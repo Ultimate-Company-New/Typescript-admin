@@ -13,7 +13,7 @@ const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('')
 
   const handleLogin = () => {
-    console.log('Login:', login, 'Password:', password)
+    console.log('Login:', login)
     // Add your login logic here
   }
 
