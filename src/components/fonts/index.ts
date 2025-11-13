@@ -1,0 +1,12 @@
+export { default as Header } from './Header'
+export { default as Subheader } from './Subheader'
+export { default as BodyText } from './BodyText'
+export { default as PrimaryFont } from './PrimaryFont'
+export { default as SecondaryFont } from './SecondaryFont'
+
+export type { HeaderProps } from './Header'
+export type { SubheaderProps } from './Subheader'
+export type { BodyTextProps } from './BodyText'
+export type { PrimaryFontProps } from './PrimaryFont'
+export type { SecondaryFontProps } from './SecondaryFont'
+
