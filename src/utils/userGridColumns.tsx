@@ -1,9 +1,15 @@
 import { useState, useEffect } from 'react'
-import { Avatar, Chip, Link, Tooltip, Box } from '@mui/material'
+import { Avatar, Chip, Link, Tooltip, Box, IconButton, Badge } from '@mui/material'
+import { 
+  Security as SecurityIcon,
+  Group as GroupIcon,
+  LocationOn as LocationIcon
+} from '@mui/icons-material'
 import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import { format } from 'date-fns'
 import { chipStyles, getRandomColor } from '../components/DataGrid/gridHelpers'
 import { APP_ROUTES } from '../constants/routes'
+import { PermissionsModal, UserGroupsModal } from '../components/Users'
 
 // Component to handle avatar with proper image error handling
 const UserAvatar = ({ 
@@ -21,281 +27,393 @@ const UserAvatar = ({
   const initials = `${(firstName || '').charAt(0).toUpperCase()}${(lastName || '').charAt(0).toUpperCase()}`
   const avatarColor = getRandomColor(userId)
 
-  // Reset error state when profilePicture changes
   useEffect(() => {
     setImageError(false)
   }, [profilePicture])
 
-  // Check if profile picture is valid (not null, not empty, not whitespace)
-  const hasValidProfilePicture = profilePicture &&
-    typeof profilePicture === 'string' &&
-    profilePicture.trim() !== '' &&
-    !imageError
+  if (!profilePicture || imageError) {
+    return (
+      <Avatar sx={{ bgcolor: avatarColor, width: 32, height: 32, fontSize: '0.875rem' }}>
+        {initials}
+      </Avatar>
+    )
+  }
 
   return (
-    <Avatar
-      src={hasValidProfilePicture ? profilePicture : undefined}
+    <Avatar 
+      src={profilePicture}
       alt={`${firstName} ${lastName}`}
-      imgProps={{
-        onError: () => setImageError(true),
-      }}
-      sx={{
-        bgcolor: avatarColor,
-        width: 40,
-        height: 40,
-        fontSize: '1rem',
-        fontWeight: 'bold',
-      }}
+      onError={() => setImageError(true)}
+      sx={{ width: 32, height: 32 }}
     >
       {initials}
     </Avatar>
   )
 }
 
-/**
- * Component to render text with ellipsis and tooltip on hover
- * Industry standard approach for displaying long text in data grids
- */
-const TextCellWithTooltip = ({ value }: { value: string }) => {
+// Permissions Button Component
+const PermissionsButton = ({ 
+  permissions, 
+  userName 
+}: { 
+  permissions: any[]
+  userName: string
+}) => {
+  const [open, setOpen] = useState(false)
+
   return (
-    <Tooltip title={value} arrow placement="top" enterDelay={300}>
-      <Box
-        sx={{
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-          width: '100%',
-        }}
+    <>
+      <IconButton
+        size="small"
+        onClick={() => setOpen(true)}
+        sx={{ padding: 0.5 }}
       >
-        {value}
-      </Box>
-    </Tooltip>
+        <Badge badgeContent={permissions?.length || 0} color="primary" max={999}>
+          <SecurityIcon fontSize="small" />
+        </Badge>
+      </IconButton>
+      <PermissionsModal
+        open={open}
+        onClose={() => setOpen(false)}
+        permissions={permissions || []}
+        userName={userName}
+      />
+    </>
+  )
+}
+
+// User Groups Button Component
+const UserGroupsButton = ({ 
+  userGroups, 
+  userName 
+}: { 
+  userGroups: any[]
+  userName: string
+}) => {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <>
+      <IconButton
+        size="small"
+        onClick={() => setOpen(true)}
+        sx={{ padding: 0.5 }}
+      >
+        <Badge badgeContent={userGroups?.length || 0} color="secondary" max={999}>
+          <GroupIcon fontSize="small" />
+        </Badge>
+      </IconButton>
+      <UserGroupsModal
+        open={open}
+        onClose={() => setOpen(false)}
+        userGroups={userGroups || []}
+        userName={userName}
+      />
+    </>
   )
 }
 
 /**
- * User DataGrid column definitions
- * Defines all columns for the users grid with appropriate renderers and formatters
+ * User grid columns configuration
+ * Columns are arranged from left to right in order of relevance:
+ * 1. Avatar/Icon - Visual identifier
+ * 2. First Name, Last Name - Primary identity
+ * 3. Email - Contact info
+ * 4. Role (with Permissions badge) - Access level
+ * 5. DOB, Phone - Personal details
+ * 6. Groups - Group membership
+ * 7. Address - Location info
+ * 8. Account Status - Current state
+ * 9. Actions - Operations
  */
-export const getUserGridColumns = (): GridColDef[] => [
+export const getUserGridColumns = (onToggleUser?: (userId: number) => void): GridColDef[] => [
+  // Hidden columns for internal use
   {
     field: 'isDeleted',
     headerName: 'IsDeleted',
     hideable: false,
     filterable: false,
     width: 0,
-    renderCell: () => null,
+    minWidth: 0,
   },
   {
     field: 'userId',
-    headerName: 'User Id',
-    flex: 1,
-    minWidth: 100,
+    headerName: 'User ID',
     hideable: false,
     filterable: false,
-    valueGetter: (_value, row) => row.userId,
+    width: 0,
+    minWidth: 0,
   },
+
+  // 1. Avatar/Icon - Visual identifier
   {
     field: 'avatar',
     headerName: 'Icon',
-    flex: 1,
-    minWidth: 80,
+    width: 70,
+    sortable: false,
+    filterable: false,
     align: 'center',
     headerAlign: 'center',
-    filterable: false,
-    sortable: false,
-    renderCell: (params: GridRenderCellParams) => {
-      return (
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: '100%',
-          }}
-        >
-          <UserAvatar
-            profilePicture={params.row.profilePicture}
-            firstName={params.row.firstName || ''}
-            lastName={params.row.lastName || ''}
-            userId={params.row.userId}
-          />
-        </div>
-      )
-    },
+    renderCell: (params: GridRenderCellParams) => (
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+        <UserAvatar
+          profilePicture={params.row.profilePicture}
+          firstName={params.row.firstName}
+          lastName={params.row.lastName}
+          userId={params.row.userId}
+        />
+      </Box>
+    ),
   },
+
+  // 2. First Name - Primary identity
   {
     field: 'firstName',
     headerName: 'First Name',
-    flex: 2,
     minWidth: 150,
-    align: 'left',
-    headerAlign: 'center',
-    filterable: false,
+    flex: 1,
     renderCell: (params: GridRenderCellParams) => (
-      <TextCellWithTooltip value={params.row.firstName || ''} />
+      <Tooltip title={params.value || ''}>
+        <span>{params.value}</span>
+      </Tooltip>
     ),
   },
+
+  // 3. Last Name - Primary identity
   {
     field: 'lastName',
     headerName: 'Last Name',
-    flex: 2,
     minWidth: 150,
-    align: 'left',
-    headerAlign: 'center',
-    filterable: false,
+    flex: 1,
     renderCell: (params: GridRenderCellParams) => (
-      <TextCellWithTooltip value={params.row.lastName || ''} />
+      <Tooltip title={params.value || ''}>
+        <span>{params.value}</span>
+      </Tooltip>
     ),
   },
+
+  // 4. Email - Contact info
   {
-    field: 'loginName',
+    field: 'email',
     headerName: 'Email',
+    minWidth: 250,
     flex: 2,
-    minWidth: 200,
-    align: 'left',
-    headerAlign: 'center',
-    filterable: false,
     renderCell: (params: GridRenderCellParams) => (
-      <TextCellWithTooltip value={params.row.loginName || ''} />
+      <Tooltip title={params.value || ''}>
+        <span>{params.value}</span>
+      </Tooltip>
     ),
   },
+
+  // 5. Role with Permissions badge - Access level
   {
     field: 'role',
     headerName: 'Role',
-    flex: 2,
     minWidth: 150,
-    align: 'left',
+    flex: 1,
+    align: 'center',
     headerAlign: 'center',
-    filterable: false,
-    renderCell: (params: GridRenderCellParams) => (
-      <TextCellWithTooltip value={params.row.role || ''} />
-    ),
+    renderCell: (params: GridRenderCellParams) => {
+      const userName = `${params.row.firstName} ${params.row.lastName}`
+      return (
+        <Box sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          gap: 1, 
+          width: '100%',
+          height: '100%'
+        }}>
+          <Chip
+            label={params.value}
+            size="small"
+            sx={chipStyles[params.value as keyof typeof chipStyles] || chipStyles.default}
+          />
+          <PermissionsButton
+            permissions={params.row.permissions || []}
+            userName={userName}
+          />
+        </Box>
+      )
+    },
   },
+
+  // 6. Date of Birth - Personal details
   {
     field: 'dob',
     headerName: 'DOB',
-    flex: 2,
-    minWidth: 150,
-    align: 'center',
-    headerAlign: 'center',
-    filterable: false,
-    valueGetter: (_value, row) => {
-      if (!row.dob) return 'N/A'
+    minWidth: 130,
+    flex: 0.8,
+    valueFormatter: (value) => {
+      if (!value) return ''
       try {
-        return format(new Date(row.dob), 'do MMM yyyy')
+        return format(new Date(value), 'do MMM yyyy')
       } catch {
-        return 'Invalid Date'
+        return value
       }
     },
   },
+
+  // 7. Phone - Contact info
   {
     field: 'phone',
     headerName: 'Phone',
-    flex: 2,
-    minWidth: 150,
-    align: 'center',
-    headerAlign: 'center',
-    filterable: false,
-    valueGetter: (_value, row) => {
-      const phone = row.phone
-      if (!phone || phone.length < 10) return phone
-      return `(${phone.slice(0, 3)}) - ${phone.slice(3, 6)} - ${phone.slice(
-        6
-      )}`
+    width: 160,
+    valueFormatter: (value) => {
+      if (!value) return ''
+      // Format phone number: (123) - 456 - 7890
+      const cleaned = value.replace(/\D/g, '')
+      if (cleaned.length === 10) {
+        return `(${cleaned.slice(0, 3)}) - ${cleaned.slice(3, 6)} - ${cleaned.slice(6)}`
+      }
+      if (cleaned.length === 11) {
+        return `(+${cleaned.slice(0, 2)}) - ${cleaned.slice(2, 5)} - ${cleaned.slice(5)}`
+      }
+      return value
     },
   },
+
+  // 8. Groups - Group membership
+  {
+    field: 'userGroups',
+    headerName: 'Groups',
+    width: 90,
+    sortable: false,
+    filterable: false,
+    align: 'center',
+    headerAlign: 'center',
+    renderCell: (params: GridRenderCellParams) => {
+      const userName = `${params.row.firstName} ${params.row.lastName}`
+      const userGroups = params.row.userGroups || []
+      
+      if (userGroups.length === 0) {
+        return <span style={{ color: '#999' }}>—</span>
+      }
+
+      return (
+        <UserGroupsButton
+          userGroups={userGroups}
+          userName={userName}
+        />
+      )
+    },
+  },
+
+  // 9. Address - Location info with full address on hover
+  {
+    field: 'addresses',
+    headerName: 'Address',
+    minWidth: 140,
+    flex: 1,
+    sortable: false,
+    filterable: false,
+    renderCell: (params: GridRenderCellParams) => {
+      const addresses = params.row.addresses || []
+      if (addresses.length === 0) {
+        return <span style={{ color: '#999' }}>—</span>
+      }
+
+      // Get primary address or first address
+      const primaryAddress = addresses.find((addr: any) => addr.isPrimary) || addresses[0]
+      
+      // Short display: City, State
+      const shortDisplay = `${primaryAddress.city || ''}, ${primaryAddress.state || ''}`
+      
+      // Full address for tooltip
+      const fullAddress = [
+        primaryAddress.street1,
+        primaryAddress.street2,
+        `${primaryAddress.city}, ${primaryAddress.state} ${primaryAddress.zipCode}`,
+        primaryAddress.country
+      ].filter(Boolean).join('\n')
+
+      return (
+        <Tooltip 
+          title={
+            <Box sx={{ whiteSpace: 'pre-line', fontSize: '0.875rem' }}>
+              {fullAddress}
+            </Box>
+          }
+          arrow
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <LocationIcon fontSize="small" sx={{ color: 'action.active' }} />
+            <span>{shortDisplay}</span>
+          </Box>
+        </Tooltip>
+      )
+    },
+  },
+
+  // 10. Account Status - Current state
   {
     field: 'emailConfirmed',
     headerName: 'Account Status',
-    flex: 2,
-    minWidth: 150,
+    width: 130,
     align: 'center',
     headerAlign: 'center',
-    filterable: false,
     renderCell: (params: GridRenderCellParams) => {
-      const confirmed = params.row.emailConfirmed
-      const label = confirmed ? 'Confirmed' : 'Pending'
-      const backgroundColor = confirmed ? '#28a745' : '#dc3545'
-      const textColor = '#fff'
-
+      const status = params.value ? 'Active' : 'Pending'
+      const color = params.value ? 'success' : 'warning'
       return (
         <Chip
-          label={label}
-          style={chipStyles(backgroundColor, textColor)}
-          variant="outlined"
+          label={status}
+          color={color}
           size="small"
         />
       )
     },
   },
-  {
-    field: 'locked',
-    headerName: 'Locked',
-    flex: 1,
-    minWidth: 120,
-    align: 'center',
-    headerAlign: 'center',
-    filterable: false,
-    renderCell: (params: GridRenderCellParams) => {
-      const locked = params.row.locked
-      const label = locked ? 'Locked' : 'Active'
-      const backgroundColor = locked ? '#dc3545' : '#28a745'
-      const textColor = '#fff'
 
-      return (
-        <Chip
-          label={label}
-          style={chipStyles(backgroundColor, textColor)}
-          variant="outlined"
-          size="small"
-        />
-      )
-    },
-  },
+  // 11. Last Login - Activity tracking (hidden by default)
   {
     field: 'lastLoginAt',
     headerName: 'Last Login',
-    flex: 2,
-    minWidth: 180,
-    align: 'center',
-    headerAlign: 'center',
-    filterable: false,
-    valueGetter: (_value, row) => {
-      if (!row.lastLoginAt) return 'Never'
+    minWidth: 150,
+    flex: 1,
+    valueFormatter: (value) => {
+      if (!value) return 'Never'
       try {
-        return format(new Date(row.lastLoginAt), 'do MMM yyyy, HH:mm')
+        return format(new Date(value), 'MMM dd, yyyy HH:mm')
       } catch {
-        return 'Invalid Date'
+        return value
       }
     },
   },
+
+  // 12. Locked Status (hidden by default)
+  {
+    field: 'locked',
+    headerName: 'Locked',
+    minWidth: 100,
+    flex: 0.5,
+    type: 'boolean',
+  },
+
+  // 13. Created Date (hidden by default)
   {
     field: 'createdAt',
-    headerName: 'Created At',
-    flex: 2,
-    minWidth: 180,
-    align: 'center',
-    headerAlign: 'center',
-    filterable: false,
-    valueGetter: (_value, row) => {
-      if (!row.createdAt) return 'N/A'
+    headerName: 'Created',
+    minWidth: 150,
+    flex: 1,
+    valueFormatter: (value) => {
+      if (!value) return ''
       try {
-        return format(new Date(row.createdAt), 'do MMM yyyy, HH:mm')
+        return format(new Date(value), 'MMM dd, yyyy')
       } catch {
-        return 'Invalid Date'
+        return value
       }
     },
   },
+
+  // 14. Actions - Operations
   {
     field: 'actions',
     headerName: 'Actions',
-    flex: 2,
-    minWidth: 200,
-    align: 'center',
-    headerAlign: 'center',
-    filterable: false,
+    minWidth: 220,
+    flex: 1.5,
     sortable: false,
+    filterable: false,
     renderCell: (params: GridRenderCellParams) => {
       if (params.row.isDeleted) {
         return (
@@ -304,9 +422,11 @@ export const getUserGridColumns = (): GridColDef[] => [
               href="#"
               onClick={(e) => {
                 e.preventDefault()
-                // Handle activate
+                if (onToggleUser) {
+                  onToggleUser(params.row.userId)
+                }
               }}
-              sx={{ cursor: 'pointer' }}
+              sx={{ cursor: 'pointer', color: 'success.main' }}
             >
               Activate
             </Link>
@@ -332,7 +452,9 @@ export const getUserGridColumns = (): GridColDef[] => [
             href="#"
             onClick={(e) => {
               e.preventDefault()
-              // Handle deactivate
+              if (onToggleUser) {
+                onToggleUser(params.row.userId)
+              }
             }}
             sx={{ cursor: 'pointer', color: 'error.main' }}
           >
@@ -343,4 +465,3 @@ export const getUserGridColumns = (): GridColDef[] => [
     },
   },
 ]
-

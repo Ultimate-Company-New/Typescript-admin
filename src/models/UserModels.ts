@@ -2,26 +2,49 @@
  * User-related TypeScript interfaces matching the Spring API models
  */
 
+import { AddressRequestModel, AddressResponseModel } from './AddressModels'
+
+export interface FilterCondition {
+  column: string
+  operator: string
+  value: string | number | boolean | null | undefined
+}
+
 export interface UserRequestModel {
   userId?: number
   loginName?: string
   firstName?: string
   lastName?: string
   password?: string
+  salt?: string
   role?: string
   dob?: string
   phone?: string
+  email?: string
   emailConfirmed?: boolean
   deleted?: boolean
+  isDeleted?: boolean
+  locked?: boolean
+  notes?: string
+  // Address
+  address?: AddressRequestModel
+  // Permissions and Groups
+  permissionIds?: number[]
+  selectedGroupIds?: number[]
+  // Profile Picture
+  profilePictureBase64?: string
   // Pagination fields
   start?: number
   end?: number
   pageSize?: number
   includeDeleted?: boolean
-  // Filtering fields
-  columnName?: string  // Single column name for filtering/sorting
-  condition?: string   // Filter condition (e.g., "contains", "equals")
-  filterExpr?: string  // Filter expression value
+  // Multi-filter support
+  logicOperator?: 'AND' | 'OR'
+  filters?: FilterCondition[]
+  // Legacy filtering fields (deprecated)
+  columnName?: string
+  condition?: string
+  filterExpr?: string
   selectedUserIds?: number[]  // Optional user IDs to filter
 }
 
@@ -60,23 +83,6 @@ export interface UserPermissionInfo {
   permissionCode: string
   description?: string
   category?: string
-}
-
-export interface AddressResponseModel {
-  addressId: number
-  userId?: number
-  clientId?: number
-  street1?: string
-  street2?: string
-  city?: string
-  state?: string
-  zipCode?: string
-  country?: string
-  addressType?: string
-  isPrimary?: boolean
-  isDeleted?: boolean
-  createdAt?: string
-  updatedAt?: string
 }
 
 export interface UserGroupResponseModel {

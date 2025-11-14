@@ -25,6 +25,7 @@ import CloseIcon from '@mui/icons-material/Close'
 import AddIcon from '@mui/icons-material/Add'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import { GridColDef } from '@mui/x-data-grid'
+import '../../styles/DataGridStyles.scss'
 
 // Operator definitions for different column types
 const OPERATORS = {
@@ -35,6 +36,9 @@ const OPERATORS = {
     { value: 'endsWith', label: 'ends with' },
     { value: 'isEmpty', label: 'is empty' },
     { value: 'isNotEmpty', label: 'is not empty' },
+    { value: 'isOneOf', label: 'is one of' },
+    { value: 'isNotOneOf', label: 'is not one of' },
+    { value: 'containsOneOf', label: 'contains one of' },
   ],
   number: [
     { value: '=', label: '=' },
@@ -116,13 +120,15 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         ]
   )
 
-  // Filter out non-filterable columns and actions column
+  // Filter out specific columns that should not be filterable
+  // Check both the 'filterable' property and specific field names
   const filterableColumns = columns.filter(
     (col) =>
-      col.filterable !== false &&
+      col.filterable !== false && // Respect the filterable property
       col.field !== 'actions' &&
       col.field !== 'isDeleted' &&
-      col.field !== 'userId'
+      col.field !== 'userId' &&
+      col.field !== 'avatar' // Avatar/Icon column should not be filterable
   )
 
   // Get column type for operator selection
@@ -302,6 +308,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     }
 
     // Default: string input
+    const isSemicolonOperator = ['isOneOf', 'isNotOneOf', 'containsOneOf'].includes(filter.operator)
+    
     return (
       <TextField
         label="Value"
@@ -310,7 +318,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         value={filter.value}
         onChange={(e) => handleFilterChange(filter.id, 'value', e.target.value)}
         variant="outlined"
-        placeholder="Filter value"
+        placeholder={isSemicolonOperator ? "Value1;Value2;Value3" : "Filter value"}
+        helperText={isSemicolonOperator ? "Use semicolon (;) to separate multiple values" : undefined}
       />
     )
   }
@@ -322,31 +331,18 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
       maxWidth="md"
       fullWidth
       PaperProps={{
-        sx: {
-          borderRadius: 2,
-          boxShadow: 24,
-        },
+        className: 'filter-panel__dialog-paper',
       }}
     >
       {/* Dialog Header */}
-      <DialogTitle
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          pb: 2,
-        }}
-      >
+      <DialogTitle className="filter-panel__header">
         <Typography variant="h6" component="div" fontWeight="bold">
           Filter Data
         </Typography>
         <IconButton
           onClick={onClose}
           size="small"
-          sx={{
-            color: 'grey.500',
-            '&:hover': { color: 'grey.700' },
-          }}
+          className="filter-panel__close-button"
         >
           <CloseIcon />
         </IconButton>
@@ -355,23 +351,11 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
       <Divider />
 
       {/* Dialog Content */}
-      <DialogContent sx={{ py: 3 }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <DialogContent className="filter-panel__content">
+        <Box className="filter-panel__content-box">
           {/* Global Logic Operator - Show only if there are multiple filters */}
           {filters.length > 1 && (
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2,
-                mb: 1,
-                p: 2,
-                bgcolor: 'primary.50',
-                borderRadius: 1,
-                border: '1px solid',
-                borderColor: 'primary.200',
-              }}
-            >
+            <Box className="filter-panel__logic-operator-box">
               <Typography variant="body2" fontWeight="medium" color="text.secondary">
                 Match:
               </Typography>
@@ -384,16 +368,9 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   }
                 }}
                 size="small"
-                sx={{
-                  '& .MuiToggleButton-root': {
-                    px: 3,
-                    textTransform: 'none',
-                    fontWeight: 'medium',
-                  },
-                }}
               >
-                <ToggleButton value="AND">All (AND)</ToggleButton>
-                <ToggleButton value="OR">Any (OR)</ToggleButton>
+                <ToggleButton value="AND" className="filter-panel__toggle-button">All (AND)</ToggleButton>
+                <ToggleButton value="OR" className="filter-panel__toggle-button">Any (OR)</ToggleButton>
               </ToggleButtonGroup>
               <Typography variant="body2" color="text.secondary">
                 of the following conditions:
@@ -405,33 +382,21 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             <Box key={filter.id}>
               {/* Show text separator for 2nd filter onwards */}
               {index > 0 && (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                  <Divider sx={{ flex: 1 }} />
+                <Box className="filter-panel__divider-box">
+                  <Divider className="filter-panel__divider" />
                   <Chip
                     label={logicOperator}
                     size="small"
                     color="primary"
                     variant="outlined"
-                    sx={{ fontWeight: 'bold', fontSize: '0.75rem' }}
+                    className="filter-panel__chip"
                   />
-                  <Divider sx={{ flex: 1 }} />
+                  <Divider className="filter-panel__divider" />
                 </Box>
               )}
 
               {/* Filter Row */}
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr 1fr auto',
-                  gap: 2,
-                  alignItems: 'start',
-                  p: 2,
-                  bgcolor: 'grey.50',
-                  borderRadius: 1,
-                  border: '1px solid',
-                  borderColor: 'grey.200',
-                }}
-              >
+              <Box className="filter-panel__filter-row">
                 {/* Column Selection */}
                 <FormControl fullWidth size="small">
                   <InputLabel>Column</InputLabel>
@@ -470,7 +435,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                 </FormControl>
 
                 {/* Value Input */}
-                <Box sx={{ minWidth: 0 }}>
+                <Box className="filter-panel__value-input">
                   {filter.operator && renderValueInput(filter)}
                 </Box>
 
@@ -480,12 +445,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   disabled={filters.length === 1}
                   color="error"
                   size="small"
-                  sx={{
-                    mt: 0.5,
-                    '&:disabled': {
-                      color: 'grey.300',
-                    },
-                  }}
+                  className="filter-panel__delete-button"
                 >
                   <DeleteOutlineIcon />
                 </IconButton>
@@ -498,11 +458,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             startIcon={<AddIcon />}
             onClick={handleAddFilter}
             variant="outlined"
-            sx={{
-              textTransform: 'none',
-              alignSelf: 'flex-start',
-              mt: 1,
-            }}
+            className="filter-panel__add-button"
           >
             Add Filter
           </Button>
@@ -512,27 +468,27 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
       <Divider />
 
       {/* Dialog Actions */}
-      <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+      <DialogActions className="filter-panel__actions">
         <Button
           onClick={handleReset}
           variant="outlined"
           color="secondary"
-          sx={{ textTransform: 'none' }}
+          className="filter-panel__action-button"
         >
           Remove All
         </Button>
-        <Box sx={{ flex: 1 }} />
+        <Box className="filter-panel__actions-spacer" />
         <Button
           onClick={onClose}
           variant="outlined"
-          sx={{ textTransform: 'none' }}
+          className="filter-panel__action-button"
         >
           Cancel
         </Button>
         <Button
           onClick={handleApply}
           variant="contained"
-          sx={{ textTransform: 'none' }}
+          className="filter-panel__action-button"
         >
           Apply Filters
         </Button>

@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom'
 import { Box, CssBaseline } from '@mui/material'
 import DashboardNavbar from './DashboardNavbar'
 import DashboardSidebar from './DashboardSidebar'
+import '../../styles/LayoutStyles.scss'
 
 /**
  * Dashboard Layout Component
@@ -20,7 +21,7 @@ const DashboardLayout = () => {
   }
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box className="dashboard-layout">
       <CssBaseline />
       
       {/* Top Navigation Bar */}
@@ -30,19 +31,7 @@ const DashboardLayout = () => {
       <DashboardSidebar open={sidebarOpen} onDrawerToggle={handleDrawerToggle} />
       
       {/* Main Content Area */}
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          p: 3,
-          mt: 8, // AppBar height
-          minHeight: '100vh',
-          backgroundColor: (theme) =>
-            theme.palette.mode === 'light'
-              ? theme.palette.grey[100]
-              : theme.palette.grey[900],
-        }}
-      >
+      <Box component="main" className="dashboard-layout__main-content">
         <Outlet />
       </Box>
     </Box>

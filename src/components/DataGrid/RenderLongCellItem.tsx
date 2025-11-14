@@ -1,5 +1,6 @@
 import React from 'react'
 import { Tooltip, Typography } from '@mui/material'
+import '../../styles/DataGridStyles.scss'
 
 interface RenderLongCellItemProps {
   value: string
@@ -25,13 +26,7 @@ const RenderLongCellItem: React.FC<RenderLongCellItemProps> = ({ value }) => {
       <Typography
         ref={textRef}
         variant="body2"
-        sx={{
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-          width: '100%',
-          cursor: isOverflowing ? 'help' : 'default',
-        }}
+        className={`render-long-cell-item ${isOverflowing ? 'render-long-cell-item--overflowing' : 'render-long-cell-item--default'}`}
       >
         {value}
       </Typography>

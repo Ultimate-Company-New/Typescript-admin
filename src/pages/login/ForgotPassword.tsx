@@ -17,6 +17,7 @@ import {
 import { loginApi } from '../../api/loginApi'
 import { passwordResetSchema, PasswordResetFormData } from '../../utils/validationSchemas'
 import { APP_ROUTES } from '../../constants/routes'
+import '../../styles/Login.scss'
 
 /**
  * Forgot Password Page Component
@@ -66,25 +67,12 @@ const ForgotPassword = () => {
     <Container maxWidth="sm">
       {/* Password Reset Card */}
       <Box
-        sx={{
-          mt: 8,
-          mb: 4,
-          p: 4,
-          border: '1px solid',
-          borderColor: 'divider',
-          borderRadius: 2,
-          boxShadow: 2,
-        }}
+        className="login-page__card"
+        sx={{ borderColor: 'divider' }}
       >
         <Stack spacing={3}>
           {/* Company Logo */}
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
-          >
+          <Box className="login-page__logo-container">
             <Logo size={100} />
           </Box>
 

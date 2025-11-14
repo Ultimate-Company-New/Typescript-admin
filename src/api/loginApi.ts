@@ -1,8 +1,7 @@
 import axiosInstance from './axiosConfig'
 import {
   LoginRequestModel,
-  ClientResponseModel,
-  TokenResponseModel,
+  ClientResponseModel
 } from '../models/LoginModels'
 
 /**

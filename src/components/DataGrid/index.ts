@@ -1,6 +1,5 @@
 export { StyledDataGrid } from './StyledDataGrid'
 export { default as CustomNoRowsOverlay } from './CustomNoRowsOverlay'
-export { default as CustomToolbar } from './CustomToolbar'
 export { default as SimpleToolbar } from './SimpleToolbar'
 export { default as RenderLongCellItem } from './RenderLongCellItem'
 export { default as FilterPanel } from './FilterPanel'

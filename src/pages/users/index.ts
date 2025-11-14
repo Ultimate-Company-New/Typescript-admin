@@ -1,4 +1,3 @@
 export { default as Users } from './Users'
-export { default as AddUsers } from './AddUsers'
+export { default as AddEditUsers } from './AddEditUsers'
 export { default as ImportUsers } from './ImportUsers'
-

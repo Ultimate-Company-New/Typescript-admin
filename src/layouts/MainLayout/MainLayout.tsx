@@ -1,31 +1,7 @@
 import { Outlet } from 'react-router-dom'
 import { Box } from '@mui/material'
-import { styled } from '@mui/material/styles'
 import MainNavbar from './MainNavbar'
-
-/**
- * Styled components for layout structure
- */
-const MainLayoutRoot = styled('div')({
-  backgroundColor: '#ffffff',
-  display: 'flex',
-  minHeight: '100vh',
-  width: '100%',
-  flexDirection: 'column',
-})
-
-const MainLayoutWrapper = styled('div')({
-  display: 'flex',
-  flex: '1 1 auto',
-  paddingTop: 64, // Height of AppBar
-})
-
-const MainLayoutContent = styled('div')({
-  flex: '1 1 auto',
-  width: '100%',
-  display: 'flex',
-  flexDirection: 'column',
-})
+import '../../styles/LayoutStyles.scss'
 
 /**
  * Main layout for public/unauthenticated pages
@@ -33,23 +9,19 @@ const MainLayoutContent = styled('div')({
  */
 const MainLayout = () => {
   return (
-    <MainLayoutRoot>
+    <div className="main-layout__root">
       <MainNavbar />
-      <MainLayoutWrapper>
-        <MainLayoutContent>
+      <div className="main-layout__wrapper">
+        <div className="main-layout__content">
           <Box
-            sx={{
-              backgroundColor: 'background.default',
-              flex: '1 1 auto',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
+            sx={{ backgroundColor: 'background.default' }}
+            className="main-layout__outlet-container"
           >
             <Outlet />
           </Box>
-        </MainLayoutContent>
-      </MainLayoutWrapper>
-    </MainLayoutRoot>
+        </div>
+      </div>
+    </div>
   )
 }
 

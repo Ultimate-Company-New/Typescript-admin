@@ -1,6 +1,7 @@
 import { Link as RouterLink } from 'react-router-dom'
 import { AppBar, Toolbar, Typography, Box } from '@mui/material'
 import { APP_ROUTES } from '../../constants/routes'
+import '../../styles/LayoutStyles.scss'
 
 /**
  * Main navigation bar for public pages
@@ -11,30 +12,19 @@ const MainNavbar = () => {
     <AppBar
       elevation={0}
       position="fixed"
-      sx={{
-        backgroundColor: 'primary.main',
-      }}
+      sx={{ backgroundColor: 'primary.main' }}
     >
-      <Toolbar sx={{ height: 64 }}>
+      <Toolbar className="main-navbar__toolbar">
         <RouterLink
           to={APP_ROUTES.HOME}
-          style={{
-            textDecoration: 'none',
-            color: 'inherit',
-            display: 'flex',
-            alignItems: 'center',
-          }}
+          className="main-navbar__logo-link"
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box className="main-navbar__logo-container">
             {/* Logo placeholder - replace with actual logo component */}
             <Typography
               variant="h5"
               component="div"
-              sx={{
-                fontWeight: 700,
-                color: 'white',
-                letterSpacing: 1,
-              }}
+              className="main-navbar__logo-text"
             >
               ADMIN
             </Typography>

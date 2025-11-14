@@ -20,6 +20,9 @@ import {
 } from '@mui/icons-material'
 import { styled } from '@mui/material/styles'
 import { APP_ROUTES } from '../../constants/routes'
+import '../../styles/LayoutStyles.scss'
+
+const DRAWER_WIDTH = 280
 
 interface DashboardNavbarProps {
   open: boolean
@@ -34,13 +37,16 @@ const StyledAppBar = styled(AppBar, {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
   }),
+  width: '100%',
   ...(open && {
-    marginLeft: 240,
-    width: `calc(100% - 240px)`,
-    transition: theme.transitions.create(['width', 'margin'], {
-      easing: theme.transitions.easing.sharp,
-      duration: theme.transitions.duration.enteringScreen,
-    }),
+    [theme.breakpoints.up('lg')]: {
+      marginLeft: DRAWER_WIDTH,
+      width: `calc(100% - ${DRAWER_WIDTH}px)`,
+      transition: theme.transitions.create(['width', 'margin'], {
+        easing: theme.transitions.easing.sharp,
+        duration: theme.transitions.duration.enteringScreen,
+      }),
+    },
   }),
 }))
 
@@ -78,22 +84,17 @@ const DashboardNavbar = forwardRef<HTMLDivElement, DashboardNavbarProps>(
             aria-label="toggle drawer"
             onClick={onDrawerToggle}
             edge="start"
-            sx={{
-              marginRight: 2,
-            }}
+            className="dashboard-navbar__menu-toggle"
             data-test-id="dashboard-menu-toggle"
           >
             <MenuIcon />
           </IconButton>
 
           {/* Client Logo & Name */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box className="dashboard-navbar__client-info">
             <Avatar
-              sx={{
-                bgcolor: 'primary.light',
-                width: 40,
-                height: 40,
-              }}
+              sx={{ bgcolor: 'primary.light' }}
+              className="dashboard-navbar__client-avatar"
             >
               {selectedCarrierName.charAt(0).toUpperCase()}
             </Avatar>
@@ -101,20 +102,17 @@ const DashboardNavbar = forwardRef<HTMLDivElement, DashboardNavbarProps>(
               variant="h6"
               noWrap
               component="div"
-              sx={{
-                display: { xs: 'none', sm: 'block' },
-                fontWeight: 600,
-              }}
+              className="dashboard-navbar__client-name"
             >
               {selectedCarrierName}
             </Typography>
           </Box>
 
           {/* Spacer */}
-          <Box sx={{ flexGrow: 1 }} />
+          <Box className="dashboard-navbar__spacer" />
 
           {/* Action Buttons */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box className="dashboard-navbar__actions">
             {/* Todo List */}
             <Tooltip title="Todo List">
               <IconButton

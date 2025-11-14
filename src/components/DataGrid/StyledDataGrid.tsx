@@ -1,5 +1,6 @@
 import { styled, alpha } from '@mui/material/styles'
 import { DataGrid, gridClasses } from '@mui/x-data-grid'
+import '../../styles/DataGridStyles.scss'
 
 const ODD_OPACITY = 0.2
 
@@ -11,6 +12,9 @@ const ODD_OPACITY = 0.2
  * - Styled headers with green theme
  * - Border styling
  * - Custom pagination
+ * 
+ * Note: This component still uses MUI's styled() API for dynamic theming.
+ * Static styles have been moved to DataGridStyles.scss
  */
 const MyDataGrid = styled(DataGrid)(({ theme }) => ({
   [`& .${gridClasses.row}.odd`]: {
@@ -127,9 +131,20 @@ const MyDataGrid = styled(DataGrid)(({ theme }) => ({
     borderRadius: 0,
   },
   '& .deleted': {
-    backgroundColor: theme.palette.grey[500],
+    backgroundColor: theme.palette.mode === 'light' 
+      ? alpha(theme.palette.grey[800], 0.15)
+      : alpha(theme.palette.grey[700], 0.3),
+    opacity: 0.7,
     '&:hover': {
-      backgroundColor: theme.palette.grey[300],
+      backgroundColor: theme.palette.mode === 'light'
+        ? alpha(theme.palette.grey[800], 0.25)
+        : alpha(theme.palette.grey[600], 0.4),
+      opacity: 0.8,
+    },
+    '& .MuiDataGrid-cell': {
+      color: theme.palette.mode === 'light'
+        ? theme.palette.grey[600]
+        : theme.palette.grey[400],
     },
   },
   '& .MuiDataGrid-toolbarContainer': {

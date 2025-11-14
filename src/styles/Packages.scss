@@ -1,0 +1,49 @@
+.packages-page {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: 0;
+  box-sizing: border-box;
+
+  &__container {
+    padding-top: 32px;
+    padding-bottom: 32px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow-x: auto;
+  }
+
+  &__card {
+    background-color: #ffffff;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+
+    .MuiDataGrid-root {
+      width: 100%;
+      max-width: 100%;
+      min-width: 800px;
+      box-sizing: border-box;
+      border: none;
+      border-radius: 0;
+    }
+  }
+
+  &__pagination {
+    padding: 16px;
+    border-top: 1px solid rgba(224, 224, 224, 1);
+    background-color: #fff;
+  }
+
+  // Deleted row styling
+  :global(.MuiDataGrid-row.deleted) {
+    background-color: rgba(0, 0, 0, 0.04) !important;
+    
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.08) !important;
+    }
+  }
+}
+

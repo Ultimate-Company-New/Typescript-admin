@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Container, Box } from '@mui/material'
+import { Box } from '@mui/material'
 import {
   GridPaginationModel,
   GridFilterModel,
@@ -11,11 +11,13 @@ import {
   SimpleToolbar,
   filterChangeFunction,
   FilterGroup,
+  PaginationComponent,
 } from '../../components/DataGrid'
 import { getUserGridColumns } from '../../utils/userGridColumns'
 import { userApi } from '../../api/userApi'
 import { UserResponseModel } from '../../models/UserModels'
 import { PaginatedGridInterface } from '../../types/grid.types'
+import '../../styles/Users.scss'
 
 /**
  * Users Management Page with DataGrid
@@ -58,8 +60,21 @@ const Users = () => {
     totalPaginationBlockCount: 0,
   })
 
+  /**
+   * Handle toggle user (deactivate/activate)
+   */
+  const handleToggleUser = async (userId: number) => {
+    try {
+      await userApi.toggleUser(userId)
+      // Refetch users to show updated status
+      await fetchUsers()
+    } catch (error) {
+      console.error('Failed to toggle user:', error)
+    }
+  }
+
   // Grid columns
-  const columns = getUserGridColumns()
+  const columns = getUserGridColumns(handleToggleUser)
 
   /**
    * Fetch users from API
@@ -70,10 +85,9 @@ const Users = () => {
       const response = await userApi.fetchUsersInCarrierInBatches({
         start: paginationModel.start,
         end: paginationModel.end,
-        includeDeleted: paginationModel.includeDeleted,
-        columnName: paginationModel.columnName,
-        condition: paginationModel.condition,
-        filterExpr: paginationModel.filterExpr,
+        includeDeleted: includeDeleted,
+        logicOperator: activeFilterGroup.logicOperator,
+        filters: activeFilterGroup.filters,
       })
 
       setRows(response.data)
@@ -85,7 +99,7 @@ const Users = () => {
     } finally {
       setLoading(false)
     }
-  }, [paginationModel])
+  }, [paginationModel, includeDeleted, activeFilterGroup])
 
   // Fetch users on mount and when pagination model changes
   useEffect(() => {
@@ -144,16 +158,27 @@ const Users = () => {
   /**
    * Handle include deleted checkbox
    */
-  const handleIncludeDeletedChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const checked = event.target.checked
+  const handleIncludeDeletedChange = (checked: boolean) => {
     setIncludeDeleted(checked)
 
     setPaginationModel((prev) => ({
       ...prev,
       includeDeleted: checked,
       start: 0, // Reset to first page
+    }))
+  }
+
+  /**
+   * Handle custom pagination change
+   */
+  const handleCustomPaginationChange = (_event: React.ChangeEvent<unknown>, page: number) => {
+    const start = (page - 1) * paginationModel.pageSize
+    const end = start + paginationModel.pageSize
+
+    setPaginationModel((prev) => ({
+      ...prev,
+      start,
+      end,
     }))
   }
 
@@ -169,10 +194,11 @@ const Users = () => {
   }
 
   return (
-    <Container maxWidth="xl">
-      <Box sx={{ py: 4 }}>
-        {/* DataGrid with custom toolbar */}
-        <StyledDataGrid
+    <Box className="users-page">
+      <Box className="users-page__container">
+        <Box className="users-page__card">
+          {/* DataGrid with custom toolbar */}
+          <StyledDataGrid
           rows={rows}
           columns={columns}
           loading={loading}
@@ -203,11 +229,14 @@ const Users = () => {
               onFiltersChange: setActiveFilterGroup,
               activeFilterGroup,
               rows,
+              includeDeleted,
+              onIncludeDeletedChange: setIncludeDeleted,
             },
           }}
           showToolbar
           disableRowSelectionOnClick
           disableColumnMenu={false}
+          hideFooter // Hide default pagination footer
           initialState={{
             columns: {
               columnVisibilityModel: {
@@ -220,8 +249,21 @@ const Users = () => {
             },
           }}
         />
+
+          {/* Custom Pagination Component */}
+          <Box className="users-page__pagination">
+            <PaginationComponent
+              totalItems={totalCount}
+              currentPage={Math.floor(paginationModel.start / paginationModel.pageSize) + 1}
+              pageSize={paginationModel.pageSize}
+              onPageChange={handleCustomPaginationChange}
+              itemLabel="users"
+              data-test-id="users-pagination"
+            />
+          </Box>
+        </Box>
       </Box>
-    </Container>
+    </Box>
   )
 }
 

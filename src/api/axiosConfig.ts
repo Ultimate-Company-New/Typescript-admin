@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios'
 import { toast } from 'react-toastify'
+import type { ApiLog } from '../components/DevLogger'
 
 /**
  * Dynamically determine API base URL based on environment
@@ -34,13 +35,82 @@ const axiosInstance: AxiosInstance = axios.create({
   },
 })
 
-// Request interceptor - Add auth token if available
+/**
+ * Helper function to generate cURL command from Axios config
+ */
+const generateCurlCommand = (config: InternalAxiosRequestConfig): string => {
+  const method = (config.method || 'GET').toUpperCase()
+  const url = `${config.baseURL}${config.url}`
+  
+  let curl = `curl -X ${method} '${url}'`
+  
+  // Add headers
+  if (config.headers) {
+    Object.entries(config.headers).forEach(([key, value]) => {
+      if (value && key !== 'common' && key !== 'delete' && key !== 'get' && key !== 'head' && key !== 'post' && key !== 'put' && key !== 'patch') {
+        curl += ` \\\n  -H '${key}: ${value}'`
+      }
+    })
+  }
+  
+  // Add body data
+  if (config.data) {
+    const dataStr = typeof config.data === 'string' ? config.data : JSON.stringify(config.data)
+    curl += ` \\\n  -d '${dataStr}'`
+  }
+  
+  return curl
+}
+
+/**
+ * Helper function to dispatch API log event to DevLogger
+ */
+const logApiRequest = (config: InternalAxiosRequestConfig) => {
+  try {
+    const method = (config.method || 'GET').toUpperCase()
+    const url = `${config.baseURL}${config.url}`
+    const endpoint = `${method} ${config.url}` // Unique identifier for deduplication
+    
+    const headers: Record<string, string> = {}
+    if (config.headers) {
+      Object.entries(config.headers).forEach(([key, value]) => {
+        if (value && typeof value === 'string' && key !== 'common' && key !== 'delete' && key !== 'get' && key !== 'head' && key !== 'post' && key !== 'put' && key !== 'patch') {
+          headers[key] = value
+        }
+      })
+    }
+    
+    const apiLog: ApiLog = {
+      id: `${Date.now()}-${Math.random()}`,
+      method,
+      url,
+      headers,
+      body: config.data,
+      timestamp: new Date(),
+      curlCommand: generateCurlCommand(config),
+      endpoint,
+    }
+    
+    // Dispatch custom event for DevLogger
+    const event = new CustomEvent('api-log', { detail: apiLog })
+    window.dispatchEvent(event)
+  } catch (error) {
+    // Silently fail - don't break the request
+    console.error('Failed to log API request:', error)
+  }
+}
+
+// Request interceptor - Add auth token if available and log requests
 axiosInstance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem('authToken')
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`
     }
+    
+    // Log the API request for DevLogger
+    logApiRequest(config)
+    
     return config
   },
   (error: AxiosError) => {

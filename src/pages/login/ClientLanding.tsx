@@ -1,6 +1,16 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Container, Box, Stack, Typography } from '@mui/material'
+import { 
+  Container, 
+  Box, 
+  Stack, 
+  Typography, 
+  Grid, 
+  Card, 
+  CardMedia, 
+  CardContent, 
+  CardActionArea 
+} from '@mui/material'
 import { toast } from 'react-toastify'
 
 import {
@@ -10,10 +20,90 @@ import {
   Logo,
   PaginationComponent,
 } from '../../components'
-import CarrierGrid, { CarrierGridItem } from '../../components/CarrierGrid'
 import { loginApi } from '../../api/loginApi'
 import { ClientResponseModel } from '../../models/LoginModels'
 import { APP_ROUTES } from '../../constants/routes'
+import '../../styles/Login.scss'
+
+interface CarrierGridItem {
+  id: number
+  name: string
+  logo?: string
+  apiKey: string
+}
+
+interface CarrierGridProps {
+  carriers: CarrierGridItem[]
+  onCarrierClick: (carrierId: number, apiKey: string) => void
+}
+
+/**
+ * Carrier Grid Component
+ * Displays carriers in a responsive 3-column grid
+ * Mobile-friendly: 1 column on xs, 2 on sm, 3 on md+
+ */
+const CarrierGrid = ({ carriers, onCarrierClick }: CarrierGridProps) => {
+  const [selectedId, setSelectedId] = useState<number | null>(null)
+
+  const handleClick = (carrier: CarrierGridItem) => {
+    setSelectedId(carrier.id)
+    onCarrierClick(carrier.id, carrier.apiKey)
+  }
+
+  if (carriers.length === 0) {
+    return (
+      <Box className="carrier-grid__empty-container">
+        <Typography variant="h6" color="text.secondary">
+          No carriers found
+        </Typography>
+      </Box>
+    )
+  }
+
+  return (
+    <Grid container spacing={3}>
+      {carriers.map((carrier) => (
+        <Grid item xs={12} sm={6} md={4} key={carrier.id}>
+          <Card
+            className={`carrier-grid__card ${selectedId === carrier.id ? 'carrier-grid__card--selected' : 'carrier-grid__card--unselected'}`}
+            sx={{ borderColor: 'primary.main' }}
+            data-test-id={`carrier-card-${carrier.id}`}
+          >
+            <CardActionArea
+              onClick={() => handleClick(carrier)}
+              className="carrier-grid__card-action-area"
+            >
+              <CardMedia
+                component="div"
+                className="carrier-grid__card-media"
+              >
+                {carrier.logo ? (
+                  <Box
+                    component="img"
+                    src={carrier.logo}
+                    alt={carrier.name}
+                    className="carrier-grid__card-logo"
+                  />
+                ) : (
+                  <Box className="carrier-grid__card-placeholder">
+                    <Typography variant="h4" color="text.secondary">
+                      {carrier.name.charAt(0).toUpperCase()}
+                    </Typography>
+                  </Box>
+                )}
+              </CardMedia>
+              <CardContent className="carrier-grid__card-content">
+                <Typography variant="h6" component="div" textAlign="center">
+                  {carrier.name}
+                </Typography>
+              </CardContent>
+            </CardActionArea>
+          </Card>
+        </Grid>
+      ))}
+    </Grid>
+  )
+}
 
 /**
  * Client Landing Page
@@ -141,21 +231,10 @@ const ClientLanding = () => {
 
   return (
     <Container maxWidth="lg">
-      <Box
-        sx={{
-          mt: 6,
-          mb: 4,
-        }}
-      >
+      <Box className="client-landing__container">
         <Stack spacing={4}>
           {/* Logo */}
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
-          >
+          <Box className="client-landing__logo-container">
             <Logo size={80} />
           </Box>
 
@@ -166,7 +245,7 @@ const ClientLanding = () => {
           </Box>
 
           {/* Search Bar */}
-          <Box sx={{ maxWidth: 600, mx: 'auto', width: '100%' }}>
+          <Box className="client-landing__search-container">
             <TextFieldInput
               label="Search Clients"
               name="searchText"
@@ -181,18 +260,17 @@ const ClientLanding = () => {
           </Box>
 
           {/* Client Grid */}
-          <Box sx={{ opacity: isLoading ? 0.5 : 1, pointerEvents: isLoading ? 'none' : 'auto' }}>
+          <Box className={`client-landing__grid-container ${isLoading ? 'client-landing__grid-container--loading' : 'client-landing__grid-container--active'}`}>
             <CarrierGrid carriers={gridItems} onCarrierClick={handleClientClick} />
           </Box>
 
           {/* Divider before pagination */}
           {filteredClients.length > pageSize && (
-            <Box component="hr" sx={{ 
-              border: 'none', 
-              borderTop: '1px solid',
-              borderColor: 'divider',
-              my: 2 
-            }} />
+            <Box 
+              component="hr" 
+              className="client-landing__divider"
+              sx={{ borderColor: 'divider' }}
+            />
           )}
 
           {/* Pagination */}
@@ -207,7 +285,7 @@ const ClientLanding = () => {
 
           {/* Empty State */}
           {filteredClients.length === 0 && searchText && (
-            <Box textAlign="center" sx={{ py: 8 }}>
+            <Box textAlign="center" className="client-landing__empty-state">
               <Typography variant="h6" color="text.secondary" gutterBottom>
                 No clients found matching "{searchText}"
               </Typography>

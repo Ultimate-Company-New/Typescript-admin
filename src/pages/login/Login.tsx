@@ -22,6 +22,7 @@ import {
 import { loginApi } from '../../api/loginApi'
 import { loginSchema, LoginFormData } from '../../utils/validationSchemas'
 import { APP_ROUTES } from '../../constants/routes'
+import '../../styles/Login.scss'
 
 /**
  * Login Page Component
@@ -80,25 +81,12 @@ const Login = () => {
     <Container maxWidth="sm">
       {/* Sign In Card */}
       <Box
-        sx={{
-          mt: 8,
-          mb: 4,
-          p: 4,
-          border: '1px solid',
-          borderColor: 'divider',
-          borderRadius: 2,
-          boxShadow: 2,
-        }}
+        className="login-page__card"
+        sx={{ borderColor: 'divider' }}
       >
         <Stack spacing={3}>
           {/* Company Logo - Inside card at top */}
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
-          >
+          <Box className="login-page__logo-container">
             <Logo size={100} />
           </Box>
 
@@ -166,12 +154,11 @@ const Login = () => {
           </form>
 
           {/* Forgot Password Link */}
-          <Box textAlign="center" sx={{ mt: 2 }}>
+          <Box textAlign="center" className="login-page__forgot-password-link">
             <Link
               component="button"
               variant="body2"
               onClick={() => navigate(APP_ROUTES.FORGOT_PASSWORD)}
-              sx={{ cursor: 'pointer' }}
               data-test-id="login-forgot-password-link"
             >
               Forgot Password?

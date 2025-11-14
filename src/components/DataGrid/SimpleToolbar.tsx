@@ -14,6 +14,8 @@ import {
   ListItemText,
   Tooltip,
   Badge,
+  FormControlLabel,
+  Checkbox,
 } from '@mui/material'
 import ViewColumnIcon from '@mui/icons-material/ViewColumn'
 import FileDownloadIcon from '@mui/icons-material/FileDownload'
@@ -21,6 +23,7 @@ import DensityMediumIcon from '@mui/icons-material/DensityMedium'
 import FilterListIcon from '@mui/icons-material/FilterList'
 import CheckIcon from '@mui/icons-material/Check'
 import FilterPanel, { FilterGroup } from './FilterPanel'
+import '../../styles/DataGridStyles.scss'
 
 const DENSITY_OPTIONS = [
   { label: 'Compact', value: 'compact' },
@@ -38,6 +41,8 @@ interface SimpleToolbarProps {
   activeFilterGroup?: FilterGroup
   rows?: GridRowModel[]
   onExport?: () => void
+  includeDeleted?: boolean
+  onIncludeDeletedChange?: (includeDeleted: boolean) => void
 }
 
 /**
@@ -56,6 +61,8 @@ const SimpleToolbar = ({
   activeFilterGroup,
   rows = [],
   onExport,
+  includeDeleted = false,
+  onIncludeDeletedChange,
 }: SimpleToolbarProps) => {
   const [densityMenuOpen, setDensityMenuOpen] = useState(false)
   const [filterPanelOpen, setFilterPanelOpen] = useState(false)
@@ -148,21 +155,22 @@ const SimpleToolbar = ({
 
   return (
     <>
-      <Toolbar style={{ gap: '16px', padding: '8px' }}>
-        {/* Filter Button */}
-        <Tooltip title="Filter data">
-          <Badge badgeContent={activeFilterCount} color="primary">
-            <Button
-              size="small"
-              variant={activeFilterCount > 0 ? 'contained' : 'outlined'}
-              startIcon={<FilterListIcon />}
-              onClick={() => setFilterPanelOpen(true)}
-              sx={{ textTransform: 'none' }}
-            >
-              Filter
-            </Button>
-          </Badge>
-        </Tooltip>
+      <Toolbar className="simple-toolbar" sx={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+          {/* Filter Button */}
+          <Tooltip title="Filter data">
+            <Badge badgeContent={activeFilterCount} color="primary">
+              <Button
+                size="small"
+                variant={activeFilterCount > 0 ? 'contained' : 'outlined'}
+                startIcon={<FilterListIcon />}
+                onClick={() => setFilterPanelOpen(true)}
+                className="simple-toolbar__button"
+              >
+                Filter
+              </Button>
+            </Badge>
+          </Tooltip>
 
         {/* Columns Panel Trigger */}
         <ColumnsPanelTrigger
@@ -173,7 +181,7 @@ const SimpleToolbar = ({
                   size="small"
                   variant="outlined"
                   startIcon={<ViewColumnIcon />}
-                  sx={{ textTransform: 'none' }}
+                  className="simple-toolbar__button"
                 >
                   Columns
                 </Button>
@@ -193,7 +201,7 @@ const SimpleToolbar = ({
             aria-controls="density-menu"
             aria-haspopup="true"
             aria-expanded={densityMenuOpen ? 'true' : undefined}
-            sx={{ textTransform: 'none' }}
+            className="simple-toolbar__button"
           >
             Density
           </Button>
@@ -224,18 +232,35 @@ const SimpleToolbar = ({
           ))}
         </Menu>
 
-        {/* Export Button */}
-        <Tooltip title="Export to CSV">
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<FileDownloadIcon />}
-            onClick={handleExport}
-            sx={{ textTransform: 'none' }}
-          >
-            Export
-          </Button>
-        </Tooltip>
+          {/* Export Button */}
+          <Tooltip title="Export to CSV">
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<FileDownloadIcon />}
+              onClick={handleExport}
+              className="simple-toolbar__button"
+            >
+              Export
+            </Button>
+          </Tooltip>
+        </div>
+
+        {/* Include Deleted Checkbox */}
+        {onIncludeDeletedChange && (
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={includeDeleted}
+                onChange={(e) => onIncludeDeletedChange(e.target.checked)}
+                size="small"
+              />
+            }
+            label="Include Deleted"
+            className="simple-toolbar__checkbox-label"
+            sx={{ whiteSpace: 'nowrap' }}
+          />
+        )}
       </Toolbar>
 
       {/* Filter Panel Modal */}
