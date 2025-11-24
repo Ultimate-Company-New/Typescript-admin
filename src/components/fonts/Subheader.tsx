@@ -1,5 +1,6 @@
-import { Typography, TypographyProps } from '@mui/material'
 import { forwardRef } from 'react'
+
+import { Typography, type TypographyProps } from '@mui/material'
 
 export interface SubheaderProps extends Omit<TypographyProps, 'variant'> {
   label: string
@@ -11,16 +12,13 @@ export interface SubheaderProps extends Omit<TypographyProps, 'variant'> {
  * Defaults to h6 variant with secondary text color
  */
 const Subheader = forwardRef<HTMLElement, SubheaderProps>(
-  ({ label, variant = 'h6', color = 'textSecondary', ...props }, ref) => {
-    return (
-      <Typography ref={ref} variant={variant} color={color} {...props}>
-        {label}
-      </Typography>
-    )
-  }
+  ({ label, variant = 'h6', color = 'textSecondary', ...props }, ref) => (
+    <Typography ref={ref} variant={variant} color={color} {...props}>
+      {label}
+    </Typography>
+  ),
 )
 
 Subheader.displayName = 'Subheader'
 
 export default Subheader
-

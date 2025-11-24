@@ -18,7 +18,7 @@ interface AddressFormProps {
 
 /**
  * Reusable Address Form Component
- * 
+ *
  * Features:
  * - Street address fields (line 1 & 2)
  * - City, State, Zip Code, Country fields
@@ -26,7 +26,7 @@ interface AddressFormProps {
  * - Read-only mode support
  * - Responsive grid layout
  */
-const AddressForm = ({ address, onChange, disabled = false, states = [] }: AddressFormProps) => {
+const AddressForm = ({ address, onChange, disabled = false, states = [] }: AddressFormProps): JSX.Element => {
   const defaultStates = ['CA', 'NY', 'TX', 'FL', 'IL', 'WA', 'PA', 'OH', 'GA', 'NC']
   const stateOptions = states.length > 0 ? states : defaultStates
 
@@ -38,7 +38,9 @@ const AddressForm = ({ address, onChange, disabled = false, states = [] }: Addre
           fullWidth
           label="Street Address 1"
           value={address.street1}
-          onChange={(e) => onChange('street1', e.target.value)}
+          onChange={e => {
+            onChange('street1', e.target.value)
+          }}
           required
           disabled={disabled}
         />
@@ -50,7 +52,9 @@ const AddressForm = ({ address, onChange, disabled = false, states = [] }: Addre
           fullWidth
           label="Street Address 2"
           value={address.street2}
-          onChange={(e) => onChange('street2', e.target.value)}
+          onChange={e => {
+            onChange('street2', e.target.value)
+          }}
           disabled={disabled}
         />
       </Grid>
@@ -61,7 +65,9 @@ const AddressForm = ({ address, onChange, disabled = false, states = [] }: Addre
           fullWidth
           label="City"
           value={address.city}
-          onChange={(e) => onChange('city', e.target.value)}
+          onChange={e => {
+            onChange('city', e.target.value)
+          }}
           required
           disabled={disabled}
         />
@@ -73,7 +79,9 @@ const AddressForm = ({ address, onChange, disabled = false, states = [] }: Addre
           fullWidth
           label="Zip Code"
           value={address.zipCode}
-          onChange={(e) => onChange('zipCode', e.target.value)}
+          onChange={e => {
+            onChange('zipCode', e.target.value)
+          }}
           required
           disabled={disabled}
         />
@@ -85,7 +93,9 @@ const AddressForm = ({ address, onChange, disabled = false, states = [] }: Addre
           fullWidth
           label="Country"
           value={address.country}
-          onChange={(e) => onChange('country', e.target.value)}
+          onChange={e => {
+            onChange('country', e.target.value)
+          }}
           required
           disabled={disabled}
         />
@@ -98,11 +108,13 @@ const AddressForm = ({ address, onChange, disabled = false, states = [] }: Addre
           select
           label="State"
           value={address.state}
-          onChange={(e) => onChange('state', e.target.value)}
+          onChange={e => {
+            onChange('state', e.target.value)
+          }}
           required
           disabled={disabled}
         >
-          {stateOptions.map((s) => (
+          {stateOptions.map(s => (
             <MenuItem key={s} value={s}>
               {s}
             </MenuItem>
@@ -114,4 +126,3 @@ const AddressForm = ({ address, onChange, disabled = false, states = [] }: Addre
 }
 
 export default AddressForm
-

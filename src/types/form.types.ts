@@ -28,4 +28,3 @@ export interface FormSection {
   subtitle: string
   fields: FormFieldConfig[]
 }
-

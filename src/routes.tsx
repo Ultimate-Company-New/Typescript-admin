@@ -1,22 +1,24 @@
-import { createBrowserRouter, RouteObject, Navigate } from 'react-router-dom'
-import { MainLayout } from './layouts/MainLayout'
+import { createBrowserRouter, type RouteObject, Navigate } from 'react-router-dom'
+
+import { APP_ROUTES } from './constants/routes'
 import DashboardLayout from './layouts/DashboardLayout'
+import { MainLayout } from './layouts/MainLayout'
 import { Login, Register, ForgotPassword, ClientLanding, NotFound } from './pages'
-import { Users, AddEditUsers, ImportUsers } from './pages/users'
+import { DeveloperDocs } from './pages/developerDocs'
 import { UserGroups, AddUserGroups, ImportUserGroups } from './pages/groups'
 import { Leads, AddLeads, ImportLeads } from './pages/leads'
-import { Promos, AddPromos, ImportPromos } from './pages/promos'
-import { Products, AddProducts, ImportProducts } from './pages/products'
+import { Messages, AddMessages, ImportMessages, MessagesList, ViewMessage } from './pages/messages'
 import { Packages, AddPackages, ImportPackages } from './pages/packages'
 import { PickupLocations, AddPickupLocations, ImportPickupLocations } from './pages/pickupLocations'
+import { Products, AddProducts, ImportProducts } from './pages/products'
+import { Promos, AddPromos, ImportPromos } from './pages/promos'
 import { PurchaseOrders, AddPurchaseOrders, ImportPurchaseOrders } from './pages/purchaseOrders'
-import { Messages, AddMessages, ImportMessages } from './pages/messages'
-import { WebTemplates, AddWebTemplates, ImportWebTemplates } from './pages/webTemplates'
 import { SalesOrders, AddSalesOrders } from './pages/salesOrders'
 import { Settings } from './pages/settings'
 import { Support } from './pages/support'
-import { DeveloperDocs } from './pages/developerDocs'
-import { APP_ROUTES } from './constants/routes'
+import { TodoList } from './pages/todo'
+import { Users, AddEditUsers, ImportUsers } from './pages/users'
+import { WebTemplates, AddWebTemplates, ImportWebTemplates } from './pages/webTemplates'
 
 /**
  * Application routes configuration
@@ -167,6 +169,14 @@ export const routes: RouteObject[] = [
         element: <Messages />,
       },
       {
+        path: 'messages/inbox',
+        element: <MessagesList />,
+      },
+      {
+        path: 'messages/view/:messageId',
+        element: <ViewMessage />,
+      },
+      {
         path: 'messages/add',
         element: <AddMessages />,
       },
@@ -197,15 +207,11 @@ export const routes: RouteObject[] = [
       // Placeholder routes for navbar items
       {
         path: 'todo',
-        element: <div>Todo - Coming Soon</div>,
+        element: <TodoList />,
       },
       {
         path: 'calendar',
         element: <div>Calendar - Coming Soon</div>,
-      },
-      {
-        path: 'messages',
-        element: <div>Messages - Coming Soon</div>,
       },
       {
         path: 'notifications',
@@ -230,4 +236,3 @@ export const routes: RouteObject[] = [
 const router = createBrowserRouter(routes)
 
 export default router
-

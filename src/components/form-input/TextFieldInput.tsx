@@ -1,5 +1,6 @@
-import { TextField, TextFieldProps } from '@mui/material'
 import { forwardRef } from 'react'
+
+import { TextField, type TextFieldProps } from '@mui/material'
 
 export interface TextFieldInputProps extends Omit<TextFieldProps, 'variant' | 'margin'> {
   maxLength?: number
@@ -13,38 +14,27 @@ export interface TextFieldInputProps extends Omit<TextFieldProps, 'variant' | 'm
  */
 const TextFieldInput = forwardRef<HTMLDivElement, TextFieldInputProps>(
   (
-    {
-      maxLength,
-      variant = 'outlined',
-      margin = 'dense',
-      fullWidth = true,
-      InputLabelProps,
-      inputProps,
-      ...props
-    },
-    ref
-  ) => {
-    return (
-      <TextField
-        ref={ref}
-        variant={variant}
-        margin={margin}
-        fullWidth={fullWidth}
-        InputLabelProps={{
-          shrink: true,
-          ...InputLabelProps,
-        }}
-        inputProps={{
-          maxLength,
-          ...inputProps,
-        }}
-        {...props}
-      />
-    )
-  }
+    { maxLength, variant = 'outlined', margin = 'dense', fullWidth = true, InputLabelProps, inputProps, ...props },
+    ref,
+  ) => (
+    <TextField
+      ref={ref}
+      variant={variant}
+      margin={margin}
+      fullWidth={fullWidth}
+      InputLabelProps={{
+        shrink: true,
+        ...InputLabelProps,
+      }}
+      inputProps={{
+        maxLength,
+        ...inputProps,
+      }}
+      {...props}
+    />
+  ),
 )
 
 TextFieldInput.displayName = 'TextFieldInput'
 
 export default TextFieldInput
-

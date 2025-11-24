@@ -1,6 +1,7 @@
-import { TextField, TextFieldProps, IconButton, InputAdornment } from '@mui/material'
-import { Visibility, VisibilityOff } from '@mui/icons-material'
 import { forwardRef, useState } from 'react'
+
+import { Visibility, VisibilityOff } from '@mui/icons-material'
+import { TextField, type TextFieldProps, IconButton, InputAdornment } from '@mui/material'
 
 export interface PasswordInputProps extends Omit<TextFieldProps, 'variant' | 'margin' | 'type'> {
   maxLength?: number
@@ -25,15 +26,15 @@ const PasswordInput = forwardRef<HTMLDivElement, PasswordInputProps>(
       inputProps,
       ...props
     },
-    ref
+    ref,
   ) => {
     const [showPassword, setShowPassword] = useState(false)
 
-    const handleTogglePassword = () => {
-      setShowPassword((prev) => !prev)
+    const handleTogglePassword = (): void => {
+      setShowPassword(prev => !prev)
     }
 
-    const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
+    const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>): void => {
       event.preventDefault()
     }
 
@@ -69,10 +70,9 @@ const PasswordInput = forwardRef<HTMLDivElement, PasswordInputProps>(
         {...props}
       />
     )
-  }
+  },
 )
 
 PasswordInput.displayName = 'PasswordInput'
 
 export default PasswordInput
-

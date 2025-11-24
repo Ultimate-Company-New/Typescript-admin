@@ -1,5 +1,17 @@
 import { useState, useCallback } from 'react'
+
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'react-toastify'
+
+import {
+  CloudUpload as UploadIcon,
+  Download as DownloadIcon,
+  GridOn as GridIcon,
+  Code as JsonIcon,
+  Delete as DeleteIcon,
+  Send as SendIcon,
+  Info as InfoIcon,
+} from '@mui/icons-material'
 import {
   Container,
   Box,
@@ -17,20 +29,11 @@ import {
   IconButton,
   Tooltip,
 } from '@mui/material'
-import {
-  CloudUpload as UploadIcon,
-  Download as DownloadIcon,
-  GridOn as GridIcon,
-  Code as JsonIcon,
-  Delete as DeleteIcon,
-  Send as SendIcon,
-  Info as InfoIcon,
-} from '@mui/icons-material'
-import { DataGrid, GridColDef } from '@mui/x-data-grid'
-import { toast } from 'react-toastify'
+import { DataGrid, type GridColDef } from '@mui/x-data-grid'
+
 import { Header, Subheader } from '../../components'
 import { APP_ROUTES } from '../../constants/routes'
-import '../../styles/UserGroups.scss'
+import styles from './UserGroups.module.scss'
 
 /**
  * Interface for parsed user group data from Excel/CSV
@@ -101,7 +104,7 @@ const ImportUserGroups = () => {
 
     // Convert to CSV
     const headers = Object.keys(templateData[0]).join(',')
-    const rows = templateData.map((row) => Object.values(row).join(','))
+    const rows = templateData.map(row => Object.values(row).join(','))
     const csv = [headers, ...rows].join('\n')
 
     // Download
@@ -121,31 +124,28 @@ const ImportUserGroups = () => {
   /**
    * Handle file upload and parse CSV/Excel
    */
-  const handleFileUpload = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const uploadedFile = event.target.files?.[0]
-      if (!uploadedFile) return
+  const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const uploadedFile = event.target.files?.[0]
+    if (!uploadedFile) return
 
-      // Validate file type
-      const validTypes = [
-        'text/csv',
-        'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      ]
-      if (
-        !validTypes.includes(uploadedFile.type) &&
-        !uploadedFile.name.endsWith('.csv') &&
-        !uploadedFile.name.endsWith('.xlsx')
-      ) {
-        toast.error('Please upload a valid CSV or Excel file')
-        return
-      }
+    // Validate file type
+    const validTypes = [
+      'text/csv',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    ]
+    if (
+      !validTypes.includes(uploadedFile.type) &&
+      !uploadedFile.name.endsWith('.csv') &&
+      !uploadedFile.name.endsWith('.xlsx')
+    ) {
+      toast.error('Please upload a valid CSV or Excel file')
+      return
+    }
 
-      setFile(uploadedFile)
-      parseFile(uploadedFile)
-    },
-    []
-  )
+    setFile(uploadedFile)
+    parseFile(uploadedFile)
+  }, [])
 
   /**
    * Parse CSV/Excel file
@@ -154,10 +154,10 @@ const ImportUserGroups = () => {
     setIsLoading(true)
     const reader = new FileReader()
 
-    reader.onload = (e) => {
+    reader.onload = e => {
       try {
         const text = e.target?.result as string
-        const lines = text.split('\n').filter((line) => line.trim())
+        const lines = text.split('\n').filter(line => line.trim())
 
         if (lines.length < 2) {
           toast.error('File is empty or invalid')
@@ -166,11 +166,11 @@ const ImportUserGroups = () => {
         }
 
         // Parse CSV
-        const headers = lines[0].split(',').map((h) => h.trim())
+        const headers = lines[0].split(',').map(h => h.trim())
         const parsedData: ImportUserGroupData[] = []
 
         for (let i = 1; i < Math.min(lines.length, maxRecords + 1); i++) {
-          const values = lines[i].split(',').map((v) => v.trim())
+          const values = lines[i].split(',').map(v => v.trim())
           const errors: string[] = []
 
           // Validate required fields
@@ -178,9 +178,7 @@ const ImportUserGroups = () => {
           if (!values[1]) errors.push('Description is required')
 
           // Parse user IDs
-          const userIds = values[3]
-            ? values[3].split(';').map((id) => parseInt(id.trim()))
-            : []
+          const userIds = values[3] ? values[3].split(';').map(id => parseInt(id.trim())) : []
 
           if (userIds.length === 0) {
             errors.push('At least one user ID is required')
@@ -226,17 +224,15 @@ const ImportUserGroups = () => {
   /**
    * Generate JSON structure for API
    */
-  const generateImportJSON = (): BulkUserGroupImportRequest => {
-    return {
-      maxRecords,
-      userGroups: importData.map((group) => ({
-        name: group.name,
-        description: group.description,
-        notes: group.notes,
-        userIds: group.userIds,
-      })),
-    }
-  }
+  const generateImportJSON = (): BulkUserGroupImportRequest => ({
+    maxRecords,
+    userGroups: importData.map(group => ({
+      name: group.name,
+      description: group.description,
+      notes: group.notes,
+      userIds: group.userIds,
+    })),
+  })
 
   /**
    * Submit bulk import to API
@@ -248,9 +244,7 @@ const ImportUserGroups = () => {
     }
 
     // Check for errors
-    const hasErrors = importData.some(
-      (group) => group.errors && group.errors.length > 0
-    )
+    const hasErrors = importData.some(group => group.errors && group.errors.length > 0)
     if (hasErrors) {
       toast.error('Please fix validation errors before submitting')
       return
@@ -264,7 +258,7 @@ const ImportUserGroups = () => {
       console.log('JSON to be sent to API:', JSON.stringify(jsonData, null, 2))
 
       // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      await new Promise(resolve => setTimeout(resolve, 1000))
 
       toast.success(`Successfully imported ${importData.length} user groups!`)
 
@@ -315,13 +309,13 @@ const ImportUserGroups = () => {
       width: 120,
       align: 'center',
       headerAlign: 'center',
-      valueGetter: (value) => (Array.isArray(value) ? value.length : 0),
+      valueGetter: value => (Array.isArray(value) ? value.length : 0),
     },
     {
       field: 'errors',
       headerName: 'Status',
       width: 120,
-      renderCell: (params) => {
+      renderCell: params => {
         if (params.row.errors && params.row.errors.length > 0) {
           return (
             <Tooltip title={params.row.errors.join(', ')}>
@@ -384,12 +378,7 @@ const ImportUserGroups = () => {
             className="import-user-groups-page__action-button"
           >
             Upload File
-            <input
-              type="file"
-              hidden
-              accept=".csv,.xlsx,.xls"
-              onChange={handleFileUpload}
-            />
+            <input type="file" hidden accept=".csv,.xlsx,.xls" onChange={handleFileUpload} />
           </Button>
 
           <FormControl className="import-user-groups-page__max-records-select">
@@ -397,7 +386,9 @@ const ImportUserGroups = () => {
             <Select
               value={maxRecords}
               label="Max Records"
-              onChange={(e) => setMaxRecords(e.target.value as number)}
+              onChange={e => {
+                setMaxRecords(e.target.value as number)
+              }}
               disabled={isLoading}
             >
               <MenuItem value={25}>25</MenuItem>
@@ -437,11 +428,7 @@ const ImportUserGroups = () => {
             severity="info"
             className="import-user-groups-page__file-alert"
             action={
-              <IconButton
-                size="small"
-                onClick={handleClearFile}
-                disabled={isLoading}
-              >
+              <IconButton size="small" onClick={handleClearFile} disabled={isLoading}>
                 <DeleteIcon fontSize="small" />
               </IconButton>
             }
@@ -456,9 +443,7 @@ const ImportUserGroups = () => {
         {importData.length > 0 && (
           <Paper className="import-user-groups-page__preview-paper">
             <Box className="import-user-groups-page__preview-header">
-              <Typography variant="h6">
-                Data Preview ({importData.length} records)
-              </Typography>
+              <Typography variant="h6">Data Preview ({importData.length} records)</Typography>
             </Box>
 
             {viewMode === 'grid' ? (
@@ -466,25 +451,21 @@ const ImportUserGroups = () => {
                 <DataGrid
                   rows={importData}
                   columns={columns}
-                  getRowId={(row) => row.rowNumber}
+                  getRowId={row => row.rowNumber}
                   pageSizeOptions={[10, 25, 50, 100]}
                   initialState={{
                     pagination: { paginationModel: { pageSize: 25 } },
                   }}
                   disableRowSelectionOnClick
                   autoHeight
-                  getRowClassName={(params) =>
-                    params.row.errors && params.row.errors.length > 0
-                      ? 'import-user-groups-page__error-row'
-                      : ''
+                  getRowClassName={params =>
+                    params.row.errors && params.row.errors.length > 0 ? 'import-user-groups-page__error-row' : ''
                   }
                 />
               </Box>
             ) : (
               <Box className="import-user-groups-page__json-container">
-                <pre className="import-user-groups-page__json-pre">
-                  {JSON.stringify(generateImportJSON(), null, 2)}
-                </pre>
+                <pre className="import-user-groups-page__json-pre">{JSON.stringify(generateImportJSON(), null, 2)}</pre>
               </Box>
             )}
 
@@ -492,7 +473,9 @@ const ImportUserGroups = () => {
             <Box className="import-user-groups-page__submit-container">
               <Button
                 variant="outlined"
-                onClick={() => navigate(APP_ROUTES.DASHBOARD.GROUPS)}
+                onClick={() => {
+                  navigate(APP_ROUTES.DASHBOARD.GROUPS)
+                }}
                 disabled={isLoading}
               >
                 Cancel
@@ -505,9 +488,7 @@ const ImportUserGroups = () => {
                 disabled={isLoading}
                 className="import-user-groups-page__submit-button"
               >
-                {isLoading
-                  ? 'Importing...'
-                  : `Import ${importData.length} Groups`}
+                {isLoading ? 'Importing...' : `Import ${importData.length} Groups`}
               </Button>
             </Box>
           </Paper>
@@ -521,21 +502,11 @@ const ImportUserGroups = () => {
               No file uploaded
             </Typography>
             <Typography variant="body2" color="text.secondary" paragraph>
-              Download the template, fill in your data, and upload the file to
-              get started
+              Download the template, fill in your data, and upload the file to get started
             </Typography>
-            <Button
-              variant="contained"
-              component="label"
-              startIcon={<UploadIcon />}
-            >
+            <Button variant="contained" component="label" startIcon={<UploadIcon />}>
               Upload File
-              <input
-                type="file"
-                hidden
-                accept=".csv,.xlsx,.xls"
-                onChange={handleFileUpload}
-              />
+              <input type="file" hidden accept=".csv,.xlsx,.xls" onChange={handleFileUpload} />
             </Button>
           </Paper>
         )}
@@ -545,4 +516,3 @@ const ImportUserGroups = () => {
 }
 
 export default ImportUserGroups
-

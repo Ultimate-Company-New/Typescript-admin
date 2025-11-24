@@ -28,9 +28,31 @@ export interface PaginationResponseModel<T> {
   totalCount: number
 }
 
+/**
+ * Base pagination response model matching Spring API structure
+ */
+export interface PaginationBaseResponseModel<T> {
+  data: T[]
+  totalDataCount: number
+}
+
 export interface GridCheckbox {
   label: string
   checked: boolean
   onCheckboxChange: (event: React.ChangeEvent<HTMLInputElement>) => void
 }
 
+/**
+ * Base pagination request model for API calls
+ */
+export interface PaginationBaseRequestModel {
+  start: number
+  end: number
+  pageSize: number
+  includeDeleted?: boolean
+  includeExpired?: boolean
+  sortField?: string
+  sortOrder?: 'asc' | 'desc'
+  filters?: unknown[]
+  [key: string]: unknown
+}

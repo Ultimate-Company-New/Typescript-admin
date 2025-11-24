@@ -12,7 +12,7 @@ export const APP_ROUTES = {
   CLIENT_LANDING: '/client-landing',
   CONFIRM_EMAIL: '/confirm-email',
   NOT_FOUND: '/404',
-  
+
   // Dashboard routes
   DASHBOARD: {
     ROOT: '/dashboard',
@@ -41,6 +41,7 @@ export const APP_ROUTES = {
     ADD_PURCHASE_ORDER: '/dashboard/purchase-orders/add',
     IMPORT_PURCHASE_ORDERS: '/dashboard/purchase-orders/import',
     MESSAGES: '/dashboard/messages',
+    MESSAGES_INBOX: '/dashboard/messages/inbox',
     ADD_MESSAGE: '/dashboard/messages/add',
     IMPORT_MESSAGES: '/dashboard/messages/import',
     WEB_TEMPLATES: '/dashboard/web-templates',
@@ -66,4 +67,3 @@ export const getLastPartFromRoute = (route: string): string => {
   const parts = route.split('/')
   return parts[parts.length - 1]
 }
-

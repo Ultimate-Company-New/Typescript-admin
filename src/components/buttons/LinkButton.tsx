@@ -1,5 +1,6 @@
-import { Button, ButtonProps } from '@mui/material'
 import { forwardRef } from 'react'
+
+import { Button, type ButtonProps } from '@mui/material'
 
 export interface LinkButtonProps extends Omit<ButtonProps, 'variant'> {
   label: string
@@ -13,36 +14,24 @@ export interface LinkButtonProps extends Omit<ButtonProps, 'variant'> {
  */
 const LinkButton = forwardRef<HTMLButtonElement, LinkButtonProps>(
   (
-    {
-      label,
-      href,
-      variant = 'outlined',
-      color = 'primary',
-      size = 'large',
-      fullWidth = false,
-      onClick,
-      ...props
-    },
-    ref
-  ) => {
-    return (
-      <Button
-        ref={ref}
-        variant={variant}
-        color={color}
-        size={size}
-        fullWidth={fullWidth}
-        onClick={onClick}
-        {...(href && { href })}
-        {...props}
-      >
-        {label}
-      </Button>
-    )
-  }
+    { label, href, variant = 'outlined', color = 'primary', size = 'large', fullWidth = false, onClick, ...props },
+    ref,
+  ) => (
+    <Button
+      ref={ref}
+      variant={variant}
+      color={color}
+      size={size}
+      fullWidth={fullWidth}
+      onClick={onClick}
+      {...(href && { href })}
+      {...props}
+    >
+      {label}
+    </Button>
+  ),
 )
 
 LinkButton.displayName = 'LinkButton'
 
 export default LinkButton
-

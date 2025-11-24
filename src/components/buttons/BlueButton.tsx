@@ -1,5 +1,6 @@
-import { Button, ButtonProps, Link } from '@mui/material'
 import { forwardRef } from 'react'
+
+import { Button, type ButtonProps, Link } from '@mui/material'
 
 export interface BlueButtonProps extends Omit<ButtonProps, 'color' | 'variant'> {
   label: string
@@ -14,17 +15,8 @@ export interface BlueButtonProps extends Omit<ButtonProps, 'color' | 'variant'> 
  */
 const BlueButton = forwardRef<HTMLButtonElement, BlueButtonProps>(
   (
-    {
-      label,
-      href,
-      color = 'primary',
-      variant = 'contained',
-      size = 'large',
-      fullWidth = false,
-      onClick,
-      ...props
-    },
-    ref
+    { label, href, color = 'primary', variant = 'contained', size = 'large', fullWidth = false, onClick, ...props },
+    ref,
   ) => {
     const button = (
       <Button
@@ -51,10 +43,9 @@ const BlueButton = forwardRef<HTMLButtonElement, BlueButtonProps>(
     }
 
     return button
-  }
+  },
 )
 
 BlueButton.displayName = 'BlueButton'
 
 export default BlueButton
-

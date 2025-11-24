@@ -1,5 +1,17 @@
 import { useState, useCallback } from 'react'
+
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'react-toastify'
+
+import {
+  CloudUpload as UploadIcon,
+  Download as DownloadIcon,
+  GridOn as GridIcon,
+  Code as JsonIcon,
+  Delete as DeleteIcon,
+  Send as SendIcon,
+  Info as InfoIcon,
+} from '@mui/icons-material'
 import {
   Container,
   Box,
@@ -17,20 +29,11 @@ import {
   IconButton,
   Tooltip,
 } from '@mui/material'
-import {
-  CloudUpload as UploadIcon,
-  Download as DownloadIcon,
-  GridOn as GridIcon,
-  Code as JsonIcon,
-  Delete as DeleteIcon,
-  Send as SendIcon,
-  Info as InfoIcon,
-} from '@mui/icons-material'
-import { DataGrid, GridColDef } from '@mui/x-data-grid'
-import { toast } from 'react-toastify'
+import { DataGrid, type GridColDef } from '@mui/x-data-grid'
+
 import { Header, Subheader } from '../../components'
 import { APP_ROUTES } from '../../constants/routes'
-import '../../styles/Users.scss'
+import styles from './Users.module.scss'
 
 /**
  * Interface for parsed user data from Excel/CSV
@@ -139,7 +142,7 @@ const ImportUsers = () => {
 
     // Convert to CSV
     const headers = Object.keys(templateData[0]).join(',')
-    const rows = templateData.map((row) => Object.values(row).join(','))
+    const rows = templateData.map(row => Object.values(row).join(','))
     const csv = [headers, ...rows].join('\n')
 
     // Download
@@ -170,8 +173,8 @@ const ImportUsers = () => {
         'application/vnd.ms-excel',
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       ]
-      if (!validTypes.includes(uploadedFile.type) && 
-          !uploadedFile.name.endsWith('.csv') && 
+      if (!validTypes.includes(uploadedFile.type) &&
+          !uploadedFile.name.endsWith('.csv') &&
           !uploadedFile.name.endsWith('.xlsx')) {
         toast.error('Please upload a valid CSV or Excel file')
         return
@@ -180,7 +183,7 @@ const ImportUsers = () => {
       setFile(uploadedFile)
       parseFile(uploadedFile)
     },
-    []
+    [],
   )
 
   /**
@@ -190,10 +193,10 @@ const ImportUsers = () => {
     setIsLoading(true)
     const reader = new FileReader()
 
-    reader.onload = (e) => {
+    reader.onload = e => {
       try {
         const text = e.target?.result as string
-        const lines = text.split('\n').filter((line) => line.trim())
+        const lines = text.split('\n').filter(line => line.trim())
 
         if (lines.length < 2) {
           toast.error('File is empty or invalid')
@@ -202,11 +205,11 @@ const ImportUsers = () => {
         }
 
         // Parse CSV
-        const headers = lines[0].split(',').map((h) => h.trim())
+        const headers = lines[0].split(',').map(h => h.trim())
         const parsedData: ImportUserData[] = []
 
         for (let i = 1; i < Math.min(lines.length, maxRecords + 1); i++) {
-          const values = lines[i].split(',').map((v) => v.trim())
+          const values = lines[i].split(',').map(v => v.trim())
           const errors: string[] = []
 
           // Validate required fields
@@ -218,10 +221,10 @@ const ImportUsers = () => {
 
           // Parse permission and group IDs
           const permissionIds = values[12]
-            ? values[12].split(';').map((id) => parseInt(id.trim()))
+            ? values[12].split(';').map(id => parseInt(id.trim()))
             : []
           const groupIds = values[13]
-            ? values[13].split(';').map((id) => parseInt(id.trim()))
+            ? values[13].split(';').map(id => parseInt(id.trim()))
             : []
 
           parsedData.push({
@@ -274,30 +277,28 @@ const ImportUsers = () => {
   /**
    * Generate JSON structure for API
    */
-  const generateImportJSON = (): BulkUserImportRequest => {
-    return {
-      maxRecords,
-      users: importData.map((user) => ({
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        phone: user.phone,
-        role: user.role,
-        dob: user.dob,
-        address: {
-          street1: user.street1,
-          street2: user.street2,
-          city: user.city,
-          state: user.state,
-          zipCode: user.zipCode,
-          country: user.country || 'USA',
-          isPrimary: true,
-        },
-        permissionIds: user.permissionIds,
-        selectedGroupIds: user.groupIds,
-      })),
-    }
-  }
+  const generateImportJSON = (): BulkUserImportRequest => ({
+    maxRecords,
+    users: importData.map(user => ({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      phone: user.phone,
+      role: user.role,
+      dob: user.dob,
+      address: {
+        street1: user.street1,
+        street2: user.street2,
+        city: user.city,
+        state: user.state,
+        zipCode: user.zipCode,
+        country: user.country || 'USA',
+        isPrimary: true,
+      },
+      permissionIds: user.permissionIds,
+      selectedGroupIds: user.groupIds,
+    })),
+  })
 
   /**
    * Submit bulk import to API
@@ -309,7 +310,7 @@ const ImportUsers = () => {
     }
 
     // Check for errors
-    const hasErrors = importData.some((user) => user.errors && user.errors.length > 0)
+    const hasErrors = importData.some(user => user.errors && user.errors.length > 0)
     if (hasErrors) {
       toast.error('Please fix validation errors before submitting')
       return
@@ -318,15 +319,15 @@ const ImportUsers = () => {
     setIsLoading(true)
     try {
       const jsonData = generateImportJSON()
-      
+
       // TODO: Call API endpoint
       console.log('JSON to be sent to API:', JSON.stringify(jsonData, null, 2))
-      
+
       // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
       toast.success(`Successfully imported ${importData.length} users!`)
-      
+
       // Navigate back to users grid
       setTimeout(() => {
         navigate(APP_ROUTES.DASHBOARD.USERS)
@@ -394,7 +395,7 @@ const ImportUsers = () => {
       field: 'errors',
       headerName: 'Status',
       width: 120,
-      renderCell: (params) => {
+      renderCell: params => {
         if (params.row.errors && params.row.errors.length > 0) {
           return (
             <Tooltip title={params.row.errors.join(', ')}>
@@ -473,7 +474,9 @@ const ImportUsers = () => {
             <Select
               value={maxRecords}
               label="Max Records"
-              onChange={(e) => setMaxRecords(e.target.value as number)}
+              onChange={e => {
+                setMaxRecords(e.target.value as number)
+              }}
               disabled={isLoading}
             >
               <MenuItem value={25}>25</MenuItem>
@@ -543,17 +546,17 @@ const ImportUsers = () => {
                 <DataGrid
                   rows={importData}
                   columns={columns}
-                  getRowId={(row) => row.rowNumber}
+                  getRowId={row => row.rowNumber}
                   pageSizeOptions={[10, 25, 50, 100]}
                   initialState={{
                     pagination: { paginationModel: { pageSize: 25 } },
                   }}
                   disableRowSelectionOnClick
                   autoHeight
-                  getRowClassName={(params) =>
-                    params.row.errors && params.row.errors.length > 0
+                  getRowClassName={params =>
+                    (params.row.errors && params.row.errors.length > 0
                       ? 'import-users-page__error-row'
-                      : ''
+                      : '')
                   }
                 />
               </Box>
@@ -569,7 +572,9 @@ const ImportUsers = () => {
             <Box className="import-users-page__submit-container">
               <Button
                 variant="outlined"
-                onClick={() => navigate(APP_ROUTES.DASHBOARD.USERS)}
+                onClick={() => {
+                  navigate(APP_ROUTES.DASHBOARD.USERS)
+                }}
                 disabled={isLoading}
               >
                 Cancel

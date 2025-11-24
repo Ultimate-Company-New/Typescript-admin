@@ -1,29 +1,15 @@
 import { useState, useEffect, useMemo } from 'react'
+
 import { useNavigate } from 'react-router-dom'
-import { 
-  Container, 
-  Box, 
-  Stack, 
-  Typography, 
-  Grid, 
-  Card, 
-  CardMedia, 
-  CardContent, 
-  CardActionArea 
-} from '@mui/material'
 import { toast } from 'react-toastify'
 
-import {
-  Header,
-  Subheader,
-  TextFieldInput,
-  Logo,
-  PaginationComponent,
-} from '../../components'
+import { Container, Box, Stack, Typography, Grid, Card, CardMedia, CardContent, CardActionArea } from '@mui/material'
+
 import { loginApi } from '../../api/loginApi'
-import { ClientResponseModel } from '../../models/LoginModels'
+import { Header, Subheader, TextFieldInput, Logo, PaginationComponent } from '../../components'
 import { APP_ROUTES } from '../../constants/routes'
-import '../../styles/Login.scss'
+import { type ClientResponseModel } from '../../models/LoginModels'
+import styles from './Login.module.scss'
 
 interface CarrierGridItem {
   id: number
@@ -52,7 +38,7 @@ const CarrierGrid = ({ carriers, onCarrierClick }: CarrierGridProps) => {
 
   if (carriers.length === 0) {
     return (
-      <Box className="carrier-grid__empty-container">
+      <Box className={styles['carrier-grid__empty-container']}>
         <Typography variant="h6" color="text.secondary">
           No carriers found
         </Typography>
@@ -62,37 +48,31 @@ const CarrierGrid = ({ carriers, onCarrierClick }: CarrierGridProps) => {
 
   return (
     <Grid container spacing={3}>
-      {carriers.map((carrier) => (
+      {carriers.map(carrier => (
         <Grid item xs={12} sm={6} md={4} key={carrier.id}>
           <Card
-            className={`carrier-grid__card ${selectedId === carrier.id ? 'carrier-grid__card--selected' : 'carrier-grid__card--unselected'}`}
+            className={`${styles['carrier-grid__card']} ${selectedId === carrier.id ? styles['carrier-grid__card--selected'] : styles['carrier-grid__card--unselected']}`}
             sx={{ borderColor: 'primary.main' }}
             data-test-id={`carrier-card-${carrier.id}`}
           >
             <CardActionArea
-              onClick={() => handleClick(carrier)}
-              className="carrier-grid__card-action-area"
+              onClick={() => {
+                handleClick(carrier)
+              }}
+              className={styles['carrier-grid__card-action-area']}
             >
-              <CardMedia
-                component="div"
-                className="carrier-grid__card-media"
-              >
+              <CardMedia component="div" className={styles['carrier-grid__card-media']}>
                 {carrier.logo ? (
-                  <Box
-                    component="img"
-                    src={carrier.logo}
-                    alt={carrier.name}
-                    className="carrier-grid__card-logo"
-                  />
+                  <Box component="img" src={carrier.logo} alt={carrier.name} className={styles['carrier-grid__card-logo']} />
                 ) : (
-                  <Box className="carrier-grid__card-placeholder">
+                  <Box className={styles['carrier-grid__card-placeholder']}>
                     <Typography variant="h4" color="text.secondary">
                       {carrier.name.charAt(0).toUpperCase()}
                     </Typography>
                   </Box>
                 )}
               </CardMedia>
-              <CardContent className="carrier-grid__card-content">
+              <CardContent className={styles['carrier-grid__card-content']}>
                 <Typography variant="h6" component="div" textAlign="center">
                   {carrier.name}
                 </Typography>
@@ -116,14 +96,14 @@ const ClientLanding = () => {
   const [searchText, setSearchText] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
-  
+
   const pageSize = 9 // 3x3 grid
 
   // Route protection: Check authentication and load clients from localStorage on mount
   useEffect(() => {
     const storedClients = localStorage.getItem('clients')
     const storedLoginName = localStorage.getItem('loginName')
-    
+
     // Redirect to login if user is not authenticated
     if (!storedClients || !storedLoginName) {
       toast.error('Please login to access this page.')
@@ -133,14 +113,14 @@ const ClientLanding = () => {
 
     try {
       const clientsData: ClientResponseModel[] = JSON.parse(storedClients)
-      
+
       // Validate that we have at least one client
       if (!clientsData || clientsData.length === 0) {
         toast.error('No clients available. Please contact support.')
         navigate(APP_ROUTES.LOGIN, { replace: true })
         return
       }
-      
+
       setClients(clientsData)
     } catch (error) {
       console.error('Failed to parse clients data:', error)
@@ -156,9 +136,7 @@ const ClientLanding = () => {
     }
 
     const searchLower = searchText.toLowerCase()
-    return clients.filter((client) =>
-      client.name.toLowerCase().includes(searchLower)
-    )
+    return clients.filter(client => client.name.toLowerCase().includes(searchLower))
   }, [clients, searchText])
 
   // Client-side pagination
@@ -188,11 +166,11 @@ const ClientLanding = () => {
   // Handle client selection
   const handleClientClick = async (clientId: number, apiKey: string) => {
     setIsLoading(true)
-    
+
     try {
       // Get the selected client's login name (email)
       const selectedClient = clients.find(c => c.clientId === clientId)
-      
+
       if (!selectedClient) {
         toast.error('Client not found')
         return
@@ -208,9 +186,9 @@ const ClientLanding = () => {
       localStorage.setItem('authToken', token)
       localStorage.setItem('selectedCarrierId', clientId.toString())
       localStorage.setItem('selectedCarrierName', selectedClient.name)
-      
+
       toast.success(`Welcome to ${selectedClient.name}!`)
-      
+
       // Navigate to dashboard
       navigate(APP_ROUTES.DASHBOARD.ROOT)
     } catch (error) {
@@ -222,7 +200,7 @@ const ClientLanding = () => {
   }
 
   // Convert to grid items
-  const gridItems: CarrierGridItem[] = paginatedClients.map((client) => ({
+  const gridItems: CarrierGridItem[] = paginatedClients.map(client => ({
     id: client.clientId,
     name: client.name,
     logo: client.logo,
@@ -231,10 +209,10 @@ const ClientLanding = () => {
 
   return (
     <Container maxWidth="lg">
-      <Box className="client-landing__container">
+      <Box className={styles['client-landing__container']}>
         <Stack spacing={4}>
           {/* Logo */}
-          <Box className="client-landing__logo-container">
+          <Box className={styles['client-landing__logo-container']}>
             <Logo size={80} />
           </Box>
 
@@ -245,7 +223,7 @@ const ClientLanding = () => {
           </Box>
 
           {/* Search Bar */}
-          <Box className="client-landing__search-container">
+          <Box className={styles['client-landing__search-container']}>
             <TextFieldInput
               label="Search Clients"
               name="searchText"
@@ -260,17 +238,15 @@ const ClientLanding = () => {
           </Box>
 
           {/* Client Grid */}
-          <Box className={`client-landing__grid-container ${isLoading ? 'client-landing__grid-container--loading' : 'client-landing__grid-container--active'}`}>
+          <Box
+            className={`${styles['client-landing__grid-container']} ${isLoading ? styles['client-landing__grid-container--loading'] : styles['client-landing__grid-container--active']}`}
+          >
             <CarrierGrid carriers={gridItems} onCarrierClick={handleClientClick} />
           </Box>
 
           {/* Divider before pagination */}
           {filteredClients.length > pageSize && (
-            <Box 
-              component="hr" 
-              className="client-landing__divider"
-              sx={{ borderColor: 'divider' }}
-            />
+            <Box component="hr" className={styles['client-landing__divider']} sx={{ borderColor: 'divider' }} />
           )}
 
           {/* Pagination */}
@@ -285,7 +261,7 @@ const ClientLanding = () => {
 
           {/* Empty State */}
           {filteredClients.length === 0 && searchText && (
-            <Box textAlign="center" className="client-landing__empty-state">
+            <Box textAlign="center" className={styles['client-landing__empty-state']}>
               <Typography variant="h6" color="text.secondary" gutterBottom>
                 No clients found matching "{searchText}"
               </Typography>
@@ -301,4 +277,3 @@ const ClientLanding = () => {
 }
 
 export default ClientLanding
-

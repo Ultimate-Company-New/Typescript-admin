@@ -1,5 +1,6 @@
-import { Typography, TypographyProps } from '@mui/material'
-import { forwardRef, ReactNode } from 'react'
+import { forwardRef, type ReactNode } from 'react'
+
+import { Typography, type TypographyProps } from '@mui/material'
 
 export interface BodyTextProps extends Omit<TypographyProps, 'variant' | 'dangerouslySetInnerHTML'> {
   text?: string
@@ -14,18 +15,8 @@ export interface BodyTextProps extends Omit<TypographyProps, 'variant' | 'danger
  * Supports both text prop and children for flexibility
  */
 const BodyText = forwardRef<HTMLElement, BodyTextProps>(
-  (
-    {
-      text,
-      children,
-      variant = 'body1',
-      color = 'textPrimary',
-      enableHtml = false,
-      ...props
-    },
-    ref
-  ) => {
-    const content = text || children
+  ({ text, children, variant = 'body1', color = 'textPrimary', enableHtml = false, ...props }, ref) => {
+    const content = text ?? children
 
     if (enableHtml && typeof content === 'string') {
       return (
@@ -44,10 +35,9 @@ const BodyText = forwardRef<HTMLElement, BodyTextProps>(
         {content}
       </Typography>
     )
-  }
+  },
 )
 
 BodyText.displayName = 'BodyText'
 
 export default BodyText
-

@@ -32,7 +32,7 @@ export const registrationSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
   confirmPassword: z.string().min(1, 'Please confirm your password'),
-}).refine((data) => data.password === data.confirmPassword, {
+}).refine(data => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ['confirmPassword'],
 })
@@ -46,4 +46,3 @@ export const passwordResetSchema = z.object({
 export type LoginFormData = z.infer<typeof loginSchema>
 export type RegistrationFormData = z.infer<typeof registrationSchema>
 export type PasswordResetFormData = z.infer<typeof passwordResetSchema>
-

@@ -1,5 +1,6 @@
-import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios'
+import axios, { type AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from 'axios'
 import { toast } from 'react-toastify'
+
 import type { ApiLog } from '../components/DevLogger'
 
 /**
@@ -9,8 +10,8 @@ import type { ApiLog } from '../components/DevLogger'
  */
 const getBaseUrl = (): string => {
   // Check if we're running on localhost
-  const isLocalhost = 
-    window.location.hostname === 'localhost' || 
+  const isLocalhost =
+    window.location.hostname === 'localhost' ||
     window.location.hostname === '127.0.0.1' ||
     window.location.hostname === ''
 
@@ -19,7 +20,7 @@ const getBaseUrl = (): string => {
   }
 
   // Use environment variable or default for production
-  return import.meta.env.VITE_API_BASE_URL || 'http://localhost:4433/api'
+  return (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:4433/api'
 }
 
 const BASE_URL = getBaseUrl()
@@ -39,58 +40,73 @@ const axiosInstance: AxiosInstance = axios.create({
  * Helper function to generate cURL command from Axios config
  */
 const generateCurlCommand = (config: InternalAxiosRequestConfig): string => {
-  const method = (config.method || 'GET').toUpperCase()
-  const url = `${config.baseURL}${config.url}`
-  
+  const method = (config.method ?? 'GET').toUpperCase()
+  const url = `${config.baseURL ?? ''}${config.url ?? ''}`
+
   let curl = `curl -X ${method} '${url}'`
-  
+
   // Add headers
-  if (config.headers) {
-    Object.entries(config.headers).forEach(([key, value]) => {
-      if (value && key !== 'common' && key !== 'delete' && key !== 'get' && key !== 'head' && key !== 'post' && key !== 'put' && key !== 'patch') {
-        curl += ` \\\n  -H '${key}: ${value}'`
-      }
-    })
-  }
-  
+  Object.entries(config.headers).forEach(([key, value]) => {
+    if (
+      value != null &&
+      key !== 'common' &&
+      key !== 'delete' &&
+      key !== 'get' &&
+      key !== 'head' &&
+      key !== 'post' &&
+      key !== 'put' &&
+      key !== 'patch'
+    ) {
+      curl += ` \\\n  -H '${key}: ${value}'`
+    }
+  })
+
   // Add body data
   if (config.data) {
     const dataStr = typeof config.data === 'string' ? config.data : JSON.stringify(config.data)
     curl += ` \\\n  -d '${dataStr}'`
   }
-  
+
   return curl
 }
 
 /**
  * Helper function to dispatch API log event to DevLogger
  */
-const logApiRequest = (config: InternalAxiosRequestConfig) => {
+const logApiRequest = (config: InternalAxiosRequestConfig): void => {
   try {
-    const method = (config.method || 'GET').toUpperCase()
-    const url = `${config.baseURL}${config.url}`
-    const endpoint = `${method} ${config.url}` // Unique identifier for deduplication
-    
+    const method = (config.method ?? 'GET').toUpperCase()
+    const url = `${config.baseURL ?? ''}${config.url ?? ''}`
+    const endpoint = `${method} ${config.url ?? ''}` // Unique identifier for deduplication
+
     const headers: Record<string, string> = {}
-    if (config.headers) {
-      Object.entries(config.headers).forEach(([key, value]) => {
-        if (value && typeof value === 'string' && key !== 'common' && key !== 'delete' && key !== 'get' && key !== 'head' && key !== 'post' && key !== 'put' && key !== 'patch') {
-          headers[key] = value
-        }
-      })
-    }
-    
+    Object.entries(config.headers).forEach(([key, value]) => {
+      if (
+        value != null &&
+        typeof value === 'string' &&
+        key !== 'common' &&
+        key !== 'delete' &&
+        key !== 'get' &&
+        key !== 'head' &&
+        key !== 'post' &&
+        key !== 'put' &&
+        key !== 'patch'
+      ) {
+        headers[key] = value
+      }
+    })
+
     const apiLog: ApiLog = {
       id: `${Date.now()}-${Math.random()}`,
       method,
       url,
       headers,
-      body: config.data,
+      body: config.data as unknown,
       timestamp: new Date(),
       curlCommand: generateCurlCommand(config),
       endpoint,
     }
-    
+
     // Dispatch custom event for DevLogger
     const event = new CustomEvent('api-log', { detail: apiLog })
     window.dispatchEvent(event)
@@ -102,47 +118,57 @@ const logApiRequest = (config: InternalAxiosRequestConfig) => {
 
 // Request interceptor - Add auth token if available and log requests
 axiosInstance.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
+  (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
     const token = localStorage.getItem('authToken')
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`
+    if (token != null) {
+      // Use AxiosHeaders methods to set header
+      config.headers.set('Authorization', `Bearer ${token}`)
     }
-    
+
     // Log the API request for DevLogger
     logApiRequest(config)
-    
+
     return config
   },
-  (error: AxiosError) => {
-    return Promise.reject(error)
-  }
+  (error: AxiosError) => Promise.reject(error),
 )
 
 // Response interceptor - Handle errors globally
 axiosInstance.interceptors.response.use(
-  (response) => response,
-  (error: AxiosError<{ message?: string }>) => {
+  response => response,
+  (error: AxiosError<{ error?: string; message?: string; status?: number }>) => {
     if (error.response) {
       const { status, data } = error.response
-      
-      // Extract error message from response if available
-      const errorMessage = data?.message || 'An error occurred'
-      
+
+      // Extract error message from ErrorResponseModel structure
+      // The API returns: { error: "ERROR_CODE", message: "Error description", status: 400 }
+      const errorMessage = data.message ?? data.error ?? 'An error occurred'
+
       // Handle specific status codes
       switch (status) {
+        case 400:
+          // Bad Request - show specific validation errors
+          toast.error(errorMessage)
+          break
         case 401:
-          toast.error(errorMessage || 'Unauthorized. Please log in again.')
-          localStorage.removeItem('authToken')
-          window.location.href = '/login'
+          // Unauthorized - could be invalid credentials or session expired
+          toast.error(errorMessage)
+          // Only redirect to login if it's a session expiration (not login failure)
+          if (!window.location.pathname.includes('/login')) {
+            localStorage.removeItem('authToken')
+            window.location.href = '/login'
+          }
           break
         case 403:
+          // Forbidden - user doesn't have permission
           toast.error(errorMessage || 'Access forbidden.')
           break
         case 404:
-          // Show specific message from API (e.g., "Invalid User Email")
+          // Not Found - show specific message from API (e.g., "Invalid User Email")
           toast.error(errorMessage)
           break
         case 500:
+          // Internal Server Error
           toast.error(errorMessage || 'Internal server error. Please try again later.')
           break
         default:
@@ -153,10 +179,9 @@ axiosInstance.interceptors.response.use(
     } else {
       toast.error('An unexpected error occurred.')
     }
-    
+
     return Promise.reject(error)
-  }
+  },
 )
 
 export default axiosInstance
-

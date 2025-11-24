@@ -1,17 +1,14 @@
 import { Box, Typography } from '@mui/material'
 
-const AddPackages = () => {
-  return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>
-        Add/Edit Package
-      </Typography>
-      <Typography variant="body1" color="text.secondary">
-        Package form will be implemented here.
-      </Typography>
-    </Box>
-  )
-}
+const AddPackages = () => (
+  <Box sx={{ p: 3 }}>
+    <Typography variant="h4" gutterBottom>
+      Add/Edit Package
+    </Typography>
+    <Typography variant="body1" color="text.secondary">
+      Package form will be implemented here.
+    </Typography>
+  </Box>
+)
 
 export default AddPackages
-

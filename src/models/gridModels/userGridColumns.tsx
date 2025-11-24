@@ -1,23 +1,52 @@
 import { useState, useEffect } from 'react'
-import { Avatar, Chip, Link, Tooltip, Box, IconButton, Badge } from '@mui/material'
-import { 
+
+import { format } from 'date-fns'
+
+import {
   Security as SecurityIcon,
   Group as GroupIcon,
-  LocationOn as LocationIcon
+  LocationOn as LocationIcon,
 } from '@mui/icons-material'
-import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
-import { format } from 'date-fns'
-import { chipStyles, getRandomColor } from '../components/DataGrid/gridHelpers'
-import { APP_ROUTES } from '../constants/routes'
-import { PermissionsModal, UserGroupsModal } from '../components/Users'
+import { Avatar, Chip, Link, Tooltip, Box, IconButton, Badge } from '@mui/material'
+import { type GridColDef, type GridRenderCellParams } from '@mui/x-data-grid'
+
+import { getRandomColor } from '../../components/DataGrid/gridHelpers'
+import { PermissionsModal, UserGroupsModal } from '../../components/Users'
+import { APP_ROUTES } from '../../constants/routes'
+import { type AddressResponseModel } from '../AddressModels'
+import { type UserPermissionInfo, type UserGroupResponseModel } from '../UserModels'
+
+// Chip styles mapping for different roles
+const roleChipStyles: Record<string, React.CSSProperties> = {
+  Admin: { backgroundColor: '#d32f2f',
+    color: '#fff',
+    fontWeight: 'bold',
+    borderColor: '#d32f2f' },
+  Manager: { backgroundColor: '#1976d2',
+    color: '#fff',
+    fontWeight: 'bold',
+    borderColor: '#1976d2' },
+  User: { backgroundColor: '#388e3c',
+    color: '#fff',
+    fontWeight: 'bold',
+    borderColor: '#388e3c' },
+  Guest: { backgroundColor: '#757575',
+    color: '#fff',
+    fontWeight: 'bold',
+    borderColor: '#757575' },
+  default: { backgroundColor: '#9e9e9e',
+    color: '#fff',
+    fontWeight: 'bold',
+    borderColor: '#9e9e9e' },
+}
 
 // Component to handle avatar with proper image error handling
-const UserAvatar = ({ 
-  profilePicture, 
-  firstName, 
-  lastName, 
-  userId 
-}: { 
+const UserAvatar = ({
+  profilePicture,
+  firstName,
+  lastName,
+  userId,
+}: {
   profilePicture: string | null
   firstName: string
   lastName: string
@@ -33,18 +62,24 @@ const UserAvatar = ({
 
   if (!profilePicture || imageError) {
     return (
-      <Avatar sx={{ bgcolor: avatarColor, width: 32, height: 32, fontSize: '0.875rem' }}>
+      <Avatar sx={{ bgcolor: avatarColor,
+        width: 32,
+        height: 32,
+        fontSize: '0.875rem' }}>
         {initials}
       </Avatar>
     )
   }
 
   return (
-    <Avatar 
+    <Avatar
       src={profilePicture}
       alt={`${firstName} ${lastName}`}
-      onError={() => setImageError(true)}
-      sx={{ width: 32, height: 32 }}
+      onError={() => {
+        setImageError(true)
+      }}
+      sx={{ width: 32,
+        height: 32 }}
     >
       {initials}
     </Avatar>
@@ -52,29 +87,43 @@ const UserAvatar = ({
 }
 
 // Permissions Button Component
-const PermissionsButton = ({ 
-  permissions, 
-  userName 
-}: { 
-  permissions: any[]
+const PermissionsButton = ({
+  permissions,
+  userName,
+  userEmail,
+  userId,
+}: {
+  permissions: UserPermissionInfo[]
   userName: string
+  userEmail?: string
+  userId?: number
 }) => {
   const [open, setOpen] = useState(false)
+  const permissionCount = permissions.length || 0
 
   return (
     <>
       <IconButton
         size="small"
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          setOpen(true)
+        }}
         sx={{ padding: 0.5 }}
+        data-test-id="user-permissions-button"
+        data-permission-count={permissionCount}
+        data-user-email={userEmail}
+        data-user-id={userId}
+        aria-label={`View permissions for ${userName}`}
       >
-        <Badge badgeContent={permissions?.length || 0} color="primary" max={999}>
+        <Badge badgeContent={permissionCount} color="primary" max={999}>
           <SecurityIcon fontSize="small" />
         </Badge>
       </IconButton>
       <PermissionsModal
         open={open}
-        onClose={() => setOpen(false)}
+        onClose={() => {
+          setOpen(false)
+        }}
         permissions={permissions || []}
         userName={userName}
       />
@@ -83,29 +132,40 @@ const PermissionsButton = ({
 }
 
 // User Groups Button Component
-const UserGroupsButton = ({ 
-  userGroups, 
-  userName 
-}: { 
-  userGroups: any[]
+const UserGroupsButton = ({
+  userGroups,
+  userName,
+  userId,
+}: {
+  userGroups: UserGroupResponseModel[]
   userName: string
+  userId: number
 }) => {
   const [open, setOpen] = useState(false)
+  const groupCount = userGroups.length || 0
 
   return (
     <>
       <IconButton
         size="small"
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          setOpen(true)
+        }}
         sx={{ padding: 0.5 }}
+        data-test-id="user-groups-button"
+        data-user-id={userId}
+        data-group-count={groupCount}
+        aria-label={`View groups for ${userName}`}
       >
-        <Badge badgeContent={userGroups?.length || 0} color="secondary" max={999}>
+        <Badge badgeContent={groupCount} color="secondary" max={999}>
           <GroupIcon fontSize="small" />
         </Badge>
       </IconButton>
       <UserGroupsModal
         open={open}
-        onClose={() => setOpen(false)}
+        onClose={() => {
+          setOpen(false)
+        }}
         userGroups={userGroups || []}
         userName={userName}
       />
@@ -155,7 +215,11 @@ export const getUserGridColumns = (onToggleUser?: (userId: number) => void): Gri
     align: 'center',
     headerAlign: 'center',
     renderCell: (params: GridRenderCellParams) => (
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+      <Box sx={{ display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%',
+        height: '100%' }}>
         <UserAvatar
           profilePicture={params.row.profilePicture}
           firstName={params.row.firstName}
@@ -216,22 +280,24 @@ export const getUserGridColumns = (onToggleUser?: (userId: number) => void): Gri
     renderCell: (params: GridRenderCellParams) => {
       const userName = `${params.row.firstName} ${params.row.lastName}`
       return (
-        <Box sx={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center', 
-          gap: 1, 
+        <Box sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 1,
           width: '100%',
-          height: '100%'
+          height: '100%',
         }}>
           <Chip
             label={params.value}
             size="small"
-            sx={chipStyles[params.value as keyof typeof chipStyles] || chipStyles.default}
+            sx={roleChipStyles[params.value as string] || roleChipStyles.default}
           />
           <PermissionsButton
             permissions={params.row.permissions || []}
             userName={userName}
+            userEmail={params.row.email}
+            userId={params.row.userId}
           />
         </Box>
       )
@@ -244,7 +310,7 @@ export const getUserGridColumns = (onToggleUser?: (userId: number) => void): Gri
     headerName: 'DOB',
     minWidth: 130,
     flex: 0.8,
-    valueFormatter: (value) => {
+    valueFormatter: value => {
       if (!value) return ''
       try {
         return format(new Date(value), 'do MMM yyyy')
@@ -259,8 +325,8 @@ export const getUserGridColumns = (onToggleUser?: (userId: number) => void): Gri
     field: 'phone',
     headerName: 'Phone',
     width: 160,
-    valueFormatter: (value) => {
-      if (!value) return ''
+    valueFormatter: (value: unknown) => {
+      if (!value || typeof value !== 'string') return ''
       // Format phone number: (123) - 456 - 7890
       const cleaned = value.replace(/\D/g, '')
       if (cleaned.length === 10) {
@@ -285,7 +351,7 @@ export const getUserGridColumns = (onToggleUser?: (userId: number) => void): Gri
     renderCell: (params: GridRenderCellParams) => {
       const userName = `${params.row.firstName} ${params.row.lastName}`
       const userGroups = params.row.userGroups || []
-      
+
       if (userGroups.length === 0) {
         return <span style={{ color: '#999' }}>—</span>
       }
@@ -294,6 +360,7 @@ export const getUserGridColumns = (onToggleUser?: (userId: number) => void): Gri
         <UserGroupsButton
           userGroups={userGroups}
           userName={userName}
+          userId={params.row.userId}
         />
       )
     },
@@ -310,33 +377,43 @@ export const getUserGridColumns = (onToggleUser?: (userId: number) => void): Gri
     renderCell: (params: GridRenderCellParams) => {
       const addresses = params.row.addresses || []
       if (addresses.length === 0) {
-        return <span style={{ color: '#999' }}>—</span>
+        return <span style={{ color: '#999' }} data-test-id="user-address-cell">—</span>
       }
 
       // Get primary address or first address
-      const primaryAddress = addresses.find((addr: any) => addr.isPrimary) || addresses[0]
-      
-      // Short display: City, State
-      const shortDisplay = `${primaryAddress.city || ''}, ${primaryAddress.state || ''}`
-      
+      const primaryAddress = addresses.find((addr: AddressResponseModel) => addr.isPrimary) || addresses[0]
+
+      const shortDisplayParts = [primaryAddress.city, primaryAddress.state].filter(Boolean)
+      const shortDisplay = shortDisplayParts.length > 0 ? shortDisplayParts.join(', ') : primaryAddress.country || '—'
+
       // Full address for tooltip
       const fullAddress = [
         primaryAddress.street1,
         primaryAddress.street2,
-        `${primaryAddress.city}, ${primaryAddress.state} ${primaryAddress.zipCode}`,
-        primaryAddress.country
-      ].filter(Boolean).join('\n')
+        [primaryAddress.city, primaryAddress.state, primaryAddress.zipCode].filter(Boolean).join(', '),
+        primaryAddress.country,
+      ]
+        .filter(line => line && line.trim().length > 0)
+        .join('\n')
 
       return (
-        <Tooltip 
+        <Tooltip
           title={
-            <Box sx={{ whiteSpace: 'pre-line', fontSize: '0.875rem' }}>
-              {fullAddress}
+            <Box sx={{ whiteSpace: 'pre-line',
+              fontSize: '0.875rem' }}>
+              {fullAddress || 'Address not available'}
             </Box>
           }
           arrow
+          slotProps={{
+            tooltip: {
+              'data-test-id': 'user-address-tooltip',
+            } as React.HTMLAttributes<HTMLDivElement>,
+          }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <Box sx={{ display: 'flex',
+            alignItems: 'center',
+            gap: 0.5 }} data-test-id="user-address-cell">
             <LocationIcon fontSize="small" sx={{ color: 'action.active' }} />
             <span>{shortDisplay}</span>
           </Box>
@@ -365,13 +442,13 @@ export const getUserGridColumns = (onToggleUser?: (userId: number) => void): Gri
     },
   },
 
-  // 11. Last Login - Activity tracking (hidden by default)
+  // 11. Last Login - Activity tracking (visible by default)
   {
     field: 'lastLoginAt',
     headerName: 'Last Login',
     minWidth: 150,
     flex: 1,
-    valueFormatter: (value) => {
+    valueFormatter: value => {
       if (!value) return 'Never'
       try {
         return format(new Date(value), 'MMM dd, yyyy HH:mm')
@@ -381,7 +458,7 @@ export const getUserGridColumns = (onToggleUser?: (userId: number) => void): Gri
     },
   },
 
-  // 12. Locked Status (hidden by default)
+  // 12. Locked Status (visible by default)
   {
     field: 'locked',
     headerName: 'Locked',
@@ -390,13 +467,13 @@ export const getUserGridColumns = (onToggleUser?: (userId: number) => void): Gri
     type: 'boolean',
   },
 
-  // 13. Created Date (hidden by default)
+  // 13. Created Date (visible by default)
   {
     field: 'createdAt',
     headerName: 'Created',
     minWidth: 150,
     flex: 1,
-    valueFormatter: (value) => {
+    valueFormatter: value => {
       if (!value) return ''
       try {
         return format(new Date(value), 'MMM dd, yyyy')
@@ -408,7 +485,7 @@ export const getUserGridColumns = (onToggleUser?: (userId: number) => void): Gri
 
   // 14. Actions - Operations
   {
-    field: 'actions',
+    field: 'userActions',
     headerName: 'Actions',
     minWidth: 220,
     flex: 1.5,
@@ -419,14 +496,16 @@ export const getUserGridColumns = (onToggleUser?: (userId: number) => void): Gri
         return (
           <div>
             <Link
+              data-test-id="user-action-activate"
               href="#"
-              onClick={(e) => {
+              onClick={e => {
                 e.preventDefault()
                 if (onToggleUser) {
                   onToggleUser(params.row.userId)
                 }
               }}
-              sx={{ cursor: 'pointer', color: 'success.main' }}
+              sx={{ cursor: 'pointer',
+                color: 'success.main' }}
             >
               Activate
             </Link>
@@ -435,28 +514,33 @@ export const getUserGridColumns = (onToggleUser?: (userId: number) => void): Gri
       }
 
       return (
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ display: 'flex',
+          gap: '12px' }}>
           <Link
+            data-test-id="user-action-view"
             href={`${APP_ROUTES.DASHBOARD.ADD_USERS}?userId=${params.row.userId}&isView`}
             sx={{ cursor: 'pointer' }}
           >
             View
           </Link>
           <Link
+            data-test-id="user-action-edit"
             href={`${APP_ROUTES.DASHBOARD.ADD_USERS}?userId=${params.row.userId}`}
             sx={{ cursor: 'pointer' }}
           >
             Edit
           </Link>
           <Link
+            data-test-id="user-action-toggle"
             href="#"
-            onClick={(e) => {
+            onClick={e => {
               e.preventDefault()
               if (onToggleUser) {
                 onToggleUser(params.row.userId)
               }
             }}
-            sx={{ cursor: 'pointer', color: 'error.main' }}
+            sx={{ cursor: 'pointer',
+              color: 'error.main' }}
           >
             Deactivate
           </Link>

@@ -40,4 +40,3 @@ export interface AddressResponseModel {
   createdAt?: string
   updatedAt?: string
 }
-

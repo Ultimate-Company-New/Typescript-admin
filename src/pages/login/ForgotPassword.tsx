@@ -1,23 +1,17 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useForm, Controller } from 'react-hook-form'
+
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Container, Box, Stack } from '@mui/material'
+import { useForm, Controller } from 'react-hook-form'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
-import {
-  Header,
-  Subheader,
-  BodyText,
-  TextFieldInput,
-  BlueButton,
-  LinkButton,
-  Logo,
-} from '../../components'
+import { Container, Box, Stack } from '@mui/material'
+
 import { loginApi } from '../../api/loginApi'
-import { passwordResetSchema, PasswordResetFormData } from '../../utils/validationSchemas'
+import { Header, Subheader, BodyText, TextFieldInput, BlueButton, LinkButton, Logo } from '../../components'
 import { APP_ROUTES } from '../../constants/routes'
-import '../../styles/Login.scss'
+import { passwordResetSchema, type PasswordResetFormData } from '../../utils/validationSchemas'
+import styles from './Login.module.scss'
 
 /**
  * Forgot Password Page Component
@@ -49,7 +43,7 @@ const ForgotPassword = () => {
       if (success) {
         toast.success('Password reset email sent! Check your inbox.')
         reset()
-        
+
         // Navigate back to login after 2 seconds
         setTimeout(() => {
           navigate(APP_ROUTES.LOGIN)
@@ -66,13 +60,10 @@ const ForgotPassword = () => {
   return (
     <Container maxWidth="sm">
       {/* Password Reset Card */}
-      <Box
-        className="login-page__card"
-        sx={{ borderColor: 'divider' }}
-      >
+      <Box className={styles['login-page__card']} sx={{ borderColor: 'divider' }}>
         <Stack spacing={3}>
           {/* Company Logo */}
-          <Box className="login-page__logo-container">
+          <Box className={styles['login-page__logo-container']}>
             <Logo size={100} />
           </Box>
 
@@ -83,9 +74,7 @@ const ForgotPassword = () => {
           </Box>
 
           {/* Description */}
-          <BodyText 
-            text="Please enter your email address. You will receive an email with a temporary password. Use the temporary password to login, then you can reset your password in your account settings." 
-          />
+          <BodyText text="Please enter your email address. You will receive an email with a temporary password. Use the temporary password to login, then you can reset your password in your account settings." />
 
           {/* Reset Form */}
           <form onSubmit={handleSubmit(onSubmit)}>
@@ -123,7 +112,9 @@ const ForgotPassword = () => {
               {/* Back to Login */}
               <LinkButton
                 label="Back to Sign In"
-                onClick={() => navigate(APP_ROUTES.LOGIN)}
+                onClick={() => {
+                  navigate(APP_ROUTES.LOGIN)
+                }}
                 fullWidth
                 disabled={isLoading}
                 data-test-id="forgot-password-back-button"
@@ -137,4 +128,3 @@ const ForgotPassword = () => {
 }
 
 export default ForgotPassword
-

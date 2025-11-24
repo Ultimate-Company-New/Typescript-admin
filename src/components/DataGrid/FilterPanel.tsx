@@ -1,67 +1,149 @@
-import React, { useState } from 'react'
+import type React from 'react'
+import { useState } from 'react'
+
+import AddIcon from '@mui/icons-material/Add'
+import CloseIcon from '@mui/icons-material/Close'
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  IconButton,
-  Select,
-  MenuItem,
-  TextField,
   Box,
-  Typography,
-  FormControl,
-  InputLabel,
-  Divider,
-  ToggleButtonGroup,
-  ToggleButton,
+  Button,
   Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  FormControl,
+  IconButton,
+  InputLabel,
+  MenuItem,
+  Select,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
 } from '@mui/material'
+import { type GridColDef } from '@mui/x-data-grid'
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
-import CloseIcon from '@mui/icons-material/Close'
-import AddIcon from '@mui/icons-material/Add'
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
-import { GridColDef } from '@mui/x-data-grid'
-import '../../styles/DataGridStyles.scss'
+
+import styles from './DataGrid.module.scss'
+import { LogicOperator, type LogicOperatorType } from './gridHelpers'
 
 // Operator definitions for different column types
 const OPERATORS = {
   string: [
-    { value: 'contains', label: 'contains' },
-    { value: 'equals', label: '=' },
-    { value: 'startsWith', label: 'starts with' },
-    { value: 'endsWith', label: 'ends with' },
-    { value: 'isEmpty', label: 'is empty' },
-    { value: 'isNotEmpty', label: 'is not empty' },
-    { value: 'isOneOf', label: 'is one of' },
-    { value: 'isNotOneOf', label: 'is not one of' },
-    { value: 'containsOneOf', label: 'contains one of' },
+    {
+      value: 'contains',
+      label: 'contains',
+    },
+    {
+      value: 'equals',
+      label: '=',
+    },
+    {
+      value: 'startsWith',
+      label: 'starts with',
+    },
+    {
+      value: 'endsWith',
+      label: 'ends with',
+    },
+    {
+      value: 'isEmpty',
+      label: 'is empty',
+    },
+    {
+      value: 'isNotEmpty',
+      label: 'is not empty',
+    },
+    {
+      value: 'isOneOf',
+      label: 'is one of',
+    },
+    {
+      value: 'isNotOneOf',
+      label: 'is not one of',
+    },
+    {
+      value: 'containsOneOf',
+      label: 'contains one of',
+    },
   ],
   number: [
-    { value: '=', label: '=' },
-    { value: '!=', label: '!=' },
-    { value: '>', label: '>' },
-    { value: '>=', label: '>=' },
-    { value: '<', label: '<' },
-    { value: '<=', label: '<=' },
-    { value: 'isEmpty', label: 'is empty' },
-    { value: 'isNotEmpty', label: 'is not empty' },
+    {
+      value: '=',
+      label: '=',
+    },
+    {
+      value: '!=',
+      label: '!=',
+    },
+    {
+      value: '>',
+      label: '>',
+    },
+    {
+      value: '>=',
+      label: '>=',
+    },
+    {
+      value: '<',
+      label: '<',
+    },
+    {
+      value: '<=',
+      label: '<=',
+    },
+    {
+      value: 'isEmpty',
+      label: 'is empty',
+    },
+    {
+      value: 'isNotEmpty',
+      label: 'is not empty',
+    },
   ],
   date: [
-    { value: 'is', label: 'is' },
-    { value: 'isNot', label: 'is not' },
-    { value: 'isAfter', label: 'is after' },
-    { value: 'isOnOrAfter', label: 'is on or after' },
-    { value: 'isBefore', label: 'is before' },
-    { value: 'isOnOrBefore', label: 'is on or before' },
-    { value: 'isEmpty', label: 'is empty' },
-    { value: 'isNotEmpty', label: 'is not empty' },
+    {
+      value: 'is',
+      label: 'is',
+    },
+    {
+      value: 'isNot',
+      label: 'is not',
+    },
+    {
+      value: 'isAfter',
+      label: 'is after',
+    },
+    {
+      value: 'isOnOrAfter',
+      label: 'is on or after',
+    },
+    {
+      value: 'isBefore',
+      label: 'is before',
+    },
+    {
+      value: 'isOnOrBefore',
+      label: 'is on or before',
+    },
+    {
+      value: 'isEmpty',
+      label: 'is empty',
+    },
+    {
+      value: 'isNotEmpty',
+      label: 'is not empty',
+    },
   ],
   boolean: [
-    { value: 'is', label: 'is' },
+    {
+      value: 'is',
+      label: 'is',
+    },
   ],
 }
 
@@ -69,11 +151,11 @@ export interface FilterCondition {
   id: string
   column: string
   operator: string
-  value: any
+  value: unknown
 }
 
 export interface FilterGroup {
-  logicOperator: 'AND' | 'OR'
+  logicOperator: LogicOperatorType
   filters: FilterCondition[]
 }
 
@@ -83,11 +165,12 @@ interface FilterPanelProps {
   columns: GridColDef[]
   onApplyFilters: (filterGroup: FilterGroup) => void
   initialFilterGroup?: FilterGroup
+  visibleColumnFields?: string[]
 }
 
 /**
  * Custom Filter Panel Component
- * 
+ *
  * Features:
  * - Multi-column filtering with AND/OR logic
  * - Dynamic operators based on column type
@@ -103,12 +186,13 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   columns,
   onApplyFilters,
   initialFilterGroup,
+  visibleColumnFields,
 }) => {
-  const [logicOperator, setLogicOperator] = useState<'AND' | 'OR'>(
-    initialFilterGroup?.logicOperator || 'AND'
+  const [logicOperator, setLogicOperator] = useState<LogicOperatorType>(
+    initialFilterGroup?.logicOperator ?? LogicOperator.AND,
   )
   const [filters, setFilters] = useState<FilterCondition[]>(
-    initialFilterGroup && initialFilterGroup.filters.length > 0
+    initialFilterGroup != null && initialFilterGroup.filters.length > 0
       ? initialFilterGroup.filters
       : [
           {
@@ -117,27 +201,34 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             operator: '',
             value: '',
           },
-        ]
+        ],
   )
 
   // Filter out specific columns that should not be filterable
   // Check both the 'filterable' property and specific field names
   const filterableColumns = columns.filter(
-    (col) =>
+    col =>
       col.filterable !== false && // Respect the filterable property
       col.field !== 'actions' &&
+      col.field !== 'userActions' &&
       col.field !== 'isDeleted' &&
       col.field !== 'userId' &&
-      col.field !== 'avatar' // Avatar/Icon column should not be filterable
+      col.field !== 'avatar' && // Avatar/Icon column should not be filterable
+      (!visibleColumnFields || visibleColumnFields.includes(col.field)),
   )
 
   // Get column type for operator selection
   const getColumnType = (columnField: string): string => {
-    const column = columns.find((col) => col.field === columnField)
+    const column = columns.find(col => col.field === columnField)
     if (!column) return 'string'
 
     // Determine type based on field name or column configuration
-    if (columnField.includes('date') || columnField === 'dob' || columnField === 'createdAt' || columnField === 'lastLoginAt') {
+    if (
+      columnField.includes('date') ||
+      columnField === 'dob' ||
+      columnField === 'createdAt' ||
+      columnField === 'lastLoginAt'
+    ) {
       return 'date'
     }
     if (columnField === 'userId' || columnField.includes('Id')) {
@@ -150,18 +241,17 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   }
 
   // Get operators for a specific column
-  const getOperatorsForColumn = (columnField: string) => {
+  const getOperatorsForColumn = (columnField: string): Array<{ value: string; label: string }> => {
     const columnType = getColumnType(columnField)
-    return OPERATORS[columnType as keyof typeof OPERATORS] || OPERATORS.string
+    const operators = OPERATORS[columnType as keyof typeof OPERATORS]
+    return operators != null ? operators : OPERATORS.string
   }
 
   // Check if operator needs a value input
-  const operatorNeedsValue = (operator: string) => {
-    return operator !== 'isEmpty' && operator !== 'isNotEmpty'
-  }
+  const operatorNeedsValue = (operator: string): boolean => operator !== 'isEmpty' && operator !== 'isNotEmpty'
 
   // Add new filter condition
-  const handleAddFilter = () => {
+  const handleAddFilter = (): void => {
     setFilters([
       ...filters,
       {
@@ -174,64 +264,64 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   }
 
   // Remove filter condition
-  const handleRemoveFilter = (id: string) => {
+  const handleRemoveFilter = (id: string): void => {
     if (filters.length === 1) return // Keep at least one filter
-    setFilters(filters.filter((f) => f.id !== id))
+    setFilters(filters.filter(f => f.id !== id))
   }
 
   // Update filter field
-  const handleFilterChange = (
-    id: string,
-    field: keyof FilterCondition,
-    value: any
-  ) => {
+  const handleFilterChange = (id: string, field: keyof FilterCondition, value: unknown): void => {
     setFilters(
-      filters.map((filter) => {
+      filters.map(filter => {
         if (filter.id === id) {
-          const updatedFilter = { ...filter, [field]: value }
-          
+          const updatedFilter: FilterCondition = {
+            ...filter,
+            [field]: value,
+          }
+
           // Reset operator and value when column changes
           if (field === 'column') {
             updatedFilter.operator = ''
             updatedFilter.value = ''
           }
-          
+
           // Reset value when operator changes to isEmpty/isNotEmpty
-          if (field === 'operator' && !operatorNeedsValue(value)) {
+          if (field === 'operator' && !operatorNeedsValue(value as string)) {
             updatedFilter.value = ''
           }
-          
+
           return updatedFilter
         }
         return filter
-      })
+      }),
     )
   }
 
   // Apply filters
-  const handleApply = () => {
+  const handleApply = (): void => {
     // Filter out incomplete filters
     const validFilters = filters.filter(
-      (f) =>
-        f.column &&
-        f.operator &&
-        (operatorNeedsValue(f.operator) ? f.value !== '' && f.value !== null : true)
+      f =>
+        f.column !== '' &&
+        f.operator !== '' &&
+        (operatorNeedsValue(f.operator) ? f.value !== '' && f.value != null : true),
     )
-    
+
     const filterGroup: FilterGroup = {
       logicOperator,
       filters: validFilters,
     }
-    
+
     // Log the JSON structure for API integration
+    // eslint-disable-next-line no-console -- Debug logging for filter structure
     console.log('Filter JSON for API:', JSON.stringify(filterGroup, null, 2))
-    
+
     onApplyFilters(filterGroup)
     onClose()
   }
 
   // Reset filters
-  const handleReset = () => {
+  const handleReset = (): void => {
     setFilters([
       {
         id: Date.now().toString(),
@@ -240,12 +330,15 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         value: '',
       },
     ])
-    setLogicOperator('AND')
-    onApplyFilters({ logicOperator: 'AND', filters: [] })
+    setLogicOperator(LogicOperator.AND)
+    onApplyFilters({
+      logicOperator: LogicOperator.AND,
+      filters: [],
+    })
   }
 
   // Render value input based on column type
-  const renderValueInput = (filter: FilterCondition) => {
+  const renderValueInput = (filter: FilterCondition, index: number): JSX.Element | null => {
     if (!operatorNeedsValue(filter.operator)) {
       return null
     }
@@ -257,15 +350,18 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <DatePicker
             label="Value"
-            value={filter.value || null}
-            onChange={(newValue) =>
+            value={(filter.value as Date | null) ?? null}
+            onChange={newValue => {
               handleFilterChange(filter.id, 'value', newValue)
-            }
+            }}
             slotProps={{
               textField: {
                 size: 'small',
                 fullWidth: true,
                 variant: 'outlined',
+                inputProps: {
+                  'data-test-id': `users-filter-value-date-${index}`,
+                },
               },
             }}
           />
@@ -280,11 +376,14 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           type="number"
           size="small"
           fullWidth
-          value={filter.value}
-          onChange={(e) =>
+          value={(filter.value as string | number) || ''}
+          onChange={e => {
             handleFilterChange(filter.id, 'value', e.target.value)
-          }
+          }}
           variant="outlined"
+          inputProps={{
+            'data-test-id': `users-filter-value-number-${index}`,
+          }}
         />
       )
     }
@@ -294,11 +393,12 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         <FormControl fullWidth size="small">
           <InputLabel>Value</InputLabel>
           <Select
-            value={filter.value}
+            value={(filter.value as string) || ''}
             label="Value"
-            onChange={(e) =>
+            onChange={e => {
               handleFilterChange(filter.id, 'value', e.target.value)
-            }
+            }}
+            data-test-id={`users-filter-value-boolean-${index}`}
           >
             <MenuItem value="true">True</MenuItem>
             <MenuItem value="false">False</MenuItem>
@@ -309,17 +409,22 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 
     // Default: string input
     const isSemicolonOperator = ['isOneOf', 'isNotOneOf', 'containsOneOf'].includes(filter.operator)
-    
+
     return (
       <TextField
         label="Value"
         size="small"
         fullWidth
-        value={filter.value}
-        onChange={(e) => handleFilterChange(filter.id, 'value', e.target.value)}
+        value={(filter.value as string) || ''}
+        onChange={e => {
+          handleFilterChange(filter.id, 'value', e.target.value)
+        }}
         variant="outlined"
-        placeholder={isSemicolonOperator ? "Value1;Value2;Value3" : "Filter value"}
-        helperText={isSemicolonOperator ? "Use semicolon (;) to separate multiple values" : undefined}
+        placeholder={isSemicolonOperator ? 'Value1;Value2;Value3' : 'Filter value'}
+        helperText={isSemicolonOperator ? 'Use semicolon (;) to separate multiple values' : undefined}
+        inputProps={{
+          'data-test-id': `users-filter-value-text-${index}`,
+        }}
       />
     )
   }
@@ -332,17 +437,19 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
       fullWidth
       PaperProps={{
         className: 'filter-panel__dialog-paper',
+        'data-test-id': 'users-filter-modal',
       }}
     >
       {/* Dialog Header */}
-      <DialogTitle className="filter-panel__header">
+      <DialogTitle className={styles['filter-panel__header']}>
         <Typography variant="h6" component="div" fontWeight="bold">
           Filter Data
         </Typography>
         <IconButton
           onClick={onClose}
           size="small"
-          className="filter-panel__close-button"
+          className={styles['filter-panel__close-button']}
+          data-test-id="users-filter-close-button"
         >
           <CloseIcon />
         </IconButton>
@@ -351,11 +458,11 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
       <Divider />
 
       {/* Dialog Content */}
-      <DialogContent className="filter-panel__content">
-        <Box className="filter-panel__content-box">
+      <DialogContent className={styles['filter-panel__content']}>
+        <Box className={styles['filter-panel__content-box']}>
           {/* Global Logic Operator - Show only if there are multiple filters */}
           {filters.length > 1 && (
-            <Box className="filter-panel__logic-operator-box">
+            <Box className={styles['filter-panel__logic-operator-box']}>
               <Typography variant="body2" fontWeight="medium" color="text.secondary">
                 Match:
               </Typography>
@@ -363,14 +470,19 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                 value={logicOperator}
                 exclusive
                 onChange={(_, newValue) => {
-                  if (newValue !== null) {
-                    setLogicOperator(newValue)
+                  if (newValue != null) {
+                    setLogicOperator(newValue as LogicOperatorType)
                   }
                 }}
                 size="small"
+                data-test-id="users-filter-logic-toggle"
               >
-                <ToggleButton value="AND" className="filter-panel__toggle-button">All (AND)</ToggleButton>
-                <ToggleButton value="OR" className="filter-panel__toggle-button">Any (OR)</ToggleButton>
+                <ToggleButton value={LogicOperator.AND} className={styles['filter-panel__toggle-button']}>
+                  All (AND)
+                </ToggleButton>
+                <ToggleButton value={LogicOperator.OR} className={styles['filter-panel__toggle-button']}>
+                  Any (OR)
+                </ToggleButton>
               </ToggleButtonGroup>
               <Typography variant="body2" color="text.secondary">
                 of the following conditions:
@@ -379,37 +491,38 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           )}
 
           {filters.map((filter, index) => (
-            <Box key={filter.id}>
+            <Box key={filter.id} data-test-id={`users-filter-row-${index}`}>
               {/* Show text separator for 2nd filter onwards */}
               {index > 0 && (
-                <Box className="filter-panel__divider-box">
-                  <Divider className="filter-panel__divider" />
+                <Box className={styles['filter-panel__divider-box']}>
+                  <Divider className={styles['filter-panel__divider']} />
                   <Chip
                     label={logicOperator}
                     size="small"
                     color="primary"
                     variant="outlined"
-                    className="filter-panel__chip"
+                    className={styles['filter-panel__chip']}
                   />
-                  <Divider className="filter-panel__divider" />
+                  <Divider className={styles['filter-panel__divider']} />
                 </Box>
               )}
 
               {/* Filter Row */}
-              <Box className="filter-panel__filter-row">
+              <Box className={styles['filter-panel__filter-row']}>
                 {/* Column Selection */}
                 <FormControl fullWidth size="small">
                   <InputLabel>Column</InputLabel>
                   <Select
                     value={filter.column}
                     label="Column"
-                    onChange={(e) =>
+                    onChange={e => {
                       handleFilterChange(filter.id, 'column', e.target.value)
-                    }
+                    }}
+                    data-test-id={`users-filter-column-select-${index}`}
                   >
-                    {filterableColumns.map((col) => (
+                    {filterableColumns.map(col => (
                       <MenuItem key={col.field} value={col.field}>
-                        {col.headerName || col.field}
+                        {col.headerName ?? col.field}
                       </MenuItem>
                     ))}
                   </Select>
@@ -421,12 +534,13 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   <Select
                     value={filter.operator}
                     label="Operator"
-                    onChange={(e) =>
+                    onChange={e => {
                       handleFilterChange(filter.id, 'operator', e.target.value)
-                    }
+                    }}
+                    data-test-id={`users-filter-operator-select-${index}`}
                   >
                     {filter.column &&
-                      getOperatorsForColumn(filter.column).map((op) => (
+                      getOperatorsForColumn(filter.column).map(op => (
                         <MenuItem key={op.value} value={op.value}>
                           {op.label}
                         </MenuItem>
@@ -435,17 +549,23 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                 </FormControl>
 
                 {/* Value Input */}
-                <Box className="filter-panel__value-input">
-                  {filter.operator && renderValueInput(filter)}
+                <Box
+                  className={styles['filter-panel__value-input']}
+                  data-test-id={`users-filter-value-container-${index}`}
+                >
+                  {filter.operator && renderValueInput(filter, index)}
                 </Box>
 
                 {/* Delete Button */}
                 <IconButton
-                  onClick={() => handleRemoveFilter(filter.id)}
+                  onClick={() => {
+                    handleRemoveFilter(filter.id)
+                  }}
                   disabled={filters.length === 1}
                   color="error"
                   size="small"
-                  className="filter-panel__delete-button"
+                  className={styles['filter-panel__delete-button']}
+                  data-test-id={`users-filter-delete-${index}`}
                 >
                   <DeleteOutlineIcon />
                 </IconButton>
@@ -458,7 +578,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             startIcon={<AddIcon />}
             onClick={handleAddFilter}
             variant="outlined"
-            className="filter-panel__add-button"
+            className={styles['filter-panel__add-button']}
+            data-test-id="users-filter-add-button"
           >
             Add Filter
           </Button>
@@ -468,27 +589,30 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
       <Divider />
 
       {/* Dialog Actions */}
-      <DialogActions className="filter-panel__actions">
+      <DialogActions className={styles['filter-panel__actions']}>
         <Button
           onClick={handleReset}
           variant="outlined"
           color="secondary"
-          className="filter-panel__action-button"
+          className={styles['filter-panel__action-button']}
+          data-test-id="users-filter-remove-all-button"
         >
           Remove All
         </Button>
-        <Box className="filter-panel__actions-spacer" />
+        <Box className={styles['filter-panel__actions-spacer']} />
         <Button
           onClick={onClose}
           variant="outlined"
-          className="filter-panel__action-button"
+          className={styles['filter-panel__action-button']}
+          data-test-id="users-filter-cancel-button"
         >
           Cancel
         </Button>
         <Button
           onClick={handleApply}
           variant="contained"
-          className="filter-panel__action-button"
+          className={styles['filter-panel__action-button']}
+          data-test-id="users-filter-apply-button"
         >
           Apply Filters
         </Button>
@@ -498,4 +622,3 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 }
 
 export default FilterPanel
-

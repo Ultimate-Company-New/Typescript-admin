@@ -1,20 +1,15 @@
 import { useState, useEffect, useCallback } from 'react'
+
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import {
-  Container,
-  Box,
-  Paper,
-  TextField,
-  Button,
-  Typography,
-  Divider,
-} from '@mui/material'
-import { Save as SaveIcon, Cancel as CancelIcon } from '@mui/icons-material'
-import { DataGrid, GridColDef, GridRowSelectionModel } from '@mui/x-data-grid'
 import { toast } from 'react-toastify'
+
+import { Save as SaveIcon, Cancel as CancelIcon } from '@mui/icons-material'
+import { Container, Box, Paper, TextField, Button, Typography, Divider } from '@mui/material'
+import { DataGrid, type GridColDef, type GridRowSelectionModel } from '@mui/x-data-grid'
+
 import { Header, Subheader } from '../../components'
 import { APP_ROUTES } from '../../constants/routes'
-import '../../styles/UserGroups.scss'
+import styles from './UserGroups.module.scss'
 
 // TODO: Import from your API
 // import { userGroupApi } from '../../api/userGroupApi'
@@ -62,7 +57,7 @@ const AddUserGroups = () => {
     try {
       // TODO: Replace with actual API call
       // const response = await userGroupApi.getUserGroupById(id)
-      
+
       // Mock data
       const mockGroup = {
         userGroupId: parseInt(id),
@@ -169,11 +164,11 @@ const AddUserGroups = () => {
     setLoading(true)
     try {
       const requestData = {
-        userGroupId: isEdit ? parseInt(userGroupId!) : undefined,
+        userGroupId: isEdit ? parseInt(userGroupId) : undefined,
         name: name.trim(),
         description: description.trim(),
         notes: notes.trim(),
-        userIds: selectedUserIds.map((id) => parseInt(id.toString())),
+        userIds: selectedUserIds.map(id => parseInt(id.toString())),
       }
 
       if (isEdit) {
@@ -254,21 +249,13 @@ const AddUserGroups = () => {
       <Box className="add-user-groups-page__container">
         {/* Header */}
         <Header
-          label={
-            isView
-              ? 'View User Group'
-              : isEdit
-              ? 'Edit User Group'
-              : 'Add User Group'
-          }
+          label={isView ? 'View User Group' : isEdit ? 'Edit User Group' : 'Add User Group'}
           variant="h3"
           gutterBottom
         />
         <Subheader
           label={
-            isView
-              ? 'View user group details and members'
-              : 'Fill in the details to create or update a user group'
+            isView ? 'View user group details and members' : 'Fill in the details to create or update a user group'
           }
         />
 
@@ -284,7 +271,9 @@ const AddUserGroups = () => {
               fullWidth
               label="Group Name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={e => {
+                setName(e.target.value)
+              }}
               disabled={isView || loading}
               required
               placeholder="Enter group name"
@@ -295,7 +284,9 @@ const AddUserGroups = () => {
               fullWidth
               label="Description"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={e => {
+                setDescription(e.target.value)
+              }}
               disabled={isView || loading}
               required
               multiline
@@ -308,7 +299,9 @@ const AddUserGroups = () => {
               fullWidth
               label="Notes"
               value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              onChange={e => {
+                setNotes(e.target.value)
+              }}
               disabled={isView || loading}
               multiline
               rows={3}
@@ -329,7 +322,7 @@ const AddUserGroups = () => {
             <DataGrid
               rows={users}
               columns={userColumns}
-              getRowId={(row) => row.userId}
+              getRowId={row => row.userId}
               checkboxSelection
               disableRowSelectionOnClick
               rowSelectionModel={selectedUserIds}
@@ -348,11 +341,7 @@ const AddUserGroups = () => {
             />
           </Box>
 
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            className="add-user-groups-page__selection-info"
-          >
+          <Typography variant="body2" color="text.secondary" className="add-user-groups-page__selection-info">
             {selectedUserIds.length} user(s) selected
           </Typography>
         </Paper>
@@ -386,4 +375,3 @@ const AddUserGroups = () => {
 }
 
 export default AddUserGroups
-

@@ -1,5 +1,6 @@
 import { forwardRef } from 'react'
-import { Box, Grid, Typography, Pagination, PaginationProps } from '@mui/material'
+
+import { Box, Grid, Typography, Pagination, type PaginationProps } from '@mui/material'
 
 export interface PaginationComponentProps extends Omit<PaginationProps, 'count' | 'page' | 'onChange'> {
   /**
@@ -59,17 +60,15 @@ export const PaginationComponent = forwardRef<HTMLDivElement, PaginationComponen
       shape = 'rounded',
       ...rest
     },
-    ref
+    ref,
   ) => {
     // Calculate pagination values
     const totalPages = Math.ceil(totalItems / pageSize)
-    const startRecord = (currentPage - 1) * pageSize + 1
-    const endRecord = Math.min(currentPage * pageSize, totalItems)
 
-    // Don't render if there are no items or only one page
-    if (totalItems === 0 || totalPages <= 1) {
-      return null
-    }
+    const infoTestId = dataTestId ? `${dataTestId}-info` : undefined
+    const startRecord = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1
+    const endRecord = totalItems === 0 ? 0 : Math.min(currentPage * pageSize, totalItems)
+    const showPaginationControls = totalPages > 1
 
     return (
       <Box ref={ref}>
@@ -77,7 +76,7 @@ export const PaginationComponent = forwardRef<HTMLDivElement, PaginationComponen
           {/* Pagination Info */}
           {!hideInfo && (
             <Grid item xs={12} sm={6}>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" data-test-id={infoTestId}>
                 Showing {startRecord} - {endRecord} of {totalItems} {itemLabel}
               </Typography>
             </Grid>
@@ -91,27 +90,34 @@ export const PaginationComponent = forwardRef<HTMLDivElement, PaginationComponen
             sx={{
               display: 'flex',
               justifyContent: hideInfo
-                ? { xs: 'center', sm: 'center' }
-                : { xs: 'center', sm: 'flex-end' },
+                ? {
+                  xs: 'center',
+                  sm: 'center',
+                }
+                : {
+                  xs: 'center',
+                  sm: 'flex-end',
+                },
             }}
           >
-            <Pagination
-              count={totalPages}
-              page={currentPage}
-              onChange={onPageChange}
-              color={color}
-              size={size}
-              variant={variant}
-              shape={shape}
-              data-test-id={dataTestId}
-              {...rest}
-            />
+            {showPaginationControls && (
+              <Pagination
+                count={totalPages}
+                page={currentPage}
+                onChange={onPageChange}
+                color={color}
+                size={size}
+                variant={variant}
+                shape={shape}
+                data-test-id={dataTestId}
+                {...rest}
+              />
+            )}
           </Grid>
         </Grid>
       </Box>
     )
-  }
+  },
 )
 
 PaginationComponent.displayName = 'PaginationComponent'
-

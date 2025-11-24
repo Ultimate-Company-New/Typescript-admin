@@ -1,13 +1,6 @@
 import { useState, useEffect } from 'react'
-import {
-  Grid,
-  Paper,
-  Typography,
-  Divider,
-  Checkbox,
-  FormControlLabel,
-  Box,
-} from '@mui/material'
+
+import { Grid, Paper, Typography, Divider, Checkbox, FormControlLabel, Box } from '@mui/material'
 
 export interface Permission {
   permissionId: number
@@ -26,7 +19,7 @@ interface UserPermissionsProps {
 
 /**
  * User Permissions Component
- * 
+ *
  * Features:
  * - Displays permissions grouped by category
  * - Checkbox selection for each permission
@@ -39,7 +32,7 @@ const UserPermissions = ({
   selectedPermissionIds,
   onChange,
   readOnly = false,
-}: UserPermissionsProps) => {
+}: UserPermissionsProps): JSX.Element => {
   const [localSelectedIds, setLocalSelectedIds] = useState<number[]>(selectedPermissionIds)
 
   useEffect(() => {
@@ -47,21 +40,21 @@ const UserPermissions = ({
   }, [selectedPermissionIds])
 
   // Group permissions by category
-  const groupedPermissions = availablePermissions.reduce((acc, permission) => {
-    const category = permission.category || 'GENERAL'
-    if (!acc[category]) {
+  const groupedPermissions = availablePermissions.reduce<Record<string, Permission[]>>((acc, permission) => {
+    const category = permission.category != null && permission.category !== '' ? permission.category : 'GENERAL'
+    if (!(category in acc)) {
       acc[category] = []
     }
     acc[category].push(permission)
     return acc
-  }, {} as Record<string, Permission[]>)
+  }, {})
 
   // Sort permissions within each category by name
-  Object.keys(groupedPermissions).forEach((category) => {
+  Object.keys(groupedPermissions).forEach(category => {
     groupedPermissions[category].sort((a, b) => a.permissionName.localeCompare(b.permissionName))
   })
 
-  const handlePermissionChange = (permissionId: number, checked: boolean) => {
+  const handlePermissionChange = (permissionId: number, checked: boolean): void => {
     let newSelectedIds = [...localSelectedIds]
 
     if (checked) {
@@ -72,16 +65,16 @@ const UserPermissions = ({
 
       // Auto-check dependencies based on permission hierarchy
       // For example: Delete -> Update -> Insert -> View
-      const permission = availablePermissions.find((p) => p.permissionId === permissionId)
+      const permission = availablePermissions.find(p => p.permissionId === permissionId)
       if (permission) {
         newSelectedIds = autoCheckDependencies(permission, newSelectedIds)
       }
     } else {
       // Remove permission
-      newSelectedIds = newSelectedIds.filter((id) => id !== permissionId)
+      newSelectedIds = newSelectedIds.filter(id => id !== permissionId)
 
       // Auto-uncheck dependent permissions
-      const permission = availablePermissions.find((p) => p.permissionId === permissionId)
+      const permission = availablePermissions.find(p => p.permissionId === permissionId)
       if (permission) {
         newSelectedIds = autoUncheckDependents(permission, newSelectedIds)
       }
@@ -97,20 +90,20 @@ const UserPermissions = ({
    */
   const autoCheckDependencies = (permission: Permission, currentIds: number[]): number[] => {
     const permCode = permission.permissionCode.toLowerCase()
-    const category = permission.category
-    let updatedIds = [...currentIds]
+    const { category } = permission
+    const updatedIds = [...currentIds]
 
     // Define permission hierarchy: Delete > Update > Insert > View
     if (permCode.includes('delete') || permCode.includes('toggle')) {
       // If delete/toggle is checked, check update, insert, and view
       const relatedPerms = availablePermissions.filter(
-        (p) =>
+        p =>
           p.category === category &&
           (p.permissionCode.toLowerCase().includes('update') ||
             p.permissionCode.toLowerCase().includes('insert') ||
-            p.permissionCode.toLowerCase().includes('view'))
+            p.permissionCode.toLowerCase().includes('view')),
       )
-      relatedPerms.forEach((p) => {
+      relatedPerms.forEach(p => {
         if (!updatedIds.includes(p.permissionId)) {
           updatedIds.push(p.permissionId)
         }
@@ -118,12 +111,11 @@ const UserPermissions = ({
     } else if (permCode.includes('update')) {
       // If update is checked, check insert and view
       const relatedPerms = availablePermissions.filter(
-        (p) =>
+        p =>
           p.category === category &&
-          (p.permissionCode.toLowerCase().includes('insert') ||
-            p.permissionCode.toLowerCase().includes('view'))
+          (p.permissionCode.toLowerCase().includes('insert') || p.permissionCode.toLowerCase().includes('view')),
       )
-      relatedPerms.forEach((p) => {
+      relatedPerms.forEach(p => {
         if (!updatedIds.includes(p.permissionId)) {
           updatedIds.push(p.permissionId)
         }
@@ -131,9 +123,9 @@ const UserPermissions = ({
     } else if (permCode.includes('insert')) {
       // If insert is checked, check view
       const relatedPerms = availablePermissions.filter(
-        (p) => p.category === category && p.permissionCode.toLowerCase().includes('view')
+        p => p.category === category && p.permissionCode.toLowerCase().includes('view'),
       )
-      relatedPerms.forEach((p) => {
+      relatedPerms.forEach(p => {
         if (!updatedIds.includes(p.permissionId)) {
           updatedIds.push(p.permissionId)
         }
@@ -149,39 +141,38 @@ const UserPermissions = ({
    */
   const autoUncheckDependents = (permission: Permission, currentIds: number[]): number[] => {
     const permCode = permission.permissionCode.toLowerCase()
-    const category = permission.category
+    const { category } = permission
     let updatedIds = [...currentIds]
 
     if (permCode.includes('view')) {
       // If view is unchecked, uncheck insert, update, delete
       const relatedPerms = availablePermissions.filter(
-        (p) =>
+        p =>
           p.category === category &&
           (p.permissionCode.toLowerCase().includes('insert') ||
             p.permissionCode.toLowerCase().includes('update') ||
             p.permissionCode.toLowerCase().includes('delete') ||
-            p.permissionCode.toLowerCase().includes('toggle'))
+            p.permissionCode.toLowerCase().includes('toggle')),
       )
-      updatedIds = updatedIds.filter((id) => !relatedPerms.some((p) => p.permissionId === id))
+      updatedIds = updatedIds.filter(id => !relatedPerms.some(p => p.permissionId === id))
     } else if (permCode.includes('insert')) {
       // If insert is unchecked, uncheck update, delete
       const relatedPerms = availablePermissions.filter(
-        (p) =>
+        p =>
           p.category === category &&
           (p.permissionCode.toLowerCase().includes('update') ||
             p.permissionCode.toLowerCase().includes('delete') ||
-            p.permissionCode.toLowerCase().includes('toggle'))
+            p.permissionCode.toLowerCase().includes('toggle')),
       )
-      updatedIds = updatedIds.filter((id) => !relatedPerms.some((p) => p.permissionId === id))
+      updatedIds = updatedIds.filter(id => !relatedPerms.some(p => p.permissionId === id))
     } else if (permCode.includes('update')) {
       // If update is unchecked, uncheck delete
       const relatedPerms = availablePermissions.filter(
-        (p) =>
+        p =>
           p.category === category &&
-          (p.permissionCode.toLowerCase().includes('delete') ||
-            p.permissionCode.toLowerCase().includes('toggle'))
+          (p.permissionCode.toLowerCase().includes('delete') || p.permissionCode.toLowerCase().includes('toggle')),
       )
-      updatedIds = updatedIds.filter((id) => !relatedPerms.some((p) => p.permissionId === id))
+      updatedIds = updatedIds.filter(id => !relatedPerms.some(p => p.permissionId === id))
     }
 
     return updatedIds
@@ -192,23 +183,39 @@ const UserPermissions = ({
   return (
     <Box sx={{ width: '100%' }}>
       <Grid container spacing={2}>
-        {categories.map((category) => (
+        {categories.map(category => (
           <Grid item xs={12} sm={6} md={4} key={category}>
-            <Paper elevation={1} sx={{ p: 2, height: '100%' }}>
+            <Paper
+              elevation={1}
+              sx={{
+                p: 2,
+                height: '100%',
+              }}
+            >
               <Typography variant="subtitle1" fontWeight="600" gutterBottom>
                 {category.charAt(0) + category.slice(1).toLowerCase().replace(/_/g, ' ')} Permissions
               </Typography>
-              <Divider sx={{ mb: 2 }} />
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                {groupedPermissions[category].map((permission) => (
+              <Divider
+                sx={{
+                  mb: 2,
+                }}
+              />
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 0.5,
+                }}
+              >
+                {groupedPermissions[category].map(permission => (
                   <FormControlLabel
                     key={permission.permissionId}
                     control={
                       <Checkbox
                         checked={localSelectedIds.includes(permission.permissionId)}
-                        onChange={(e) =>
+                        onChange={e => {
                           handlePermissionChange(permission.permissionId, e.target.checked)
-                        }
+                        }}
                         disabled={readOnly}
                         size="small"
                       />
@@ -230,4 +237,3 @@ const UserPermissions = ({
 }
 
 export default UserPermissions
-

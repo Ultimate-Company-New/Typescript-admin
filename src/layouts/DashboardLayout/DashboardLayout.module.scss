@@ -99,6 +99,8 @@
 
     &--closed {
       justify-content: center;
+      padding-left: 8px !important; // Balanced padding for centering
+      padding-right: 8px !important; // Balanced padding for centering
     }
   }
 
@@ -111,7 +113,8 @@
     }
 
     &--closed {
-      margin-right: auto;
+      margin-right: 0 !important; // Center the icon
+      margin-left: 0 !important; // Center the icon
     }
   }
 

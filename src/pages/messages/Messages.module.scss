@@ -1,0 +1,46 @@
+.messages-page {
+  padding: 0;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+
+  &__container {
+    padding-top: 32px;
+    padding-bottom: 32px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  &__card {
+    background-color: #ffffff;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+
+    .MuiDataGrid-root {
+      border: none;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+  }
+
+  &__pagination {
+    padding: 16px;
+    border-top: 1px solid rgba(224, 224, 224, 1);
+    background-color: #ffffff;
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .messages-page {
+    &__container {
+      padding: 16px 12px;
+    }
+  }
+}
+

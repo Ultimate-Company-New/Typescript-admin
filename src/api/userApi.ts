@@ -1,9 +1,6 @@
+import { type UserRequestModel, type UserResponseModel, type PaginationBaseResponseModel } from '../models/UserModels'
+
 import axiosInstance from './axiosConfig'
-import {
-  UserRequestModel,
-  UserResponseModel,
-  PaginationBaseResponseModel,
-} from '../models/UserModels'
 
 /**
  * API endpoints for user operations
@@ -27,9 +24,7 @@ export const userApi = {
    * Fetches a user by their ID
    */
   getUserById: async (id: number): Promise<UserResponseModel> => {
-    const response = await axiosInstance.get<UserResponseModel>(
-      `${API_ROUTES.GET_USER_BY_ID}/${id}`
-    )
+    const response = await axiosInstance.get<UserResponseModel>(`${API_ROUTES.GET_USER_BY_ID}/${id}`)
     return response.data
   },
 
@@ -37,9 +32,7 @@ export const userApi = {
    * Fetches a user by their email
    */
   getUserByEmail: async (email: string): Promise<UserResponseModel> => {
-    const response = await axiosInstance.get<UserResponseModel>(
-      `${API_ROUTES.GET_USER_BY_EMAIL}/${email}`
-    )
+    const response = await axiosInstance.get<UserResponseModel>(`${API_ROUTES.GET_USER_BY_EMAIL}/${email}`)
     return response.data
   },
 
@@ -53,10 +46,7 @@ export const userApi = {
   /**
    * Updates an existing user
    */
-  updateUser: async (
-    id: number,
-    user: UserRequestModel
-  ): Promise<void> => {
+  updateUser: async (id: number, user: UserRequestModel): Promise<void> => {
     await axiosInstance.post(`${API_ROUTES.UPDATE_USER}/${id}`, user)
   },
 
@@ -72,11 +62,12 @@ export const userApi = {
    * This is the main endpoint for the DataGrid
    */
   fetchUsersInCarrierInBatches: async (
-    requestModel: UserRequestModel
+    requestModel: UserRequestModel,
   ): Promise<PaginationBaseResponseModel<UserResponseModel>> => {
-    const response = await axiosInstance.post<
-      PaginationBaseResponseModel<UserResponseModel>
-    >(API_ROUTES.GET_USERS_IN_CARRIER_IN_BATCHES, requestModel)
+    const response = await axiosInstance.post<PaginationBaseResponseModel<UserResponseModel>>(
+      API_ROUTES.GET_USERS_IN_CARRIER_IN_BATCHES,
+      requestModel,
+    )
     return response.data
   },
 
@@ -84,10 +75,6 @@ export const userApi = {
    * Confirms user email
    */
   confirmEmail: async (userId: number, token: string): Promise<void> => {
-    await axiosInstance.post(
-      `${API_ROUTES.CONFIRM_EMAIL}/${userId}?token=${encodeURIComponent(
-        token
-      )}`
-    )
+    await axiosInstance.post(`${API_ROUTES.CONFIRM_EMAIL}/${userId}?token=${encodeURIComponent(token)}`)
   },
 }

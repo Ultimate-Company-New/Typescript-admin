@@ -1,5 +1,6 @@
-import { Typography, TypographyProps } from '@mui/material'
-import { forwardRef, ReactNode } from 'react'
+import { forwardRef, type ReactNode } from 'react'
+
+import { Typography, type TypographyProps } from '@mui/material'
 
 export interface PrimaryFontProps extends Omit<TypographyProps, 'variant'> {
   text?: string
@@ -13,32 +14,13 @@ export interface PrimaryFontProps extends Omit<TypographyProps, 'variant'> {
  * Use for important information that needs emphasis
  */
 const PrimaryFont = forwardRef<HTMLElement, PrimaryFontProps>(
-  (
-    {
-      text,
-      children,
-      variant = 'subtitle1',
-      color = 'textPrimary',
-      fontWeight = 500,
-      ...props
-    },
-    ref
-  ) => {
-    return (
-      <Typography
-        ref={ref}
-        variant={variant}
-        color={color}
-        fontWeight={fontWeight}
-        {...props}
-      >
-        {text || children}
-      </Typography>
-    )
-  }
+  ({ text, children, variant = 'subtitle1', color = 'textPrimary', fontWeight = 500, ...props }, ref) => (
+    <Typography ref={ref} variant={variant} color={color} fontWeight={fontWeight} {...props}>
+      {text ?? children}
+    </Typography>
+  ),
 )
 
 PrimaryFont.displayName = 'PrimaryFont'
 
 export default PrimaryFont
-

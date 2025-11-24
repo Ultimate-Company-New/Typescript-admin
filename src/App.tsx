@@ -1,12 +1,13 @@
 import { RouterProvider } from 'react-router-dom'
-import router from './routes'
+
 import { DevLogger } from './components/DevLogger'
+import router from './routes'
 
 /**
  * Main App Component
  * Simple and minimal - routing configuration is in routes.tsx
  */
-function App() {
+function App(): JSX.Element {
   // Enable DevLogger only in development mode
   const isDevelopment = import.meta.env.DEV
 
@@ -19,4 +20,3 @@ function App() {
 }
 
 export default App
-

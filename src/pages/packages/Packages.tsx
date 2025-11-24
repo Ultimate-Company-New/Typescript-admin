@@ -1,46 +1,68 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+
 import { Box } from '@mui/material'
-import {
-  GridPaginationModel,
-  GridFilterModel,
-  GridSortModel,
-} from '@mui/x-data-grid'
-import { toast } from 'react-toastify'
+import { type GridColumnVisibilityModel, type GridToolbarProps, type GridSlotsComponent } from '@mui/x-data-grid'
+
+import { packageApi } from '../../api/packageApi'
 import {
   StyledDataGrid,
   CustomNoRowsOverlay,
   SimpleToolbar,
-  filterChangeFunction,
-  FilterGroup,
-  PaginationComponent,
+  type FilterGroup,
+  handlePaginationModelChange,
+  handleFilterModelChange,
+  handleSortModelChange,
+  handleIncludeDeletedChange,
+  getInitialDensity,
+  type GridDensityType,
+  LogicOperator,
+  createFetchFunction,
+  createToggleFunction,
 } from '../../components/DataGrid'
-import { getPackageGridColumns } from '../../utils/packageGridColumns'
-import { packageApi } from '../../api/packageApi'
-import { PaginatedGridInterface } from '../../types/grid.types'
-import '../../styles/Packages.scss'
+import { getPackageGridColumns } from '../../models/gridModels/packageGridColumns'
+import { type PaginatedGridInterface } from '../../types/grid.types'
+import styles from './Packages.module.scss'
 
-const DENSITY_STORAGE_KEY = 'mui-data-grid-density-packages'
-
-const getInitialDensity = (): 'compact' | 'standard' | 'comfortable' => {
-  try {
-    const storedDensity = localStorage.getItem(DENSITY_STORAGE_KEY)
-    if (storedDensity && ['compact', 'standard', 'comfortable'].includes(storedDensity)) {
-      return storedDensity as 'compact' | 'standard' | 'comfortable'
-    }
-    return 'standard'
-  } catch {
-    return 'standard'
+/**
+ * Package data structure matching API response
+ */
+interface PackageData {
+  packageId?: number
+  _package?: {
+    packageId: number
+    deleted?: boolean
   }
+  isDeleted?: boolean
+  deleted?: boolean
 }
 
+/**
+ * Packages Management Page with DataGrid
+ * Features:
+ * - Server-side pagination
+ * - Custom multi-column filtering
+ * - Sorting
+ * - Include Deleted toggle
+ * - Responsive design
+ */
+
 const Packages = () => {
-  const [rows, setRows] = useState<any[]>([])
+  const [rows, setRows] = useState<PackageData[]>([])
   const [loading, setLoading] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
   const [includeDeleted, setIncludeDeleted] = useState(false)
-  const [density, setDensity] = useState<'compact' | 'standard' | 'comfortable'>(getInitialDensity())
-  const [activeFilterGroup, setActiveFilterGroup] = useState<FilterGroup>({ logicOperator: 'AND', filters: [] })
+  const [density, setDensity] = useState<GridDensityType>(getInitialDensity())
+  const [activeFilterGroup, setActiveFilterGroup] = useState<FilterGroup>({
+    logicOperator: LogicOperator.AND,
+    filters: [],
+  })
+  const [columnVisibilityModel, setColumnVisibilityModel] = useState<GridColumnVisibilityModel>({
+    isDeleted: false,
+    packageId: false,
+  })
+  const [visibleColumnFields, setVisibleColumnFields] = useState<string[]>([])
 
+  // Pagination model
   const [paginationModel, setPaginationModel] = useState<PaginatedGridInterface>({
     start: 0,
     end: 25,
@@ -50,166 +72,97 @@ const Packages = () => {
     totalPaginationBlockCount: 0,
   })
 
-  /**
-   * Fetch packages from API
-   */
-  const fetchPackages = useCallback(async () => {
-    setLoading(true)
-    try {
-      const response = await packageApi.getPackagesInBatches({
-        start: paginationModel.start,
-        end: paginationModel.end,
-        includeDeleted: includeDeleted,
-        logicOperator: activeFilterGroup.logicOperator,
-        filters: activeFilterGroup.filters,
-      })
+  // Get grid columns with action handlers
+  const columns = useMemo(
+    () =>
+      getPackageGridColumns(async (packageId: number) => {
+        await createToggleFunction(
+          packageApi.togglePackage,
+          packageId,
+          async () => {
+            await createFetchFunction(
+              packageApi.getPackagesInBatches,
+              setLoading,
+              setRows,
+              setTotalCount,
+              paginationModel,
+              includeDeleted,
+              activeFilterGroup,
+              'Failed to fetch packages',
+            )
+          },
+          'Failed to toggle package',
+        )
+      }),
+    [paginationModel, includeDeleted, activeFilterGroup],
+  )
 
-      setRows(response.data || [])
-      setTotalCount(response.totalDataCount || 0)
-    } catch (error) {
-      console.error('Error fetching packages:', error)
-      toast.error('Failed to fetch packages')
-      setRows([])
-      setTotalCount(0)
-    } finally {
-      setLoading(false)
-    }
+  useEffect(() => {
+    setVisibleColumnFields(
+      columns
+        .filter(col => columnVisibilityModel[col.field] && !['isDeleted', 'packageId'].includes(col.field))
+        .map(col => col.field),
+    )
+  }, [columnVisibilityModel, columns])
+
+  // Fetch packages on mount and when pagination model changes
+  useEffect(() => {
+    createFetchFunction(
+      packageApi.getPackagesInBatches,
+      setLoading,
+      setRows,
+      setTotalCount,
+      paginationModel,
+      includeDeleted,
+      activeFilterGroup,
+      'Failed to fetch packages',
+    )
   }, [paginationModel, includeDeleted, activeFilterGroup])
 
-  /**
-   * Handle toggle package (activate/deactivate)
-   */
-  const handleTogglePackage = useCallback(async (packageId: number) => {
-    try {
-      await packageApi.togglePackage(packageId)
-      toast.success('Package toggled successfully')
-      fetchPackages()
-    } catch (error) {
-      console.error('Error toggling package:', error)
-      toast.error('Failed to toggle package')
-    }
-  }, [fetchPackages])
-
-  /**
-   * Get grid columns with action handlers
-   */
-  const columns = getPackageGridColumns(handleTogglePackage)
-
-  // Fetch data on mount and when dependencies change
-  useEffect(() => {
-    fetchPackages()
-  }, [fetchPackages])
-
-  /**
-   * Handle pagination changes
-   */
-  const handlePaginationModelChange = (model: GridPaginationModel) => {
-    const start = model.page * model.pageSize
-    const end = start + model.pageSize
-
-    setPaginationModel((prev) => ({
-      ...prev,
-      start,
-      end,
-      pageSize: model.pageSize,
-    }))
-  }
-
-  /**
-   * Handle filter model changes
-   */
-  const handleFilterModelChange = (model: GridFilterModel) => {
-    filterChangeFunction({
-      gridFilterModel: model,
-      setGridFunction: setPaginationModel,
-      paginatedGridModel: paginationModel,
-    })
-  }
-
-  /**
-   * Handle sort model changes
-   */
-  const handleSortModelChange = (model: GridSortModel) => {
-    if (model.length > 0) {
-      const sortField = model[0].field
-      const sortOrder = model[0].sort
-
-      setPaginationModel((prev) => ({
-        ...prev,
-        columnName: sortField,
-        condition: sortOrder === 'desc' ? 'desc' : 'asc',
-      }))
-    } else {
-      setPaginationModel((prev) => ({
-        ...prev,
-        columnName: undefined,
-        condition: undefined,
-      }))
-    }
-  }
-
-  /**
-   * Handle include deleted checkbox change
-   */
-  const handleIncludeDeletedChange = (checked: boolean) => {
-    setIncludeDeleted(checked)
-    setPaginationModel((prev) => ({
-      ...prev,
-      includeDeleted: checked,
-      start: 0,
-    }))
-  }
-
-  /**
-   * Handle custom pagination change
-   */
-  const handleCustomPaginationChange = (_event: React.ChangeEvent<unknown>, page: number) => {
-    const start = (page - 1) * paginationModel.pageSize
-    const end = start + paginationModel.pageSize
-
-    setPaginationModel((prev) => ({
-      ...prev,
-      start,
-      end,
-    }))
-  }
-
-  /**
-   * Get row class name for styling deleted rows
-   */
-  const getRowClassName = (params: any) => {
-    const classes = [params.indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd']
-    if (params.row.isDeleted || params.row.deleted) {
-      classes.push('deleted')
-    }
-    return classes.join(' ')
-  }
-
   return (
-    <Box className="packages-page">
-      <Box className="packages-page__container">
-        <Box className="packages-page__card">
+    <Box className={styles['packages-page']}>
+      <Box className={styles['packages-page__container']}>
+        <Box className={styles['packages-page__card']} data-test-id="packages-grid-card">
+          {/* DataGrid with custom toolbar and integrated pagination */}
           <StyledDataGrid
+            dataTestId="packages-data-grid"
             rows={rows}
             columns={columns}
             loading={loading}
             rowCount={totalCount}
-            pageSizeOptions={[10, 25, 50, 100]}
-            paginationMode="server"
-            filterMode="server"
-            sortingMode="server"
+            totalCount={totalCount}
+            paginationModelState={paginationModel}
+            setPaginationModel={setPaginationModel}
+            itemLabel="packages"
+            paginationTestId="packages-pagination"
             density={density}
+            columnVisibilityModel={columnVisibilityModel}
+            onColumnVisibilityModelChange={model => {
+              setColumnVisibilityModel(model)
+            }}
             paginationModel={{
               page: Math.floor(paginationModel.start / paginationModel.pageSize),
               pageSize: paginationModel.pageSize,
             }}
-            onPaginationModelChange={handlePaginationModelChange}
-            onFilterModelChange={handleFilterModelChange}
-            onSortModelChange={handleSortModelChange}
-            getRowId={(row) => row.packageId || row._package?.packageId}
-            getRowClassName={getRowClassName}
+            onPaginationModelChange={model => {
+              handlePaginationModelChange(model, setPaginationModel)
+            }}
+            onFilterModelChange={model => {
+              handleFilterModelChange(model, paginationModel, setPaginationModel)
+            }}
+            onSortModelChange={model => {
+              handleSortModelChange(model, setPaginationModel)
+            }}
+            getRowId={row => row.packageId || row._package?.packageId}
+            getRowClassName={params => {
+              const classes = [params.indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd']
+              if (params.row.isDeleted || params.row.deleted) {
+                classes.push('deleted')
+              }
+              return classes.join(' ')
+            }}
             slots={{
-              toolbar: SimpleToolbar,
+              toolbar: SimpleToolbar as GridSlotsComponent['toolbar'],
               noRowsOverlay: CustomNoRowsOverlay,
             }}
             slotProps={{
@@ -221,33 +174,18 @@ const Packages = () => {
                 activeFilterGroup,
                 rows,
                 includeDeleted,
-                onIncludeDeletedChange: handleIncludeDeletedChange,
-              },
+                onIncludeDeletedChange: (checked: boolean) => {
+                  handleIncludeDeletedChange(checked, setIncludeDeleted, setPaginationModel)
+                },
+                visibleColumnFields,
+                columnVisibilityModel,
+                onColumnVisibilityChange: setColumnVisibilityModel,
+              } as GridToolbarProps,
             }}
             showToolbar
             disableRowSelectionOnClick
             disableColumnMenu={false}
-            hideFooter
-            initialState={{
-              columns: {
-                columnVisibilityModel: {
-                  isDeleted: false,
-                  packageId: false,
-                },
-              },
-            }}
           />
-
-          <Box className="packages-page__pagination">
-            <PaginationComponent
-              totalItems={totalCount}
-              currentPage={Math.floor(paginationModel.start / paginationModel.pageSize) + 1}
-              pageSize={paginationModel.pageSize}
-              onPageChange={handleCustomPaginationChange}
-              itemLabel="packages"
-              data-test-id="packages-pagination"
-            />
-          </Box>
         </Box>
       </Box>
     </Box>
@@ -255,4 +193,3 @@ const Packages = () => {
 }
 
 export default Packages
-

@@ -14,12 +14,12 @@
   align-items: center;
   width: 100%;
   box-sizing: border-box;
-  
+
   // Add spacing between toolbar buttons and their wrappers
   & > button,
   & > div[role="button"],
-  & > .MuiTooltip-root,
-  & > .MuiBadge-root {
+  & > :global(.MuiTooltip-root),
+  & > :global(.MuiBadge-root) {
     margin-right: 12px;
   }
 }
@@ -37,8 +37,8 @@
 .simple-toolbar__checkbox-label {
   margin-right: 0;
   margin-left: 8px;
-  
-  .MuiFormControlLabel-label {
+
+  :global(.MuiFormControlLabel-label) {
     font-size: 0.875rem;
   }
 }
@@ -171,23 +171,23 @@
   }
 
   // SVG icon colors for light mode
-  .ant-empty-img-1 {
+  :global(.ant-empty-img-1) {
     fill: #aeb8c2;
   }
 
-  .ant-empty-img-2 {
+  :global(.ant-empty-img-2) {
     fill: #f5f5f7;
   }
 
-  .ant-empty-img-3 {
+  :global(.ant-empty-img-3) {
     fill: #dce0e6;
   }
 
-  .ant-empty-img-4 {
+  :global(.ant-empty-img-4) {
     fill: #fff;
   }
 
-  .ant-empty-img-5 {
+  :global(.ant-empty-img-5) {
     fill-opacity: 0.8;
     fill: #f5f5f5;
   }
@@ -196,23 +196,23 @@
 // Dark mode support for CustomNoRowsOverlay
 @media (prefers-color-scheme: dark) {
   .custom-no-rows-overlay {
-    .ant-empty-img-1 {
+    :global(.ant-empty-img-1) {
       fill: #262626;
     }
 
-    .ant-empty-img-2 {
+    :global(.ant-empty-img-2) {
       fill: #595959;
     }
 
-    .ant-empty-img-3 {
+    :global(.ant-empty-img-3) {
       fill: #434343;
     }
 
-    .ant-empty-img-4 {
+    :global(.ant-empty-img-4) {
       fill: #1c1c1c;
     }
 
-    .ant-empty-img-5 {
+    :global(.ant-empty-img-5) {
       fill-opacity: 0.08;
       fill: #fff;
     }
@@ -436,7 +436,7 @@
   letter-spacing: normal;
 
   // Odd rows
-  .MuiDataGrid-row.odd {
+  :global(.MuiDataGrid-row.odd) {
     &:hover {
       background-color: rgba(0, 0, 0, 0.04);
 
@@ -445,7 +445,7 @@
       }
     }
 
-    &.Mui-selected {
+    &:global(.Mui-selected) {
       background-color: rgba(25, 118, 210, 0.28);
 
       &:hover {
@@ -459,7 +459,7 @@
   }
 
   // Even rows
-  .MuiDataGrid-row.even {
+  :global(.MuiDataGrid-row.even) {
     background-color: #e0e0e0;
 
     &:hover {
@@ -470,7 +470,7 @@
       }
     }
 
-    &.Mui-selected {
+    &:global(.Mui-selected) {
       background-color: rgba(25, 118, 210, 0.28);
 
       &:hover {
@@ -484,7 +484,7 @@
   }
 
   // Deleted rows
-  .MuiDataGrid-row.deleted {
+  :global(.MuiDataGrid-row.deleted) {
     background-color: rgba(66, 66, 66, 0.15);
     opacity: 0.7;
 
@@ -493,49 +493,49 @@
       opacity: 0.8;
     }
 
-    .MuiDataGrid-cell {
+    :global(.MuiDataGrid-cell) {
       color: #757575;
     }
   }
 
   // Column headers
-  .MuiDataGrid-columnHeader {
+  :global(.MuiDataGrid-columnHeader) {
     background-color: #2E7D32;
     color: white;
     font-weight: bold;
   }
 
-  .MuiDataGrid-sortIcon {
+  :global(.MuiDataGrid-sortIcon) {
     color: white;
   }
 
-  .MuiDataGrid-menuIcon {
+  :global(.MuiDataGrid-menuIcon) {
     color: white;
   }
 
-  .MuiDataGrid-iconSeparator {
+  :global(.MuiDataGrid-iconSeparator) {
     display: none;
   }
 
-  .MuiDataGrid-columnHeader,
-  .MuiDataGrid-cell {
+  :global(.MuiDataGrid-columnHeader),
+  :global(.MuiDataGrid-cell) {
     border-right: 1px solid #f0f0f0;
   }
 
-  .MuiDataGrid-columnsContainer,
-  .MuiDataGrid-cell {
+  :global(.MuiDataGrid-columnsContainer),
+  :global(.MuiDataGrid-cell) {
     border-bottom: 1px solid #f0f0f0;
   }
 
-  .MuiDataGrid-cell {
+  :global(.MuiDataGrid-cell) {
     color: rgba(0, 0, 0, 0.85);
   }
 
-  .MuiPaginationItem-root {
+  :global(.MuiPaginationItem-root) {
     border-radius: 0;
   }
 
-  .MuiDataGrid-toolbarContainer {
+  :global(.MuiDataGrid-toolbarContainer) {
     padding: 8px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.12);
     display: flex;
@@ -544,38 +544,50 @@
   }
 }
 
+// Show built-in rows-per-page dropdown but hide duplicate pagination controls
+:global(.MuiDataGrid-root) {
+  :global(.MuiTablePagination-root) {
+    border-top: 1px solid rgba(0, 0, 0, 0.12);
+    margin-top: 8px;
+  }
+
+  :global(.MuiTablePagination-actions),
+  :global(.MuiTablePagination-displayedRows) {
+    display: none;
+  }
+}
+
 // Dark mode support for DataGrid
 @media (prefers-color-scheme: dark) {
   .data-grid {
-    .MuiDataGrid-columnsContainer {
+    :global(.MuiDataGrid-columnsContainer) {
       background-color: #1d1d1d;
     }
 
-    .MuiDataGrid-columnHeader,
-    .MuiDataGrid-cell {
+    :global(.MuiDataGrid-columnHeader),
+    :global(.MuiDataGrid-cell) {
       border-right: 1px solid #303030;
     }
 
-    .MuiDataGrid-columnsContainer,
-    .MuiDataGrid-cell {
+    :global(.MuiDataGrid-columnsContainer),
+    :global(.MuiDataGrid-cell) {
       border-bottom: 1px solid #303030;
     }
 
-    .MuiDataGrid-cell {
+    :global(.MuiDataGrid-cell) {
       color: rgba(255, 255, 255, 0.65);
     }
 
-    .MuiDataGrid-row.deleted {
+    :global(.MuiDataGrid-row.deleted) {
       background-color: rgba(97, 97, 97, 0.3);
 
       &:hover {
         background-color: rgba(117, 117, 117, 0.4);
       }
 
-      .MuiDataGrid-cell {
+      :global(.MuiDataGrid-cell) {
         color: #bdbdbd;
       }
     }
   }
 }
-

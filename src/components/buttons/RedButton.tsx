@@ -1,5 +1,6 @@
-import { Button, ButtonProps } from '@mui/material'
 import { forwardRef } from 'react'
+
+import { Button, type ButtonProps } from '@mui/material'
 
 export interface RedButtonProps extends Omit<ButtonProps, 'color' | 'variant'> {
   label: string
@@ -15,36 +16,24 @@ export interface RedButtonProps extends Omit<ButtonProps, 'color' | 'variant'> {
  */
 const RedButton = forwardRef<HTMLButtonElement, RedButtonProps>(
   (
-    {
-      label,
-      href,
-      color = 'error',
-      variant = 'contained',
-      size = 'large',
-      fullWidth = false,
-      onClick,
-      ...props
-    },
-    ref
-  ) => {
-    return (
-      <Button
-        ref={ref}
-        color={color}
-        variant={variant}
-        size={size}
-        fullWidth={fullWidth}
-        onClick={onClick}
-        {...(href && { href })}
-        {...props}
-      >
-        {label}
-      </Button>
-    )
-  }
+    { label, href, color = 'error', variant = 'contained', size = 'large', fullWidth = false, onClick, ...props },
+    ref,
+  ) => (
+    <Button
+      ref={ref}
+      color={color}
+      variant={variant}
+      size={size}
+      fullWidth={fullWidth}
+      onClick={onClick}
+      {...(href && { href })}
+      {...props}
+    >
+      {label}
+    </Button>
+  ),
 )
 
 RedButton.displayName = 'RedButton'
 
 export default RedButton
-

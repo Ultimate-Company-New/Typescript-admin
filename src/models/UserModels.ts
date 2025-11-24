@@ -2,7 +2,7 @@
  * User-related TypeScript interfaces matching the Spring API models
  */
 
-import { AddressRequestModel, AddressResponseModel } from './AddressModels'
+import { type AddressRequestModel, type AddressResponseModel } from './AddressModels'
 
 export interface FilterCondition {
   column: string
@@ -45,7 +45,7 @@ export interface UserRequestModel {
   columnName?: string
   condition?: string
   filterExpr?: string
-  selectedUserIds?: number[]  // Optional user IDs to filter
+  selectedUserIds?: number[] // Optional user IDs to filter
 }
 
 export interface UserResponseModel {
@@ -57,7 +57,7 @@ export interface UserResponseModel {
   datePasswordChanges?: string
   loginAttempts?: number
   role: string
-  isDeleted: boolean  // Changed from 'deleted' to match Java
+  isDeleted: boolean // Changed from 'deleted' to match Java
   locked?: boolean
   emailConfirmed: boolean
   dob: string
@@ -96,6 +96,5 @@ export interface UserGroupResponseModel {
 
 export interface PaginationBaseResponseModel<T> {
   data: T[]
-  totalDataCount: number  // Matches Java: setTotalDataCount()
+  totalDataCount: number // Matches Java: setTotalDataCount()
 }
-

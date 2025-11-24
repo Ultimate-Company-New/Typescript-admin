@@ -1,28 +1,17 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useForm, Controller } from 'react-hook-form'
+
 import { zodResolver } from '@hookform/resolvers/zod'
-import {
-  Container,
-  Box,
-  Stack,
-  Link,
-  Divider,
-} from '@mui/material'
+import { useForm, Controller } from 'react-hook-form'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
-import {
-  Header,
-  Subheader,
-  TextFieldInput,
-  PasswordInput,
-  BlueButton,
-  Logo,
-} from '../../components'
+import { Container, Box, Stack, Link, Divider } from '@mui/material'
+
 import { loginApi } from '../../api/loginApi'
-import { loginSchema, LoginFormData } from '../../utils/validationSchemas'
+import { Header, Subheader, TextFieldInput, PasswordInput, BlueButton, Logo } from '../../components'
 import { APP_ROUTES } from '../../constants/routes'
-import '../../styles/Login.scss'
+import { loginSchema, type LoginFormData } from '../../utils/validationSchemas'
+import styles from './Login.module.scss'
 
 /**
  * Login Page Component
@@ -46,7 +35,7 @@ const Login = () => {
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: 'nahushrai+testuser01@gmail.com',
-      password: '$2a$15$.ImzrW1GgRqVPgCO.zokCO',
+      password: '$2a$15$GwHvN8jk3kDvO7.jO3OY6O',
     },
   })
 
@@ -60,17 +49,26 @@ const Login = () => {
       })
 
       toast.success('Login successful!')
-      
+
       // Store client data and login name for token retrieval
       if (clients && clients.length > 0) {
         localStorage.setItem('clients', JSON.stringify(clients))
         localStorage.setItem('loginName', data.email)
-        
+
         // Navigate to carrier landing page to select a carrier
         navigate(APP_ROUTES.CLIENT_LANDING)
+      } else {
+        toast.error('No clients found for this user.')
       }
     } catch (error) {
       // Error is handled by axios interceptor with toast
+      // The interceptor will display the specific error message from the API:
+      // - "Email and password cannot be null or empty." (400)
+      // - "Invalid User Email" (404)
+      // - "Please Confirm Your Account first" (401)
+      // - "Your account has been locked please reset your password to login" (401)
+      // - "Invalid Credentials" (401)
+      // - "Due to multiple failed attempts your account has been locked..." (401)
       console.error('Login failed:', error)
     } finally {
       setIsLoading(false)
@@ -80,13 +78,10 @@ const Login = () => {
   return (
     <Container maxWidth="sm">
       {/* Sign In Card */}
-      <Box
-        className="login-page__card"
-        sx={{ borderColor: 'divider' }}
-      >
+      <Box className={styles['login-page__card']} sx={{ borderColor: 'divider' }}>
         <Stack spacing={3}>
           {/* Company Logo - Inside card at top */}
-          <Box className="login-page__logo-container">
+          <Box className={styles['login-page__logo-container']}>
             <Logo size={100} />
           </Box>
 
@@ -154,11 +149,13 @@ const Login = () => {
           </form>
 
           {/* Forgot Password Link */}
-          <Box textAlign="center" className="login-page__forgot-password-link">
+          <Box textAlign="center" className={styles['login-page__forgot-password-link']}>
             <Link
               component="button"
               variant="body2"
-              onClick={() => navigate(APP_ROUTES.FORGOT_PASSWORD)}
+              onClick={() => {
+                navigate(APP_ROUTES.FORGOT_PASSWORD)
+              }}
               data-test-id="login-forgot-password-link"
             >
               Forgot Password?
@@ -171,4 +168,3 @@ const Login = () => {
 }
 
 export default Login
-

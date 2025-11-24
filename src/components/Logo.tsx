@@ -8,15 +8,15 @@ interface LogoProps {
 /**
  * Company Logo Component
  * Replace this placeholder with your actual logo image
- * 
+ *
  * Usage:
  * <Logo size={120} variant="default" />
- * 
+ *
  * To use an actual image:
  * <Box component="img" src="/path/to/logo.png" alt="Company Logo" sx={{ width: size, height: size }} />
  */
-const Logo = ({ size = 120, variant = 'default' }: LogoProps) => {
-  const getBackgroundColor = () => {
+const Logo = ({ size = 120, variant = 'default' }: LogoProps): JSX.Element => {
+  const getBackgroundColor = (): string => {
     switch (variant) {
       case 'light':
         return 'rgba(255, 255, 255, 0.1)'
@@ -27,7 +27,7 @@ const Logo = ({ size = 120, variant = 'default' }: LogoProps) => {
     }
   }
 
-  const getTextColor = () => {
+  const getTextColor = (): string => {
     switch (variant) {
       case 'light':
       case 'dark':
@@ -77,4 +77,3 @@ const Logo = ({ size = 120, variant = 'default' }: LogoProps) => {
 }
 
 export default Logo
-

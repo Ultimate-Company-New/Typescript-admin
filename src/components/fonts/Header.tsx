@@ -1,5 +1,6 @@
-import { Typography, TypographyProps } from '@mui/material'
 import { forwardRef } from 'react'
+
+import { Typography, type TypographyProps } from '@mui/material'
 
 export interface HeaderProps extends Omit<TypographyProps, 'variant'> {
   label: string
@@ -11,16 +12,13 @@ export interface HeaderProps extends Omit<TypographyProps, 'variant'> {
  * Defaults to h4 variant with primary text color
  */
 const Header = forwardRef<HTMLElement, HeaderProps>(
-  ({ label, variant = 'h4', color = 'textPrimary', ...props }, ref) => {
-    return (
-      <Typography ref={ref} variant={variant} color={color} {...props}>
-        {label}
-      </Typography>
-    )
-  }
+  ({ label, variant = 'h4', color = 'textPrimary', ...props }, ref) => (
+    <Typography ref={ref} variant={variant} color={color} {...props}>
+      {label}
+    </Typography>
+  ),
 )
 
 Header.displayName = 'Header'
 
 export default Header
-

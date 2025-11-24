@@ -9,4 +9,3 @@ export type { SubheaderProps } from './Subheader'
 export type { BodyTextProps } from './BodyText'
 export type { PrimaryFontProps } from './PrimaryFont'
 export type { SecondaryFontProps } from './SecondaryFont'
-

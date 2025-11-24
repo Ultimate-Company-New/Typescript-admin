@@ -1,5 +1,6 @@
-import { Typography, TypographyProps } from '@mui/material'
-import { forwardRef, ReactNode } from 'react'
+import { forwardRef, type ReactNode } from 'react'
+
+import { Typography, type TypographyProps } from '@mui/material'
 
 export interface SecondaryFontProps extends Omit<TypographyProps, 'variant'> {
   text?: string
@@ -13,25 +14,13 @@ export interface SecondaryFontProps extends Omit<TypographyProps, 'variant'> {
  * Use for supporting information, captions, or metadata
  */
 const SecondaryFont = forwardRef<HTMLElement, SecondaryFontProps>(
-  (
-    {
-      text,
-      children,
-      variant = 'body2',
-      color = 'textSecondary',
-      ...props
-    },
-    ref
-  ) => {
-    return (
-      <Typography ref={ref} variant={variant} color={color} {...props}>
-        {text || children}
-      </Typography>
-    )
-  }
+  ({ text, children, variant = 'body2', color = 'textSecondary', ...props }, ref) => (
+    <Typography ref={ref} variant={variant} color={color} {...props}>
+      {text ?? children}
+    </Typography>
+  ),
 )
 
 SecondaryFont.displayName = 'SecondaryFont'
 
 export default SecondaryFont
-

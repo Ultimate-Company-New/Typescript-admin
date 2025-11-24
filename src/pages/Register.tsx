@@ -1,9 +1,11 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useForm, Controller } from 'react-hook-form'
+
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Container, Box, Stack, Divider } from '@mui/material'
+import { useForm, Controller } from 'react-hook-form'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
+
+import { Container, Box, Stack, Divider } from '@mui/material'
 
 import {
   Header,
@@ -14,8 +16,8 @@ import {
   BlueButton,
   LinkButton,
 } from '../components'
-import { registrationSchema, RegistrationFormData } from '../utils/validationSchemas'
 import { APP_ROUTES } from '../constants/routes'
+import { registrationSchema, type RegistrationFormData } from '../utils/validationSchemas'
 
 /**
  * Registration Page Component
@@ -47,9 +49,9 @@ const Register = () => {
     try {
       // TODO: Implement registration API call
       console.log('Registration data:', data)
-      
+
       toast.success('Registration successful! Please check your email to confirm.')
-      
+
       // Navigate to login or confirmation page
       setTimeout(() => {
         navigate(APP_ROUTES.LOGIN)
@@ -165,7 +167,9 @@ const Register = () => {
           <Box textAlign="center">
             <LinkButton
               label="Already have an account? Sign In"
-              onClick={() => navigate(APP_ROUTES.LOGIN)}
+              onClick={() => {
+                navigate(APP_ROUTES.LOGIN)
+              }}
               fullWidth
             />
           </Box>
@@ -176,4 +180,3 @@ const Register = () => {
 }
 
 export default Register
-

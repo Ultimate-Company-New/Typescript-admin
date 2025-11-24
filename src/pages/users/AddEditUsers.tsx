@@ -1,5 +1,14 @@
 import { useState, useEffect, useCallback } from 'react'
+
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { toast } from 'react-toastify'
+
+import {
+  Save as SaveIcon,
+  Cancel as CancelIcon,
+  CloudUpload as UploadIcon,
+  Delete as DeleteIcon,
+} from '@mui/icons-material'
 import {
   Container,
   Box,
@@ -13,21 +22,15 @@ import {
   Avatar,
   IconButton,
 } from '@mui/material'
-import {
-  Save as SaveIcon,
-  Cancel as CancelIcon,
-  CloudUpload as UploadIcon,
-  Delete as DeleteIcon,
-} from '@mui/icons-material'
-import { GridRowId, GridRowSelectionModel } from '@mui/x-data-grid'
+import { type GridRowId, type GridRowSelectionModel } from '@mui/x-data-grid'
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
-import { toast } from 'react-toastify'
-import { AddressForm, AddressFormData, UserPermissions, Permission, StyledDataGrid } from '../../components'
-import { APP_ROUTES } from '../../constants/routes'
+
 import { userApi } from '../../api/userApi'
-import { UserResponseModel, UserRequestModel } from '../../models/UserModels'
-import '../../styles/Users.scss'
+import { AddressForm, type AddressFormData, UserPermissions, type Permission, StyledDataGrid } from '../../components'
+import { APP_ROUTES } from '../../constants/routes'
+import { type UserResponseModel, type UserRequestModel } from '../../models/UserModels'
+import styles from './Users.module.scss'
 
 /**
  * Form field configuration for repeated text fields
@@ -130,7 +133,7 @@ const AddEditUsers = () => {
 
       // Set address details
       if (response.addresses && response.addresses.length > 0) {
-        const primaryAddress = response.addresses.find((addr) => addr.isPrimary) || response.addresses[0]
+        const primaryAddress = response.addresses.find(addr => addr.isPrimary) || response.addresses[0]
         setAddress({
           street1: primaryAddress.street1 || '',
           street2: primaryAddress.street2 || '',
@@ -143,7 +146,7 @@ const AddEditUsers = () => {
 
       // Set user groups
       if (response.userGroups && response.userGroups.length > 0) {
-        const groupIds = response.userGroups.map((group) => group.groupId)
+        const groupIds = response.userGroups.map(group => group.groupId)
         setSelectedGroupIds(groupIds)
         setRowSelectionModel({
           type: 'include',
@@ -159,7 +162,7 @@ const AddEditUsers = () => {
 
       // Set permissions
       if (response.permissions && response.permissions.length > 0) {
-        setSelectedPermissionIds(response.permissions.map((perm) => perm.permissionId))
+        setSelectedPermissionIds(response.permissions.map(perm => perm.permissionId))
       }
 
       toast.success('User details loaded successfully')
@@ -177,31 +180,31 @@ const AddEditUsers = () => {
   const fetchUserGroups = useCallback(async () => {
     try {
       setGroupsLoading(true)
-      
+
       // TODO: Replace with actual API call when userGroupApi is ready
       // Mock data matching API structure
       const mockGroups = [
-        { 
-          userGroupId: 1, 
-          name: 'Administrators', 
+        {
+          userGroupId: 1,
+          name: 'Administrators',
           description: 'System administrators',
           userCount: 5,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           isDeleted: false,
         },
-        { 
-          userGroupId: 2, 
-          name: 'Managers', 
+        {
+          userGroupId: 2,
+          name: 'Managers',
           description: 'Department managers',
           userCount: 12,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           isDeleted: false,
         },
-        { 
-          userGroupId: 3, 
-          name: 'Employees', 
+        {
+          userGroupId: 3,
+          name: 'Employees',
           description: 'Regular employees',
           userCount: 45,
           createdAt: new Date().toISOString(),
@@ -209,7 +212,7 @@ const AddEditUsers = () => {
           isDeleted: false,
         },
       ]
-      
+
       setAvailableGroups(mockGroups)
     } catch (error) {
       console.error('Error fetching user groups:', error)
@@ -226,126 +229,438 @@ const AddEditUsers = () => {
     try {
       // TODO: Replace with actual API call when backend endpoint is ready
       // const response = await permissionApi.getAllPermissions()
-      
+
       // All permissions from backend Authorizations.java
       const mockPermissions: Permission[] = [
         // User Permissions
-        { permissionId: 1, permissionName: 'View User', permissionCode: 'ViewUser', description: 'View user details', category: 'USER' },
-        { permissionId: 2, permissionName: 'Insert User', permissionCode: 'InsertUser', description: 'Create new users', category: 'USER' },
-        { permissionId: 3, permissionName: 'Update User', permissionCode: 'UpdateUser', description: 'Update user details', category: 'USER' },
-        { permissionId: 4, permissionName: 'Delete User', permissionCode: 'DeleteUser', description: 'Delete users', category: 'USER' },
-        
+        { permissionId: 1,
+          permissionName: 'View User',
+          permissionCode: 'ViewUser',
+          description: 'View user details',
+          category: 'USER' },
+        { permissionId: 2,
+          permissionName: 'Insert User',
+          permissionCode: 'InsertUser',
+          description: 'Create new users',
+          category: 'USER' },
+        { permissionId: 3,
+          permissionName: 'Update User',
+          permissionCode: 'UpdateUser',
+          description: 'Update user details',
+          category: 'USER' },
+        { permissionId: 4,
+          permissionName: 'Delete User',
+          permissionCode: 'DeleteUser',
+          description: 'Delete users',
+          category: 'USER' },
+
         // User Log Permissions
-        { permissionId: 5, permissionName: 'View Logs', permissionCode: 'ViewLogs', description: 'View user logs', category: 'USER_LOG' },
-        
+        { permissionId: 5,
+          permissionName: 'View Logs',
+          permissionCode: 'ViewLogs',
+          description: 'View user logs',
+          category: 'USER_LOG' },
+
         // Groups Permissions
-        { permissionId: 6, permissionName: 'View Groups', permissionCode: 'ViewGroups', description: 'View user groups', category: 'GROUP' },
-        { permissionId: 7, permissionName: 'Insert Groups', permissionCode: 'InsertGroups', description: 'Create new groups', category: 'GROUP' },
-        { permissionId: 8, permissionName: 'Update Groups', permissionCode: 'UpdateGroups', description: 'Update group details', category: 'GROUP' },
-        { permissionId: 9, permissionName: 'Delete Groups', permissionCode: 'DeleteGroups', description: 'Delete groups', category: 'GROUP' },
-        
+        { permissionId: 6,
+          permissionName: 'View Groups',
+          permissionCode: 'ViewGroups',
+          description: 'View user groups',
+          category: 'GROUP' },
+        { permissionId: 7,
+          permissionName: 'Insert Groups',
+          permissionCode: 'InsertGroups',
+          description: 'Create new groups',
+          category: 'GROUP' },
+        { permissionId: 8,
+          permissionName: 'Update Groups',
+          permissionCode: 'UpdateGroups',
+          description: 'Update group details',
+          category: 'GROUP' },
+        { permissionId: 9,
+          permissionName: 'Delete Groups',
+          permissionCode: 'DeleteGroups',
+          description: 'Delete groups',
+          category: 'GROUP' },
+
         // Messages Permissions
-        { permissionId: 10, permissionName: 'View Messages', permissionCode: 'ViewMessages', description: 'View messages', category: 'MESSAGE' },
-        { permissionId: 11, permissionName: 'Insert Messages', permissionCode: 'InsertMessages', description: 'Send messages', category: 'MESSAGE' },
-        { permissionId: 12, permissionName: 'Update Messages', permissionCode: 'UpdateMessages', description: 'Update messages', category: 'MESSAGE' },
-        { permissionId: 13, permissionName: 'Delete Messages', permissionCode: 'DeleteMessages', description: 'Delete messages', category: 'MESSAGE' },
-        
+        { permissionId: 10,
+          permissionName: 'View Messages',
+          permissionCode: 'ViewMessages',
+          description: 'View messages',
+          category: 'MESSAGE' },
+        { permissionId: 11,
+          permissionName: 'Insert Messages',
+          permissionCode: 'InsertMessages',
+          description: 'Send messages',
+          category: 'MESSAGE' },
+        { permissionId: 12,
+          permissionName: 'Update Messages',
+          permissionCode: 'UpdateMessages',
+          description: 'Update messages',
+          category: 'MESSAGE' },
+        { permissionId: 13,
+          permissionName: 'Delete Messages',
+          permissionCode: 'DeleteMessages',
+          description: 'Delete messages',
+          category: 'MESSAGE' },
+
         // Promos Permissions
-        { permissionId: 14, permissionName: 'View Promos', permissionCode: 'ViewPromos', description: 'View promotions', category: 'PROMO' },
-        { permissionId: 15, permissionName: 'Insert Promos', permissionCode: 'InsertPromos', description: 'Create promotions', category: 'PROMO' },
-        { permissionId: 16, permissionName: 'Update Promos', permissionCode: 'UpdatePromos', description: 'Update promotions', category: 'PROMO' },
-        { permissionId: 17, permissionName: 'Delete Promos', permissionCode: 'DeletePromos', description: 'Delete promotions', category: 'PROMO' },
-        
+        { permissionId: 14,
+          permissionName: 'View Promos',
+          permissionCode: 'ViewPromos',
+          description: 'View promotions',
+          category: 'PROMO' },
+        { permissionId: 15,
+          permissionName: 'Insert Promos',
+          permissionCode: 'InsertPromos',
+          description: 'Create promotions',
+          category: 'PROMO' },
+        { permissionId: 16,
+          permissionName: 'Update Promos',
+          permissionCode: 'UpdatePromos',
+          description: 'Update promotions',
+          category: 'PROMO' },
+        { permissionId: 17,
+          permissionName: 'Delete Promos',
+          permissionCode: 'DeletePromos',
+          description: 'Delete promotions',
+          category: 'PROMO' },
+
         // Pickup Location Permissions
-        { permissionId: 18, permissionName: 'View Pickup Locations', permissionCode: 'ViewPickupLocations', description: 'View pickup locations', category: 'PICKUP_LOCATION' },
-        { permissionId: 19, permissionName: 'Insert Pickup Locations', permissionCode: 'InsertPickupLocations', description: 'Create pickup locations', category: 'PICKUP_LOCATION' },
-        { permissionId: 20, permissionName: 'Update Pickup Locations', permissionCode: 'UpdatePickupLocations', description: 'Update pickup locations', category: 'PICKUP_LOCATION' },
-        { permissionId: 21, permissionName: 'Delete Pickup Locations', permissionCode: 'DeletePickupLocations', description: 'Delete pickup locations', category: 'PICKUP_LOCATION' },
-        
+        { permissionId: 18,
+          permissionName: 'View Pickup Locations',
+          permissionCode: 'ViewPickupLocations',
+          description: 'View pickup locations',
+          category: 'PICKUP_LOCATION' },
+        { permissionId: 19,
+          permissionName: 'Insert Pickup Locations',
+          permissionCode: 'InsertPickupLocations',
+          description: 'Create pickup locations',
+          category: 'PICKUP_LOCATION' },
+        { permissionId: 20,
+          permissionName: 'Update Pickup Locations',
+          permissionCode: 'UpdatePickupLocations',
+          description: 'Update pickup locations',
+          category: 'PICKUP_LOCATION' },
+        { permissionId: 21,
+          permissionName: 'Delete Pickup Locations',
+          permissionCode: 'DeletePickupLocations',
+          description: 'Delete pickup locations',
+          category: 'PICKUP_LOCATION' },
+
         // Products Permissions
-        { permissionId: 22, permissionName: 'View Products', permissionCode: 'ViewProducts', description: 'View products', category: 'PRODUCT' },
-        { permissionId: 23, permissionName: 'Insert Products', permissionCode: 'InsertProducts', description: 'Create products', category: 'PRODUCT' },
-        { permissionId: 24, permissionName: 'Update Products', permissionCode: 'UpdateProducts', description: 'Update products', category: 'PRODUCT' },
-        { permissionId: 25, permissionName: 'Delete Products', permissionCode: 'DeleteProducts', description: 'Delete products', category: 'PRODUCT' },
-        { permissionId: 26, permissionName: 'Toggle Product Availability', permissionCode: 'ToggleProductAvailability', description: 'Toggle product availability', category: 'PRODUCT' },
-        { permissionId: 27, permissionName: 'Toggle Product Returns', permissionCode: 'ToggleProductReturns', description: 'Toggle product returns', category: 'PRODUCT' },
-        
+        { permissionId: 22,
+          permissionName: 'View Products',
+          permissionCode: 'ViewProducts',
+          description: 'View products',
+          category: 'PRODUCT' },
+        { permissionId: 23,
+          permissionName: 'Insert Products',
+          permissionCode: 'InsertProducts',
+          description: 'Create products',
+          category: 'PRODUCT' },
+        { permissionId: 24,
+          permissionName: 'Update Products',
+          permissionCode: 'UpdateProducts',
+          description: 'Update products',
+          category: 'PRODUCT' },
+        { permissionId: 25,
+          permissionName: 'Delete Products',
+          permissionCode: 'DeleteProducts',
+          description: 'Delete products',
+          category: 'PRODUCT' },
+        { permissionId: 26,
+          permissionName: 'Toggle Product Availability',
+          permissionCode: 'ToggleProductAvailability',
+          description: 'Toggle product availability',
+          category: 'PRODUCT' },
+        { permissionId: 27,
+          permissionName: 'Toggle Product Returns',
+          permissionCode: 'ToggleProductReturns',
+          description: 'Toggle product returns',
+          category: 'PRODUCT' },
+
         // Orders Permissions
-        { permissionId: 28, permissionName: 'View Orders', permissionCode: 'ViewOrders', description: 'View orders', category: 'ORDER' },
-        { permissionId: 29, permissionName: 'Insert Orders', permissionCode: 'InsertOrders', description: 'Create orders', category: 'ORDER' },
-        { permissionId: 30, permissionName: 'Update Orders', permissionCode: 'UpdateOrders', description: 'Update orders', category: 'ORDER' },
-        { permissionId: 31, permissionName: 'Cancel Orders', permissionCode: 'CancelOrders', description: 'Cancel orders', category: 'ORDER' },
-        { permissionId: 32, permissionName: 'View Order Statistics', permissionCode: 'ViewOrderStatistics', description: 'View order statistics', category: 'ORDER' },
-        
+        { permissionId: 28,
+          permissionName: 'View Orders',
+          permissionCode: 'ViewOrders',
+          description: 'View orders',
+          category: 'ORDER' },
+        { permissionId: 29,
+          permissionName: 'Insert Orders',
+          permissionCode: 'InsertOrders',
+          description: 'Create orders',
+          category: 'ORDER' },
+        { permissionId: 30,
+          permissionName: 'Update Orders',
+          permissionCode: 'UpdateOrders',
+          description: 'Update orders',
+          category: 'ORDER' },
+        { permissionId: 31,
+          permissionName: 'Cancel Orders',
+          permissionCode: 'CancelOrders',
+          description: 'Cancel orders',
+          category: 'ORDER' },
+        { permissionId: 32,
+          permissionName: 'View Order Statistics',
+          permissionCode: 'ViewOrderStatistics',
+          description: 'View order statistics',
+          category: 'ORDER' },
+
         // Address Permissions
-        { permissionId: 33, permissionName: 'View Address', permissionCode: 'ViewAddress', description: 'View addresses', category: 'ADDRESS' },
-        { permissionId: 34, permissionName: 'Insert Address', permissionCode: 'InsertAddress', description: 'Create addresses', category: 'ADDRESS' },
-        { permissionId: 35, permissionName: 'Update Address', permissionCode: 'UpdateAddress', description: 'Update addresses', category: 'ADDRESS' },
-        { permissionId: 36, permissionName: 'Delete Address', permissionCode: 'DeleteAddress', description: 'Delete addresses', category: 'ADDRESS' },
-        
+        { permissionId: 33,
+          permissionName: 'View Address',
+          permissionCode: 'ViewAddress',
+          description: 'View addresses',
+          category: 'ADDRESS' },
+        { permissionId: 34,
+          permissionName: 'Insert Address',
+          permissionCode: 'InsertAddress',
+          description: 'Create addresses',
+          category: 'ADDRESS' },
+        { permissionId: 35,
+          permissionName: 'Update Address',
+          permissionCode: 'UpdateAddress',
+          description: 'Update addresses',
+          category: 'ADDRESS' },
+        { permissionId: 36,
+          permissionName: 'Delete Address',
+          permissionCode: 'DeleteAddress',
+          description: 'Delete addresses',
+          category: 'ADDRESS' },
+
         // Client Permissions
-        { permissionId: 37, permissionName: 'View Client', permissionCode: 'ViewClient', description: 'View clients', category: 'CLIENT' },
-        { permissionId: 38, permissionName: 'Insert Client', permissionCode: 'InsertClient', description: 'Create clients', category: 'CLIENT' },
-        { permissionId: 39, permissionName: 'Update Client', permissionCode: 'UpdateClient', description: 'Update clients', category: 'CLIENT' },
-        { permissionId: 40, permissionName: 'Delete Client', permissionCode: 'DeleteClient', description: 'Delete clients', category: 'CLIENT' },
-        
+        { permissionId: 37,
+          permissionName: 'View Client',
+          permissionCode: 'ViewClient',
+          description: 'View clients',
+          category: 'CLIENT' },
+        { permissionId: 38,
+          permissionName: 'Insert Client',
+          permissionCode: 'InsertClient',
+          description: 'Create clients',
+          category: 'CLIENT' },
+        { permissionId: 39,
+          permissionName: 'Update Client',
+          permissionCode: 'UpdateClient',
+          description: 'Update clients',
+          category: 'CLIENT' },
+        { permissionId: 40,
+          permissionName: 'Delete Client',
+          permissionCode: 'DeleteClient',
+          description: 'Delete clients',
+          category: 'CLIENT' },
+
         // Payments Permissions
-        { permissionId: 41, permissionName: 'View Payments', permissionCode: 'ViewPayments', description: 'View payments', category: 'PAYMENT' },
-        { permissionId: 42, permissionName: 'View Payment Statistics', permissionCode: 'ViewPaymentStatistics', description: 'View payment statistics', category: 'PAYMENT' },
-        { permissionId: 43, permissionName: 'Process Refunds', permissionCode: 'ProcessRefunds', description: 'Process refunds', category: 'PAYMENT' },
-        
+        { permissionId: 41,
+          permissionName: 'View Payments',
+          permissionCode: 'ViewPayments',
+          description: 'View payments',
+          category: 'PAYMENT' },
+        { permissionId: 42,
+          permissionName: 'View Payment Statistics',
+          permissionCode: 'ViewPaymentStatistics',
+          description: 'View payment statistics',
+          category: 'PAYMENT' },
+        { permissionId: 43,
+          permissionName: 'Process Refunds',
+          permissionCode: 'ProcessRefunds',
+          description: 'Process refunds',
+          category: 'PAYMENT' },
+
         // Events Permissions
-        { permissionId: 44, permissionName: 'View Events', permissionCode: 'ViewEvents', description: 'View events', category: 'EVENT' },
-        { permissionId: 45, permissionName: 'Insert Events', permissionCode: 'InsertEvents', description: 'Create events', category: 'EVENT' },
-        { permissionId: 46, permissionName: 'Update Events', permissionCode: 'UpdateEvents', description: 'Update events', category: 'EVENT' },
-        { permissionId: 47, permissionName: 'Toggle Events', permissionCode: 'ToggleEvents', description: 'Toggle events', category: 'EVENT' },
-        
+        { permissionId: 44,
+          permissionName: 'View Events',
+          permissionCode: 'ViewEvents',
+          description: 'View events',
+          category: 'EVENT' },
+        { permissionId: 45,
+          permissionName: 'Insert Events',
+          permissionCode: 'InsertEvents',
+          description: 'Create events',
+          category: 'EVENT' },
+        { permissionId: 46,
+          permissionName: 'Update Events',
+          permissionCode: 'UpdateEvents',
+          description: 'Update events',
+          category: 'EVENT' },
+        { permissionId: 47,
+          permissionName: 'Toggle Events',
+          permissionCode: 'ToggleEvents',
+          description: 'Toggle events',
+          category: 'EVENT' },
+
         // API Keys Permissions
-        { permissionId: 48, permissionName: 'View API Keys', permissionCode: 'ViewApiKeys', description: 'View API keys', category: 'API_KEY' },
-        { permissionId: 49, permissionName: 'Insert API Keys', permissionCode: 'InsertApiKeys', description: 'Create API keys', category: 'API_KEY' },
-        { permissionId: 50, permissionName: 'Update API Keys', permissionCode: 'UpdateApiKeys', description: 'Update API keys', category: 'API_KEY' },
-        
+        { permissionId: 48,
+          permissionName: 'View API Keys',
+          permissionCode: 'ViewApiKeys',
+          description: 'View API keys',
+          category: 'API_KEY' },
+        { permissionId: 49,
+          permissionName: 'Insert API Keys',
+          permissionCode: 'InsertApiKeys',
+          description: 'Create API keys',
+          category: 'API_KEY' },
+        { permissionId: 50,
+          permissionName: 'Update API Keys',
+          permissionCode: 'UpdateApiKeys',
+          description: 'Update API keys',
+          category: 'API_KEY' },
+
         // Leads Permissions
-        { permissionId: 51, permissionName: 'View Leads', permissionCode: 'ViewLeads', description: 'View leads', category: 'LEAD' },
-        { permissionId: 52, permissionName: 'Insert Leads', permissionCode: 'InsertLeads', description: 'Create leads', category: 'LEAD' },
-        { permissionId: 53, permissionName: 'Update Leads', permissionCode: 'UpdateLeads', description: 'Update leads', category: 'LEAD' },
-        { permissionId: 54, permissionName: 'Toggle Leads', permissionCode: 'ToggleLeads', description: 'Toggle leads', category: 'LEAD' },
-        
+        { permissionId: 51,
+          permissionName: 'View Leads',
+          permissionCode: 'ViewLeads',
+          description: 'View leads',
+          category: 'LEAD' },
+        { permissionId: 52,
+          permissionName: 'Insert Leads',
+          permissionCode: 'InsertLeads',
+          description: 'Create leads',
+          category: 'LEAD' },
+        { permissionId: 53,
+          permissionName: 'Update Leads',
+          permissionCode: 'UpdateLeads',
+          description: 'Update leads',
+          category: 'LEAD' },
+        { permissionId: 54,
+          permissionName: 'Toggle Leads',
+          permissionCode: 'ToggleLeads',
+          description: 'Toggle leads',
+          category: 'LEAD' },
+
         // Purchase Order Permissions
-        { permissionId: 55, permissionName: 'View Purchase Orders', permissionCode: 'ViewPurchaseOrders', description: 'View purchase orders', category: 'PURCHASE_ORDER' },
-        { permissionId: 56, permissionName: 'Insert Purchase Orders', permissionCode: 'InsertPurchaseOrders', description: 'Create purchase orders', category: 'PURCHASE_ORDER' },
-        { permissionId: 57, permissionName: 'Update Purchase Orders', permissionCode: 'UpdatePurchaseOrders', description: 'Update purchase orders', category: 'PURCHASE_ORDER' },
-        { permissionId: 58, permissionName: 'Toggle Purchase Orders', permissionCode: 'TogglePurchaseOrders', description: 'Toggle purchase orders', category: 'PURCHASE_ORDER' },
-        
+        { permissionId: 55,
+          permissionName: 'View Purchase Orders',
+          permissionCode: 'ViewPurchaseOrders',
+          description: 'View purchase orders',
+          category: 'PURCHASE_ORDER' },
+        { permissionId: 56,
+          permissionName: 'Insert Purchase Orders',
+          permissionCode: 'InsertPurchaseOrders',
+          description: 'Create purchase orders',
+          category: 'PURCHASE_ORDER' },
+        { permissionId: 57,
+          permissionName: 'Update Purchase Orders',
+          permissionCode: 'UpdatePurchaseOrders',
+          description: 'Update purchase orders',
+          category: 'PURCHASE_ORDER' },
+        { permissionId: 58,
+          permissionName: 'Toggle Purchase Orders',
+          permissionCode: 'TogglePurchaseOrders',
+          description: 'Toggle purchase orders',
+          category: 'PURCHASE_ORDER' },
+
         // Sales Order Permissions
-        { permissionId: 59, permissionName: 'View Sales Orders', permissionCode: 'ViewSalesOrders', description: 'View sales orders', category: 'SALES_ORDER' },
-        { permissionId: 60, permissionName: 'Insert Sales Orders', permissionCode: 'InsertSalesOrders', description: 'Create sales orders', category: 'SALES_ORDER' },
-        { permissionId: 61, permissionName: 'Update Sales Orders', permissionCode: 'UpdateSalesOrders', description: 'Update sales orders', category: 'SALES_ORDER' },
-        { permissionId: 62, permissionName: 'Toggle Sales Orders', permissionCode: 'ToggleSalesOrders', description: 'Toggle sales orders', category: 'SALES_ORDER' },
-        
+        { permissionId: 59,
+          permissionName: 'View Sales Orders',
+          permissionCode: 'ViewSalesOrders',
+          description: 'View sales orders',
+          category: 'SALES_ORDER' },
+        { permissionId: 60,
+          permissionName: 'Insert Sales Orders',
+          permissionCode: 'InsertSalesOrders',
+          description: 'Create sales orders',
+          category: 'SALES_ORDER' },
+        { permissionId: 61,
+          permissionName: 'Update Sales Orders',
+          permissionCode: 'UpdateSalesOrders',
+          description: 'Update sales orders',
+          category: 'SALES_ORDER' },
+        { permissionId: 62,
+          permissionName: 'Toggle Sales Orders',
+          permissionCode: 'ToggleSalesOrders',
+          description: 'Toggle sales orders',
+          category: 'SALES_ORDER' },
+
         // Web Template Permissions
-        { permissionId: 63, permissionName: 'View Web Template', permissionCode: 'ViewWebTemplate', description: 'View web templates', category: 'WEB_TEMPLATE' },
-        { permissionId: 64, permissionName: 'Insert Web Template', permissionCode: 'InsertWebTemplate', description: 'Create web templates', category: 'WEB_TEMPLATE' },
-        { permissionId: 65, permissionName: 'Update Web Template', permissionCode: 'UpdateWebTemplate', description: 'Update web templates', category: 'WEB_TEMPLATE' },
-        { permissionId: 66, permissionName: 'Deploy Web Template', permissionCode: 'DeployWebTemplate', description: 'Deploy web templates', category: 'WEB_TEMPLATE' },
-        { permissionId: 67, permissionName: 'Deactivate Web Template', permissionCode: 'DeactivateWebTemplate', description: 'Deactivate web templates', category: 'WEB_TEMPLATE' },
-        
+        { permissionId: 63,
+          permissionName: 'View Web Template',
+          permissionCode: 'ViewWebTemplate',
+          description: 'View web templates',
+          category: 'WEB_TEMPLATE' },
+        { permissionId: 64,
+          permissionName: 'Insert Web Template',
+          permissionCode: 'InsertWebTemplate',
+          description: 'Create web templates',
+          category: 'WEB_TEMPLATE' },
+        { permissionId: 65,
+          permissionName: 'Update Web Template',
+          permissionCode: 'UpdateWebTemplate',
+          description: 'Update web templates',
+          category: 'WEB_TEMPLATE' },
+        { permissionId: 66,
+          permissionName: 'Deploy Web Template',
+          permissionCode: 'DeployWebTemplate',
+          description: 'Deploy web templates',
+          category: 'WEB_TEMPLATE' },
+        { permissionId: 67,
+          permissionName: 'Deactivate Web Template',
+          permissionCode: 'DeactivateWebTemplate',
+          description: 'Deactivate web templates',
+          category: 'WEB_TEMPLATE' },
+
         // Packages Permissions
-        { permissionId: 68, permissionName: 'View Packages', permissionCode: 'ViewPackages', description: 'View packages', category: 'PACKAGE' },
-        { permissionId: 69, permissionName: 'Insert Packages', permissionCode: 'InsertPackages', description: 'Create packages', category: 'PACKAGE' },
-        { permissionId: 70, permissionName: 'Update Packages', permissionCode: 'UpdatePackages', description: 'Update packages', category: 'PACKAGE' },
-        { permissionId: 71, permissionName: 'Toggle Packages', permissionCode: 'TogglePackages', description: 'Toggle packages', category: 'PACKAGE' },
-        
+        { permissionId: 68,
+          permissionName: 'View Packages',
+          permissionCode: 'ViewPackages',
+          description: 'View packages',
+          category: 'PACKAGE' },
+        { permissionId: 69,
+          permissionName: 'Insert Packages',
+          permissionCode: 'InsertPackages',
+          description: 'Create packages',
+          category: 'PACKAGE' },
+        { permissionId: 70,
+          permissionName: 'Update Packages',
+          permissionCode: 'UpdatePackages',
+          description: 'Update packages',
+          category: 'PACKAGE' },
+        { permissionId: 71,
+          permissionName: 'Toggle Packages',
+          permissionCode: 'TogglePackages',
+          description: 'Toggle packages',
+          category: 'PACKAGE' },
+
         // Support Permissions
-        { permissionId: 72, permissionName: 'View Tickets', permissionCode: 'ViewTickets', description: 'View support tickets', category: 'SUPPORT' },
-        { permissionId: 73, permissionName: 'Raise Tickets', permissionCode: 'RaiseTickets', description: 'Raise support tickets', category: 'SUPPORT' },
-        { permissionId: 74, permissionName: 'Edit Tickets', permissionCode: 'EditTickets', description: 'Edit support tickets', category: 'SUPPORT' },
-        { permissionId: 75, permissionName: 'Delete Tickets', permissionCode: 'DeleteTickets', description: 'Delete support tickets', category: 'SUPPORT' },
-        { permissionId: 76, permissionName: 'View Comments', permissionCode: 'ViewComments', description: 'View ticket comments', category: 'SUPPORT' },
-        { permissionId: 77, permissionName: 'Post Comments', permissionCode: 'PostComments', description: 'Post ticket comments', category: 'SUPPORT' },
-        { permissionId: 78, permissionName: 'Download Attachments', permissionCode: 'DownloadAttachments', description: 'Download ticket attachments', category: 'SUPPORT' },
+        { permissionId: 72,
+          permissionName: 'View Tickets',
+          permissionCode: 'ViewTickets',
+          description: 'View support tickets',
+          category: 'SUPPORT' },
+        { permissionId: 73,
+          permissionName: 'Raise Tickets',
+          permissionCode: 'RaiseTickets',
+          description: 'Raise support tickets',
+          category: 'SUPPORT' },
+        { permissionId: 74,
+          permissionName: 'Edit Tickets',
+          permissionCode: 'EditTickets',
+          description: 'Edit support tickets',
+          category: 'SUPPORT' },
+        { permissionId: 75,
+          permissionName: 'Delete Tickets',
+          permissionCode: 'DeleteTickets',
+          description: 'Delete support tickets',
+          category: 'SUPPORT' },
+        { permissionId: 76,
+          permissionName: 'View Comments',
+          permissionCode: 'ViewComments',
+          description: 'View ticket comments',
+          category: 'SUPPORT' },
+        { permissionId: 77,
+          permissionName: 'Post Comments',
+          permissionCode: 'PostComments',
+          description: 'Post ticket comments',
+          category: 'SUPPORT' },
+        { permissionId: 78,
+          permissionName: 'Download Attachments',
+          permissionCode: 'DownloadAttachments',
+          description: 'Download ticket attachments',
+          category: 'SUPPORT' },
       ]
-      
+
       setAvailablePermissions(mockPermissions)
     } catch (error) {
       console.error('Failed to fetch permissions:', error)
@@ -374,7 +689,7 @@ const AddEditUsers = () => {
 
     // Convert to base64
     const reader = new FileReader()
-    reader.onload = (e) => {
+    reader.onload = e => {
       const base64 = e.target?.result as string
       setProfilePictureBase64(base64)
       toast.success('Profile picture uploaded')
@@ -449,7 +764,7 @@ const AddEditUsers = () => {
     setLoading(true)
     try {
       const requestData: UserRequestModel = {
-        userId: isEdit ? parseInt(userId!) : undefined,
+        userId: isEdit ? parseInt(userId) : undefined,
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         email: email.trim(),
@@ -497,7 +812,6 @@ const AddEditUsers = () => {
     navigate(APP_ROUTES.DASHBOARD.USERS)
   }
 
-
   // Personal information fields configuration
   const personalInfoFields: FormField[] = [
     {
@@ -506,7 +820,8 @@ const AddEditUsers = () => {
       value: firstName,
       onChange: setFirstName,
       required: true,
-      gridSize: { xs: 12, md: 6 },
+      gridSize: { xs: 12,
+        md: 6 },
     },
     {
       id: 'lastName',
@@ -514,7 +829,8 @@ const AddEditUsers = () => {
       value: lastName,
       onChange: setLastName,
       required: true,
-      gridSize: { xs: 12, md: 6 },
+      gridSize: { xs: 12,
+        md: 6 },
     },
     {
       id: 'email',
@@ -523,7 +839,8 @@ const AddEditUsers = () => {
       onChange: setEmail,
       required: true,
       type: 'email',
-      gridSize: { xs: 12, md: 6 },
+      gridSize: { xs: 12,
+        md: 6 },
     },
     {
       id: 'phone',
@@ -532,10 +849,10 @@ const AddEditUsers = () => {
       onChange: setPhone,
       required: true,
       type: 'tel',
-      gridSize: { xs: 12, md: 6 },
+      gridSize: { xs: 12,
+        md: 6 },
     },
   ]
-
 
   // Fetch data on mount
   useEffect(() => {
@@ -559,14 +876,20 @@ const AddEditUsers = () => {
 
             <Grid container spacing={2}>
               {/* Profile Picture */}
-              <Grid item xs={12} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+              <Grid item xs={12} sx={{ display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 2 }}>
                 <Avatar
                   src={profilePictureBase64}
-                  sx={{ width: 120, height: 120, cursor: isView ? 'default' : 'pointer' }}
+                  sx={{ width: 120,
+                    height: 120,
+                    cursor: isView ? 'default' : 'pointer' }}
                   onClick={() => !isView && document.getElementById('profile-picture-input')?.click()}
                 />
                 {!isView && (
-                  <Box sx={{ display: 'flex', gap: 2 }}>
+                  <Box sx={{ display: 'flex',
+                    gap: 2 }}>
                     <Button
                       variant="outlined"
                       startIcon={<UploadIcon />}
@@ -592,13 +915,15 @@ const AddEditUsers = () => {
               </Grid>
 
               {/* Text Fields */}
-              {personalInfoFields.map((field) => (
+              {personalInfoFields.map(field => (
                 <Grid item xs={12} sm={6} key={field.id}>
                   <TextField
                     fullWidth
                     label={field.label}
                     value={field.value}
-                    onChange={(e) => field.onChange(e.target.value)}
+                    onChange={e => {
+                      field.onChange(e.target.value)
+                    }}
                     required={field.required}
                     disabled={isView || loading}
                     type={field.type || 'text'}
@@ -615,11 +940,13 @@ const AddEditUsers = () => {
                   select
                   label="Role"
                   value={role}
-                  onChange={(e) => setRole(e.target.value)}
+                  onChange={e => {
+                    setRole(e.target.value)
+                  }}
                   required
                   disabled={isView || loading}
                 >
-                  {roles.map((r) => (
+                  {roles.map(r => (
                     <MenuItem key={r} value={r}>
                       {r}
                     </MenuItem>
@@ -632,7 +959,9 @@ const AddEditUsers = () => {
                 <DatePicker
                   label="Date of Birth"
                   value={dob}
-                  onChange={(newValue: Date | null) => setDob(newValue)}
+                  onChange={(newValue: Date | null) => {
+                    setDob(newValue)
+                  }}
                   disabled={isView || loading}
                   slotProps={{
                     textField: {
@@ -654,7 +983,10 @@ const AddEditUsers = () => {
 
             <AddressForm
               address={address}
-              onChange={(field, value) => setAddress({ ...address, [field]: value })}
+              onChange={(field, value) => {
+                setAddress({ ...address,
+                  [field]: value })
+              }}
               disabled={isView || loading}
               states={states}
             />
@@ -713,14 +1045,14 @@ const AddEditUsers = () => {
                     headerAlign: 'center',
                   },
                 ]}
-                getRowId={(row) => row.userGroupId}
+                getRowId={row => row.userGroupId}
                 checkboxSelection={!isView}
                 disableRowSelectionOnClick
                 rowSelectionModel={rowSelectionModel}
-                onRowSelectionModelChange={(newSelection) => {
+                onRowSelectionModelChange={newSelection => {
                   setRowSelectionModel(newSelection)
                   const ids = Array.from(newSelection.ids ?? new Set<GridRowId>())
-                  setSelectedGroupIds(ids.map((id) => Number(id)))
+                  setSelectedGroupIds(ids.map(id => Number(id)))
                 }}
                 loading={groupsLoading}
                 pageSizeOptions={[10, 25, 50]}
@@ -810,4 +1142,3 @@ const AddEditUsers = () => {
 }
 
 export default AddEditUsers
-
