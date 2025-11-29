@@ -1,0 +1,545 @@
+/**
+ * Common Styles Module
+ * Centralized reusable styles for consistent UI across the application
+ * Import and extend these classes in your component-specific SCSS modules
+ */
+
+// ============================================================================
+// Page Layout Patterns
+// ============================================================================
+
+.page {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: 0;
+  box-sizing: border-box;
+
+  &__container {
+    padding-top: 32px;
+    padding-bottom: 32px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow-x: auto;
+  }
+
+  &__container--reduced-top {
+    padding-top: 16px;
+    padding-bottom: 32px;
+  }
+
+  &__container--form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding-top: 24px;
+    padding-bottom: 24px;
+  }
+}
+
+// ============================================================================
+// Card / Paper Components
+// ============================================================================
+
+.card {
+  background-color: #ffffff;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  box-sizing: border-box;
+
+  &--elevated {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  &--rounded {
+    border-radius: 8px;
+  }
+}
+
+.section {
+  margin-top: 24px;
+  padding: 24px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  &__title {
+    font-weight: 600;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+  }
+
+  &__divider {
+    margin: 16px 0;
+  }
+
+  &__divider-spacer {
+    margin-bottom: 24px;
+    display: block;
+  }
+}
+
+// ============================================================================
+// DataGrid Container
+// ============================================================================
+
+.grid-container {
+  &__card {
+    background-color: #ffffff;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
+
+    :global(.MuiDataGrid-root) {
+      width: 100%;
+      max-width: 100%;
+      min-width: 800px;
+      box-sizing: border-box;
+      border: none;
+      border-radius: 0;
+    }
+  }
+
+  &__wrapper {
+    margin-top: 16px;
+    min-height: 400px;
+  }
+
+  &__pagination {
+    padding: 16px;
+    border-top: 1px solid rgba(224, 224, 224, 1);
+    background-color: #fff;
+  }
+}
+
+// ============================================================================
+// Action Buttons Layout
+// ============================================================================
+
+.actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+
+  &--start {
+    justify-content: flex-start;
+  }
+
+  &--end {
+    justify-content: flex-end;
+  }
+
+  &--between {
+    justify-content: space-between;
+  }
+
+  &--padded {
+    padding: 24px;
+  }
+
+  &--bordered-top {
+    padding-top: 24px;
+    margin-top: 32px;
+    border-top: 1px solid #e0e0e0;
+  }
+}
+
+.action-button {
+  text-transform: none;
+  min-width: 200px;
+
+  &--normal-width {
+    min-width: auto;
+  }
+}
+
+// ============================================================================
+// Form Elements
+// ============================================================================
+
+.form {
+  &__field {
+    width: 100%;
+  }
+
+  &__field-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 0;
+  }
+
+  &__container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+}
+
+// ============================================================================
+// Selection Info / Alert Boxes
+// ============================================================================
+
+.info-box {
+  margin-top: 16px;
+  padding: 12px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  text-align: center;
+
+  &--primary {
+    background-color: #f5f9ff;
+    border-left: 4px solid #1976d2;
+    text-align: left;
+  }
+
+  &--padded {
+    padding: 24px;
+    margin-top: 24px;
+    margin-bottom: 24px;
+  }
+}
+
+// ============================================================================
+// Instructions / Help Sections
+// ============================================================================
+
+.instructions {
+  &__paper {
+    padding: 24px;
+    margin-top: 24px;
+    margin-bottom: 24px;
+    background-color: #f5f9ff;
+    border-left: 4px solid #1976d2;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  &__title {
+    font-weight: 600;
+  }
+}
+
+// ============================================================================
+// Empty States
+// ============================================================================
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 40px;
+  margin-top: 40px;
+  text-align: center;
+
+  &__icon {
+    font-size: 80px;
+    color: #bdbdbd;
+    margin-bottom: 16px;
+  }
+
+  &--compact {
+    padding: 48px 16px;
+    margin-top: 0;
+  }
+}
+
+// ============================================================================
+// Preview / Code Display
+// ============================================================================
+
+.preview {
+  &__paper {
+    margin-top: 24px;
+    padding: 24px;
+  }
+
+  &__header {
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e0e0e0;
+  }
+}
+
+.code-display {
+  &__container {
+    margin-top: 16px;
+    max-height: 600px;
+    overflow: auto;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+    padding: 16px;
+  }
+
+  &__pre {
+    margin: 0;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #333;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+}
+
+// ============================================================================
+// Modal / Dialog Components
+// ============================================================================
+
+.dialog {
+  &__paper {
+    border-radius: 16px;
+    box-shadow:
+      0px 11px 15px -7px rgba(0, 0, 0, 0.2),
+      0px 24px 38px 3px rgba(0, 0, 0, 0.14),
+      0px 9px 46px 8px rgba(0, 0, 0, 0.12);
+  }
+
+  &__paper--simple {
+    border-radius: 8px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 8px;
+  }
+
+  &__close-button {
+    color: #9e9e9e;
+
+    &:hover {
+      color: #757575;
+    }
+  }
+
+  &__content {
+    padding-top: 16px;
+    padding-bottom: 24px;
+  }
+
+  &__content--extended {
+    padding-top: 24px;
+    padding-bottom: 24px;
+  }
+
+  &__actions {
+    padding: 24px 24px 16px 24px;
+    gap: 8px;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  &__actions-spacer {
+    flex: 1;
+  }
+}
+
+// ============================================================================
+// Floating Action Button (FAB) Patterns
+// ============================================================================
+
+.fab {
+  position: fixed !important;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1200;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  transition: all 0.3s ease-in-out !important;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  &--offset-left {
+    right: 96px; // Position to the left of another FAB
+  }
+
+  &--primary {
+    background-color: #1976d2 !important;
+    color: #fff !important;
+
+    &:hover {
+      background-color: #1565c0 !important;
+    }
+  }
+
+  &--secondary {
+    background-color: #008000 !important;
+    color: #fff !important;
+
+    &:hover {
+      background-color: #2e7d32 !important;
+    }
+  }
+}
+
+// ============================================================================
+// Utility Classes
+// ============================================================================
+
+.spacer {
+  flex-grow: 1;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.divider {
+  margin: 16px 0;
+
+  &--thin {
+    margin: 8px 0;
+  }
+
+  &--thick {
+    margin: 24px 0;
+  }
+}
+
+.text {
+  &--center {
+    text-align: center;
+  }
+
+  &--ellipsis {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
+  }
+
+  &--bold {
+    font-weight: 600;
+  }
+
+  &--uppercase {
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+.flex {
+  display: flex;
+
+  &--column {
+    flex-direction: column;
+  }
+
+  &--row {
+    flex-direction: row;
+  }
+
+  &--center {
+    align-items: center;
+    justify-content: center;
+  }
+
+  &--gap-small {
+    gap: 8px;
+  }
+
+  &--gap-medium {
+    gap: 16px;
+  }
+
+  &--gap-large {
+    gap: 24px;
+  }
+
+  &--wrap {
+    flex-wrap: wrap;
+  }
+}
+
+// ============================================================================
+// Error / Warning Row States
+// ============================================================================
+
+.error-row {
+  background-color: #ffebee !important;
+
+  &:hover {
+    background-color: #ffcdd2 !important;
+  }
+}
+
+.deleted-row {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.08) !important;
+  }
+}
+
+// ============================================================================
+// Dark Mode Support
+// ============================================================================
+
+@media (prefers-color-scheme: dark) {
+  .card {
+    background-color: #1e1e1e;
+  }
+
+  .section {
+    background-color: #1e1e1e;
+  }
+
+  .grid-container {
+    &__card {
+      background-color: #1e1e1e;
+    }
+
+    &__pagination {
+      background-color: #1e1e1e;
+      border-top: 1px solid #303030;
+    }
+  }
+
+  .info-box {
+    background-color: rgba(255, 255, 255, 0.05);
+
+    &--primary {
+      background-color: rgba(25, 118, 210, 0.08);
+    }
+  }
+
+  .instructions {
+    &__paper {
+      background-color: rgba(25, 118, 210, 0.08);
+    }
+  }
+
+  .code-display {
+    &__container {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    &__pre {
+      color: #e0e0e0;
+    }
+  }
+
+  .deleted-row {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.08) !important;
+    }
+  }
+}

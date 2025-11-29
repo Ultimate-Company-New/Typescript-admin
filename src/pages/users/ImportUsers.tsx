@@ -1,39 +1,38 @@
-import { useState, useCallback } from 'react'
+import { useCallback, useState } from 'react'
 
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
 import {
-  CloudUpload as UploadIcon,
+  Delete as DeleteIcon,
   Download as DownloadIcon,
   GridOn as GridIcon,
-  Code as JsonIcon,
-  Delete as DeleteIcon,
-  Send as SendIcon,
   Info as InfoIcon,
+  Code as JsonIcon,
+  Send as SendIcon,
+  CloudUpload as UploadIcon,
 } from '@mui/icons-material'
 import {
-  Container,
+  Alert,
   Box,
   Button,
-  Typography,
+  Chip,
+  Container,
+  FormControl,
+  IconButton,
+  InputLabel,
+  MenuItem,
   Paper,
   Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   ToggleButton,
   ToggleButtonGroup,
-  Alert,
-  Chip,
-  IconButton,
   Tooltip,
+  Typography,
 } from '@mui/material'
 import { DataGrid, type GridColDef } from '@mui/x-data-grid'
 
 import { Header, Subheader } from '../../components'
 import { APP_ROUTES } from '../../constants/routes'
-import styles from './Users.module.scss'
 
 /**
  * Interface for parsed user data from Excel/CSV
@@ -46,8 +45,8 @@ interface ImportUserData {
   phone: string
   role: string
   dob: string
-  street1: string
-  street2?: string
+  streetAddress: string
+  streetAddress2?: string
   city: string
   state: string
   zipCode: string
@@ -70,8 +69,8 @@ interface BulkUserImportRequest {
     role: string
     dob: string
     address: {
-      street1: string
-      street2?: string
+      streetAddress: string
+      streetAddress2?: string
       city: string
       state: string
       zipCode: string
@@ -113,8 +112,8 @@ const ImportUsers = () => {
         phone: '1234567890',
         role: 'Manager',
         dob: '1990-01-15',
-        street1: '123 Main St',
-        street2: 'Apt 4B',
+        streetAddress: '123 Main St',
+        streetAddress2: 'Apt 4B',
         city: 'New York',
         state: 'NY',
         zipCode: '10001',
@@ -129,8 +128,8 @@ const ImportUsers = () => {
         phone: '0987654321',
         role: 'Employee',
         dob: '1992-05-20',
-        street1: '456 Oak Ave',
-        street2: '',
+        streetAddress: '456 Oak Ave',
+        streetAddress2: '',
         city: 'Los Angeles',
         state: 'CA',
         zipCode: '90001',
@@ -162,29 +161,28 @@ const ImportUsers = () => {
   /**
    * Handle file upload and parse CSV/Excel
    */
-  const handleFileUpload = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const uploadedFile = event.target.files?.[0]
-      if (!uploadedFile) return
+  const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const uploadedFile = event.target.files?.[0]
+    if (!uploadedFile) return
 
-      // Validate file type
-      const validTypes = [
-        'text/csv',
-        'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      ]
-      if (!validTypes.includes(uploadedFile.type) &&
-          !uploadedFile.name.endsWith('.csv') &&
-          !uploadedFile.name.endsWith('.xlsx')) {
-        toast.error('Please upload a valid CSV or Excel file')
-        return
-      }
+    // Validate file type
+    const validTypes = [
+      'text/csv',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    ]
+    if (
+      !validTypes.includes(uploadedFile.type) &&
+      !uploadedFile.name.endsWith('.csv') &&
+      !uploadedFile.name.endsWith('.xlsx')
+    ) {
+      toast.error('Please upload a valid CSV or Excel file')
+      return
+    }
 
-      setFile(uploadedFile)
-      parseFile(uploadedFile)
-    },
-    [],
-  )
+    setFile(uploadedFile)
+    parseFile(uploadedFile)
+  }, [])
 
   /**
    * Parse CSV/Excel file
@@ -220,12 +218,8 @@ const ImportUsers = () => {
           if (!values[4]) errors.push('Role is required')
 
           // Parse permission and group IDs
-          const permissionIds = values[12]
-            ? values[12].split(';').map(id => parseInt(id.trim()))
-            : []
-          const groupIds = values[13]
-            ? values[13].split(';').map(id => parseInt(id.trim()))
-            : []
+          const permissionIds = values[12] ? values[12].split(';').map(id => parseInt(id.trim())) : []
+          const groupIds = values[13] ? values[13].split(';').map(id => parseInt(id.trim())) : []
 
           parsedData.push({
             rowNumber: i,
@@ -235,8 +229,8 @@ const ImportUsers = () => {
             phone: values[3] || '',
             role: values[4] || '',
             dob: values[5] || '',
-            street1: values[6] || '',
-            street2: values[7] || undefined,
+            streetAddress: values[6] || '',
+            streetAddress2: values[7] || undefined,
             city: values[8] || '',
             state: values[9] || '',
             zipCode: values[10] || '',
@@ -287,8 +281,8 @@ const ImportUsers = () => {
       role: user.role,
       dob: user.dob,
       address: {
-        street1: user.street1,
-        street2: user.street2,
+        streetAddress: user.streetAddress,
+        streetAddress2: user.streetAddress2,
         city: user.city,
         state: user.state,
         zipCode: user.zipCode,
@@ -460,12 +454,7 @@ const ImportUsers = () => {
             className="import-users-page__action-button"
           >
             Upload File
-            <input
-              type="file"
-              hidden
-              accept=".csv,.xlsx,.xls"
-              onChange={handleFileUpload}
-            />
+            <input type="file" hidden accept=".csv,.xlsx,.xls" onChange={handleFileUpload} />
           </Button>
 
           {/* Max Records Dropdown */}
@@ -517,11 +506,7 @@ const ImportUsers = () => {
             severity="info"
             className="import-users-page__file-alert"
             action={
-              <IconButton
-                size="small"
-                onClick={handleClearFile}
-                disabled={isLoading}
-              >
+              <IconButton size="small" onClick={handleClearFile} disabled={isLoading}>
                 <DeleteIcon fontSize="small" />
               </IconButton>
             }
@@ -536,9 +521,7 @@ const ImportUsers = () => {
         {importData.length > 0 && (
           <Paper className="import-users-page__preview-paper">
             <Box className="import-users-page__preview-header">
-              <Typography variant="h6">
-                Data Preview ({importData.length} records)
-              </Typography>
+              <Typography variant="h6">Data Preview ({importData.length} records)</Typography>
             </Box>
 
             {viewMode === 'grid' ? (
@@ -554,17 +537,13 @@ const ImportUsers = () => {
                   disableRowSelectionOnClick
                   autoHeight
                   getRowClassName={params =>
-                    (params.row.errors && params.row.errors.length > 0
-                      ? 'import-users-page__error-row'
-                      : '')
+                    params.row.errors && params.row.errors.length > 0 ? 'import-users-page__error-row' : ''
                   }
                 />
               </Box>
             ) : (
               <Box className="import-users-page__json-container">
-                <pre className="import-users-page__json-pre">
-                  {JSON.stringify(generateImportJSON(), null, 2)}
-                </pre>
+                <pre className="import-users-page__json-pre">{JSON.stringify(generateImportJSON(), null, 2)}</pre>
               </Box>
             )}
 
@@ -603,18 +582,9 @@ const ImportUsers = () => {
             <Typography variant="body2" color="text.secondary" paragraph>
               Download the template, fill in your data, and upload the file to get started
             </Typography>
-            <Button
-              variant="contained"
-              component="label"
-              startIcon={<UploadIcon />}
-            >
+            <Button variant="contained" component="label" startIcon={<UploadIcon />}>
               Upload File
-              <input
-                type="file"
-                hidden
-                accept=".csv,.xlsx,.xls"
-                onChange={handleFileUpload}
-              />
+              <input type="file" hidden accept=".csv,.xlsx,.xls" onChange={handleFileUpload} />
             </Button>
           </Paper>
         )}

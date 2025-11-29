@@ -3,7 +3,7 @@ import { Link as RouterLink } from 'react-router-dom'
 import { AppBar, Toolbar, Typography, Box } from '@mui/material'
 
 import { APP_ROUTES } from '../../constants/routes'
-import styles from './MainLayout.module.scss'
+import styles from '../../styles/Layouts.module.scss'
 
 /**
  * Main navigation bar for public pages

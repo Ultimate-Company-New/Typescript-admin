@@ -1,0 +1,169 @@
+/**
+ * Form Input Components - Centralized Styles
+ * Shared styling for all form input components
+ */
+
+// Base filled input styles
+.filled-input {
+  :global {
+    .MuiFilledInput-root {
+      background-color: rgba(0, 0, 0, 0.04);
+      border-radius: 8px;
+      border: 1px solid transparent;
+      transition: all 0.2s ease-in-out;
+
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.06);
+        border: 1px solid rgba(0, 0, 0, 0.12);
+      }
+
+      &.Mui-focused {
+        background-color: rgba(0, 0, 0, 0.02);
+        border: 1px solid;
+        border-color: #1976d2;
+        box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.08);
+      }
+
+      &.Mui-error {
+        border: 1px solid;
+        border-color: #d32f2f;
+
+        &.Mui-focused {
+          box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.08);
+        }
+      }
+
+      &.Mui-disabled {
+        background-color: rgba(0, 0, 0, 0.02);
+        opacity: 0.6;
+      }
+    }
+
+    .MuiInputLabel-root {
+      font-size: 0.875rem;
+      font-weight: 500;
+
+      &.Mui-focused {
+        color: #1976d2;
+      }
+    }
+  }
+}
+
+// Select menu item styles
+.select-menu-item {
+  border-radius: 4px;
+  margin: 4px 8px;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+
+  &.Mui-selected {
+    background-color: rgba(25, 118, 210, 0.08);
+
+    &:hover {
+      background-color: rgba(25, 118, 210, 0.12);
+    }
+  }
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+  .filled-input {
+    :global {
+      .MuiFilledInput-root {
+        background-color: rgba(255, 255, 255, 0.08);
+
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.12);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        &.Mui-focused {
+          background-color: rgba(255, 255, 255, 0.06);
+          border-color: #90caf9;
+          box-shadow: 0 0 0 3px rgba(144, 202, 249, 0.16);
+        }
+
+        &.Mui-error {
+          border-color: #f44336;
+
+          &.Mui-focused {
+            box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.16);
+          }
+        }
+
+        &.Mui-disabled {
+          background-color: rgba(255, 255, 255, 0.04);
+        }
+      }
+
+      .MuiInputLabel-root {
+        &.Mui-focused {
+          color: #90caf9;
+        }
+      }
+    }
+  }
+
+  .select-menu-item {
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.08);
+    }
+
+    &.Mui-selected {
+      background-color: rgba(144, 202, 249, 0.16);
+
+      &:hover {
+        background-color: rgba(144, 202, 249, 0.24);
+      }
+    }
+  }
+}
+
+// ============================================================================
+// Image Upload Input Styles
+// ============================================================================
+
+.image-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+  padding: 16px 0;
+
+  &__preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+
+  &__avatar {
+    &--active {
+      cursor: pointer;
+      transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+
+      &:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+    }
+
+    &--disabled {
+      cursor: default;
+      opacity: 0.7;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+}

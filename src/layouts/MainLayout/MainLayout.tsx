@@ -3,7 +3,7 @@ import { Outlet } from 'react-router-dom'
 import { Box } from '@mui/material'
 
 import MainNavbar from './MainNavbar'
-import styles from './MainLayout.module.scss'
+import styles from '../../styles/Layouts.module.scss'
 
 /**
  * Main layout for public/unauthenticated pages

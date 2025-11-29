@@ -18,27 +18,10 @@ import {
   type GridDensityType,
   LogicOperator,
   createToggleFunction,
-} from '../../components/DataGrid'
-import { getUserGroupGridColumns } from '../../models/gridModels/userGroupGridColumns'
+} from '../../components/datagrid'
+import { getUserGroupGridColumns, type UserGroupData } from '../../models/gridModels/userGroupGridColumns'
 import { type PaginatedGridInterface } from '../../types/grid.types'
 import styles from './UserGroups.module.scss'
-
-/**
- * User Group data structure matching API response
- */
-interface UserGroupData {
-  groupId?: number
-  userGroupId?: number
-  groupName: string
-  name?: string
-  description: string
-  userIds: number[]
-  memberCount?: number
-  userCount?: number
-  isDeleted: boolean
-  createdAt: string
-  updatedAt: string
-}
 
 /**
  * User Groups Management Page with DataGrid

@@ -18,7 +18,7 @@ import {
   LogicOperator,
   createFetchFunction,
   createToggleFunction,
-} from '../../components/DataGrid'
+} from '../../components/datagrid'
 import { getPackageGridColumns } from '../../models/gridModels/packageGridColumns'
 import { type PaginatedGridInterface } from '../../types/grid.types'
 import styles from './Packages.module.scss'

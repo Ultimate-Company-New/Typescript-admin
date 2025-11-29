@@ -1,17 +1,18 @@
 import { useState } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm, Controller } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
-import { Container, Box, Stack, Link, Divider } from '@mui/material'
+import { Box, Container, Divider, Link, Stack } from '@mui/material'
 
 import { loginApi } from '../../api/loginApi'
-import { Header, Subheader, TextFieldInput, PasswordInput, BlueButton, Logo } from '../../components'
+import { BlueButton, Header, Logo, PasswordInput, Subheader, TextFieldInput } from '../../components'
 import { APP_ROUTES } from '../../constants/routes'
 import { loginSchema, type LoginFormData } from '../../utils/validationSchemas'
-import styles from './Login.module.scss'
+
+import styles from '../../styles/Login.module.scss'
 
 /**
  * Login Page Component
@@ -22,7 +23,7 @@ import styles from './Login.module.scss'
  * - Toast notifications
  * - React Hook Form for form management
  */
-const Login = () => {
+const Login = (): JSX.Element => {
   const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(false)
 
@@ -35,12 +36,12 @@ const Login = () => {
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: 'nahushrai+testuser01@gmail.com',
-      password: '$2a$15$GwHvN8jk3kDvO7.jO3OY6O',
+      password: '$2a$15$u8Yh4O2qc7Tb5rBUIpiuWO',
     },
   })
 
   // Handle login submission
-  const onSubmit = async (data: LoginFormData) => {
+  const onSubmit = async (data: LoginFormData): Promise<void> => {
     setIsLoading(true)
     try {
       const clients = await loginApi.signIn({
@@ -51,7 +52,7 @@ const Login = () => {
       toast.success('Login successful!')
 
       // Store client data and login name for token retrieval
-      if (clients && clients.length > 0) {
+      if (clients.length > 0) {
         localStorage.setItem('clients', JSON.stringify(clients))
         localStorage.setItem('loginName', data.email)
 
@@ -60,7 +61,7 @@ const Login = () => {
       } else {
         toast.error('No clients found for this user.')
       }
-    } catch (error) {
+    } catch {
       // Error is handled by axios interceptor with toast
       // The interceptor will display the specific error message from the API:
       // - "Email and password cannot be null or empty." (400)
@@ -69,7 +70,6 @@ const Login = () => {
       // - "Your account has been locked please reset your password to login" (401)
       // - "Invalid Credentials" (401)
       // - "Due to multiple failed attempts your account has been locked..." (401)
-      console.error('Login failed:', error)
     } finally {
       setIsLoading(false)
     }

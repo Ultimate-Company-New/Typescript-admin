@@ -1,33 +1,30 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { Box } from '@mui/material'
-import {
-  type GridColumnVisibilityModel,
-
-  type GridToolbarProps,
-  type GridSlotsComponent } from '@mui/x-data-grid'
+import { type GridColumnVisibilityModel, type GridSlotsComponent, type GridToolbarProps } from '@mui/x-data-grid'
 
 import { userApi } from '../../api/userApi'
 import {
-  StyledDataGrid,
   CustomNoRowsOverlay,
-  SimpleToolbar,
-  type FilterGroup,
-  handlePaginationModelChange,
-  handleFilterModelChange,
-  handleSortModelChange,
-  handleIncludeDeletedChange,
-  getRowClassName,
-  getInitialDensity,
-  type GridDensityType,
   LogicOperator,
+  SimpleToolbar,
+  StyledDataGrid,
   createFetchFunction,
   createToggleFunction,
-} from '../../components/DataGrid'
+  getInitialDensity,
+  getRowClassName,
+  handleFilterModelChange,
+  handleIncludeDeletedChange,
+  handlePaginationModelChange,
+  handleSortModelChange,
+  type FilterGroup,
+  type GridDensityType,
+} from '../../components/datagrid'
 import { getUserGridColumns } from '../../models/gridModels/userGridColumns'
 import { type UserResponseModel } from '../../models/UserModels'
 import { type PaginatedGridInterface } from '../../types/grid.types'
-import styles from './Users.module.scss'
+
+import styles from '../../styles/Users.module.scss'
 
 /**
  * Users Management Page with DataGrid
@@ -39,14 +36,16 @@ import styles from './Users.module.scss'
  * - Responsive design
  */
 
-const Users = () => {
+const Users = (): JSX.Element => {
   const [rows, setRows] = useState<UserResponseModel[]>([])
   const [loading, setLoading] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
   const [includeDeleted, setIncludeDeleted] = useState(false)
   const [density, setDensity] = useState<GridDensityType>(getInitialDensity())
-  const [activeFilterGroup, setActiveFilterGroup] = useState<FilterGroup>({ logicOperator: LogicOperator.AND,
-    filters: [] })
+  const [activeFilterGroup, setActiveFilterGroup] = useState<FilterGroup>({
+    logicOperator: LogicOperator.AND,
+    filters: [],
+  })
   const [columnVisibilityModel, setColumnVisibilityModel] = useState<GridColumnVisibilityModel>({
     isDeleted: false,
     userId: false,
@@ -72,7 +71,16 @@ const Users = () => {
           userId,
           async () => {
             await createFetchFunction(
-              userApi.fetchUsersInCarrierInBatches,
+              async params => {
+                const result = await userApi.fetchUsersInCarrierInBatches({
+                  ...params,
+                  filters: params.filters as never,
+                })
+                return {
+                  data: result.data,
+                  totalDataCount: result.totalDataCount,
+                }
+              },
               setLoading,
               setRows,
               setTotalCount,
@@ -91,15 +99,28 @@ const Users = () => {
   useEffect(() => {
     setVisibleColumnFields(
       columns
-        .filter(col => columnVisibilityModel[col.field] !== false && !['isDeleted', 'userId'].includes(col.field))
+        .filter(col => {
+          const isExcluded = ['isDeleted', 'userId'].includes(col.field)
+          const isVisible = columnVisibilityModel[col.field]
+          return !isExcluded && isVisible
+        })
         .map(col => col.field),
     )
   }, [columnVisibilityModel, columns])
 
   // Fetch users on mount and when pagination model changes
   useEffect(() => {
-    createFetchFunction(
-      userApi.fetchUsersInCarrierInBatches,
+    void createFetchFunction(
+      async params => {
+        const result = await userApi.fetchUsersInCarrierInBatches({
+          ...params,
+          filters: params.filters as never,
+        })
+        return {
+          data: result.data,
+          totalDataCount: result.totalDataCount,
+        }
+      },
       setLoading,
       setRows,
       setTotalCount,
@@ -124,7 +145,6 @@ const Users = () => {
             totalCount={totalCount}
             paginationModelState={paginationModel}
             setPaginationModel={setPaginationModel}
-            itemLabel="users"
             paginationTestId="users-pagination"
             density={density}
             columnVisibilityModel={columnVisibilityModel}
@@ -137,17 +157,14 @@ const Users = () => {
             }}
             onPaginationModelChange={model => {
               handlePaginationModelChange(model, setPaginationModel)
-            }
-            }
+            }}
             onFilterModelChange={model => {
               handleFilterModelChange(model, paginationModel, setPaginationModel)
-            }
-            }
+            }}
             onSortModelChange={model => {
               handleSortModelChange(model, setPaginationModel)
-            }
-            }
-            getRowId={row => row.userId}
+            }}
+            getRowId={(row): number => (row as UserResponseModel).userId}
             getRowClassName={params => getRowClassName<UserResponseModel>(params)}
             slots={{
               toolbar: SimpleToolbar as GridSlotsComponent['toolbar'],

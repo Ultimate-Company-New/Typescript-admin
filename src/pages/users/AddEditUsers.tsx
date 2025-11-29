@@ -1,50 +1,90 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm, useWatch, type DefaultValues } from 'react-hook-form'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
+import { Cancel as CancelIcon, Save as SaveIcon } from '@mui/icons-material'
+import { Box, Container, Divider, Paper } from '@mui/material'
 import {
-  Save as SaveIcon,
-  Cancel as CancelIcon,
-  CloudUpload as UploadIcon,
-  Delete as DeleteIcon,
-} from '@mui/icons-material'
-import {
-  Container,
-  Box,
-  Paper,
-  TextField,
-  Button,
-  Typography,
-  Divider,
-  Grid,
-  MenuItem,
-  Avatar,
-  IconButton,
-} from '@mui/material'
-import { type GridRowId, type GridRowSelectionModel } from '@mui/x-data-grid'
-import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers'
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
+  type GridColumnVisibilityModel,
+  type GridFilterModel,
+  type GridPaginationModel,
+  type GridRowClassNameParams,
+  type GridSlotsComponent,
+  type GridSortModel,
+  type GridToolbarProps,
+  type GridValidRowModel,
+} from '@mui/x-data-grid'
 
-import { userApi } from '../../api/userApi'
-import { AddressForm, type AddressFormData, UserPermissions, type Permission, StyledDataGrid } from '../../components'
+import { createUser, getAllPermissions, getUserById, updateUser } from '../../api/userApi'
+import { getUserLogsInBatches, type UserLogResponseModel } from '../../api/userLogApi'
+import {
+  AddressDetailsView,
+  AddressFormController,
+  FillTestDataButton,
+  FormFieldRenderer,
+  UserDetailsView,
+  UserGroupSelectionGrid,
+  UserPermissions,
+  type Permission,
+  type SectionConfig,
+} from '../../components'
+import { BlueButton, RedButton } from '../../components/buttons'
+import {
+  LogicOperator,
+  SimpleToolbar,
+  StyledDataGrid,
+  getInitialDensity,
+  getRowClassName,
+  handleFilterModelChange,
+  handlePaginationModelChange,
+  handleSortModelChange,
+  type FilterGroup,
+  type GridDensityType,
+} from '../../components/datagrid'
+import { Subheader } from '../../components/fonts'
+import { FieldType } from '../../components/form/FormFieldRenderer'
+import { PERMISSIONS, ROLE_PERMISSIONS, USER_ROLES, USER_ROLES_ARRAY } from '../../constants/appConstants'
 import { APP_ROUTES } from '../../constants/routes'
-import { type UserResponseModel, type UserRequestModel } from '../../models/UserModels'
-import styles from './Users.module.scss'
+import { usePermissions } from '../../hooks/usePermissions'
+import { type AddressResponseModel } from '../../models/AddressModels'
+import { getUserGroupGridColumns } from '../../models/gridModels/userGroupGridColumns'
+import { getUserLogGridColumns } from '../../models/gridModels/userLogGridColumns'
+import { type UserRequestModel, type UserResponseModel } from '../../models/UserModels'
+import { type PaginatedGridInterface } from '../../types/grid.types'
+import { getAllStates, getCitiesByState } from '../../utils/stateCityMapper'
+import { userFormSchema, type UserFormData } from '../../utils/validationSchemas'
+
+import styles from '../../styles/Users.module.scss'
 
 /**
- * Form field configuration for repeated text fields
+ * Normalize permission codes so comparisons are consistent regardless of casing or delimiters
+ * Examples:
+ *  - 'VIEW_USER' => 'viewuser'
+ *  - 'ViewUser' => 'viewuser'
+ *  - 'view-user' => 'viewuser'
  */
-interface FormField {
-  id: string
-  label: string
-  value: string
-  onChange: (value: string) => void
-  required?: boolean
-  multiline?: boolean
-  rows?: number
-  type?: string
-  gridSize?: { xs: number; md: number }
+const normalizePermissionCode = (code: string): string => code.replace(/[^a-z0-9]/gi, '').toLowerCase()
+
+/**
+ * Utility to avoid unnecessary state updates when selected permissions already match
+ */
+const haveSameIds = (a: number[], b: number[]): boolean => {
+  if (a.length !== b.length) return false
+  const sortedA = [...a].sort((x, y) => x - y)
+  const sortedB = [...b].sort((x, y) => x - y)
+  return sortedA.every((value, index) => value === sortedB[index])
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ensureApiFunction = <T extends (...args: any[]) => any>(fn: unknown, name: string): fn is T => {
+  if (typeof fn !== 'function') {
+    toast.error(`${name} API is unavailable`)
+    return false
+  }
+  return true
 }
 
 /**
@@ -60,7 +100,7 @@ interface FormField {
  * - User logs section (edit/view mode only)
  * - Profile picture upload
  */
-const AddEditUsers = () => {
+const AddEditUsers = (): JSX.Element => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const userId = searchParams.get('userId')
@@ -69,1075 +109,886 @@ const AddEditUsers = () => {
 
   const [loading, setLoading] = useState(false)
 
-  // Personal Information
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
-  const [email, setEmail] = useState('')
-  const [phone, setPhone] = useState('')
-  const [dob, setDob] = useState<Date | null>(null)
-  const [role, setRole] = useState('')
-  const [profilePictureBase64, setProfilePictureBase64] = useState('')
+  // Get user permissions for authorization
+  const { hasPermission } = usePermissions()
 
-  // Address Details
-  const [address, setAddress] = useState<AddressFormData>({
-    street1: '',
-    street2: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    country: 'USA',
+  // Use ref to track if permission check has been performed to avoid duplicate toasts
+  const hasCheckedPermissions = useRef(false)
+  const hasFetchedUserDetails = useRef(false)
+
+  // Check permissions on mount and redirect if unauthorized
+  useEffect(() => {
+    // Skip if already checked (prevents duplicate toasts in React Strict Mode)
+    if (hasCheckedPermissions.current) {
+      return
+    }
+
+    let requiredPermission: string | null = null
+
+    // Determine required permission based on the mode
+    if (isView) {
+      // View mode requires VIEW_USER permission
+      requiredPermission = PERMISSIONS.VIEW_USER
+    } else if (isEdit) {
+      // Edit mode requires UPDATE_USER permission
+      requiredPermission = PERMISSIONS.UPDATE_USER
+    } else {
+      // Add mode requires INSERT_USER permission
+      requiredPermission = PERMISSIONS.INSERT_USER
+    }
+
+    // Check if user has the required permission
+    if (requiredPermission && !hasPermission(requiredPermission)) {
+      hasCheckedPermissions.current = true
+      toast.error('You do not have permission to access this page')
+      navigate(APP_ROUTES.DASHBOARD.USERS, { replace: true })
+    } else if (requiredPermission) {
+      // Mark as checked even on success to prevent re-checking
+      hasCheckedPermissions.current = true
+    }
+  }, [hasPermission, isView, isEdit, navigate])
+
+  // Form setup with react-hook-form and Zod validation
+  const formMethods = useForm<UserFormData>({
+    resolver: zodResolver(userFormSchema),
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      loginName: '',
+      phone: '',
+      dob: undefined,
+      role: '',
+      profilePictureBase64: '',
+      address: {
+        streetAddress: '',
+        streetAddress2: '',
+        streetAddress3: '',
+        city: '',
+        state: '',
+        postalCode: '',
+        country: 'India',
+        addressType: '',
+        nameOnAddress: '',
+        emailOnAddress: '',
+        phoneOnAddress: '',
+      },
+      notes: '',
+    },
   })
+  const { control, handleSubmit: handleFormSubmit, formState, reset, setValue } = formMethods
+  const errors = formState.errors as Record<string, { message?: string } | undefined>
 
-  // User Groups
-  interface UserGroupRow {
-    userGroupId: number
-    name: string
-    description?: string
-    userCount: number
-    createdAt?: string
-    updatedAt?: string
-    isDeleted?: boolean
-  }
+  // Watch the state field to update cities dynamically
+  // Type guard for address value - memoized
+  const isAddressValue = useCallback(
+    (value: unknown): value is UserFormData['address'] =>
+      typeof value === 'object' &&
+      value !== null &&
+      'streetAddress' in value &&
+      'city' in value &&
+      'state' in value &&
+      'postalCode' in value &&
+      'country' in value,
+    [],
+  )
 
-  const [rowSelectionModel, setRowSelectionModel] = useState<GridRowSelectionModel>({
-    type: 'include',
-    ids: new Set<GridRowId>(),
-  })
+  // Watch address field - use getValues for type safety
+  // We'll use a state variable that gets updated when address changes via useEffect
+  const [selectedState, setSelectedState] = useState<string>('')
+
+  // Watch address state for city updates - extract to variable for dependency array
+  const watchedAddressStateRaw = useWatch({
+    control,
+    name: 'address',
+    defaultValue: formMethods.getValues('address'),
+  }) as unknown
+  const watchedAddressState: unknown = watchedAddressStateRaw
+
+  // Update selectedState when address changes - memoized callback
+  const updateSelectedState = useCallback(() => {
+    const currentAddressValue: unknown = formMethods.getValues('address')
+    if (isAddressValue(currentAddressValue)) {
+      const addressRecord = currentAddressValue as Record<string, unknown>
+      const stateValue = addressRecord.state
+      if (typeof stateValue === 'string') {
+        setSelectedState(stateValue)
+      } else {
+        setSelectedState('')
+      }
+    } else {
+      setSelectedState('')
+    }
+  }, [formMethods, isAddressValue])
+
+  useEffect(() => {
+    updateSelectedState()
+  }, [updateSelectedState, watchedAddressState])
+
+  // User groups state
   const [selectedGroupIds, setSelectedGroupIds] = useState<number[]>([])
-  const [availableGroups, setAvailableGroups] = useState<UserGroupRow[]>([])
-  const [groupsLoading, setGroupsLoading] = useState(false)
+
+  // User Logs state
+  const [userLogsRows, setUserLogsRows] = useState<UserLogResponseModel[]>([])
+  const [userLogsLoading, setUserLogsLoading] = useState(false)
+  const [userLogsTotalCount, setUserLogsTotalCount] = useState(0)
+  const [userLogsPaginationModel, setUserLogsPaginationModel] = useState<PaginatedGridInterface>({
+    start: 0,
+    end: 10,
+    pageSize: 10,
+    includeDeleted: false,
+    actualDataCount: 0,
+    totalPaginationBlockCount: 0,
+  })
+  const [userLogsDensity, setUserLogsDensity] = useState<GridDensityType>(getInitialDensity())
+  const [userLogsActiveFilterGroup, setUserLogsActiveFilterGroup] = useState<FilterGroup>({
+    logicOperator: LogicOperator.AND,
+    filters: [],
+  })
+  const [userLogsColumnVisibilityModel, setUserLogsColumnVisibilityModel] = useState<GridColumnVisibilityModel>({})
+  const [userLogsVisibleColumnFields, setUserLogsVisibleColumnFields] = useState<string[]>([])
+
+  // Get grid columns for user groups selection grid
+  const columns = useMemo(() => {
+    const allColumns = getUserGroupGridColumns(() => {
+      // No-op for selection grid - toggle not needed
+    })
+    // Filter out actions column for selection grid
+    return allColumns.filter(col => col.field !== 'actions')
+  }, [])
 
   // Permissions
   const [availablePermissions, setAvailablePermissions] = useState<Permission[]>([])
   const [selectedPermissionIds, setSelectedPermissionIds] = useState<number[]>([])
 
-  // Dropdown data
-  const roles = ['Admin', 'Manager', 'Employee', 'Customer']
-  const states = ['CA', 'NY', 'TX', 'FL', 'IL']
+  // Watch the role field to auto-select permissions
+  const selectedRole = useWatch({
+    control,
+    name: 'role',
+    defaultValue: '',
+  }) as string | undefined
+
+  // Get all states from stateCityMapper - memoized once
+  const allStates = useMemo(() => getAllStates(), [])
+
+  // Get cities for selected state - memoized for performance and sorted A-Z
+  const citiesForState = useMemo(() => {
+    if (!selectedState || typeof selectedState !== 'string') return []
+    const cities = getCitiesByState(selectedState)
+    // Sort cities alphabetically
+    return [...cities].sort((a, b) => {
+      const cityA = a.toLowerCase()
+      const cityB = b.toLowerCase()
+      if (cityA < cityB) return -1
+      if (cityA > cityB) return 1
+      return 0
+    })
+  }, [selectedState])
 
   /**
    * Fetch user details if editing or viewing
    */
-  const fetchUserDetails = useCallback(async (id: string) => {
-    setLoading(true)
-    try {
-      const response: UserResponseModel = await userApi.getUserById(parseInt(id))
+  const fetchUserDetails = useCallback(
+    async (id: string) => {
+      setLoading(true)
+      try {
+        if (!ensureApiFunction<(userId: number) => Promise<UserResponseModel>>(getUserById, 'getUserById')) {
+          setLoading(false)
+          return
+        }
+        const response: UserResponseModel = await getUserById(parseInt(id))
 
-      // Set personal information
-      setFirstName(response.firstName || '')
-      setLastName(response.lastName || '')
-      setEmail(response.email || '')
-      setPhone(response.phone || '')
-      setDob(response.dob ? new Date(response.dob) : null)
-      setRole(response.role || '')
+        // Reset form with user data
+        const addresses: AddressResponseModel[] = response.addresses ?? []
+        let primaryAddress: AddressResponseModel | undefined
+        if (addresses.length > 0) {
+          const foundPrimary = addresses.find((addr: AddressResponseModel) => addr.isPrimary)
+          primaryAddress = foundPrimary ?? addresses[0]
+        }
 
-      // Set address details
-      if (response.addresses && response.addresses.length > 0) {
-        const primaryAddress = response.addresses.find(addr => addr.isPrimary) || response.addresses[0]
-        setAddress({
-          street1: primaryAddress.street1 || '',
-          street2: primaryAddress.street2 || '',
-          city: primaryAddress.city || '',
-          state: primaryAddress.state || '',
-          zipCode: primaryAddress.zipCode || '',
-          country: primaryAddress.country || 'USA',
-        })
+        // Set the selected state FIRST so cities can be loaded
+        const userState = primaryAddress ? String(primaryAddress.state) : ''
+        if (userState) {
+          setSelectedState(userState)
+        }
+
+        const dobValue: Date = response.dob ? new Date(response.dob) : new Date()
+        const userCity = primaryAddress ? String(primaryAddress.city) : ''
+
+        const formValues: DefaultValues<UserFormData> = {
+          firstName: String(response.firstName || ''),
+          lastName: String(response.lastName || ''),
+          loginName: String(response.loginName || response.email || ''),
+          phone: String(response.phone || ''),
+          dob: dobValue,
+          role: String(response.role || ''),
+          profilePictureBase64: typeof response.profilePicture === 'string' ? response.profilePicture : '',
+          address: {
+            streetAddress: primaryAddress ? String(primaryAddress.streetAddress) : '',
+            streetAddress2: primaryAddress?.streetAddress2 ? String(primaryAddress.streetAddress2) : '',
+            streetAddress3: primaryAddress?.streetAddress3 ? String(primaryAddress.streetAddress3) : '',
+            city: '', // Set to empty initially
+            state: userState,
+            postalCode: (() => {
+              if (primaryAddress?.postalCode) {
+                return String(primaryAddress.postalCode)
+              }
+              if (primaryAddress?.zipCode) {
+                return String(primaryAddress.zipCode)
+              }
+              return ''
+            })(),
+            country: primaryAddress ? String(primaryAddress.country) : 'India',
+            addressType: primaryAddress ? String(primaryAddress.addressType) : '',
+            nameOnAddress: primaryAddress?.nameOnAddress ? String(primaryAddress.nameOnAddress) : '',
+            emailOnAddress: primaryAddress?.emailOnAddress ? String(primaryAddress.emailOnAddress) : '',
+            phoneOnAddress: primaryAddress?.phoneOnAddress ? String(primaryAddress.phoneOnAddress) : '',
+          },
+          notes: String(response.notes ?? ''),
+        }
+        reset(formValues)
+
+        // Set the city after a small delay to ensure the cities dropdown is populated
+        if (userCity) {
+          setTimeout(() => {
+            setValue('address.city', userCity)
+          }, 100)
+        }
+
+        // Set user groups
+        if (response.userGroups && response.userGroups.length > 0) {
+          const groupIds = response.userGroups
+            .map(group => group.groupId)
+            .filter((id): id is number => typeof id === 'number')
+          setSelectedGroupIds(groupIds)
+        } else {
+          setSelectedGroupIds([])
+        }
+
+        // Set permissions
+        if (response.permissions && response.permissions.length > 0) {
+          setSelectedPermissionIds(response.permissions.map(perm => perm.permissionId))
+        }
+
+        toast.success('User details loaded successfully')
+      } catch (error) {
+        toast.error('Failed to fetch user details')
+      } finally {
+        setLoading(false)
       }
-
-      // Set user groups
-      if (response.userGroups && response.userGroups.length > 0) {
-        const groupIds = response.userGroups.map(group => group.groupId)
-        setSelectedGroupIds(groupIds)
-        setRowSelectionModel({
-          type: 'include',
-          ids: new Set<GridRowId>(groupIds),
-        })
-      } else {
-        setSelectedGroupIds([])
-        setRowSelectionModel({
-          type: 'include',
-          ids: new Set<GridRowId>(),
-        })
-      }
-
-      // Set permissions
-      if (response.permissions && response.permissions.length > 0) {
-        setSelectedPermissionIds(response.permissions.map(perm => perm.permissionId))
-      }
-
-      toast.success('User details loaded successfully')
-    } catch (error) {
-      console.error('Error fetching user:', error)
-      toast.error('Failed to fetch user details')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+    },
+    [reset, setValue],
+  )
 
   /**
-   * Fetch available user groups for selection
+   * Fetch user logs for the current user (edit/view mode only)
    */
-  const fetchUserGroups = useCallback(async () => {
+  const fetchUserLogs = useCallback(async (): Promise<void> => {
+    if (!userId) return
+
+    setUserLogsLoading(true)
     try {
-      setGroupsLoading(true)
+      // Get the selected client ID from localStorage (set during client selection)
+      const clientIdStr = localStorage.getItem('selectedClientId') ?? localStorage.getItem('clientId') ?? '1'
+      const carrierId = parseInt(clientIdStr)
 
-      // TODO: Replace with actual API call when userGroupApi is ready
-      // Mock data matching API structure
-      const mockGroups = [
-        {
-          userGroupId: 1,
-          name: 'Administrators',
-          description: 'System administrators',
-          userCount: 5,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          isDeleted: false,
-        },
-        {
-          userGroupId: 2,
-          name: 'Managers',
-          description: 'Department managers',
-          userCount: 12,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          isDeleted: false,
-        },
-        {
-          userGroupId: 3,
-          name: 'Employees',
-          description: 'Regular employees',
-          userCount: 45,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          isDeleted: false,
-        },
-      ]
+      const response = await getUserLogsInBatches({
+        userId: parseInt(userId),
+        carrierId,
+        start: userLogsPaginationModel.start,
+        end: userLogsPaginationModel.end,
+        pageSize: userLogsPaginationModel.pageSize,
+        includeDeleted: false,
+        actualDataCount: 0,
+        totalPaginationBlockCount: 0,
+      })
 
-      setAvailableGroups(mockGroups)
+      setUserLogsRows(response.data)
+      setUserLogsTotalCount(response.totalDataCount)
     } catch (error) {
-      console.error('Error fetching user groups:', error)
-      toast.error('Failed to load user groups')
+      setUserLogsRows([])
+      setUserLogsTotalCount(0)
     } finally {
-      setGroupsLoading(false)
+      setUserLogsLoading(false)
     }
-  }, [])
+  }, [userId, userLogsPaginationModel])
 
   /**
    * Fetch available permissions
    */
-  const fetchPermissions = useCallback(async () => {
+  const fetchPermissions = useCallback(async (): Promise<void> => {
     try {
-      // TODO: Replace with actual API call when backend endpoint is ready
-      // const response = await permissionApi.getAllPermissions()
+      if (!ensureApiFunction<() => Promise<Permission[]>>(getAllPermissions, 'getAllPermissions')) {
+        return
+      }
+      const permissionsResponse: unknown = await getAllPermissions()
 
-      // All permissions from backend Authorizations.java
-      const mockPermissions: Permission[] = [
-        // User Permissions
-        { permissionId: 1,
-          permissionName: 'View User',
-          permissionCode: 'ViewUser',
-          description: 'View user details',
-          category: 'USER' },
-        { permissionId: 2,
-          permissionName: 'Insert User',
-          permissionCode: 'InsertUser',
-          description: 'Create new users',
-          category: 'USER' },
-        { permissionId: 3,
-          permissionName: 'Update User',
-          permissionCode: 'UpdateUser',
-          description: 'Update user details',
-          category: 'USER' },
-        { permissionId: 4,
-          permissionName: 'Delete User',
-          permissionCode: 'DeleteUser',
-          description: 'Delete users',
-          category: 'USER' },
+      const isValidPermission = (perm: unknown): perm is Permission => {
+        if (typeof perm !== 'object' || perm === null) {
+          return false
+        }
+        const permission = perm as Record<string, unknown>
+        return (
+          'permissionId' in permission &&
+          'permissionName' in permission &&
+          'permissionCode' in permission &&
+          typeof permission.permissionId === 'number' &&
+          typeof permission.permissionName === 'string' &&
+          typeof permission.permissionCode === 'string'
+        )
+      }
 
-        // User Log Permissions
-        { permissionId: 5,
-          permissionName: 'View Logs',
-          permissionCode: 'ViewLogs',
-          description: 'View user logs',
-          category: 'USER_LOG' },
+      if (!Array.isArray(permissionsResponse) || permissionsResponse.length === 0) {
+        setAvailablePermissions([])
+        return
+      }
 
-        // Groups Permissions
-        { permissionId: 6,
-          permissionName: 'View Groups',
-          permissionCode: 'ViewGroups',
-          description: 'View user groups',
-          category: 'GROUP' },
-        { permissionId: 7,
-          permissionName: 'Insert Groups',
-          permissionCode: 'InsertGroups',
-          description: 'Create new groups',
-          category: 'GROUP' },
-        { permissionId: 8,
-          permissionName: 'Update Groups',
-          permissionCode: 'UpdateGroups',
-          description: 'Update group details',
-          category: 'GROUP' },
-        { permissionId: 9,
-          permissionName: 'Delete Groups',
-          permissionCode: 'DeleteGroups',
-          description: 'Delete groups',
-          category: 'GROUP' },
-
-        // Messages Permissions
-        { permissionId: 10,
-          permissionName: 'View Messages',
-          permissionCode: 'ViewMessages',
-          description: 'View messages',
-          category: 'MESSAGE' },
-        { permissionId: 11,
-          permissionName: 'Insert Messages',
-          permissionCode: 'InsertMessages',
-          description: 'Send messages',
-          category: 'MESSAGE' },
-        { permissionId: 12,
-          permissionName: 'Update Messages',
-          permissionCode: 'UpdateMessages',
-          description: 'Update messages',
-          category: 'MESSAGE' },
-        { permissionId: 13,
-          permissionName: 'Delete Messages',
-          permissionCode: 'DeleteMessages',
-          description: 'Delete messages',
-          category: 'MESSAGE' },
-
-        // Promos Permissions
-        { permissionId: 14,
-          permissionName: 'View Promos',
-          permissionCode: 'ViewPromos',
-          description: 'View promotions',
-          category: 'PROMO' },
-        { permissionId: 15,
-          permissionName: 'Insert Promos',
-          permissionCode: 'InsertPromos',
-          description: 'Create promotions',
-          category: 'PROMO' },
-        { permissionId: 16,
-          permissionName: 'Update Promos',
-          permissionCode: 'UpdatePromos',
-          description: 'Update promotions',
-          category: 'PROMO' },
-        { permissionId: 17,
-          permissionName: 'Delete Promos',
-          permissionCode: 'DeletePromos',
-          description: 'Delete promotions',
-          category: 'PROMO' },
-
-        // Pickup Location Permissions
-        { permissionId: 18,
-          permissionName: 'View Pickup Locations',
-          permissionCode: 'ViewPickupLocations',
-          description: 'View pickup locations',
-          category: 'PICKUP_LOCATION' },
-        { permissionId: 19,
-          permissionName: 'Insert Pickup Locations',
-          permissionCode: 'InsertPickupLocations',
-          description: 'Create pickup locations',
-          category: 'PICKUP_LOCATION' },
-        { permissionId: 20,
-          permissionName: 'Update Pickup Locations',
-          permissionCode: 'UpdatePickupLocations',
-          description: 'Update pickup locations',
-          category: 'PICKUP_LOCATION' },
-        { permissionId: 21,
-          permissionName: 'Delete Pickup Locations',
-          permissionCode: 'DeletePickupLocations',
-          description: 'Delete pickup locations',
-          category: 'PICKUP_LOCATION' },
-
-        // Products Permissions
-        { permissionId: 22,
-          permissionName: 'View Products',
-          permissionCode: 'ViewProducts',
-          description: 'View products',
-          category: 'PRODUCT' },
-        { permissionId: 23,
-          permissionName: 'Insert Products',
-          permissionCode: 'InsertProducts',
-          description: 'Create products',
-          category: 'PRODUCT' },
-        { permissionId: 24,
-          permissionName: 'Update Products',
-          permissionCode: 'UpdateProducts',
-          description: 'Update products',
-          category: 'PRODUCT' },
-        { permissionId: 25,
-          permissionName: 'Delete Products',
-          permissionCode: 'DeleteProducts',
-          description: 'Delete products',
-          category: 'PRODUCT' },
-        { permissionId: 26,
-          permissionName: 'Toggle Product Availability',
-          permissionCode: 'ToggleProductAvailability',
-          description: 'Toggle product availability',
-          category: 'PRODUCT' },
-        { permissionId: 27,
-          permissionName: 'Toggle Product Returns',
-          permissionCode: 'ToggleProductReturns',
-          description: 'Toggle product returns',
-          category: 'PRODUCT' },
-
-        // Orders Permissions
-        { permissionId: 28,
-          permissionName: 'View Orders',
-          permissionCode: 'ViewOrders',
-          description: 'View orders',
-          category: 'ORDER' },
-        { permissionId: 29,
-          permissionName: 'Insert Orders',
-          permissionCode: 'InsertOrders',
-          description: 'Create orders',
-          category: 'ORDER' },
-        { permissionId: 30,
-          permissionName: 'Update Orders',
-          permissionCode: 'UpdateOrders',
-          description: 'Update orders',
-          category: 'ORDER' },
-        { permissionId: 31,
-          permissionName: 'Cancel Orders',
-          permissionCode: 'CancelOrders',
-          description: 'Cancel orders',
-          category: 'ORDER' },
-        { permissionId: 32,
-          permissionName: 'View Order Statistics',
-          permissionCode: 'ViewOrderStatistics',
-          description: 'View order statistics',
-          category: 'ORDER' },
-
-        // Address Permissions
-        { permissionId: 33,
-          permissionName: 'View Address',
-          permissionCode: 'ViewAddress',
-          description: 'View addresses',
-          category: 'ADDRESS' },
-        { permissionId: 34,
-          permissionName: 'Insert Address',
-          permissionCode: 'InsertAddress',
-          description: 'Create addresses',
-          category: 'ADDRESS' },
-        { permissionId: 35,
-          permissionName: 'Update Address',
-          permissionCode: 'UpdateAddress',
-          description: 'Update addresses',
-          category: 'ADDRESS' },
-        { permissionId: 36,
-          permissionName: 'Delete Address',
-          permissionCode: 'DeleteAddress',
-          description: 'Delete addresses',
-          category: 'ADDRESS' },
-
-        // Client Permissions
-        { permissionId: 37,
-          permissionName: 'View Client',
-          permissionCode: 'ViewClient',
-          description: 'View clients',
-          category: 'CLIENT' },
-        { permissionId: 38,
-          permissionName: 'Insert Client',
-          permissionCode: 'InsertClient',
-          description: 'Create clients',
-          category: 'CLIENT' },
-        { permissionId: 39,
-          permissionName: 'Update Client',
-          permissionCode: 'UpdateClient',
-          description: 'Update clients',
-          category: 'CLIENT' },
-        { permissionId: 40,
-          permissionName: 'Delete Client',
-          permissionCode: 'DeleteClient',
-          description: 'Delete clients',
-          category: 'CLIENT' },
-
-        // Payments Permissions
-        { permissionId: 41,
-          permissionName: 'View Payments',
-          permissionCode: 'ViewPayments',
-          description: 'View payments',
-          category: 'PAYMENT' },
-        { permissionId: 42,
-          permissionName: 'View Payment Statistics',
-          permissionCode: 'ViewPaymentStatistics',
-          description: 'View payment statistics',
-          category: 'PAYMENT' },
-        { permissionId: 43,
-          permissionName: 'Process Refunds',
-          permissionCode: 'ProcessRefunds',
-          description: 'Process refunds',
-          category: 'PAYMENT' },
-
-        // Events Permissions
-        { permissionId: 44,
-          permissionName: 'View Events',
-          permissionCode: 'ViewEvents',
-          description: 'View events',
-          category: 'EVENT' },
-        { permissionId: 45,
-          permissionName: 'Insert Events',
-          permissionCode: 'InsertEvents',
-          description: 'Create events',
-          category: 'EVENT' },
-        { permissionId: 46,
-          permissionName: 'Update Events',
-          permissionCode: 'UpdateEvents',
-          description: 'Update events',
-          category: 'EVENT' },
-        { permissionId: 47,
-          permissionName: 'Toggle Events',
-          permissionCode: 'ToggleEvents',
-          description: 'Toggle events',
-          category: 'EVENT' },
-
-        // API Keys Permissions
-        { permissionId: 48,
-          permissionName: 'View API Keys',
-          permissionCode: 'ViewApiKeys',
-          description: 'View API keys',
-          category: 'API_KEY' },
-        { permissionId: 49,
-          permissionName: 'Insert API Keys',
-          permissionCode: 'InsertApiKeys',
-          description: 'Create API keys',
-          category: 'API_KEY' },
-        { permissionId: 50,
-          permissionName: 'Update API Keys',
-          permissionCode: 'UpdateApiKeys',
-          description: 'Update API keys',
-          category: 'API_KEY' },
-
-        // Leads Permissions
-        { permissionId: 51,
-          permissionName: 'View Leads',
-          permissionCode: 'ViewLeads',
-          description: 'View leads',
-          category: 'LEAD' },
-        { permissionId: 52,
-          permissionName: 'Insert Leads',
-          permissionCode: 'InsertLeads',
-          description: 'Create leads',
-          category: 'LEAD' },
-        { permissionId: 53,
-          permissionName: 'Update Leads',
-          permissionCode: 'UpdateLeads',
-          description: 'Update leads',
-          category: 'LEAD' },
-        { permissionId: 54,
-          permissionName: 'Toggle Leads',
-          permissionCode: 'ToggleLeads',
-          description: 'Toggle leads',
-          category: 'LEAD' },
-
-        // Purchase Order Permissions
-        { permissionId: 55,
-          permissionName: 'View Purchase Orders',
-          permissionCode: 'ViewPurchaseOrders',
-          description: 'View purchase orders',
-          category: 'PURCHASE_ORDER' },
-        { permissionId: 56,
-          permissionName: 'Insert Purchase Orders',
-          permissionCode: 'InsertPurchaseOrders',
-          description: 'Create purchase orders',
-          category: 'PURCHASE_ORDER' },
-        { permissionId: 57,
-          permissionName: 'Update Purchase Orders',
-          permissionCode: 'UpdatePurchaseOrders',
-          description: 'Update purchase orders',
-          category: 'PURCHASE_ORDER' },
-        { permissionId: 58,
-          permissionName: 'Toggle Purchase Orders',
-          permissionCode: 'TogglePurchaseOrders',
-          description: 'Toggle purchase orders',
-          category: 'PURCHASE_ORDER' },
-
-        // Sales Order Permissions
-        { permissionId: 59,
-          permissionName: 'View Sales Orders',
-          permissionCode: 'ViewSalesOrders',
-          description: 'View sales orders',
-          category: 'SALES_ORDER' },
-        { permissionId: 60,
-          permissionName: 'Insert Sales Orders',
-          permissionCode: 'InsertSalesOrders',
-          description: 'Create sales orders',
-          category: 'SALES_ORDER' },
-        { permissionId: 61,
-          permissionName: 'Update Sales Orders',
-          permissionCode: 'UpdateSalesOrders',
-          description: 'Update sales orders',
-          category: 'SALES_ORDER' },
-        { permissionId: 62,
-          permissionName: 'Toggle Sales Orders',
-          permissionCode: 'ToggleSalesOrders',
-          description: 'Toggle sales orders',
-          category: 'SALES_ORDER' },
-
-        // Web Template Permissions
-        { permissionId: 63,
-          permissionName: 'View Web Template',
-          permissionCode: 'ViewWebTemplate',
-          description: 'View web templates',
-          category: 'WEB_TEMPLATE' },
-        { permissionId: 64,
-          permissionName: 'Insert Web Template',
-          permissionCode: 'InsertWebTemplate',
-          description: 'Create web templates',
-          category: 'WEB_TEMPLATE' },
-        { permissionId: 65,
-          permissionName: 'Update Web Template',
-          permissionCode: 'UpdateWebTemplate',
-          description: 'Update web templates',
-          category: 'WEB_TEMPLATE' },
-        { permissionId: 66,
-          permissionName: 'Deploy Web Template',
-          permissionCode: 'DeployWebTemplate',
-          description: 'Deploy web templates',
-          category: 'WEB_TEMPLATE' },
-        { permissionId: 67,
-          permissionName: 'Deactivate Web Template',
-          permissionCode: 'DeactivateWebTemplate',
-          description: 'Deactivate web templates',
-          category: 'WEB_TEMPLATE' },
-
-        // Packages Permissions
-        { permissionId: 68,
-          permissionName: 'View Packages',
-          permissionCode: 'ViewPackages',
-          description: 'View packages',
-          category: 'PACKAGE' },
-        { permissionId: 69,
-          permissionName: 'Insert Packages',
-          permissionCode: 'InsertPackages',
-          description: 'Create packages',
-          category: 'PACKAGE' },
-        { permissionId: 70,
-          permissionName: 'Update Packages',
-          permissionCode: 'UpdatePackages',
-          description: 'Update packages',
-          category: 'PACKAGE' },
-        { permissionId: 71,
-          permissionName: 'Toggle Packages',
-          permissionCode: 'TogglePackages',
-          description: 'Toggle packages',
-          category: 'PACKAGE' },
-
-        // Support Permissions
-        { permissionId: 72,
-          permissionName: 'View Tickets',
-          permissionCode: 'ViewTickets',
-          description: 'View support tickets',
-          category: 'SUPPORT' },
-        { permissionId: 73,
-          permissionName: 'Raise Tickets',
-          permissionCode: 'RaiseTickets',
-          description: 'Raise support tickets',
-          category: 'SUPPORT' },
-        { permissionId: 74,
-          permissionName: 'Edit Tickets',
-          permissionCode: 'EditTickets',
-          description: 'Edit support tickets',
-          category: 'SUPPORT' },
-        { permissionId: 75,
-          permissionName: 'Delete Tickets',
-          permissionCode: 'DeleteTickets',
-          description: 'Delete support tickets',
-          category: 'SUPPORT' },
-        { permissionId: 76,
-          permissionName: 'View Comments',
-          permissionCode: 'ViewComments',
-          description: 'View ticket comments',
-          category: 'SUPPORT' },
-        { permissionId: 77,
-          permissionName: 'Post Comments',
-          permissionCode: 'PostComments',
-          description: 'Post ticket comments',
-          category: 'SUPPORT' },
-        { permissionId: 78,
-          permissionName: 'Download Attachments',
-          permissionCode: 'DownloadAttachments',
-          description: 'Download ticket attachments',
-          category: 'SUPPORT' },
-      ]
-
-      setAvailablePermissions(mockPermissions)
+      const permissions: Permission[] = []
+      for (const permission of permissionsResponse as unknown[]) {
+        if (isValidPermission(permission)) {
+          permissions.push(permission)
+        }
+      }
+      setAvailablePermissions(permissions)
     } catch (error) {
-      console.error('Failed to fetch permissions:', error)
       toast.error('Failed to load permissions')
+      setAvailablePermissions([])
     }
   }, [])
 
   /**
-   * Handle profile picture upload
+   * Handle form submission - memoized
    */
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
+  const onSubmit = useCallback(
+    async (formData: UserFormData): Promise<void> => {
+      setLoading(true)
+      try {
+        // Type-safe extraction of form data
+        const typedFormData = formData as {
+          firstName: string
+          lastName: string
+          loginName: string
+          phone: string
+          role: string
+          dob: Date
+          address: {
+            streetAddress: string
+            streetAddress2?: string | null
+            streetAddress3?: string | null
+            city: string
+            state: string
+            postalCode: string
+            country: string
+            addressType: string
+            nameOnAddress?: string | null
+            emailOnAddress?: string | null
+            phoneOnAddress?: string | null
+          }
+          notes?: string | null
+        }
+        const dobDate: Date = typedFormData.dob
+        const dobString: string = dobDate.toISOString().split('T')[0] ?? ''
+        const addressData = typedFormData.address
+        const requestData: UserRequestModel = {
+          userId: isEdit && userId ? parseInt(userId) : undefined,
+          loginName: typedFormData.loginName,
+          email: typedFormData.loginName, // Set email same as loginName for backend compatibility
+          firstName: typedFormData.firstName,
+          lastName: typedFormData.lastName,
+          phone: typedFormData.phone,
+          role: typedFormData.role,
+          dob: dobString,
+          address: {
+            streetAddress: addressData.streetAddress,
+            streetAddress2: addressData.streetAddress2 ? addressData.streetAddress2 : undefined,
+            streetAddress3: addressData.streetAddress3 ? addressData.streetAddress3 : undefined,
+            city: addressData.city,
+            state: addressData.state,
+            postalCode: addressData.postalCode,
+            country: addressData.country,
+            addressType: addressData.addressType,
+            nameOnAddress: addressData.nameOnAddress ? addressData.nameOnAddress : undefined,
+            emailOnAddress: addressData.emailOnAddress ? addressData.emailOnAddress : undefined,
+            phoneOnAddress: addressData.phoneOnAddress ? addressData.phoneOnAddress : undefined,
+            isPrimary: true,
+          },
+          selectedGroupIds: selectedGroupIds,
+          permissionIds: selectedPermissionIds,
+          profilePictureBase64: formData.profilePictureBase64 ?? undefined,
+          notes: typedFormData.notes ? typedFormData.notes : undefined,
+        }
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please upload an image file')
-      return
-    }
+        if (isEdit && userId) {
+          const userIdNum = parseInt(userId)
+          if (
+            !ensureApiFunction<(userId: number, payload: UserRequestModel) => Promise<void>>(updateUser, 'updateUser')
+          ) {
+            setLoading(false)
+            return
+          }
+          await updateUser(userIdNum, requestData)
+          toast.success('User updated successfully')
+        } else {
+          if (!ensureApiFunction<(payload: UserRequestModel) => Promise<void>>(createUser, 'createUser')) {
+            setLoading(false)
+            return
+          }
+          await createUser(requestData)
+          toast.success('User created successfully')
+        }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size must be less than 5MB')
-      return
-    }
-
-    // Convert to base64
-    const reader = new FileReader()
-    reader.onload = e => {
-      const base64 = e.target?.result as string
-      setProfilePictureBase64(base64)
-      toast.success('Profile picture uploaded')
-    }
-    reader.onerror = () => {
-      toast.error('Failed to read image file')
-    }
-    reader.readAsDataURL(file)
-  }
-
-  /**
-   * Remove profile picture
-   */
-  const handleRemoveImage = () => {
-    setProfilePictureBase64('')
-    toast.info('Profile picture removed')
-  }
-
-  /**
-   * Validate form data
-   */
-  const validateForm = (): boolean => {
-    if (!firstName.trim()) {
-      toast.error('First name is required')
-      return false
-    }
-    if (!lastName.trim()) {
-      toast.error('Last name is required')
-      return false
-    }
-    if (!email.trim()) {
-      toast.error('Email is required')
-      return false
-    }
-    if (!phone.trim()) {
-      toast.error('Phone is required')
-      return false
-    }
-    if (!role) {
-      toast.error('Role is required')
-      return false
-    }
-    if (!dob) {
-      toast.error('Date of birth is required')
-      return false
-    }
-    if (!address.street1.trim()) {
-      toast.error('Street address is required')
-      return false
-    }
-    if (!address.city.trim()) {
-      toast.error('City is required')
-      return false
-    }
-    if (!address.state) {
-      toast.error('State is required')
-      return false
-    }
-    if (!address.zipCode.trim()) {
-      toast.error('Zip code is required')
-      return false
-    }
-    return true
-  }
-
-  /**
-   * Handle form submission
-   */
-  const handleSubmit = async () => {
-    if (!validateForm()) return
-
-    setLoading(true)
-    try {
-      const requestData: UserRequestModel = {
-        userId: isEdit ? parseInt(userId) : undefined,
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        email: email.trim(),
-        phone: phone.trim(),
-        role: role,
-        dob: dob?.toISOString().split('T')[0],
-        address: {
-          street1: address.street1.trim(),
-          street2: address.street2.trim() || undefined,
-          city: address.city.trim(),
-          state: address.state,
-          zipCode: address.zipCode.trim(),
-          country: address.country,
-          isPrimary: true,
-        },
-        selectedGroupIds: selectedGroupIds,
-        permissionIds: selectedPermissionIds,
-        profilePictureBase64: profilePictureBase64 || undefined,
+        // Navigate back to users grid
+        setTimeout(() => {
+          navigate(APP_ROUTES.DASHBOARD.USERS)
+        }, 1000)
+      } catch (error) {
+        toast.error(`Failed to ${isEdit ? 'update' : 'create'} user`)
+      } finally {
+        setLoading(false)
       }
-
-      if (isEdit) {
-        await userApi.updateUser(requestData.userId!, requestData)
-        toast.success('User updated successfully')
-      } else {
-        await userApi.createUser(requestData)
-        toast.success('User created successfully')
-      }
-
-      // Navigate back to users grid
-      setTimeout(() => {
-        navigate(APP_ROUTES.DASHBOARD.USERS)
-      }, 1000)
-    } catch (error) {
-      console.error('Error saving user:', error)
-      toast.error(`Failed to ${isEdit ? 'update' : 'create'} user`)
-    } finally {
-      setLoading(false)
-    }
-  }
+    },
+    [isEdit, userId, selectedGroupIds, selectedPermissionIds, navigate],
+  )
 
   /**
-   * Handle cancel
+   * Handle cancel - memoized
    */
-  const handleCancel = () => {
+  const handleCancel = useCallback((): void => {
     navigate(APP_ROUTES.DASHBOARD.USERS)
-  }
+  }, [navigate])
 
-  // Personal information fields configuration
-  const personalInfoFields: FormField[] = [
-    {
-      id: 'firstName',
-      label: 'First Name',
-      value: firstName,
-      onChange: setFirstName,
-      required: true,
-      gridSize: { xs: 12,
-        md: 6 },
-    },
-    {
-      id: 'lastName',
-      label: 'Last Name',
-      value: lastName,
-      onChange: setLastName,
-      required: true,
-      gridSize: { xs: 12,
-        md: 6 },
-    },
-    {
-      id: 'email',
-      label: 'Email',
-      value: email,
-      onChange: setEmail,
-      required: true,
-      type: 'email',
-      gridSize: { xs: 12,
-        md: 6 },
-    },
-    {
-      id: 'phone',
-      label: 'Phone',
-      value: phone,
-      onChange: setPhone,
-      required: true,
-      type: 'tel',
-      gridSize: { xs: 12,
-        md: 6 },
-    },
-  ]
+  // Fetch user logs when pagination changes (edit/view mode only)
+  useEffect(() => {
+    if (userId && (isEdit || isView)) {
+      void fetchUserLogs()
+    }
+  }, [fetchUserLogs, userId, isEdit, isView])
 
   // Fetch data on mount
   useEffect(() => {
-    fetchUserGroups()
-    fetchPermissions()
-    if (userId) {
-      fetchUserDetails(userId)
+    fetchPermissions().catch(() => {
+      // Error already handled in fetchPermissions
+    })
+    if (userId && !hasFetchedUserDetails.current) {
+      hasFetchedUserDetails.current = true
+      fetchUserDetails(userId).catch(() => {
+        // Error already handled in fetchUserDetails
+      })
     }
-  }, [fetchPermissions, fetchUserDetails, fetchUserGroups, userId])
+  }, [fetchPermissions, fetchUserDetails, userId])
+
+  const handlePermissionChange = useCallback((newPermissionIds: number[]) => {
+    setSelectedPermissionIds(newPermissionIds)
+  }, [])
+
+  // Auto-select permissions based on role
+  useEffect(() => {
+    // Don't auto-select if:
+    // - No role selected
+    // - Role is Custom (user should manually select)
+    // - In view mode
+    // - No permissions loaded yet
+    if (!selectedRole || selectedRole === USER_ROLES.CUSTOM || isView || availablePermissions.length === 0) {
+      return
+    }
+
+    // Get permission codes for the selected role
+    const rolePermissionCodes = ROLE_PERMISSIONS[selectedRole] ?? []
+
+    // If no permissions defined for this role, clear selection
+    if (rolePermissionCodes.length === 0) {
+      if (selectedPermissionIds.length !== 0) {
+        setSelectedPermissionIds([])
+      }
+      return
+    }
+
+    const normalizedRoleCodes = rolePermissionCodes.map(normalizePermissionCode)
+
+    // Map permission codes to permission IDs (case / delimiter insensitive)
+    const permissionIds = availablePermissions
+      .filter(permission => normalizedRoleCodes.includes(normalizePermissionCode(permission.permissionCode)))
+      .map(permission => permission.permissionId)
+
+    // Update selected permissions only if there's a difference
+    if (!haveSameIds(selectedPermissionIds, permissionIds)) {
+      setSelectedPermissionIds(permissionIds)
+    }
+  }, [selectedRole, availablePermissions, isView, selectedPermissionIds])
+
+  // Compute button text - memoized
+  const buttonText = useMemo((): string => {
+    if (loading) return 'Saving...'
+    if (isEdit) return 'Update User'
+    return 'Create User'
+  }, [loading, isEdit])
+
+  // User logs grid columns - memoized
+  const userLogsColumns = useMemo(() => getUserLogGridColumns(), [])
+
+  // Update visible column fields for user logs when column visibility changes
+  useEffect(() => {
+    setUserLogsVisibleColumnFields(
+      userLogsColumns
+        .filter(col => {
+          const visibility = userLogsColumnVisibilityModel[col.field]
+          return visibility
+        })
+        .map(col => col.field),
+    )
+  }, [userLogsColumnVisibilityModel, userLogsColumns])
+
+  // User logs pagination model for DataGrid - memoized
+  const userLogsGridPaginationModel = useMemo(
+    () => ({
+      page: Math.floor(userLogsPaginationModel.start / userLogsPaginationModel.pageSize),
+      pageSize: userLogsPaginationModel.pageSize,
+    }),
+    [userLogsPaginationModel.start, userLogsPaginationModel.pageSize],
+  )
+
+  // User logs toolbar props - memoized
+  const userLogsToolbarProps = useMemo(
+    () =>
+      ({
+        density: userLogsDensity,
+        onDensityChange: setUserLogsDensity,
+        columns: userLogsColumns,
+        onFiltersChange: setUserLogsActiveFilterGroup,
+        activeFilterGroup: userLogsActiveFilterGroup,
+        rows: userLogsRows,
+        includeDeleted: false,
+        onIncludeDeletedChange: () => {
+          // Not applicable for logs
+        },
+        visibleColumnFields: userLogsVisibleColumnFields,
+        columnVisibilityModel: userLogsColumnVisibilityModel,
+        onColumnVisibilityChange: setUserLogsColumnVisibilityModel,
+        hideIncludeDeleted: true,
+        hideExport: false,
+      }) as GridToolbarProps,
+    [
+      userLogsDensity,
+      userLogsColumns,
+      userLogsActiveFilterGroup,
+      userLogsRows,
+      userLogsVisibleColumnFields,
+      userLogsColumnVisibilityModel,
+    ],
+  )
+
+  // Memoize role options to prevent recreation on every render
+  const roleOptions = useMemo(
+    () =>
+      USER_ROLES_ARRAY.map(r => ({
+        value: r,
+        label: r,
+      })),
+    [],
+  )
+
+  // Form sections configuration - memoized
+  const formSections = useMemo<Array<SectionConfig<UserFormData>>>(
+    () => [
+      {
+        title: 'Personal Information',
+        fields: [
+          {
+            name: 'profilePictureBase64' as const,
+            label: 'Upload Photo',
+            type: FieldType.Image as FieldType,
+            required: false,
+            gridSize: {
+              xs: 12,
+              sm: 12,
+            },
+            imageSize: 150,
+            maxSizeMB: 5,
+          },
+          {
+            name: 'firstName' as const,
+            label: 'First Name',
+            type: FieldType.Text as FieldType,
+            required: true,
+            gridSize: {
+              xs: 12,
+              sm: 6,
+            },
+          },
+          {
+            name: 'lastName' as const,
+            label: 'Last Name',
+            type: FieldType.Text as FieldType,
+            required: true,
+            gridSize: {
+              xs: 12,
+              sm: 6,
+            },
+          },
+          {
+            name: 'loginName' as const,
+            label: 'Login Name (Email)',
+            type: FieldType.Email as FieldType,
+            required: true,
+            disabled: isEdit, // Disable login name in edit mode - cannot be changed
+            gridSize: {
+              xs: 12,
+              sm: 6,
+            },
+          },
+          {
+            name: 'phone' as const,
+            label: 'Phone',
+            type: FieldType.Phone as FieldType,
+            required: true,
+            gridSize: {
+              xs: 12,
+              sm: 6,
+            },
+          },
+          {
+            name: 'role' as const,
+            label: 'Role',
+            type: FieldType.Autocomplete as FieldType,
+            required: true,
+            gridSize: {
+              xs: 12,
+              sm: 6,
+            },
+            options: roleOptions,
+            sortOptions: true,
+            maxHeight: 300,
+          },
+          {
+            name: 'dob' as const,
+            label: 'Date of Birth',
+            type: FieldType.Date as FieldType,
+            required: true,
+            gridSize: {
+              xs: 12,
+              sm: 6,
+            },
+          },
+        ],
+      },
+      {
+        title: 'Notes',
+        fields: [
+          {
+            name: 'notes' as const,
+            label: 'Notes',
+            type: FieldType.Textarea as FieldType,
+            required: false,
+            gridSize: {
+              xs: 12,
+              sm: 12,
+            },
+            rows: 4,
+            placeholder: 'Enter any additional notes or comments...',
+          },
+        ],
+      },
+    ],
+    [roleOptions, isEdit],
+  )
+
+  // User Logs grid callbacks - memoized outside of conditional rendering
+  const handleUserLogsColumnVisibilityChange = useCallback((model: GridColumnVisibilityModel) => {
+    setUserLogsColumnVisibilityModel(model)
+  }, [])
+
+  const handleUserLogsPaginationChange = useCallback((model: GridPaginationModel) => {
+    handlePaginationModelChange(model, setUserLogsPaginationModel)
+  }, [])
+
+  const handleUserLogsFilterChange = useCallback(
+    (model: GridFilterModel) => {
+      handleFilterModelChange(model, userLogsPaginationModel, setUserLogsPaginationModel)
+    },
+    [userLogsPaginationModel],
+  )
+
+  const handleUserLogsSortChange = useCallback((model: GridSortModel) => {
+    handleSortModelChange(model, setUserLogsPaginationModel)
+  }, [])
+
+  const getUserLogsRowId = useCallback((row: GridValidRowModel): number => {
+    const typedRow = row as { logId?: number }
+    return typedRow.logId ?? 0
+  }, [])
+
+  const getUserLogsRowClassName = useCallback(
+    (params: GridRowClassNameParams<GridValidRowModel>) => getRowClassName<UserLogResponseModel>(params),
+    [],
+  )
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Container maxWidth="xl">
-        <Box className="add-users-page__container">
-          {/* Personal Information Section */}
-          <Paper className="add-users-page__section">
-            <Typography variant="h6" className="add-users-page__section-title">
-              Personal Information
-            </Typography>
-            <Divider className="add-users-page__divider" />
+    <Container maxWidth="xl">
+      {/* Fill Test Data Button - Only show in development/non-view mode */}
+      {!isView && (
+        <FillTestDataButton
+          reset={reset}
+          getValues={formMethods.getValues}
+          setSelectedGroupIds={setSelectedGroupIds}
+          setValue={setValue}
+          isEdit={isEdit}
+        />
+      )}
 
-            <Grid container spacing={2}>
-              {/* Profile Picture */}
-              <Grid item xs={12} sx={{ display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 2 }}>
-                <Avatar
-                  src={profilePictureBase64}
-                  sx={{ width: 120,
-                    height: 120,
-                    cursor: isView ? 'default' : 'pointer' }}
-                  onClick={() => !isView && document.getElementById('profile-picture-input')?.click()}
-                />
-                {!isView && (
-                  <Box sx={{ display: 'flex',
-                    gap: 2 }}>
-                    <Button
-                      variant="outlined"
-                      startIcon={<UploadIcon />}
-                      component="label"
-                      size="small"
-                    >
-                      Upload Photo
-                      <input
-                        id="profile-picture-input"
-                        type="file"
-                        hidden
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                      />
-                    </Button>
-                    {profilePictureBase64 && (
-                      <IconButton size="small" color="error" onClick={handleRemoveImage}>
-                        <DeleteIcon />
-                      </IconButton>
-                    )}
-                  </Box>
-                )}
-              </Grid>
+      <form onSubmit={handleFormSubmit(onSubmit)}>
+        <Box className={styles['add-users-page__container']}>
+          {isView ? (
+            <>
+              {/* View Mode - Personal Information */}
+              <UserDetailsView
+                profilePictureBase64={formMethods.getValues('profilePictureBase64') ?? ''}
+                firstName={formMethods.getValues('firstName')}
+                lastName={formMethods.getValues('lastName')}
+                loginName={formMethods.getValues('loginName')}
+                phone={formMethods.getValues('phone')}
+                role={formMethods.getValues('role')}
+                dob={formMethods.getValues('dob')}
+                notes={formMethods.getValues('notes')}
+              />
 
-              {/* Text Fields */}
-              {personalInfoFields.map(field => (
-                <Grid item xs={12} sm={6} key={field.id}>
-                  <TextField
-                    fullWidth
-                    label={field.label}
-                    value={field.value}
-                    onChange={e => {
-                      field.onChange(e.target.value)
-                    }}
-                    required={field.required}
-                    disabled={isView || loading}
-                    type={field.type || 'text'}
-                    multiline={field.multiline}
-                    rows={field.rows}
-                  />
-                </Grid>
-              ))}
+              {/* View Mode - Address Details */}
+              <AddressDetailsView
+                streetAddress={formMethods.getValues('address.streetAddress')}
+                streetAddress2={formMethods.getValues('address.streetAddress2')}
+                streetAddress3={formMethods.getValues('address.streetAddress3')}
+                city={formMethods.getValues('address.city')}
+                state={formMethods.getValues('address.state')}
+                postalCode={formMethods.getValues('address.postalCode')}
+                country={formMethods.getValues('address.country')}
+                addressType={formMethods.getValues('address.addressType')}
+                nameOnAddress={formMethods.getValues('address.nameOnAddress')}
+                emailOnAddress={formMethods.getValues('address.emailOnAddress')}
+                phoneOnAddress={formMethods.getValues('address.phoneOnAddress')}
+              />
+            </>
+          ) : (
+            <>
+              {/* Edit/Add Mode - Personal Information and Notes Sections */}
+              <FormFieldRenderer
+                sections={formSections}
+                control={control}
+                errors={errors}
+                disabled={loading}
+                isView={false}
+                sectionClassName={styles['add-users-page__section']}
+                sectionTitleClassName={styles['add-users-page__section-title']}
+                dividerClassName={styles['add-users-page__divider']}
+                dividerSpacerClassName={styles['add-users-page__divider-spacer']}
+              />
 
-              {/* Role Dropdown */}
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  select
-                  label="Role"
-                  value={role}
-                  onChange={e => {
-                    setRole(e.target.value)
-                  }}
-                  required
-                  disabled={isView || loading}
-                >
-                  {roles.map(r => (
-                    <MenuItem key={r} value={r}>
-                      {r}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-
-              {/* Date of Birth */}
-              <Grid item xs={12} sm={6}>
-                <DatePicker
-                  label="Date of Birth"
-                  value={dob}
-                  onChange={(newValue: Date | null) => {
-                    setDob(newValue)
-                  }}
-                  disabled={isView || loading}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      required: true,
-                    },
-                  }}
-                />
-              </Grid>
-            </Grid>
-          </Paper>
-
-          {/* Address Details Section */}
-          <Paper className="add-users-page__section">
-            <Typography variant="h6" className="add-users-page__section-title">
-              Address Details
-            </Typography>
-            <Divider className="add-users-page__divider" />
-
-            <AddressForm
-              address={address}
-              onChange={(field, value) => {
-                setAddress({ ...address,
-                  [field]: value })
-              }}
-              disabled={isView || loading}
-              states={states}
-            />
-          </Paper>
+              {/* Edit/Add Mode - Address Details Section - Keep as is for now due to complex logic */}
+              <AddressFormController
+                control={control}
+                errors={errors}
+                disabled={loading}
+                states={allStates}
+                cities={citiesForState}
+                onStateChange={setSelectedState}
+                setValue={setValue}
+              />
+            </>
+          )}
 
           {/* User Permissions Section */}
-          <Paper className="add-users-page__section">
-            <Typography variant="h6" className="add-users-page__section-title">
-              User Permissions
-            </Typography>
-            <Divider className="add-users-page__divider" />
+          <Paper className={styles['add-users-page__section']}>
+            <Subheader label="User Permissions" className={styles['add-users-page__section-title']} />
+            <Divider className={styles['add-users-page__divider']} />
+            <Box className={styles['add-users-page__divider-spacer']} />
 
             <UserPermissions
               availablePermissions={availablePermissions}
               selectedPermissionIds={selectedPermissionIds}
-              onChange={setSelectedPermissionIds}
+              onChange={handlePermissionChange}
               readOnly={isView}
+              disabled={selectedRole !== USER_ROLES.CUSTOM}
             />
           </Paper>
 
           {/* User Groups Section */}
-          <Paper className="add-users-page__section">
-            <Typography variant="h6" className="add-users-page__section-title">
-              User Groups
-            </Typography>
-            <Divider className="add-users-page__divider" />
+          <UserGroupSelectionGrid
+            selectedGroupIds={selectedGroupIds}
+            onSelectionChange={setSelectedGroupIds}
+            columns={columns}
+            isView={isView}
+            title={isView ? 'Assigned User Groups' : 'User Groups'}
+            showSelectionInfo={!isView}
+            defaultPageSize={10}
+            hideToolbar={false}
+            selectedGroupIdsFilter={isView ? selectedGroupIds : undefined}
+          />
 
-            <Box className="add-users-page__grid-container">
-              <StyledDataGrid
-                rows={availableGroups}
-                columns={[
-                  {
-                    field: 'userGroupId',
-                    headerName: 'ID',
-                    width: 80,
-                    align: 'center',
-                    headerAlign: 'center',
-                  },
-                  {
-                    field: 'name',
-                    headerName: 'Group Name',
-                    flex: 1,
-                    minWidth: 200,
-                  },
-                  {
-                    field: 'description',
-                    headerName: 'Description',
-                    flex: 2,
-                    minWidth: 300,
-                  },
-                  {
-                    field: 'userCount',
-                    headerName: 'Members',
-                    width: 100,
-                    align: 'center',
-                    headerAlign: 'center',
-                  },
-                ]}
-                getRowId={row => row.userGroupId}
-                checkboxSelection={!isView}
-                disableRowSelectionOnClick
-                rowSelectionModel={rowSelectionModel}
-                onRowSelectionModelChange={newSelection => {
-                  setRowSelectionModel(newSelection)
-                  const ids = Array.from(newSelection.ids ?? new Set<GridRowId>())
-                  setSelectedGroupIds(ids.map(id => Number(id)))
-                }}
-                loading={groupsLoading}
-                pageSizeOptions={[10, 25, 50]}
-                initialState={{
-                  pagination: {
-                    paginationModel: {
-                      page: 0,
-                      pageSize: 10,
-                    },
-                  },
-                }}
-                autoHeight
-                hideFooter
-                sx={{
-                  '& .MuiDataGrid-row.Mui-selected': {
-                    backgroundColor: 'rgba(25, 118, 210, 0.08)',
-                  },
-                }}
-              />
-            </Box>
+          {/* User Logs Section - Only show in edit/view mode */}
+          {userId && (isEdit || isView) && (
+            <Paper className={styles['add-users-page__section']}>
+              <Subheader label="User Logs" className={styles['add-users-page__section-title']} />
+              <Divider className={styles['add-users-page__divider']} />
+              <Box className={styles['add-users-page__divider-spacer']} />
 
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              className="add-users-page__selection-info"
-              sx={{ mt: 2 }}
-            >
-              {selectedGroupIds.length} group(s) selected
-            </Typography>
-          </Paper>
-
-          {/* User Logs Section (Edit/View Mode Only) */}
-          {/* TODO: Fix DataGrid configuration */}
-          {/* {(isEdit || isView) && (
-            <Paper className="add-users-page__section">
-              <Typography variant="h6" className="add-users-page__section-title">
-                User Activity Logs
-              </Typography>
-              <Divider className="add-users-page__divider" />
-
-              <Box className="add-users-page__grid-container">
-                <DataGrid
-                  rows={userLogs}
-                  columns={logColumns}
-                  getRowId={(row) => row.logId}
-                  pageSizeOptions={[5, 10, 25]}
-                  initialState={{
-                    pagination: {
-                      paginationModel: { page: 0, pageSize: 5 },
-                    },
-                  }}
-                  autoHeight
-                  hideFooter
+              <Box className={styles['add-users-page__grid-container']}>
+                <StyledDataGrid
+                  dataTestId="user-logs-data-grid"
+                  rows={userLogsRows}
+                  columns={userLogsColumns}
+                  loading={userLogsLoading}
+                  rowCount={userLogsTotalCount}
+                  totalCount={userLogsTotalCount}
+                  paginationModelState={userLogsPaginationModel}
+                  setPaginationModel={setUserLogsPaginationModel}
+                  density={userLogsDensity}
+                  columnVisibilityModel={userLogsColumnVisibilityModel}
+                  onColumnVisibilityModelChange={handleUserLogsColumnVisibilityChange}
+                  paginationModel={userLogsGridPaginationModel}
+                  onPaginationModelChange={handleUserLogsPaginationChange}
+                  onFilterModelChange={handleUserLogsFilterChange}
+                  onSortModelChange={handleUserLogsSortChange}
+                  getRowId={getUserLogsRowId}
+                  getRowClassName={getUserLogsRowClassName}
                   disableRowSelectionOnClick
+                  slots={{
+                    toolbar: SimpleToolbar as GridSlotsComponent['toolbar'],
+                  }}
+                  slotProps={{
+                    toolbar: userLogsToolbarProps,
+                  }}
+                  showToolbar
+                  disableColumnMenu={false}
+                  className={styles['add-users-page__data-grid']}
                 />
               </Box>
             </Paper>
-          )} */}
+          )}
 
           {/* Action Buttons */}
           {!isView && (
-            <Box className="add-users-page__actions">
-              <Button
-                variant="outlined"
-                startIcon={<CancelIcon />}
-                onClick={handleCancel}
-                disabled={loading}
-                className="add-users-page__action-button"
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="contained"
-                startIcon={<SaveIcon />}
-                onClick={handleSubmit}
-                disabled={loading}
-                className="add-users-page__action-button"
-              >
-                {loading ? 'Saving...' : isEdit ? 'Update User' : 'Create User'}
-              </Button>
-            </Box>
+            <Paper className={styles['add-users-page__section']}>
+              <Box className={styles['add-users-page__actions']}>
+                <RedButton
+                  variant="outlined"
+                  startIcon={<CancelIcon />}
+                  onClick={handleCancel}
+                  disabled={loading}
+                  className={styles['add-users-page__action-button']}
+                  type="button"
+                  label="Cancel"
+                />
+                <BlueButton
+                  variant="contained"
+                  startIcon={<SaveIcon />}
+                  type="submit"
+                  disabled={loading}
+                  className={styles['add-users-page__action-button']}
+                  label={buttonText}
+                />
+              </Box>
+            </Paper>
           )}
         </Box>
-      </Container>
-    </LocalizationProvider>
+      </form>
+    </Container>
   )
 }
 

@@ -15,15 +15,7 @@ module.exports = {
     'plugin:react/jsx-runtime',
     'prettier', // Must be last to override other configs
   ],
-  ignorePatterns: [
-    'dist',
-    '.eslintrc.cjs',
-    'node_modules',
-    'build',
-    '*.config.js',
-    '*.config.cjs',
-    '*.config.mjs',
-  ],
+  ignorePatterns: ['dist', '.eslintrc.cjs', 'node_modules', 'build', '*.config.js', '*.config.cjs', '*.config.mjs'],
   parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 'latest',
@@ -31,13 +23,7 @@ module.exports = {
     project: ['./tsconfig.json', './tsconfig.node.json'],
     tsconfigRootDir: __dirname,
   },
-  plugins: [
-    'react-refresh',
-    '@typescript-eslint',
-    'react',
-    'react-hooks',
-    'import',
-  ],
+  plugins: ['react-refresh', '@typescript-eslint', 'react', 'react-hooks', 'import'],
   settings: {
     react: {
       version: 'detect',
@@ -45,10 +31,7 @@ module.exports = {
   },
   rules: {
     // React Refresh - Allow constant exports
-    'react-refresh/only-export-components': [
-      'warn',
-      { allowConstantExport: true },
-    ],
+    'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
 
     // TypeScript Rules - Strict
     '@typescript-eslint/no-explicit-any': 'error',
@@ -143,14 +126,7 @@ module.exports = {
     'import/order': [
       'error',
       {
-        groups: [
-          'builtin',
-          'external',
-          'internal',
-          'parent',
-          'sibling',
-          'index',
-        ],
+        groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
         'newlines-between': 'always',
         alphabetize: {
           order: 'asc',
@@ -176,7 +152,7 @@ module.exports = {
     'import/no-cycle': ['error', { maxDepth: 3 }],
 
     // General Code Quality Rules
-    'no-console': ['warn', { allow: ['warn', 'error'] }],
+    'no-console': 'error',
     'no-debugger': 'error',
     'no-alert': 'error',
     'no-var': 'error',
@@ -218,14 +194,14 @@ module.exports = {
     'prefer-object-spread': 'error',
     'prefer-regex-literals': 'error',
     'prefer-spread': 'error',
-    'yoda': 'error',
+    yoda: 'error',
 
     // Code Style Rules
     'array-bracket-spacing': ['error', 'never'],
     'array-element-newline': ['error', 'consistent'],
     'block-spacing': ['error', 'always'],
     'brace-style': ['error', '1tbs', { allowSingleLine: false }],
-    'camelcase': [
+    camelcase: [
       'error',
       {
         properties: 'always',
@@ -249,32 +225,7 @@ module.exports = {
     'computed-property-spacing': ['error', 'never'],
     'eol-last': ['error', 'always'],
     'func-call-spacing': ['error', 'never'],
-    'indent': [
-      'error',
-      2,
-      {
-        SwitchCase: 1,
-        VariableDeclarator: 1,
-        outerIIFEBody: 1,
-        MemberExpression: 1,
-        FunctionDeclaration: {
-          parameters: 1,
-          body: 1,
-        },
-        FunctionExpression: {
-          parameters: 1,
-          body: 1,
-        },
-        CallExpression: {
-          arguments: 1,
-        },
-        ArrayExpression: 1,
-        ObjectExpression: 1,
-        ImportDeclaration: 1,
-        flatTernaryExpressions: false,
-        ignoreComments: false,
-      },
-    ],
+    indent: 'off',
     'key-spacing': [
       'error',
       {
@@ -318,7 +269,7 @@ module.exports = {
         allowAllPropertiesOnSameLine: false,
       },
     ],
-    'quotes': [
+    quotes: [
       'error',
       'single',
       {
@@ -326,7 +277,7 @@ module.exports = {
         allowTemplateLiterals: true,
       },
     ],
-    'semi': ['error', 'never'],
+    semi: ['error', 'never'],
     'semi-spacing': ['error', { before: false, after: true }],
     'space-before-blocks': ['error', 'always'],
     'space-before-function-paren': [

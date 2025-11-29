@@ -1,7 +1,9 @@
 import { forwardRef, useState } from 'react'
 
 import { Visibility, VisibilityOff } from '@mui/icons-material'
-import { TextField, type TextFieldProps, IconButton, InputAdornment } from '@mui/material'
+import { IconButton, InputAdornment, TextField, type TextFieldProps } from '@mui/material'
+
+import styles from '../../styles/FormInput.module.scss'
 
 export interface PasswordInputProps extends Omit<TextFieldProps, 'variant' | 'margin' | 'type'> {
   maxLength?: number
@@ -18,8 +20,8 @@ const PasswordInput = forwardRef<HTMLDivElement, PasswordInputProps>(
   (
     {
       maxLength,
-      variant = 'outlined',
-      margin = 'dense',
+      variant = 'filled',
+      margin = 'normal',
       fullWidth = true,
       showPasswordToggle = true,
       InputLabelProps,
@@ -45,6 +47,7 @@ const PasswordInput = forwardRef<HTMLDivElement, PasswordInputProps>(
         variant={variant}
         margin={margin}
         fullWidth={fullWidth}
+        className={styles['filled-input']}
         InputLabelProps={{
           shrink: true,
           ...InputLabelProps,
@@ -54,6 +57,7 @@ const PasswordInput = forwardRef<HTMLDivElement, PasswordInputProps>(
           ...inputProps,
         }}
         InputProps={{
+          disableUnderline: true,
           endAdornment: showPasswordToggle ? (
             <InputAdornment position="end">
               <IconButton
@@ -67,6 +71,7 @@ const PasswordInput = forwardRef<HTMLDivElement, PasswordInputProps>(
             </InputAdornment>
           ) : undefined,
         }}
+        sx={props.sx}
         {...props}
       />
     )

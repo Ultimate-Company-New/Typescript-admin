@@ -1,15 +1,17 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
-import { Container, Box, Stack, Typography, Grid, Card, CardMedia, CardContent, CardActionArea } from '@mui/material'
+import { Box, Card, CardActionArea, CardContent, CardMedia, Container, Grid, Stack, Typography } from '@mui/material'
 
 import { loginApi } from '../../api/loginApi'
-import { Header, Subheader, TextFieldInput, Logo, PaginationComponent } from '../../components'
+import { getUserByEmail } from '../../api/userApi'
+import { Header, Logo, Subheader, TextFieldInput } from '../../components'
 import { APP_ROUTES } from '../../constants/routes'
 import { type ClientResponseModel } from '../../models/LoginModels'
-import styles from './Login.module.scss'
+
+import styles from '../../styles/Login.module.scss'
 
 interface CarrierGridItem {
   id: number
@@ -63,7 +65,12 @@ const CarrierGrid = ({ carriers, onCarrierClick }: CarrierGridProps) => {
             >
               <CardMedia component="div" className={styles['carrier-grid__card-media']}>
                 {carrier.logo ? (
-                  <Box component="img" src={carrier.logo} alt={carrier.name} className={styles['carrier-grid__card-logo']} />
+                  <Box
+                    component="img"
+                    src={carrier.logo}
+                    alt={carrier.name}
+                    className={styles['carrier-grid__card-logo']}
+                  />
                 ) : (
                   <Box className={styles['carrier-grid__card-placeholder']}>
                     <Typography variant="h4" color="text.secondary">
@@ -87,17 +94,14 @@ const CarrierGrid = ({ carriers, onCarrierClick }: CarrierGridProps) => {
 
 /**
  * Client Landing Page
- * Displays clients from login response in a searchable, paginated grid
+ * Displays clients from login response in a searchable grid
  * User selects a client to get bearer token and proceed to dashboard
  */
 const ClientLanding = () => {
   const navigate = useNavigate()
   const [clients, setClients] = useState<ClientResponseModel[]>([])
   const [searchText, setSearchText] = useState('')
-  const [currentPage, setCurrentPage] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
-
-  const pageSize = 9 // 3x3 grid
 
   // Route protection: Check authentication and load clients from localStorage on mount
   useEffect(() => {
@@ -139,28 +143,9 @@ const ClientLanding = () => {
     return clients.filter(client => client.name.toLowerCase().includes(searchLower))
   }, [clients, searchText])
 
-  // Client-side pagination
-  const paginatedClients = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize
-    const endIndex = startIndex + pageSize
-    return filteredClients.slice(startIndex, endIndex)
-  }, [filteredClients, currentPage, pageSize])
-
-  // Reset to page 1 when search changes
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [searchText])
-
   // Handle search input
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchText(event.target.value)
-  }
-
-  // Handle page change
-  const handlePageChange = (_event: React.ChangeEvent<unknown>, page: number) => {
-    setCurrentPage(page)
-    // Scroll to top on page change
-    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   // Handle client selection
@@ -185,7 +170,35 @@ const ClientLanding = () => {
       // Store the bearer token and selected client info
       localStorage.setItem('authToken', token)
       localStorage.setItem('selectedCarrierId', clientId.toString())
+      localStorage.setItem('selectedClientId', clientId.toString()) // Also store as selectedClientId for consistency
+      localStorage.setItem('clientId', clientId.toString()) // Also store as clientId for backwards compatibility
       localStorage.setItem('selectedCarrierName', selectedClient.name)
+
+      // Fetch current user's details including permissions using their login name (email)
+      const storedLoginName = localStorage.getItem('loginName')
+
+      if (storedLoginName) {
+        try {
+          const userDetails = await getUserByEmail(storedLoginName)
+
+          // Store userId for future reference
+          if (userDetails.userId) {
+            localStorage.setItem('userId', userDetails.userId.toString())
+          }
+
+          // Store user permissions in session storage for quick access
+          if (userDetails.permissions && userDetails.permissions.length > 0) {
+            const permissionCodes = userDetails.permissions.map(p => p.permissionCode)
+            sessionStorage.setItem('userPermissions', JSON.stringify(permissionCodes))
+          } else {
+            sessionStorage.setItem('userPermissions', JSON.stringify([]))
+          }
+        } catch (error) {
+          console.error('Failed to fetch user permissions:', error)
+          // Continue even if permissions fetch fails - user can still access dashboard
+          sessionStorage.setItem('userPermissions', JSON.stringify([]))
+        }
+      }
 
       toast.success(`Welcome to ${selectedClient.name}!`)
 
@@ -200,7 +213,7 @@ const ClientLanding = () => {
   }
 
   // Convert to grid items
-  const gridItems: CarrierGridItem[] = paginatedClients.map(client => ({
+  const gridItems: CarrierGridItem[] = filteredClients.map(client => ({
     id: client.clientId,
     name: client.name,
     logo: client.logo,
@@ -243,21 +256,6 @@ const ClientLanding = () => {
           >
             <CarrierGrid carriers={gridItems} onCarrierClick={handleClientClick} />
           </Box>
-
-          {/* Divider before pagination */}
-          {filteredClients.length > pageSize && (
-            <Box component="hr" className={styles['client-landing__divider']} sx={{ borderColor: 'divider' }} />
-          )}
-
-          {/* Pagination */}
-          <PaginationComponent
-            totalItems={filteredClients.length}
-            currentPage={currentPage}
-            pageSize={pageSize}
-            onPageChange={handlePageChange}
-            itemLabel="clients"
-            data-test-id="client-pagination"
-          />
 
           {/* Empty State */}
           {filteredClients.length === 0 && searchText && (

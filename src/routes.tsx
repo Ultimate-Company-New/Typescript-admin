@@ -1,24 +1,25 @@
-import { createBrowserRouter, type RouteObject, Navigate } from 'react-router-dom'
+import { createBrowserRouter, Navigate, type RouteObject } from 'react-router-dom'
 
 import { APP_ROUTES } from './constants/routes'
 import DashboardLayout from './layouts/DashboardLayout'
 import { MainLayout } from './layouts/MainLayout'
-import { Login, Register, ForgotPassword, ClientLanding, NotFound } from './pages'
+import { ClientLanding, ForgotPassword, Login, NotFound, Register } from './pages'
 import { DeveloperDocs } from './pages/developerDocs'
-import { UserGroups, AddUserGroups, ImportUserGroups } from './pages/groups'
-import { Leads, AddLeads, ImportLeads } from './pages/leads'
-import { Messages, AddMessages, ImportMessages, MessagesList, ViewMessage } from './pages/messages'
-import { Packages, AddPackages, ImportPackages } from './pages/packages'
-import { PickupLocations, AddPickupLocations, ImportPickupLocations } from './pages/pickupLocations'
-import { Products, AddProducts, ImportProducts } from './pages/products'
-import { Promos, AddPromos, ImportPromos } from './pages/promos'
-import { PurchaseOrders, AddPurchaseOrders, ImportPurchaseOrders } from './pages/purchaseOrders'
-import { SalesOrders, AddSalesOrders } from './pages/salesOrders'
+import { AddUserGroups, ImportUserGroups, UserGroups } from './pages/groups'
+import { AddLeads, ImportLeads, Leads } from './pages/leads'
+import ConfirmEmail from './pages/login/ConfirmEmail'
+import { AddMessages, ImportMessages, Messages, MessagesList, ViewMessage } from './pages/messages'
+import { AddPackages, ImportPackages, Packages } from './pages/packages'
+import { AddPickupLocations, ImportPickupLocations, PickupLocations } from './pages/pickupLocations'
+import { AddProducts, ImportProducts, Products } from './pages/products'
+import { AddPromos, ImportPromos, Promos } from './pages/promos'
+import { AddPurchaseOrders, ImportPurchaseOrders, PurchaseOrders } from './pages/purchaseOrders'
+import { AddSalesOrders, SalesOrders } from './pages/salesOrders'
 import { Settings } from './pages/settings'
 import { Support } from './pages/support'
 import { TodoList } from './pages/todo'
-import { Users, AddEditUsers, ImportUsers } from './pages/users'
-import { WebTemplates, AddWebTemplates, ImportWebTemplates } from './pages/webTemplates'
+import { AddEditUsers, ImportUsers, Users } from './pages/users'
+import { AddWebTemplates, ImportWebTemplates, WebTemplates } from './pages/webTemplates'
 
 /**
  * Application routes configuration
@@ -44,6 +45,10 @@ export const routes: RouteObject[] = [
       {
         path: 'forgot-password',
         element: <ForgotPassword />,
+      },
+      {
+        path: 'confirm-email',
+        element: <ConfirmEmail />,
       },
       {
         path: 'client-landing',

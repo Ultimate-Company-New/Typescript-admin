@@ -1,0 +1,201 @@
+// src/styles/Login.scss
+// Centralized styles for Login-related pages (Login, ForgotPassword, ClientLanding)
+
+// ============================================================================
+// Shared Login Page Styles
+// ============================================================================
+
+.login-page {
+  &__card {
+    margin-top: 64px; // Corresponds to MUI mt: 8
+    margin-bottom: 32px; // Corresponds to MUI mb: 4
+    padding: 32px; // Corresponds to MUI p: 4
+    border: 1px solid;
+    border-radius: 8px; // Corresponds to MUI borderRadius: 2
+    box-shadow: 0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12); // Corresponds to MUI boxShadow: 2
+  }
+
+  &__logo-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  &__forgot-password-link {
+    margin-top: 16px; // Corresponds to MUI mt: 2
+    cursor: pointer;
+  }
+}
+
+// ============================================================================
+// Client Landing Page Styles
+// ============================================================================
+
+.client-landing {
+  &__container {
+    margin-top: 48px; // Corresponds to MUI mt: 6
+    margin-bottom: 32px; // Corresponds to MUI mb: 4
+  }
+
+  &__logo-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  &__search-container {
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+  }
+
+  &__grid-container {
+    &--loading {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    &--active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+
+  &__divider {
+    border: none;
+    border-top: 1px solid;
+    margin-top: 16px; // Corresponds to MUI my: 2
+    margin-bottom: 16px; // Corresponds to MUI my: 2
+  }
+
+  &__empty-state {
+    padding-top: 64px; // Corresponds to MUI py: 8
+    padding-bottom: 64px; // Corresponds to MUI py: 8
+  }
+}
+
+// ============================================================================
+// Carrier Grid Styles
+// ============================================================================
+
+.carrier-grid {
+  &__empty-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+  }
+
+  &__card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s, box-shadow 0.2s;
+
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0px 10px 13px -6px rgba(0,0,0,0.2), 0px 20px 31px 3px rgba(0,0,0,0.14), 0px 8px 38px 7px rgba(0,0,0,0.12); // Corresponds to MUI boxShadow: 6
+    }
+
+    &--selected {
+      border: 2px solid;
+    }
+
+    &--unselected {
+      border: 0;
+    }
+  }
+
+  &__card-action-area {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  &__card-media {
+    padding-top: 75%; // 4:3 aspect ratio
+    background-color: #e0e0e0; // Corresponds to MUI grey.200
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__card-logo {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 16px; // Corresponds to MUI p: 2
+  }
+
+  &__card-placeholder {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+  }
+
+  &__card-content {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+// ============================================================================
+// Confirm Email Page Styles
+// ============================================================================
+
+.confirm-email {
+  &__container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__paper {
+    padding: 32px; // Corresponds to MUI p: 4
+    width: 100%;
+    text-align: center;
+  }
+
+  &__status-container {
+    margin-top: 24px; // Corresponds to MUI mt: 3
+    margin-bottom: 16px; // Corresponds to MUI mb: 2
+  }
+
+  &__status-icon {
+    font-size: 3rem;
+
+    &--success {
+      color: #2e7d32; // MUI success.main
+    }
+
+    &--error {
+      color: #d32f2f; // MUI error.main
+    }
+  }
+
+  &__message {
+    margin-top: 16px; // Corresponds to MUI mt: 2
+  }
+
+  &__login-link {
+    margin-top: 16px; // Corresponds to MUI mt: 2
+    cursor: pointer;
+    color: #1976d2; // MUI primary.main
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+

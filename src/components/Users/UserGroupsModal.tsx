@@ -4,7 +4,7 @@ import { Close as CloseIcon, Group as GroupIcon } from '@mui/icons-material'
 import { Dialog, DialogTitle, DialogContent, IconButton, Typography, Box, Chip, Paper, Grid } from '@mui/material'
 
 import { type UserGroupResponseModel } from '../../models/UserModels'
-import styles from '../DataGrid/DataGrid.module.scss'
+import styles from '../../styles/DataGrid.module.scss'
 
 interface UserGroupsModalProps {
   open: boolean

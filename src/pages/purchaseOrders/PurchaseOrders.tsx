@@ -22,7 +22,7 @@ import {
   LogicOperator,
   createFetchFunction,
   createToggleFunction,
-} from '../../components/DataGrid'
+} from '../../components/datagrid'
 import { getPurchaseOrderGridColumns } from '../../models/gridModels/purchaseOrderGridColumns'
 import { type PaginatedGridInterface } from '../../types/grid.types'
 import styles from './PurchaseOrders.module.scss'

@@ -22,7 +22,7 @@ import {
   LogicOperator,
   createFetchFunction,
   createToggleFunction,
-} from '../../components/DataGrid'
+} from '../../components/datagrid'
 import { getPromoGridColumns } from '../../models/gridModels/promoGridColumns'
 import { type PaginatedGridInterface } from '../../types/grid.types'
 import styles from './Promos.module.scss'

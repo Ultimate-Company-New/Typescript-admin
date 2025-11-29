@@ -19,7 +19,7 @@ import {
   LogicOperator,
   createFetchFunction,
   createToggleFunction,
-} from '../../components/DataGrid'
+} from '../../components/datagrid'
 import { getMessageGridColumns } from '../../models/gridModels/messageGridColumns'
 import { type MessageResponseModel } from '../../models/MessageModels'
 import { type PaginatedGridInterface } from '../../types/grid.types'

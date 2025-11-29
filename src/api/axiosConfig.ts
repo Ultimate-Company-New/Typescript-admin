@@ -156,6 +156,7 @@ axiosInstance.interceptors.response.use(
           // Only redirect to login if it's a session expiration (not login failure)
           if (!window.location.pathname.includes('/login')) {
             localStorage.removeItem('authToken')
+            sessionStorage.clear()
             window.location.href = '/login'
           }
           break

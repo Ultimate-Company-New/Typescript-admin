@@ -7,7 +7,7 @@ import { Link, Avatar, Box, Switch, Chip, IconButton, Badge } from '@mui/materia
 import { type GridColDef, type GridRenderCellParams } from '@mui/x-data-grid'
 
 import { productApi } from '../../api/productApi'
-import { RenderLongCellItem } from '../../components/DataGrid'
+import { RenderLongCellItem } from '../../components/datagrid'
 import { PickupLocationsModal } from '../../components/Products'
 import { APP_ROUTES } from '../../constants/routes'
 

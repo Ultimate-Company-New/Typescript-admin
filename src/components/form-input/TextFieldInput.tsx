@@ -2,6 +2,8 @@ import { forwardRef } from 'react'
 
 import { TextField, type TextFieldProps } from '@mui/material'
 
+import styles from '../../styles/FormInput.module.scss'
+
 export interface TextFieldInputProps extends Omit<TextFieldProps, 'variant' | 'margin'> {
   maxLength?: number
   variant?: 'outlined' | 'filled' | 'standard'
@@ -14,7 +16,7 @@ export interface TextFieldInputProps extends Omit<TextFieldProps, 'variant' | 'm
  */
 const TextFieldInput = forwardRef<HTMLDivElement, TextFieldInputProps>(
   (
-    { maxLength, variant = 'outlined', margin = 'dense', fullWidth = true, InputLabelProps, inputProps, ...props },
+    { maxLength, variant = 'filled', margin = 'normal', fullWidth = true, InputLabelProps, inputProps, ...props },
     ref,
   ) => (
     <TextField
@@ -22,6 +24,7 @@ const TextFieldInput = forwardRef<HTMLDivElement, TextFieldInputProps>(
       variant={variant}
       margin={margin}
       fullWidth={fullWidth}
+      className={styles['filled-input']}
       InputLabelProps={{
         shrink: true,
         ...InputLabelProps,
@@ -30,6 +33,10 @@ const TextFieldInput = forwardRef<HTMLDivElement, TextFieldInputProps>(
         maxLength,
         ...inputProps,
       }}
+      InputProps={{
+        disableUnderline: true,
+      }}
+      sx={props.sx}
       {...props}
     />
   ),

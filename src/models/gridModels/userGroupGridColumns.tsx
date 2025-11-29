@@ -4,6 +4,23 @@ import { type GridColDef, type GridRenderCellParams } from '@mui/x-data-grid'
 import { APP_ROUTES } from '../../constants/routes'
 
 /**
+ * User Group data structure matching API response
+ */
+export interface UserGroupData {
+  groupId?: number
+  userGroupId?: number
+  groupName: string
+  name?: string
+  description: string
+  userIds: number[]
+  memberCount?: number
+  userCount?: number
+  isDeleted: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+/**
  * Get user group grid columns with action handlers
  */
 export const getUserGroupGridColumns = (

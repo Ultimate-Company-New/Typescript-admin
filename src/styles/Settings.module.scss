@@ -1,0 +1,41 @@
+// Settings Page Styles
+// Extends common styles from ../../styles/common.module.scss
+
+@import './common.module.scss';
+
+.settings-page {
+  // Use common page container pattern
+  &__container {
+    @extend .page__container--form;
+  }
+
+  // Use common section pattern
+  &__section {
+    @extend .section;
+    // Remove margin-top from section as it's already in container gap
+    margin-top: 0;
+  }
+
+  &__section-title {
+    @extend .section__title;
+  }
+
+  &__divider {
+    @extend .section__divider;
+  }
+
+  &__divider-spacer {
+    @extend .section__divider-spacer;
+  }
+
+  // Use common actions pattern
+  &__actions {
+    @extend .actions;
+    @extend .actions--start;
+  }
+
+  &__action-button {
+    @extend .action-button;
+  }
+}
+

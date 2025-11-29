@@ -3,7 +3,7 @@ import { forwardRef } from 'react'
 import { Button, type ButtonProps, Link } from '@mui/material'
 
 export interface BlueButtonProps extends Omit<ButtonProps, 'color' | 'variant'> {
-  label: string
+  label?: string
   href?: string
   color?: ButtonProps['color']
   variant?: ButtonProps['variant']
@@ -15,7 +15,7 @@ export interface BlueButtonProps extends Omit<ButtonProps, 'color' | 'variant'> 
  */
 const BlueButton = forwardRef<HTMLButtonElement, BlueButtonProps>(
   (
-    { label, href, color = 'primary', variant = 'contained', size = 'large', fullWidth = false, onClick, ...props },
+    { label, href, color = 'primary', variant = 'contained', size = 'large', fullWidth = false, onClick, children, ...props },
     ref,
   ) => {
     const button = (
@@ -29,7 +29,7 @@ const BlueButton = forwardRef<HTMLButtonElement, BlueButtonProps>(
         {...(href && { href })}
         {...props}
       >
-        {label}
+        {children ?? label}
       </Button>
     )
 

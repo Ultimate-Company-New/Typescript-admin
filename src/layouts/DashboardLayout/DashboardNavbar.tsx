@@ -15,7 +15,7 @@ import { styled } from '@mui/material/styles'
 
 import messageApi from '../../api/messageApi'
 import { APP_ROUTES } from '../../constants/routes'
-import styles from './DashboardLayout.module.scss'
+import styles from '../../styles/Layouts.module.scss'
 
 const DRAWER_WIDTH = 280
 
@@ -91,12 +91,18 @@ const DashboardNavbar = forwardRef<HTMLDivElement, DashboardNavbarProps>(({ open
   }, [])
 
   const handleLogout = (): void => {
-    // Clear auth data
+    // Clear auth data from localStorage
     localStorage.removeItem('authToken')
     localStorage.removeItem('selectedCarrierId')
+    localStorage.removeItem('selectedClientId')
+    localStorage.removeItem('clientId')
     localStorage.removeItem('selectedCarrierName')
     localStorage.removeItem('clients')
     localStorage.removeItem('loginName')
+    localStorage.removeItem('userId')
+
+    // Clear session data (permissions, etc.)
+    sessionStorage.clear()
 
     // Redirect to login
     window.location.href = APP_ROUTES.LOGIN

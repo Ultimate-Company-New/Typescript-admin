@@ -2,7 +2,7 @@ import { Close as CloseIcon } from '@mui/icons-material'
 import { Box, Chip, Dialog, DialogContent, DialogTitle, Divider, IconButton, Paper, Typography } from '@mui/material'
 
 import { type UserPermissionInfo } from '../../models/UserModels'
-import styles from '../DataGrid/DataGrid.module.scss'
+import styles from '../../styles/DataGrid.module.scss'
 
 interface PermissionsModalProps {
   open: boolean

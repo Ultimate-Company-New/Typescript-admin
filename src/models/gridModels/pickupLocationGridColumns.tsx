@@ -2,7 +2,7 @@ import { LocationOn as LocationIcon } from '@mui/icons-material'
 import { Link, Box, Tooltip } from '@mui/material'
 import { type GridColDef, type GridRenderCellParams } from '@mui/x-data-grid'
 
-import { RenderLongCellItem } from '../../components/DataGrid'
+import { RenderLongCellItem } from '../../components/datagrid'
 import { APP_ROUTES } from '../../constants/routes'
 
 /**

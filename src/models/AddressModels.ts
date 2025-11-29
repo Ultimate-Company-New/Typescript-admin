@@ -11,14 +11,23 @@ export interface AddressRequestModel {
   addressId?: number
   userId?: number
   clientId?: number
+  streetAddress?: string
+  streetAddress2?: string
+  streetAddress3?: string
+  // Legacy field names retained for backward compatibility
   street1?: string
   street2?: string
+  street3?: string
   city?: string
   state?: string
-  zipCode?: string
+  postalCode?: string
+  zipCode?: string // Keep for backward compatibility
   country?: string
   addressType?: string
   isPrimary?: boolean
+  nameOnAddress?: string
+  emailOnAddress?: string
+  phoneOnAddress?: string
 }
 
 /**
@@ -29,13 +38,18 @@ export interface AddressResponseModel {
   addressId: number
   userId?: number
   clientId?: number
-  street1: string
-  street2?: string
+  streetAddress: string
+  streetAddress2?: string
+  streetAddress3?: string
   city: string
   state: string
-  zipCode: string
+  postalCode?: string
+  zipCode?: string // Keep for backward compatibility
   country: string
   addressType: string
+  nameOnAddress?: string
+  emailOnAddress?: string
+  phoneOnAddress?: string
   isPrimary: boolean
   createdAt?: string
   updatedAt?: string

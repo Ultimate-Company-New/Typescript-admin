@@ -1,0 +1,552 @@
+// src/styles/Users.scss
+// Centralized styles for Users-related pages (Users, AddUsers, ImportUsers)
+
+// ============================================================================
+// Users Page Styles
+// ============================================================================
+
+.users-page {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0; // Allow shrinking
+  padding: 0;
+  box-sizing: border-box;
+
+  &__container {
+    padding-top: 32px;
+    padding-bottom: 32px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0; // Allow shrinking
+    box-sizing: border-box;
+    overflow-x: auto; // Enable horizontal scroll if needed
+  }
+
+  &__card {
+    background-color: #ffffff;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden; // Ensure content doesn't overflow rounded corners
+
+    // Ensure DataGrid is responsive
+    .MuiDataGrid-root {
+      width: 100%;
+      max-width: 100%;
+      min-width: 800px; // Minimum width before horizontal scroll
+      box-sizing: border-box;
+      border: none; // Remove border since card has it
+      border-radius: 0; // Remove border radius since card has it
+    }
+  }
+
+  &__pagination {
+    padding: 16px;
+    border-top: 1px solid rgba(224, 224, 224, 1); // Divider between grid and pagination
+  }
+}
+
+// ============================================================================
+// Add Users Page Styles
+// ============================================================================
+
+.add-users-page {
+  &__container {
+    padding-top: 16px; // Reduced from 32px to minimize whitespace below navbar
+    padding-bottom: 32px; // Corresponds to MUI py: 4
+  }
+
+  &__form-container {
+    margin-top: 32px; // Corresponds to MUI mt: 4
+    padding: 32px; // Corresponds to MUI p: 4
+    border-radius: 8px; // Corresponds to MUI borderRadius: 2
+  }
+
+  &__section {
+    margin-top: 24px;
+    padding: 24px;
+  }
+
+  &__section-title {
+    font-weight: 600;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+  }
+
+  &__divider {
+    margin-bottom: 8px;
+    margin-top: 8px;
+  }
+
+  &__divider-spacer {
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  &__grid-container {
+    margin-top: -8px;
+    min-height: 300px;
+  }
+
+  &__selection-info {
+    margin-top: 16px;
+    padding: 12px;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    text-align: center;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    padding: 24px;
+  }
+
+  &__action-button {
+    text-transform: none;
+  }
+
+  &__profile-picture-wrapper {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
+
+  &__profile-picture-grid {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px; // MUI spacing 2 = 16px
+    width: 100%;
+  }
+
+  &__avatar {
+    width: 150px !important;
+    height: 150px !important;
+    min-width: 150px !important;
+    min-height: 150px !important;
+    font-size: 60px !important;
+
+    &--view-mode {
+      cursor: default;
+    }
+
+    &--edit-mode {
+      cursor: pointer;
+    }
+  }
+
+  &__avatar-container {
+    position: relative;
+    display: inline-block;
+  }
+
+  &__avatar-delete-button {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+
+    &:hover {
+      background-color: #ffebee;
+    }
+  }
+
+  &__upload-buttons-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px; // MUI spacing 2 = 16px
+    flex-wrap: wrap;
+  }
+
+  &__data-grid {
+    :global(.MuiDataGrid-row.Mui-selected) {
+      background-color: rgba(25, 118, 210, 0.08);
+    }
+  }
+
+  &__selection-info-text {
+    margin-top: 16px; // MUI spacing 2 = 16px
+  }
+}
+
+// ============================================================================
+// Import Users Page Styles
+// ============================================================================
+
+.import-users-page {
+  &__container {
+    padding-top: 32px;
+    padding-bottom: 32px;
+  }
+
+  &__instructions-paper {
+    padding: 24px;
+    margin-top: 24px;
+    margin-bottom: 24px;
+    background-color: #f5f9ff;
+    border-left: 4px solid #1976d2;
+  }
+
+  &__instructions-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  &__instructions-title {
+    font-weight: 600;
+  }
+
+  &__actions-bar {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 24px;
+    margin-bottom: 24px;
+  }
+
+  &__action-button {
+    text-transform: none;
+  }
+
+  &__max-records-select {
+    min-width: 150px;
+  }
+
+  &__view-toggle {
+    margin-left: auto;
+  }
+
+  &__file-alert {
+    margin-bottom: 24px;
+  }
+
+  &__preview-paper {
+    margin-top: 24px;
+    padding: 24px;
+  }
+
+  &__preview-header {
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  &__grid-container {
+    margin-top: 16px;
+    min-height: 400px;
+  }
+
+  &__error-row {
+    background-color: #ffebee !important;
+
+    &:hover {
+      background-color: #ffcdd2 !important;
+    }
+  }
+
+  &__json-container {
+    margin-top: 16px;
+    max-height: 600px;
+    overflow: auto;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+    padding: 16px;
+  }
+
+  &__json-pre {
+    margin: 0;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #333;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  &__submit-container {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid #e0e0e0;
+  }
+
+  &__submit-button {
+    text-transform: none;
+  }
+
+  &__empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 40px;
+    margin-top: 40px;
+    text-align: center;
+  }
+
+  &__empty-icon {
+    font-size: 80px;
+    color: #bdbdbd;
+    margin-bottom: 16px;
+  }
+}
+
+// ============================================================================
+// Fill Test Data Button Styles
+// ============================================================================
+
+.fill-test-data-button {
+  &__fab {
+    position: fixed !important;
+    bottom: 24px;
+    right: 96px; // Position to the left of DevLogger FAB (56px width + 16px gap + 24px from right)
+    z-index: 1200;
+    background-color: #1976d2 !important; // Primary blue color matching theme
+    color: #fff !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    transition: all 0.3s ease-in-out !important;
+
+    &:hover {
+      background-color: #1565c0 !important; // Darker blue on hover
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    &.Mui-disabled {
+      background-color: rgba(0, 0, 0, 0.12) !important;
+      color: rgba(0, 0, 0, 0.26) !important;
+    }
+  }
+}
+
+// ============================================================================
+// User Permissions Styles
+// ============================================================================
+
+.user-permissions {
+  &__container {
+    width: 100%;
+  }
+
+  &__category-paper {
+    padding: 16px;
+    height: 100%;
+  }
+
+  &__category-title {
+    font-weight: 600;
+  }
+
+  &__divider {
+    margin-bottom: 16px;
+  }
+
+  &__permissions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+}
+
+// ============================================================================
+// User Grid Columns Styles
+// ============================================================================
+
+.user-grid {
+  // Role chip styles for different roles
+  &__role-chip {
+    &--superadmin {
+      background-color: #7b1fa2 !important; // Deep Purple for SuperAdmin
+      color: #fff !important;
+      font-weight: bold !important;
+      border-color: #7b1fa2 !important;
+    }
+
+    &--admin {
+      background-color: #d32f2f !important; // Red for Admin
+      color: #fff !important;
+      font-weight: bold !important;
+      border-color: #d32f2f !important;
+    }
+
+    &--manager {
+      background-color: #1976d2 !important; // Blue for Manager
+      color: #fff !important;
+      font-weight: bold !important;
+      border-color: #1976d2 !important;
+    }
+
+    &--viewer {
+      background-color: #388e3c !important; // Green for Viewer
+      color: #fff !important;
+      font-weight: bold !important;
+      border-color: #388e3c !important;
+    }
+
+    &--customer {
+      background-color: #f57c00 !important; // Orange for Customer
+      color: #fff !important;
+      font-weight: bold !important;
+      border-color: #f57c00 !important;
+    }
+
+    &--custom {
+      background-color: #0097a7 !important; // Cyan for Custom
+      color: #fff !important;
+      font-weight: bold !important;
+      border-color: #0097a7 !important;
+    }
+
+    &--default {
+      background-color: #9e9e9e !important; // Grey for unknown roles
+      color: #fff !important;
+      font-weight: bold !important;
+      border-color: #9e9e9e !important;
+    }
+  }
+
+  // Avatar styles
+  &__avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.875rem;
+  }
+
+  // Avatar container
+  &__avatar-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+  }
+
+  // Permissions button
+  &__permissions-button {
+    padding: 0.5;
+  }
+
+  // User groups button
+  &__groups-button {
+    padding: 0.5;
+  }
+
+  // Role column container
+  &__role-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px; // MUI spacing 1 = 8px
+    width: 100%;
+    height: 100%;
+  }
+
+  // Address icon
+  &__address-icon {
+    color: rgba(0, 0, 0, 0.54); // MUI action.active color
+  }
+
+  // Address container
+  &__address-container {
+    display: flex;
+    align-items: center;
+    gap: 4px; // MUI spacing 0.5 = 4px
+  }
+
+  // Address tooltip content
+  &__address-tooltip {
+    white-space: pre-line;
+    font-size: 0.875rem;
+  }
+
+  // Empty state (no data)
+  &__empty-cell {
+    color: #999;
+  }
+
+  // Actions container
+  &__actions-container {
+    display: flex;
+    gap: 12px;
+  }
+
+  // Action link
+  &__action-link {
+    cursor: pointer;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    &--activate {
+      color: #4caf50 !important; // Success green
+    }
+
+    &--deactivate {
+      color: #f44336 !important; // Error red
+    }
+  }
+}
+
+// ============================================================================
+// User Details View Mode Styles
+// ============================================================================
+
+.user-details-view {
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 0;
+  }
+
+  &__label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  &__value {
+    font-size: 1rem;
+    color: rgba(0, 0, 0, 0.87);
+    word-break: break-word;
+  }
+
+  &__notes {
+    font-size: 1rem;
+    color: rgba(0, 0, 0, 0.87);
+    white-space: pre-wrap;
+    line-height: 1.6;
+  }
+}
+
+// Dark mode support for view mode
+:global(.dark-mode) {
+  .user-details-view {
+    &__label {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    &__value,
+    &__notes {
+      color: rgba(255, 255, 255, 0.87);
+    }
+  }
+}
+

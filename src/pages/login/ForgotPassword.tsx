@@ -1,23 +1,24 @@
 import { useState } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm, Controller } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
-import { Container, Box, Stack } from '@mui/material'
+import { Box, Container, Stack } from '@mui/material'
 
 import { loginApi } from '../../api/loginApi'
-import { Header, Subheader, BodyText, TextFieldInput, BlueButton, LinkButton, Logo } from '../../components'
+import { BlueButton, BodyText, Header, LinkButton, Logo, Subheader, TextFieldInput } from '../../components'
 import { APP_ROUTES } from '../../constants/routes'
 import { passwordResetSchema, type PasswordResetFormData } from '../../utils/validationSchemas'
-import styles from './Login.module.scss'
+
+import styles from '../../styles/Login.module.scss'
 
 /**
  * Forgot Password Page Component
  * Allows users to request a password reset email
  */
-const ForgotPassword = () => {
+const ForgotPassword = (): JSX.Element => {
   const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(false)
 
@@ -33,7 +34,7 @@ const ForgotPassword = () => {
     },
   })
 
-  const onSubmit = async (data: PasswordResetFormData) => {
+  const onSubmit = async (data: PasswordResetFormData): Promise<void> => {
     setIsLoading(true)
     try {
       const success = await loginApi.resetPassword({
@@ -51,7 +52,6 @@ const ForgotPassword = () => {
       }
     } catch (error) {
       // Error is handled by axios interceptor with toast
-      console.error('Password reset failed:', error)
     } finally {
       setIsLoading(false)
     }

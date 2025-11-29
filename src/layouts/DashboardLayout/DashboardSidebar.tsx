@@ -3,44 +3,45 @@ import { forwardRef, useState } from 'react'
 import { Link as RouterLink, useLocation } from 'react-router-dom'
 
 import {
+  Add as AddIcon,
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
+  Description as DescriptionIcon,
   ExpandLess,
   ExpandMore,
-  People as PeopleIcon,
-  PersonAdd as PersonAddIcon,
-  Upload as UploadIcon,
-  Groups as GroupsIcon,
   GroupAdd as GroupAddIcon,
-  Leaderboard as LeaderboardIcon,
-  Add as AddIcon,
-  LocalOffer as LocalOfferIcon,
+  Groups as GroupsIcon,
   Inventory as InventoryIcon,
+  Leaderboard as LeaderboardIcon,
+  LocalOffer as LocalOfferIcon,
   LocalShipping as LocalShippingIcon,
   LocationOn as LocationOnIcon,
-  ShoppingCart as ShoppingCartIcon,
-  Settings as SettingsIcon,
-  Support as SupportIcon,
-  Description as DescriptionIcon,
   Message as MessageIcon,
-  Web as WebIcon,
+  People as PeopleIcon,
+  PersonAdd as PersonAddIcon,
   Receipt as ReceiptIcon,
+  Settings as SettingsIcon,
+  ShoppingCart as ShoppingCartIcon,
+  Support as SupportIcon,
+  Upload as UploadIcon,
+  Web as WebIcon,
 } from '@mui/icons-material'
 import {
+  Box,
+  Collapse,
+  Divider,
   Drawer,
+  IconButton,
   List,
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  IconButton,
-  Box,
-  Collapse,
-  Divider,
 } from '@mui/material'
 import { styled, useTheme } from '@mui/material/styles'
 
 import { APP_ROUTES } from '../../constants/routes'
-import styles from './DashboardLayout.module.scss'
+
+import styles from '../../styles/Layouts.module.scss'
 
 interface DashboardSidebarProps {
   open: boolean

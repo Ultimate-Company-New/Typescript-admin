@@ -18,7 +18,7 @@ import {
   LogicOperator,
   createFetchFunction,
   createToggleFunction,
-} from '../../components/DataGrid'
+} from '../../components/datagrid'
 import { getLeadGridColumns, type LeadData } from '../../models/gridModels/leadGridColumns'
 import { type PaginatedGridInterface } from '../../types/grid.types'
 import styles from './Leads.module.scss'

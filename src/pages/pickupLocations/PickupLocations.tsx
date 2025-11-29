@@ -18,7 +18,7 @@ import {
   LogicOperator,
   createFetchFunction,
   createToggleFunction,
-} from '../../components/DataGrid'
+} from '../../components/datagrid'
 import { getPickupLocationGridColumns } from '../../models/gridModels/pickupLocationGridColumns'
 import { type PaginatedGridInterface } from '../../types/grid.types'
 import styles from './PickupLocations.module.scss'

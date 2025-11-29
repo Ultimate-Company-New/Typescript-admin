@@ -6,7 +6,7 @@ import { Box, CssBaseline } from '@mui/material'
 
 import DashboardNavbar from './DashboardNavbar'
 import DashboardSidebar from './DashboardSidebar'
-import styles from './DashboardLayout.module.scss'
+import styles from '../../styles/Layouts.module.scss'
 
 /**
  * Dashboard Layout Component

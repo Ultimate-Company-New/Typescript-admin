@@ -1,0 +1,599 @@
+/**
+ * DataGrid Styles
+ * Centralized SCSS styles for all DataGrid components
+ * Extracted from inline styles for better maintainability
+ */
+
+// ==================== SimpleToolbar Styles ====================
+
+.simple-toolbar {
+  gap: 16px;
+  padding: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+
+  // Add spacing between toolbar buttons and their wrappers
+  & > button,
+  & > div[role="button"],
+  & > :global(.MuiTooltip-root),
+  & > :global(.MuiBadge-root) {
+    margin-right: 12px;
+  }
+}
+
+.simple-toolbar__spacer {
+  flex-grow: 1;
+  min-width: 0; // Allow spacer to shrink
+  max-width: 100%; // Prevent spacer from pushing content off-screen
+}
+
+.simple-toolbar__button {
+  text-transform: none;
+}
+
+.simple-toolbar__checkbox-label {
+  margin-right: 0;
+  margin-left: 8px;
+
+  :global(.MuiFormControlLabel-label) {
+    font-size: 0.875rem;
+  }
+}
+
+// ==================== FilterPanel Styles ====================
+
+.filter-panel {
+  &__dialog-paper {
+    border-radius: 8px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 16px;
+  }
+
+  &__close-button {
+    color: #9e9e9e;
+
+    &:hover {
+      color: #616161;
+    }
+  }
+
+  &__content {
+    padding-top: 24px;
+    padding-bottom: 24px;
+  }
+
+  &__content-box {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  &__logic-operator-box {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 8px;
+    padding: 16px;
+    background-color: rgba(25, 118, 210, 0.08);
+    border-radius: 4px;
+    border: 1px solid rgba(25, 118, 210, 0.2);
+  }
+
+  &__toggle-button {
+    padding-left: 24px;
+    padding-right: 24px;
+    text-transform: none;
+    font-weight: 500;
+  }
+
+  &__divider-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  &__divider {
+    flex: 1;
+  }
+
+  &__chip {
+    font-weight: bold;
+    font-size: 0.75rem;
+  }
+
+  &__filter-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    gap: 16px;
+    align-items: start;
+    padding: 16px;
+    background-color: #fafafa;
+    border-radius: 4px;
+    border: 1px solid #e0e0e0;
+  }
+
+  &__value-input {
+    min-width: 0;
+  }
+
+  &__delete-button {
+    margin-top: 4px;
+
+    &:disabled {
+      color: #e0e0e0;
+    }
+  }
+
+  &__add-button {
+    text-transform: none;
+    align-self: flex-start;
+    margin-top: 8px;
+  }
+
+  &__actions {
+    padding-left: 24px;
+    padding-right: 24px;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    gap: 8px;
+  }
+
+  &__actions-spacer {
+    flex: 1;
+  }
+
+  &__action-button {
+    text-transform: none;
+  }
+}
+
+// ==================== CustomNoRowsOverlay Styles ====================
+
+.custom-no-rows-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+
+  &__message {
+    margin-top: 8px;
+  }
+
+  // SVG icon colors for light mode
+  :global(.ant-empty-img-1) {
+    fill: #aeb8c2;
+  }
+
+  :global(.ant-empty-img-2) {
+    fill: #f5f5f7;
+  }
+
+  :global(.ant-empty-img-3) {
+    fill: #dce0e6;
+  }
+
+  :global(.ant-empty-img-4) {
+    fill: #fff;
+  }
+
+  :global(.ant-empty-img-5) {
+    fill-opacity: 0.8;
+    fill: #f5f5f5;
+  }
+}
+
+// Dark mode support for CustomNoRowsOverlay
+@media (prefers-color-scheme: dark) {
+  .custom-no-rows-overlay {
+    :global(.ant-empty-img-1) {
+      fill: #262626;
+    }
+
+    :global(.ant-empty-img-2) {
+      fill: #595959;
+    }
+
+    :global(.ant-empty-img-3) {
+      fill: #434343;
+    }
+
+    :global(.ant-empty-img-4) {
+      fill: #1c1c1c;
+    }
+
+    :global(.ant-empty-img-5) {
+      fill-opacity: 0.08;
+      fill: #fff;
+    }
+  }
+}
+
+// ==================== RenderLongCellItem Styles ====================
+
+.render-long-cell-item {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+
+  &--overflowing {
+    cursor: help;
+  }
+
+  &--default {
+    cursor: default;
+  }
+}
+
+// ==================== PermissionsModal Styles ====================
+
+.permissions-modal {
+  &__dialog-paper {
+    border-radius: 16px;
+    box-shadow: 0px 11px 15px -7px rgba(0,0,0,0.2), 0px 24px 38px 3px rgba(0,0,0,0.14), 0px 9px 46px 8px rgba(0,0,0,0.12);
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 8px;
+  }
+
+  &__close-button {
+    color: #9e9e9e;
+
+    &:hover {
+      color: #757575;
+    }
+  }
+
+  &__content {
+    padding-top: 16px;
+    padding-bottom: 24px;
+  }
+
+  &__empty-state {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 48px 16px;
+    text-align: center;
+  }
+
+  &__content-box {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  &__category-paper {
+    padding: 20px;
+    border-radius: 12px;
+    transition: box-shadow 0.3s ease;
+
+    &:hover {
+      box-shadow: 0px 4px 20px rgba(0,0,0,0.1);
+    }
+  }
+
+  &__category-title {
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 1.25rem;
+  }
+
+  &__divider {
+    margin-bottom: 16px;
+  }
+
+  &__permissions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  &__permission-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__permission-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  &__permission-code-chip {
+    min-width: 120px;
+  }
+
+  &__permission-name {
+    font-weight: 500;
+    flex: 1;
+  }
+
+  &__permission-description {
+    padding-left: 132px; // Align with permission name (chip width + gap)
+    line-height: 1.5;
+  }
+
+  &__permission-divider {
+    margin-top: 8px;
+  }
+}
+
+// ==================== UserGroupsModal Styles ====================
+
+.user-groups-modal {
+  &__dialog-paper {
+    border-radius: 16px;
+    box-shadow: 0px 11px 15px -7px rgba(0,0,0,0.2), 0px 24px 38px 3px rgba(0,0,0,0.14), 0px 9px 46px 8px rgba(0,0,0,0.12);
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 8px;
+  }
+
+  &__close-button {
+    color: #9e9e9e;
+
+    &:hover {
+      color: #757575;
+    }
+  }
+
+  &__content {
+    padding-top: 16px;
+    padding-bottom: 24px;
+  }
+
+  &__empty-state {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 48px 16px;
+    text-align: center;
+  }
+
+  &__group-card {
+    padding: 20px;
+    border-radius: 12px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0px 6px 24px rgba(0,0,0,0.15);
+    }
+  }
+
+  &__group-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__group-icon {
+    font-size: 28px;
+  }
+
+  &__group-name {
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+
+  &__group-description {
+    line-height: 1.6;
+    margin-top: 4px;
+  }
+
+  &__group-metadata {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 8px;
+  }
+
+  &__metadata-chip {
+    font-size: 0.75rem;
+  }
+}
+
+// ==================== StyledDataGrid Styles ====================
+
+// ODD_OPACITY constant equivalent: 0.2
+$odd-opacity: 0.2;
+
+.data-grid {
+  border: 0;
+  transition: box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+  border-radius: 4px;
+  padding: 20px;
+  min-height: 700px;
+  width: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: normal;
+
+  // Odd rows with hover and selection states
+  :global {
+    .MuiDataGrid-row.odd {
+      &:hover {
+        background-color: rgba(0, 128, 0, $odd-opacity); // secondary.main with ODD_OPACITY
+
+        @media (hover: none) {
+          background-color: transparent;
+        }
+      }
+
+      &.Mui-selected {
+        background-color: rgba(25, 118, 210, calc($odd-opacity + 0.08)); // primary.main with ODD_OPACITY + selectedOpacity (0.08)
+
+        &:hover {
+          background-color: rgba(0, 128, 0, calc($odd-opacity + 0.08 + 0.04)); // secondary.main with ODD_OPACITY + selectedOpacity + hoverOpacity
+
+          @media (hover: none) {
+            background-color: rgba(25, 118, 210, calc($odd-opacity + 0.08));
+          }
+        }
+      }
+    }
+
+    // Even rows with alternating background
+    .MuiDataGrid-row.even {
+      background-color: #e0e0e0; // grey[200]
+
+      &:hover {
+        background-color: rgba(0, 128, 0, $odd-opacity); // secondary.main with ODD_OPACITY
+
+        @media (hover: none) {
+          background-color: transparent;
+        }
+      }
+
+      &.Mui-selected {
+        background-color: rgba(25, 118, 210, calc($odd-opacity + 0.08)); // primary.main with ODD_OPACITY + selectedOpacity
+
+        &:hover {
+          background-color: rgba(0, 128, 0, calc($odd-opacity + 0.08 + 0.04)); // secondary.main with ODD_OPACITY + selectedOpacity + hoverOpacity
+
+          @media (hover: none) {
+            background-color: rgba(25, 118, 210, calc($odd-opacity + 0.08));
+          }
+        }
+      }
+    }
+
+    // Deleted rows styling
+    .MuiDataGrid-row.deleted {
+      background-color: rgba(66, 66, 66, 0.15); // grey[800] with alpha
+      opacity: 0.7;
+
+      &:hover {
+        background-color: rgba(66, 66, 66, 0.25);
+        opacity: 0.8;
+      }
+
+      .MuiDataGrid-cell {
+        color: #757575; // grey[600]
+      }
+    }
+
+    // Column headers with green theme
+    .MuiDataGrid-columnHeader {
+      background-color: #2E7D32 !important; // Matches our avatar color palette (Dark Green)
+      color: #ffffff !important;
+      font-weight: 600 !important;
+      font-size: 0.875rem !important;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .MuiDataGrid-sortIcon {
+      color: white !important;
+    }
+
+    .MuiDataGrid-menuIcon {
+      color: white !important;
+    }
+
+    .MuiDataGrid-iconSeparator {
+      display: none;
+    }
+
+    // Column and cell borders
+    .MuiDataGrid-columnHeader,
+    .MuiDataGrid-cell {
+      border-right: 1px solid #f0f0f0;
+    }
+
+    .MuiDataGrid-columnsContainer,
+    .MuiDataGrid-cell {
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    // Cell text color
+    .MuiDataGrid-cell {
+      color: rgba(0, 0, 0, 0.85);
+    }
+
+    // Pagination styling
+    .MuiPaginationItem-root {
+      border-radius: 0;
+    }
+
+    // Toolbar container
+    .MuiDataGrid-toolbarContainer {
+      padding: 8px; // theme.spacing(1)
+      border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    // Columns container background
+    .MuiDataGrid-columnsContainer {
+      background-color: #fafafa;
+    }
+  }
+}
+
+// Dark mode support for DataGrid
+@media (prefers-color-scheme: dark) {
+  .data-grid {
+    :global {
+      .MuiDataGrid-columnsContainer {
+        background-color: #1d1d1d;
+      }
+
+      .MuiDataGrid-columnHeader,
+      .MuiDataGrid-cell {
+        border-right: 1px solid #303030;
+      }
+
+      .MuiDataGrid-columnsContainer,
+      .MuiDataGrid-cell {
+        border-bottom: 1px solid #303030;
+      }
+
+      .MuiDataGrid-cell {
+        color: rgba(255, 255, 255, 0.65);
+      }
+
+      .MuiDataGrid-row.deleted {
+        background-color: rgba(97, 97, 97, 0.3); // grey[700] with alpha
+
+        &:hover {
+          background-color: rgba(117, 117, 117, 0.4); // grey[600] with alpha
+        }
+
+        .MuiDataGrid-cell {
+          color: #bdbdbd; // grey[400]
+        }
+      }
+    }
+  }
+}

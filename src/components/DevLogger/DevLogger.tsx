@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 
 import { toast } from 'react-toastify'
 
@@ -12,21 +12,22 @@ import {
   Search as SearchIcon,
 } from '@mui/icons-material'
 import {
+  Badge,
   Box,
-  Fab,
+  Chip,
+  Divider,
   Drawer,
+  Fab,
   IconButton,
-  Typography,
+  InputAdornment,
   List,
   ListItem,
-  Divider,
-  Tooltip,
-  Badge,
   TextField,
-  InputAdornment,
-  Chip,
+  Tooltip,
 } from '@mui/material'
-import styles from './DevLogger.module.scss'
+
+import styles from '../../styles/DevLogger.module.scss'
+import { BodyText, Header, PrimaryFont } from '../fonts'
 
 export interface ApiLog {
   id: string
@@ -149,7 +150,12 @@ const DevLogger: React.FC<DevLoggerProps> = ({ enabled = true }) => {
     <>
       {/* Floating Action Button */}
       <Tooltip title="Developer Logger" placement="left">
-        <Fab color="secondary" aria-label="developer logger" className={styles['dev-logger__fab']} onClick={handleToggle}>
+        <Fab
+          color="secondary"
+          aria-label="developer logger"
+          className={styles['dev-logger__fab']}
+          onClick={handleToggle}
+        >
           <Badge badgeContent={logs.length} color="error" max={99}>
             <BugReportIcon />
           </Badge>
@@ -164,10 +170,6 @@ const DevLogger: React.FC<DevLoggerProps> = ({ enabled = true }) => {
         className={styles['dev-logger__drawer']}
         PaperProps={{
           className: styles['dev-logger__drawer-paper'],
-          sx: {
-            height: '50vh',
-            maxHeight: '50vh',
-          },
         }}
         ModalProps={{
           keepMounted: true,
@@ -178,16 +180,16 @@ const DevLogger: React.FC<DevLoggerProps> = ({ enabled = true }) => {
       >
         <Box className={styles['dev-logger__header']}>
           <Box className={styles['dev-logger__header-content']}>
-            <BugReportIcon sx={{ mr: 1 }} />
-            <Typography variant="h6">Developer Logger</Typography>
-            <Badge badgeContent={logs.length} color="error" sx={{ ml: 2 }} />
+            <BugReportIcon className={styles['dev-logger__header-icon']} />
+            <Header label="Developer Logger" variant="h6" className={styles['dev-logger__header-title']} />
+            <Badge badgeContent={logs.length} color="error" className={styles['dev-logger__header-badge']} />
           </Box>
-          <Box>
+          <Box className={styles['dev-logger__header-actions']}>
             <Tooltip title={isPinned ? 'Unpin drawer' : 'Pin drawer (keep open)'}>
               <IconButton
                 onClick={handleTogglePin}
                 size="small"
-                sx={{ mr: 1 }}
+                className={styles['dev-logger__header-action-button']}
                 color={isPinned ? 'primary' : 'default'}
               >
                 {isPinned ? <PushPinIcon /> : <PushPinOutlinedIcon />}
@@ -195,7 +197,11 @@ const DevLogger: React.FC<DevLoggerProps> = ({ enabled = true }) => {
             </Tooltip>
             {logs.length > 0 && (
               <Tooltip title="Clear all logs">
-                <IconButton onClick={handleClearAll} size="small" sx={{ mr: 1 }}>
+                <IconButton
+                  onClick={handleClearAll}
+                  size="small"
+                  className={styles['dev-logger__header-action-button']}
+                >
                   <DeleteIcon />
                 </IconButton>
               </Tooltip>
@@ -204,6 +210,7 @@ const DevLogger: React.FC<DevLoggerProps> = ({ enabled = true }) => {
               onClick={() => {
                 setOpen(false)
               }}
+              className={styles['dev-logger__header-close-button']}
             >
               <CloseIcon />
             </IconButton>
@@ -247,114 +254,82 @@ const DevLogger: React.FC<DevLoggerProps> = ({ enabled = true }) => {
         <Divider />
 
         <Box className={styles['dev-logger__content']}>
-          {logs.length === 0 ? (
-            <Box className={styles['dev-logger__empty']}>
-              <BugReportIcon
-                sx={{
-                  fontSize: 64,
-                  color: 'text.disabled',
-                  mb: 2,
-                }}
-              />
-              <Typography variant="body1" color="text.secondary">
-                No API requests logged yet
-              </Typography>
-              <Typography
-                variant="body2"
-                color="text.disabled"
-                sx={{
-                  mt: 1,
-                }}
-              >
-                Make an API call to see it here
-              </Typography>
-            </Box>
-          ) : filteredLogs.length === 0 ? (
-            <Box className={styles['dev-logger__empty']}>
-              <SearchIcon
-                sx={{
-                  fontSize: 64,
-                  color: 'text.disabled',
-                  mb: 2,
-                }}
-              />
-              <Typography variant="body1" color="text.secondary">
-                No results found
-              </Typography>
-              <Typography
-                variant="body2"
-                color="text.disabled"
-                sx={{
-                  mt: 1,
-                }}
-              >
-                Try a different search term
-              </Typography>
-            </Box>
-          ) : (
-            <List className={styles['dev-logger__list']}>
-              {filteredLogs.map((log, index) => (
-                <React.Fragment key={log.id}>
-                  <ListItem className={styles['dev-logger__list-item']}>
-                    <Box className={styles['dev-logger__log-row']}>
-                      {/* Method Badge */}
-                      <Chip
-                        label={log.method}
-                        size="small"
-                        className={styles['dev-logger__method-chip']}
-                        data-method={log.method}
-                      />
+          {(() => {
+            if (logs.length === 0) {
+              return (
+                <Box className={styles['dev-logger__empty']}>
+                  <BugReportIcon className={styles['dev-logger__empty-icon']} />
+                  <PrimaryFont text="No API requests logged yet" className={styles['dev-logger__empty-title']} />
+                  <BodyText text="Make an API call to see it here" className={styles['dev-logger__empty-subtitle']} />
+                </Box>
+              )
+            }
+            if (filteredLogs.length === 0) {
+              return (
+                <Box className={styles['dev-logger__empty']}>
+                  <SearchIcon className={styles['dev-logger__empty-icon']} />
+                  <PrimaryFont text="No results found" className={styles['dev-logger__empty-title']} />
+                  <BodyText text="Try a different search term" className={styles['dev-logger__empty-subtitle']} />
+                </Box>
+              )
+            }
+            return (
+              <List className={styles['dev-logger__list']}>
+                {filteredLogs.map((log, index) => (
+                  <React.Fragment key={log.id}>
+                    <ListItem className={styles['dev-logger__list-item']}>
+                      <Box className={styles['dev-logger__log-row']}>
+                        {/* Method Badge */}
+                        <Chip
+                          label={log.method}
+                          size="small"
+                          className={styles['dev-logger__method-chip']}
+                          data-method={log.method}
+                        />
 
-                      {/* URL */}
-                      <Typography variant="body2" className={styles['dev-logger__url']} sx={{ flex: 1, mx: 2 }}>
-                        {log.url}
-                      </Typography>
+                        {/* URL */}
+                        <BodyText text={log.url} className={styles['dev-logger__url']} />
 
-                      {/* Timestamp */}
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{
-                          minWidth: '80px',
-                          textAlign: 'right',
-                          mr: 1,
-                        }}
-                      >
-                        {log.timestamp.toLocaleTimeString()}
-                      </Typography>
+                        {/* Timestamp */}
+                        <BodyText
+                          text={log.timestamp.toLocaleTimeString()}
+                          variant="body2"
+                          className={styles['dev-logger__timestamp']}
+                        />
 
-                      {/* Actions */}
-                      <Box className={styles['dev-logger__actions']}>
-                        <Tooltip title="Copy cURL command">
-                          <IconButton
-                            size="small"
-                            onClick={() => {
-                              handleCopy(log.curlCommand)
-                            }}
-                            color="primary"
-                          >
-                            <ContentCopyIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Delete">
-                          <IconButton
-                            size="small"
-                            onClick={() => {
-                              handleDeleteLog(log.id)
-                            }}
-                            color="error"
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
+                        {/* Actions */}
+                        <Box className={styles['dev-logger__actions']}>
+                          <Tooltip title="Copy cURL command">
+                            <IconButton
+                              size="small"
+                              onClick={() => {
+                                handleCopy(log.curlCommand)
+                              }}
+                              color="primary"
+                            >
+                              <ContentCopyIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Delete">
+                            <IconButton
+                              size="small"
+                              onClick={() => {
+                                handleDeleteLog(log.id)
+                              }}
+                              color="error"
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
                       </Box>
-                    </Box>
-                  </ListItem>
-                  {index < filteredLogs.length - 1 && <Divider />}
-                </React.Fragment>
-              ))}
-            </List>
-          )}
+                    </ListItem>
+                    {index < filteredLogs.length - 1 && <Divider />}
+                  </React.Fragment>
+                ))}
+              </List>
+            )
+          })()}
         </Box>
       </Drawer>
     </>
