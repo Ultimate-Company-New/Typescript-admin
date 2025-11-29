@@ -1,3 +1,4 @@
+import type React from 'react'
 import { useState } from 'react'
 
 import { format } from 'date-fns'
@@ -12,15 +13,87 @@ import { PickupLocationsModal } from '../../components/Products'
 import { APP_ROUTES } from '../../constants/routes'
 
 /**
+ * Pickup location data structure
+ */
+interface PickupLocation {
+  pickupLocationId: number
+  addressNickName?: string
+  [key: string]: unknown
+}
+
+/**
+ * Product data structure matching API response
+ */
+export interface ProductData {
+  productId?: number
+  product?: {
+    productId: number
+    title?: string
+    upc?: string
+    length?: number
+    breadth?: number
+    width?: number
+    height?: number
+    price?: number
+    discount?: number
+    discountPercent?: boolean
+    availableStock?: number
+    itemAvailableFrom?: string
+    brand?: string
+    condition?: string
+    countryOfManufacture?: string
+    model?: string
+    itemModified?: boolean
+    weightKgs?: number
+    returnsAllowed?: boolean
+    deleted?: boolean
+    category?: {
+      name?: string
+    } | string
+    pickupLocations?: PickupLocation[]
+  }
+  title?: string
+  upc?: string
+  length?: number
+  breadth?: number
+  width?: number
+  height?: number
+  price?: number
+  discount?: number
+  discountPercent?: boolean
+  availableStock?: number
+  itemAvailableFrom?: string
+  brand?: string
+  condition?: string
+  countryOfManufacture?: string
+  model?: string
+  itemModified?: boolean
+  weightKgs?: number
+  returnsAllowed?: boolean
+  isDeleted?: boolean
+  deleted?: boolean
+  category?: {
+    name?: string
+  } | string
+  pickupLocations?: PickupLocation[]
+}
+
+/**
  * Component to display pickup locations button with modal
  */
-const PickupLocationsButton = ({ locations, productTitle }: { locations: any[], productTitle?: string }) => {
+const PickupLocationsButton = ({
+  locations,
+  productTitle,
+}: {
+  locations: PickupLocation[]
+  productTitle?: string
+}): React.JSX.Element => {
   const [open, setOpen] = useState(false)
 
-  const handleOpen = () => {
+  const handleOpen = (): void => {
     setOpen(true)
   }
-  const handleClose = () => {
+  const handleClose = (): void => {
     setOpen(false)
   }
 
@@ -74,9 +147,10 @@ export const getProductGridColumns = (
     filterable: false,
     align: 'center',
     headerAlign: 'center',
-    renderCell: (params: GridRenderCellParams) => {
-      const productId = params.row.productId || params.row.product?.productId
-      const imageUrl = productApi.getProductImageUrl(productId, 'Main')
+    renderCell: (params: GridRenderCellParams<ProductData>) => {
+      const rowData = params.row
+      const productId = rowData.productId ?? rowData.product?.productId
+      const imageUrl = productApi.getProductImageUrl(productId ?? 0, 'Main')
 
       return (
         <div
@@ -94,7 +168,7 @@ export const getProductGridColumns = (
             sx={{ width: 150,
               height: 150 }}
           >
-            {params.row.title?.[0] || 'P'}
+            {rowData.title?.[0] ?? 'P'}
           </Avatar>
         </div>
       )
@@ -106,8 +180,9 @@ export const getProductGridColumns = (
     flex: 2,
     minWidth: 250,
     headerAlign: 'left',
-    valueGetter: (value, row: any) => {
-      const title = row.title || row.product?.title
+    valueGetter: (value, row: ProductData) => {
+      const rowData = row
+      const title = rowData.title ?? rowData.product?.title
       if (!title) return '—'
       return typeof title === 'string' ? title : String(title)
     },
@@ -128,18 +203,19 @@ export const getProductGridColumns = (
     flex: 1.5,
     minWidth: 180,
     headerAlign: 'left',
-    valueGetter: (value, row: any) => {
+    valueGetter: (value, row: ProductData) => {
+      const rowData = row
       // The API returns category as ProductCategoryResponseModel object
-      if (row.category && typeof row.category === 'object' && row.category !== null) {
-        return row.category.name || '—'
+      if (rowData.category && typeof rowData.category === 'object' && rowData.category !== null && 'name' in rowData.category) {
+        return rowData.category.name ?? '—'
       }
       // Fallback for nested product object
-      if (row.product?.category && typeof row.product.category === 'object') {
-        return row.product.category.name || '—'
+      if (rowData.product?.category && typeof rowData.product.category === 'object' && 'name' in rowData.product.category) {
+        return rowData.product.category.name ?? '—'
       }
       // If it's already a string
-      if (typeof row.category === 'string') {
-        return row.category
+      if (typeof rowData.category === 'string') {
+        return rowData.category
       }
       return '—'
     },
@@ -160,8 +236,9 @@ export const getProductGridColumns = (
     minWidth: 150,
     flex: 1,
     headerAlign: 'left',
-    valueGetter: (value, row: any) => {
-      const upc = row.upc || row.product?.upc
+    valueGetter: (value, row: ProductData) => {
+      const rowData = row
+      const upc = rowData.upc ?? rowData.product?.upc
       if (!upc) return '—'
       return typeof upc === 'string' ? upc : String(upc)
     },
@@ -182,12 +259,13 @@ export const getProductGridColumns = (
     minWidth: 180,
     flex: 1.2,
     headerAlign: 'left',
-    valueGetter: (value, row: any) => {
-      const length = row.length || row.product?.length
-      const breadth = row.breadth || row.width || row.product?.breadth
-      const height = row.height || row.product?.height
+    valueGetter: (value, row: ProductData) => {
+      const rowData = row
+      const length = rowData.length ?? rowData.product?.length
+      const breadth = rowData.breadth ?? rowData.width ?? rowData.product?.breadth
+      const height = rowData.height ?? rowData.product?.height
       if (!length && !breadth && !height) return '—'
-      return `${length || 0} x ${breadth || 0} x ${height || 0}`
+      return `${length ?? 0} x ${breadth ?? 0} x ${height ?? 0}`
     },
     renderCell: (params: GridRenderCellParams) => (
       <Box sx={{ display: 'flex',
@@ -203,9 +281,10 @@ export const getProductGridColumns = (
     minWidth: 120,
     flex: 0.8,
     headerAlign: 'left',
-    valueGetter: (value, row: any) => {
-      const price = row.price || row.product?.price
-      if (!price && price !== 0) return '—'
+    valueGetter: (value, row: ProductData) => {
+      const rowData = row
+      const price = rowData.price ?? rowData.product?.price
+      if (price == null) return '—'
       return `₹ ${price}`
     },
     renderCell: (params: GridRenderCellParams) => (
@@ -222,10 +301,11 @@ export const getProductGridColumns = (
     minWidth: 120,
     flex: 0.8,
     headerAlign: 'left',
-    valueGetter: (value, row: any) => {
-      const discount = row.discount || row.product?.discount
-      if (!discount && discount !== 0) return '—'
-      const isPercent = row.discountPercent || row.product?.discountPercent || false
+    valueGetter: (value, row: ProductData) => {
+      const rowData = row
+      const discount = rowData.discount ?? rowData.product?.discount
+      if (discount == null) return '—'
+      const isPercent = rowData.discountPercent ?? rowData.product?.discountPercent ?? false
       return isPercent ? `${discount}%` : `₹ ${discount}`
     },
     renderCell: (params: GridRenderCellParams) => (
@@ -242,9 +322,10 @@ export const getProductGridColumns = (
     minWidth: 100,
     flex: 0.6,
     headerAlign: 'left',
-    valueGetter: (value, row: any) => {
-      const stock = row.availableStock || row.product?.availableStock
-      if (stock === null || stock === undefined) return '—'
+    valueGetter: (value, row: ProductData) => {
+      const rowData = row
+      const stock = rowData.availableStock ?? rowData.product?.availableStock
+      if (stock == null) return '—'
       return stock
     },
     renderCell: (params: GridRenderCellParams) => (
@@ -261,8 +342,9 @@ export const getProductGridColumns = (
     minWidth: 150,
     flex: 1,
     headerAlign: 'left',
-    valueGetter: (value, row: any) => {
-      const date = row.itemAvailableFrom || row.product?.itemAvailableFrom
+    valueGetter: (value, row: ProductData) => {
+      const rowData = row
+      const date = rowData.itemAvailableFrom ?? rowData.product?.itemAvailableFrom
       if (!date) return '—'
       try {
         return format(new Date(date), 'do MMM yyyy')
@@ -287,8 +369,9 @@ export const getProductGridColumns = (
     minWidth: 150,
     flex: 1,
     headerAlign: 'left',
-    valueGetter: (value, row: any) => {
-      const brand = row.brand || row.product?.brand
+    valueGetter: (value, row: ProductData) => {
+      const rowData = row
+      const brand = rowData.brand ?? rowData.product?.brand
       if (!brand) return '—'
       return brand
     },
@@ -309,8 +392,9 @@ export const getProductGridColumns = (
     minWidth: 140,
     flex: 0.9,
     headerAlign: 'left',
-    valueGetter: (value, row: any) => {
-      const condition = row.condition || row.product?.condition
+    valueGetter: (value, row: ProductData) => {
+      const rowData = row
+      const condition = rowData.condition ?? rowData.product?.condition
       if (!condition) return '—'
       return condition
     },
@@ -354,8 +438,9 @@ export const getProductGridColumns = (
     minWidth: 180,
     flex: 1.2,
     headerAlign: 'left',
-    valueGetter: (value, row: any) => {
-      const country = row.countryOfManufacture || row.product?.countryOfManufacture
+    valueGetter: (value, row: ProductData) => {
+      const rowData = row
+      const country = rowData.countryOfManufacture ?? rowData.product?.countryOfManufacture
       if (!country) return '—'
       return country
     },
@@ -376,8 +461,9 @@ export const getProductGridColumns = (
     minWidth: 150,
     flex: 1,
     headerAlign: 'left',
-    valueGetter: (value, row: any) => {
-      const model = row.model || row.product?.model
+    valueGetter: (value, row: ProductData) => {
+      const rowData = row
+      const model = rowData.model ?? rowData.product?.model
       if (!model) return '—'
       return model
     },
@@ -398,9 +484,10 @@ export const getProductGridColumns = (
     minWidth: 130,
     flex: 0.8,
     headerAlign: 'left',
-    valueGetter: (value, row: any) => {
-      const modified = row.itemModified || row.product?.itemModified
-      if (modified === null || modified === undefined) return '—'
+    valueGetter: (value, row: ProductData) => {
+      const rowData = row
+      const modified = rowData.itemModified ?? rowData.product?.itemModified
+      if (modified == null) return '—'
       return modified ? 'Yes' : 'No'
     },
     renderCell: (params: GridRenderCellParams) => (
@@ -417,9 +504,10 @@ export const getProductGridColumns = (
     minWidth: 120,
     flex: 0.8,
     headerAlign: 'left',
-    valueGetter: (value, row: any) => {
-      const weight = row.weightKgs || row.product?.weightKgs
-      if (weight === null || weight === undefined) return '—'
+    valueGetter: (value, row: ProductData) => {
+      const rowData = row
+      const weight = rowData.weightKgs ?? rowData.product?.weightKgs
+      if (weight == null) return '—'
       return `${weight} kg`
     },
     renderCell: (params: GridRenderCellParams) => (
@@ -439,9 +527,10 @@ export const getProductGridColumns = (
     headerAlign: 'center',
     sortable: false,
     filterable: false,
-    renderCell: (params: GridRenderCellParams) => {
-      const locations = params.row.pickupLocations || params.row.product?.pickupLocations || []
-      const productTitle = params.row.title || params.row.product?.title
+    renderCell: (params: GridRenderCellParams<ProductData>) => {
+      const rowData = params.row
+      const locations = rowData.pickupLocations ?? rowData.product?.pickupLocations ?? []
+      const productTitle = rowData.title ?? rowData.product?.title
 
       if (locations.length === 0) {
         return (
@@ -473,9 +562,10 @@ export const getProductGridColumns = (
     headerAlign: 'center',
     sortable: false,
     filterable: false,
-    renderCell: (params: GridRenderCellParams) => {
-      const productId = params.row.productId || params.row.product?.productId
-      const returnsAllowed = params.row.returnsAllowed || params.row.product?.returnsAllowed || false
+    renderCell: (params: GridRenderCellParams<ProductData>) => {
+      const rowData = params.row
+      const productId = rowData.productId ?? rowData.product?.productId
+      const returnsAllowed = rowData.returnsAllowed ?? rowData.product?.returnsAllowed ?? false
 
       return (
         <Box sx={{ display: 'flex',
@@ -485,7 +575,9 @@ export const getProductGridColumns = (
           <Switch
             checked={returnsAllowed}
             onChange={() => {
-              onToggleReturns(productId)
+              if (productId != null) {
+                onToggleReturns(productId)
+              }
             }}
             color="primary"
             size="small"
@@ -501,17 +593,20 @@ export const getProductGridColumns = (
     flex: 1.2,
     sortable: false,
     filterable: false,
-    renderCell: (params: GridRenderCellParams) => {
-      const productId = params.row.productId || params.row.product?.productId
+    renderCell: (params: GridRenderCellParams<ProductData>) => {
+      const rowData = params.row
+      const productId = rowData.productId ?? rowData.product?.productId
 
-      if (params.row.isDeleted || params.row.deleted || params.row.product?.deleted) {
+      if (rowData.isDeleted ?? rowData.deleted ?? rowData.product?.deleted) {
         return (
           <div>
             <Link
               href="#"
               onClick={e => {
                 e.preventDefault()
-                onToggleProduct(productId)
+                if (productId != null) {
+                  onToggleProduct(productId)
+                }
               }}
               sx={{ cursor: 'pointer',
                 color: 'success.main' }}
@@ -541,7 +636,9 @@ export const getProductGridColumns = (
             href="#"
             onClick={e => {
               e.preventDefault()
-              onToggleProduct(productId)
+              if (productId != null) {
+                onToggleProduct(productId)
+              }
             }}
             sx={{ cursor: 'pointer',
               color: 'error.main' }}

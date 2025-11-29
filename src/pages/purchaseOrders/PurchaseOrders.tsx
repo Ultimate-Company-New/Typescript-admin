@@ -1,3 +1,4 @@
+import type React from 'react'
 import { useState, useEffect, useMemo } from 'react'
 
 import { Box } from '@mui/material'
@@ -25,6 +26,7 @@ import {
 } from '../../components/datagrid'
 import { getPurchaseOrderGridColumns } from '../../models/gridModels/purchaseOrderGridColumns'
 import { type PaginatedGridInterface } from '../../types/grid.types'
+
 import styles from './PurchaseOrders.module.scss'
 
 /**
@@ -50,14 +52,16 @@ interface PurchaseOrderData {
  * - Responsive design
  */
 
-const PurchaseOrders = () => {
+const PurchaseOrders = (): React.JSX.Element => {
   const [rows, setRows] = useState<PurchaseOrderData[]>([])
   const [loading, setLoading] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
   const [includeDeleted, setIncludeDeleted] = useState(false)
   const [density, setDensity] = useState<GridDensityType>(getInitialDensity())
-  const [activeFilterGroup, setActiveFilterGroup] = useState<FilterGroup>({ logicOperator: LogicOperator.AND,
-    filters: [] })
+  const [activeFilterGroup, setActiveFilterGroup] = useState<FilterGroup>({
+    logicOperator: LogicOperator.AND,
+    filters: [],
+  })
   const [columnVisibilityModel, setColumnVisibilityModel] = useState<GridColumnVisibilityModel>({
     isDeleted: false,
     purchaseOrderId: false,
@@ -149,7 +153,7 @@ const PurchaseOrders = () => {
 
   // Fetch purchase orders on mount and when pagination model changes
   useEffect(() => {
-    createFetchFunction(
+    void createFetchFunction(
       purchaseOrderApi.getPurchaseOrdersInBatches,
       setLoading,
       setRows,
@@ -162,9 +166,9 @@ const PurchaseOrders = () => {
   }, [paginationModel, includeDeleted, activeFilterGroup])
 
   return (
-    <Box className="purchase-orders-page">
-      <Box className="purchase-orders-page__container">
-        <Box className="purchase-orders-page__card" data-test-id="purchase-orders-grid-card">
+    <Box className={styles['purchase-orders-page']}>
+      <Box className={styles['purchase-orders-page__container']}>
+        <Box className={styles['purchase-orders-page__card']} data-test-id="purchase-orders-grid-card">
           {/* DataGrid with custom toolbar and integrated pagination */}
           <StyledDataGrid
             dataTestId="purchase-orders-data-grid"
@@ -180,28 +184,25 @@ const PurchaseOrders = () => {
             density={density}
             columnVisibilityModel={columnVisibilityModel}
             onColumnVisibilityModelChange={model => {
-              setColumnVisibilityModel(model)
+              setColumnVisibilityModel(model as GridColumnVisibilityModel)
             }}
             paginationModel={{
               page: Math.floor(paginationModel.start / paginationModel.pageSize),
               pageSize: paginationModel.pageSize,
             }}
             onPaginationModelChange={model => {
-              handlePaginationModelChange(model, setPaginationModel)
-            }
-            }
+              void handlePaginationModelChange(model, setPaginationModel)
+            }}
             onFilterModelChange={model => {
-              handleFilterModelChange(model, paginationModel, setPaginationModel)
-            }
-            }
+              void handleFilterModelChange(model, paginationModel, setPaginationModel)
+            }}
             onSortModelChange={model => {
-              handleSortModelChange(model, setPaginationModel)
-            }
-            }
-            getRowId={row => row.purchaseOrderId || row.purchaseOrder?.purchaseOrderId}
+              void handleSortModelChange(model, setPaginationModel)
+            }}
+            getRowId={row => (row as PurchaseOrderData).purchaseOrderId ?? (row as PurchaseOrderData).purchaseOrder?.purchaseOrderId ?? 0}
             getRowClassName={params => {
-              const classes = [params.indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd']
-              if (params.row.isDeleted || params.row.deleted || params.row.purchaseOrder?.deleted) {
+              const classes = [(params as { indexRelativeToCurrentPage: number }).indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd']
+              if ((params.row as PurchaseOrderData).isDeleted ?? (params.row as PurchaseOrderData).deleted ?? (params.row as PurchaseOrderData).purchaseOrder?.deleted) {
                 classes.push('deleted')
               }
               return classes.join(' ')

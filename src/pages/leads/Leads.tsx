@@ -1,3 +1,4 @@
+import type React from 'react'
 import { useState, useEffect, useMemo } from 'react'
 
 import { Box } from '@mui/material'
@@ -21,6 +22,7 @@ import {
 } from '../../components/datagrid'
 import { getLeadGridColumns, type LeadData } from '../../models/gridModels/leadGridColumns'
 import { type PaginatedGridInterface } from '../../types/grid.types'
+
 import styles from './Leads.module.scss'
 
 /**
@@ -33,7 +35,7 @@ import styles from './Leads.module.scss'
  * - Responsive design
  */
 
-const Leads = () => {
+const Leads = (): React.JSX.Element => {
   const [rows, setRows] = useState<LeadData[]>([])
   const [loading, setLoading] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
@@ -95,7 +97,7 @@ const Leads = () => {
 
   // Fetch leads on mount and when pagination model changes
   useEffect(() => {
-    createFetchFunction(
+    void createFetchFunction(
       leadApi.getLeadsInBatches,
       setLoading,
       setRows,
@@ -126,25 +128,25 @@ const Leads = () => {
             density={density}
             columnVisibilityModel={columnVisibilityModel}
             onColumnVisibilityModelChange={model => {
-              setColumnVisibilityModel(model)
+              setColumnVisibilityModel(model as GridColumnVisibilityModel)
             }}
             paginationModel={{
               page: Math.floor(paginationModel.start / paginationModel.pageSize),
               pageSize: paginationModel.pageSize,
             }}
             onPaginationModelChange={model => {
-              handlePaginationModelChange(model, setPaginationModel)
+              void handlePaginationModelChange(model, setPaginationModel)
             }}
             onFilterModelChange={model => {
-              handleFilterModelChange(model, paginationModel, setPaginationModel)
+              void handleFilterModelChange(model, paginationModel, setPaginationModel)
             }}
             onSortModelChange={model => {
-              handleSortModelChange(model, setPaginationModel)
+              void handleSortModelChange(model, setPaginationModel)
             }}
-            getRowId={row => row.leadId || row.lead?.leadId}
+            getRowId={row => (row as LeadData).leadId ?? (row as LeadData).lead.leadId ?? 0}
             getRowClassName={params => {
-              const classes = [params.indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd']
-              if (params.row.isDeleted || params.row.lead?.deleted) {
+              const classes = [(params as { indexRelativeToCurrentPage: number }).indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd']
+              if ((params.row as LeadData).isDeleted ?? (params.row as LeadData).lead.deleted) {
                 classes.push('deleted')
               }
               return classes.join(' ')

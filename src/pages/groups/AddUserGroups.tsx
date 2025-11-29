@@ -1,3 +1,4 @@
+import type React from 'react'
 import { useState, useEffect, useCallback } from 'react'
 
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -9,7 +10,6 @@ import { DataGrid, type GridColDef, type GridRowSelectionModel } from '@mui/x-da
 
 import { Header, Subheader } from '../../components'
 import { APP_ROUTES } from '../../constants/routes'
-import styles from './UserGroups.module.scss'
 
 // TODO: Import from your API
 // import { userGroupApi } from '../../api/userGroupApi'
@@ -35,7 +35,7 @@ interface UserData {
  * - Select users to add to group
  * - Multi-select user grid
  */
-const AddUserGroups = () => {
+const AddUserGroups = (): React.JSX.Element => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const userGroupId = searchParams.get('userGroupId')
@@ -52,7 +52,7 @@ const AddUserGroups = () => {
   /**
    * Fetch user group details if editing
    */
-  const fetchUserGroupDetails = useCallback(async (id: string) => {
+  const fetchUserGroupDetails = useCallback((id: string): void => {
     setLoading(true)
     try {
       // TODO: Replace with actual API call
@@ -71,8 +71,7 @@ const AddUserGroups = () => {
       setDescription(mockGroup.description)
       setNotes(mockGroup.notes || '')
       setSelectedUserIds(mockGroup.userIds)
-    } catch (error) {
-      console.error('Error fetching user group:', error)
+    } catch {
       toast.error('Failed to fetch user group details')
     } finally {
       setLoading(false)
@@ -82,7 +81,7 @@ const AddUserGroups = () => {
   /**
    * Fetch all users for selection grid
    */
-  const fetchUsers = useCallback(async () => {
+  const fetchUsers = useCallback((): void => {
     setLoading(true)
     try {
       // TODO: Replace with actual API call
@@ -133,8 +132,7 @@ const AddUserGroups = () => {
       ]
 
       setUsers(mockUsers)
-    } catch (error) {
-      console.error('Error fetching users:', error)
+    } catch {
       toast.error('Failed to fetch users')
     } finally {
       setLoading(false)
@@ -144,7 +142,7 @@ const AddUserGroups = () => {
   /**
    * Handle form submission
    */
-  const handleSubmit = async () => {
+  const handleSubmit = (): void => {
     // Validation
     if (!name.trim()) {
       toast.error('Group name is required')
@@ -163,12 +161,12 @@ const AddUserGroups = () => {
 
     setLoading(true)
     try {
-      const requestData = {
-        userGroupId: isEdit ? parseInt(userGroupId) : undefined,
+      const _requestData = {
+        userGroupId: isEdit ? parseInt(userGroupId ?? '0') : undefined,
         name: name.trim(),
         description: description.trim(),
         notes: notes.trim(),
-        userIds: selectedUserIds.map(id => parseInt(id.toString())),
+        userIds: selectedUserIds.map((id: number | string) => (typeof id === 'number' ? id : parseInt(String(id), 10))),
       }
 
       if (isEdit) {
@@ -185,8 +183,7 @@ const AddUserGroups = () => {
       setTimeout(() => {
         navigate(APP_ROUTES.DASHBOARD.GROUPS)
       }, 1000)
-    } catch (error) {
-      console.error('Error saving user group:', error)
+    } catch {
       toast.error('Failed to save user group')
     } finally {
       setLoading(false)
@@ -196,7 +193,7 @@ const AddUserGroups = () => {
   /**
    * Handle cancel
    */
-  const handleCancel = () => {
+  const handleCancel = (): void => {
     navigate(APP_ROUTES.DASHBOARD.GROUPS)
   }
 
@@ -322,7 +319,7 @@ const AddUserGroups = () => {
             <DataGrid
               rows={users}
               columns={userColumns}
-              getRowId={row => row.userId}
+              getRowId={(row: UserData) => row.userId}
               checkboxSelection
               disableRowSelectionOnClick
               rowSelectionModel={selectedUserIds}

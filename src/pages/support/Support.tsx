@@ -1,7 +1,9 @@
+import type React from 'react'
+
 import { Email as EmailIcon, Phone as PhoneIcon, Chat as ChatIcon } from '@mui/icons-material'
 import { Box, Typography, Card, CardContent, Grid, Button } from '@mui/material'
 
-const Support = () => (
+const Support = (): React.JSX.Element => (
   <Box sx={{ p: 3 }}>
     <Typography variant="h4" gutterBottom>
         Support
@@ -22,7 +24,7 @@ const Support = () => (
                 Email Support
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Send us an email and we'll get back to you within 24 hours.
+                Send us an email and we&apos;ll get back to you within 24 hours.
             </Typography>
             <Button variant="contained" href="mailto:support@example.com">
                 Send Email

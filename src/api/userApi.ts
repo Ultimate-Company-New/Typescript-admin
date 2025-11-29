@@ -1,5 +1,5 @@
+import { type Permission } from '../components/users/components/UserPermissions'
 import { type UserRequestModel, type UserResponseModel, type PaginationBaseResponseModel } from '../models/UserModels'
-import { type Permission } from '../components/Users/UserPermissions'
 
 import axiosInstance from './axiosConfig'
 

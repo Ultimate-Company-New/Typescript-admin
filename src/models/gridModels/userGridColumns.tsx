@@ -2,9 +2,9 @@ import { Box, Chip, Tooltip } from '@mui/material'
 import { type GridColDef, type GridRenderCellParams } from '@mui/x-data-grid'
 
 import { AddressCell, formatDate, formatPhone, formatUTCTimestamp } from '../../components/datagrid'
-import { PermissionsButton, UserActionsCell, UserAvatar, UserGroupsButton } from '../../components/Users'
+import { PermissionsButton, UserActionsCell, UserAvatar, UserGroupsButton } from '../../components/users/components'
 import { USER_ROLES } from '../../constants/appConstants'
-import styles from '../../pages/users/Users.module.scss'
+import styles from '../../styles/Users.module.scss'
 import { type UserResponseModel } from '../UserModels'
 
 // Type assertions for helper functions to ensure type safety

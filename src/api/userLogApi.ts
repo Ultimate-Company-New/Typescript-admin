@@ -54,4 +54,3 @@ export const getUserLogsInBatches = async (request: UserLogRequestModel): Promis
   )
   return response.data
 }
-

@@ -26,6 +26,7 @@ import {
 
 import todoApi from '../../api/todoApi'
 import { type TodoResponseModel, type TodoRequestModel } from '../../models/TodoModels'
+
 import styles from './TodoList.module.scss'
 
 const TodoList: React.FC = () => {
@@ -38,19 +39,18 @@ const TodoList: React.FC = () => {
       setLoading(true)
       const data = await todoApi.getTodoItems()
       setTodos(data)
-    } catch (error) {
+    } catch {
       toast.error('Failed to fetch todos')
-      console.error('Error fetching todos:', error)
     } finally {
       setLoading(false)
     }
   }, [])
 
   useEffect(() => {
-    fetchTodos()
+    void fetchTodos()
   }, [fetchTodos])
 
-  const handleAddTodo = async () => {
+  const handleAddTodo = async (): Promise<void> => {
     if (!newTask.trim()) {
       toast.warning('Please enter a task')
       return
@@ -64,37 +64,34 @@ const TodoList: React.FC = () => {
       await todoApi.addTodo(todoRequest)
       setNewTask('')
       toast.success('Task added successfully')
-      fetchTodos()
-    } catch (error) {
+      void fetchTodos()
+    } catch {
       toast.error('Failed to add task')
-      console.error('Error adding todo:', error)
     }
   }
 
-  const handleToggleDone = async (todoId: number) => {
+  const handleToggleDone = async (todoId: number): Promise<void> => {
     try {
       await todoApi.toggleTodoDone(todoId)
-      fetchTodos()
-    } catch (error) {
+      void fetchTodos()
+    } catch {
       toast.error('Failed to toggle task status')
-      console.error('Error toggling todo:', error)
     }
   }
 
-  const handleDeleteTodo = async (todoId: number) => {
+  const handleDeleteTodo = async (todoId: number): Promise<void> => {
     try {
       await todoApi.deleteTodo(todoId)
       toast.success('Task deleted successfully')
-      fetchTodos()
-    } catch (error) {
+      void fetchTodos()
+    } catch {
       toast.error('Failed to delete task')
-      console.error('Error deleting todo:', error)
     }
   }
 
-  const handleKeyPress = (event: React.KeyboardEvent) => {
+  const handleKeyPress = (event: React.KeyboardEvent): void => {
     if (event.key === 'Enter') {
-      handleAddTodo()
+      void handleAddTodo()
     }
   }
 

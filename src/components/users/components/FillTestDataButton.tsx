@@ -6,7 +6,7 @@ import { Science as ScienceIcon } from '@mui/icons-material'
 import { Fab, Tooltip } from '@mui/material'
 
 import { USER_ROLES } from '../../../constants/appConstants'
-import styles from '../../../pages/users/Users.module.scss'
+import styles from '../../../styles/Users.module.scss'
 import { type UserFormData } from '../../../utils/validationSchemas'
 
 interface FillTestDataButtonProps {

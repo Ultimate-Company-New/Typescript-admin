@@ -6,6 +6,26 @@ import { type GridColDef, type GridRenderCellParams } from '@mui/x-data-grid'
 import { APP_ROUTES } from '../../constants/routes'
 
 /**
+ * Message data structure matching API response
+ */
+export interface MessageData {
+  messageId: number
+  title?: string
+  descriptionHtml?: string
+  publishDate?: string
+  sendAsEmail?: boolean
+  userIds?: number[]
+  userGroupIds?: number[]
+  createdAt?: string
+  createdByUser?: {
+    firstName?: string
+    lastName?: string
+    email?: string
+  }
+  isDeleted?: boolean
+}
+
+/**
  * Helper function to strip HTML tags from a string
  */
 const stripHtml = (html: string): string => {
@@ -120,12 +140,12 @@ export const getMessageGridColumns = (onToggleMessage?: (messageId: number) => v
     headerName: 'Publish Date',
     minWidth: 150,
     flex: 1,
-    valueFormatter: value => {
-      if (!value) return '—'
+    valueFormatter: (value: unknown) => {
+      if (!value || typeof value !== 'string') return '—'
       try {
         return format(new Date(value), 'do MMM yyyy')
       } catch {
-        return value
+        return String(value)
       }
     },
     renderCell: (params: GridRenderCellParams) => (
@@ -171,9 +191,9 @@ export const getMessageGridColumns = (onToggleMessage?: (messageId: number) => v
     align: 'center',
     headerAlign: 'center',
     filterable: false,
-    valueGetter: (value, row) =>
+    valueGetter: (value, row: { userIds?: number[] }) =>
       // Calculate from userIds array length
-      row.userIds?.length || 0,
+      row.userIds?.length ?? 0,
     renderCell: (params: GridRenderCellParams) => (
       <Box sx={{
         display: 'flex',
@@ -195,9 +215,9 @@ export const getMessageGridColumns = (onToggleMessage?: (messageId: number) => v
     align: 'center',
     headerAlign: 'center',
     filterable: false,
-    valueGetter: (value, row) =>
+    valueGetter: (value, row: MessageData) =>
       // Calculate from userGroupIds array length
-      row.userGroupIds?.length || 0,
+      row.userGroupIds?.length ?? 0,
     renderCell: (params: GridRenderCellParams) => (
       <Box sx={{
         display: 'flex',
@@ -217,15 +237,16 @@ export const getMessageGridColumns = (onToggleMessage?: (messageId: number) => v
     minWidth: 250,
     flex: 1.8,
     sortable: false,
-    valueGetter: (value, row) => {
+    valueGetter: (value, row: MessageData) => {
       const user = row.createdByUser
       if (!user) return '—'
-      const name = `${user.firstName || ''} ${user.lastName || ''}`.trim()
-      const email = user.email || ''
+      const name = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()
+      const email = user.email ?? ''
       return name ? `${name} (${email})` : email || '—'
     },
-    renderCell: (params: GridRenderCellParams) => {
-      const user = params.row.createdByUser
+    renderCell: (params: GridRenderCellParams<MessageData>) => {
+      const rowData = params.row
+      const user = rowData.createdByUser
       if (!user) {
         return (
           <Box sx={{
@@ -238,8 +259,8 @@ export const getMessageGridColumns = (onToggleMessage?: (messageId: number) => v
         )
       }
 
-      const name = `${user.firstName || ''} ${user.lastName || ''}`.trim()
-      const email = user.email || ''
+      const name = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()
+      const email = user.email ?? ''
       const displayText = name ? name : email || 'N/A'
 
       return (
@@ -286,8 +307,8 @@ export const getMessageGridColumns = (onToggleMessage?: (messageId: number) => v
     headerName: 'Created',
     minWidth: 200,
     flex: 1.2,
-    valueFormatter: value => {
-      if (!value) return '—'
+    valueFormatter: (value: unknown) => {
+      if (!value || typeof value !== 'string') return '—'
       try {
         const date = new Date(value)
         const day = date.getDate()
@@ -298,7 +319,7 @@ export const getMessageGridColumns = (onToggleMessage?: (messageId: number) => v
           hour12: true })
 
         // Add ordinal suffix
-        const suffix = (day: number) => {
+        const suffix = (day: number): string => {
           if (day > 3 && day < 21) return 'th'
           switch (day % 10) {
             case 1: return 'st'
@@ -310,10 +331,10 @@ export const getMessageGridColumns = (onToggleMessage?: (messageId: number) => v
 
         return `${day}${suffix(day)} ${month} ${year} ${time}`
       } catch {
-        return value
+        return String(value)
       }
     },
-    renderCell: (params: GridRenderCellParams) => (
+    renderCell: (params: GridRenderCellParams<MessageData>) => (
       <Box sx={{
         display: 'flex',
         alignItems: 'center',
@@ -332,10 +353,11 @@ export const getMessageGridColumns = (onToggleMessage?: (messageId: number) => v
     flex: 1.5,
     sortable: false,
     filterable: false,
-    renderCell: (params: GridRenderCellParams) => {
-      const canEdit = !isDateGreaterThanOrEqualToToday(params.row.publishDate)
+    renderCell: (params: GridRenderCellParams<MessageData>) => {
+      const rowData = params.row
+      const canEdit = !rowData.publishDate || !isDateGreaterThanOrEqualToToday(rowData.publishDate)
 
-      if (params.row.isDeleted) {
+      if (rowData.isDeleted) {
         return (
           <div>
             <Link
@@ -343,7 +365,7 @@ export const getMessageGridColumns = (onToggleMessage?: (messageId: number) => v
               onClick={e => {
                 e.preventDefault()
                 if (onToggleMessage) {
-                  onToggleMessage(params.row.messageId)
+                  onToggleMessage(rowData.messageId)
                 }
               }}
               sx={{ cursor: 'pointer',
@@ -359,14 +381,14 @@ export const getMessageGridColumns = (onToggleMessage?: (messageId: number) => v
         <div style={{ display: 'flex',
           gap: '12px' }}>
           <Link
-            href={`${APP_ROUTES.DASHBOARD.ADD_MESSAGE}?messageId=${params.row.messageId}&isView`}
+            href={`${APP_ROUTES.DASHBOARD.ADD_MESSAGE}?messageId=${rowData.messageId}&isView`}
             sx={{ cursor: 'pointer' }}
           >
             View
           </Link>
           {canEdit && (
             <Link
-              href={`${APP_ROUTES.DASHBOARD.ADD_MESSAGE}?messageId=${params.row.messageId}`}
+              href={`${APP_ROUTES.DASHBOARD.ADD_MESSAGE}?messageId=${rowData.messageId}`}
               sx={{ cursor: 'pointer' }}
             >
               Edit
@@ -377,7 +399,7 @@ export const getMessageGridColumns = (onToggleMessage?: (messageId: number) => v
             onClick={e => {
               e.preventDefault()
               if (onToggleMessage) {
-                onToggleMessage(params.row.messageId)
+                onToggleMessage(rowData.messageId)
               }
             }}
             sx={{ cursor: 'pointer',

@@ -25,7 +25,6 @@ import {
 import messageApi from '../../api/messageApi'
 import { type MessageResponseModel } from '../../models/MessageModels'
 import { getCurrentUserId } from '../../utils/auth'
-import styles from './MessagesList.module.scss'
 
 const MESSAGES_PER_PAGE = 25
 
@@ -77,7 +76,6 @@ const MessagesList: React.FC = () => {
         } else {
           toast.error('Failed to fetch messages')
         }
-        console.error('Error fetching messages:', error)
       } finally {
         setLoading(false)
         setLoadingMore(false)
@@ -87,15 +85,15 @@ const MessagesList: React.FC = () => {
   )
 
   useEffect(() => {
-    fetchMessages(false)
+    void fetchMessages(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const handleLoadMore = () => {
-    fetchMessages(true)
+  const handleLoadMore = (): void => {
+    void fetchMessages(true)
   }
 
-  const handleMessageClick = async (messageId: number, isRead: boolean) => {
+  const handleMessageClick = async (messageId: number, isRead: boolean): Promise<void> => {
     try {
       const userId = getCurrentUserId()
       if (!userId) {
@@ -113,46 +111,46 @@ const MessagesList: React.FC = () => {
 
       // Navigate to view message page
       navigate(`/dashboard/messages/view/${messageId}`)
-    } catch (error) {
-      console.error('Error marking message as read:', error)
+    } catch {
       // Still navigate even if marking as read fails
       navigate(`/dashboard/messages/view/${messageId}`)
     }
   }
 
-  const handleDeleteMessage = async (messageId: number, event: React.MouseEvent) => {
+  const handleDeleteMessage = async (messageId: number, event: React.MouseEvent): Promise<void> => {
     event.stopPropagation()
     try {
       await messageApi.deleteMessage(messageId)
       toast.success('Message deleted successfully')
-      fetchMessages()
-    } catch (error) {
+      void fetchMessages()
+    } catch {
       toast.error('Failed to delete message')
-      console.error('Error deleting message:', error)
     }
   }
 
-  const getInitials = (firstName?: string, lastName?: string) => {
-    const first = firstName?.charAt(0) || ''
-    const last = lastName?.charAt(0) || ''
+  const getInitials = (firstName?: string, lastName?: string): string => {
+    const first = firstName?.charAt(0) ?? ''
+    const last = lastName?.charAt(0) ?? ''
     return `${first}${last}`.toUpperCase()
   }
 
-  const getAvatarColor = (name: string) => {
+  const getAvatarColor = (name: string): string => {
     const colors = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#43e97b', '#fa709a']
     const index = name.charCodeAt(0) % colors.length
     return colors[index]
   }
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string): string => {
     const date = new Date(dateString)
     const day = date.getDate()
     const month = date.toLocaleString('default', { month: 'long' })
     const year = date.getFullYear()
-    const time = date.toLocaleString('default', { hour: 'numeric', minute: '2-digit', hour12: true })
+    const time = date.toLocaleString('default', { hour: 'numeric',
+minute: '2-digit',
+hour12: true })
 
     // Add ordinal suffix
-    const suffix = (day: number) => {
+    const suffix = (day: number): string => {
       if (day > 3 && day < 21) return 'th'
       switch (day % 10) {
         case 1:
@@ -169,7 +167,7 @@ const MessagesList: React.FC = () => {
     return `${day}${suffix(day)} ${month} ${year} ${time}`
   }
 
-  const stripHtml = (html: string) => {
+  const stripHtml = (html: string): string => {
     const tmp = document.createElement('DIV')
     tmp.innerHTML = html
     return tmp.textContent || tmp.innerText || ''
@@ -193,12 +191,14 @@ const MessagesList: React.FC = () => {
       <Box className="messages-list__container">
         {messages.length === 0 ? (
           <Card className="messages-list__empty">
-            <EmailOpenIcon sx={{ fontSize: 80, color: 'text.disabled', mb: 2 }} />
+            <EmailOpenIcon sx={{ fontSize: 80,
+color: 'text.disabled',
+mb: 2 }} />
             <Typography variant="h6" color="text.secondary">
               No messages
             </Typography>
             <Typography variant="body2" color="text.disabled" sx={{ mt: 1 }}>
-              You don't have any messages yet
+              You don&apos;t have any messages yet
             </Typography>
           </Card>
         ) : (
@@ -209,13 +209,13 @@ const MessagesList: React.FC = () => {
                   <React.Fragment key={message.messageId}>
                     <ListItem
                       className={`messages-list__item ${!message.isRead ? 'messages-list__item--unread' : ''}`}
-                      onClick={() => handleMessageClick(message.messageId, message.isRead || false)}
+                      onClick={() => void handleMessageClick(message.messageId, message.isRead ?? false)}
                       secondaryAction={
                         <Tooltip title="Delete message">
                           <IconButton
                             edge="end"
                             aria-label="delete"
-                            onClick={e => handleDeleteMessage(message.messageId, e)}
+                            onClick={e => void handleDeleteMessage(message.messageId, e)}
                             size="small"
                             className="messages-list__delete-btn"
                           >
@@ -227,14 +227,15 @@ const MessagesList: React.FC = () => {
                       <ListItemAvatar>
                         <Badge
                           overlap="circular"
-                          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                          anchorOrigin={{ vertical: 'top',
+horizontal: 'right' }}
                           variant="dot"
                           color="error"
                           invisible={message.isRead}
                         >
                           <Avatar
                             sx={{
-                              bgcolor: getAvatarColor(message.createdByUser?.firstName || 'U'),
+                              bgcolor: getAvatarColor(message.createdByUser?.firstName ?? 'U'),
                               width: 48,
                               height: 48,
                             }}

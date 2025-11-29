@@ -78,17 +78,20 @@ export const getUserGroupGridColumns = (
     width: 250,
     sortable: false,
     filterable: false,
-    renderCell: (params: GridRenderCellParams) => {
-      const groupId = params.row.groupId || params.row.userGroupId
+    renderCell: (params: GridRenderCellParams<UserGroupData>) => {
+      const rowData = params.row
+      const groupId = rowData.groupId ?? rowData.userGroupId
 
-      if (params.row.isDeleted) {
+      if (rowData.isDeleted) {
         return (
           <div>
             <Link
               href="#"
               onClick={e => {
                 e.preventDefault()
-                onToggleGroup(groupId)
+                if (groupId != null) {
+                  onToggleGroup(groupId)
+                }
               }}
               sx={{ cursor: 'pointer',
                 color: 'success.main' }}
@@ -103,13 +106,13 @@ export const getUserGroupGridColumns = (
         <div style={{ display: 'flex',
           gap: '12px' }}>
           <Link
-            href={`${APP_ROUTES.DASHBOARD.ADD_GROUPS}?userGroupId=${groupId}&isView`}
+            href={`${APP_ROUTES.DASHBOARD.ADD_GROUPS}?userGroupId=${groupId ?? ''}&isView`}
             sx={{ cursor: 'pointer' }}
           >
               View
           </Link>
           <Link
-            href={`${APP_ROUTES.DASHBOARD.ADD_GROUPS}?userGroupId=${groupId}`}
+            href={`${APP_ROUTES.DASHBOARD.ADD_GROUPS}?userGroupId=${groupId ?? ''}`}
             sx={{ cursor: 'pointer' }}
           >
               Edit

@@ -10,7 +10,6 @@ import { getUserByEmail } from '../../api/userApi'
 import { Header, Logo, Subheader, TextFieldInput } from '../../components'
 import { APP_ROUTES } from '../../constants/routes'
 import { type ClientResponseModel } from '../../models/LoginModels'
-
 import styles from '../../styles/Login.module.scss'
 
 interface CarrierGridItem {
@@ -30,10 +29,10 @@ interface CarrierGridProps {
  * Displays carriers in a responsive 3-column grid
  * Mobile-friendly: 1 column on xs, 2 on sm, 3 on md+
  */
-const CarrierGrid = ({ carriers, onCarrierClick }: CarrierGridProps) => {
+const CarrierGrid = ({ carriers, onCarrierClick }: CarrierGridProps): JSX.Element => {
   const [selectedId, setSelectedId] = useState<number | null>(null)
 
-  const handleClick = (carrier: CarrierGridItem) => {
+  const handleClick = (carrier: CarrierGridItem): void => {
     setSelectedId(carrier.id)
     onCarrierClick(carrier.id, carrier.apiKey)
   }
@@ -97,7 +96,7 @@ const CarrierGrid = ({ carriers, onCarrierClick }: CarrierGridProps) => {
  * Displays clients from login response in a searchable grid
  * User selects a client to get bearer token and proceed to dashboard
  */
-const ClientLanding = () => {
+const ClientLanding = (): JSX.Element => {
   const navigate = useNavigate()
   const [clients, setClients] = useState<ClientResponseModel[]>([])
   const [searchText, setSearchText] = useState('')
@@ -116,10 +115,10 @@ const ClientLanding = () => {
     }
 
     try {
-      const clientsData: ClientResponseModel[] = JSON.parse(storedClients)
+      const clientsData = JSON.parse(storedClients) as ClientResponseModel[]
 
       // Validate that we have at least one client
-      if (!clientsData || clientsData.length === 0) {
+      if (clientsData.length === 0) {
         toast.error('No clients available. Please contact support.')
         navigate(APP_ROUTES.LOGIN, { replace: true })
         return
@@ -127,6 +126,7 @@ const ClientLanding = () => {
 
       setClients(clientsData)
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Failed to parse clients data:', error)
       toast.error('Invalid session data. Please login again.')
       navigate(APP_ROUTES.LOGIN, { replace: true })
@@ -144,12 +144,12 @@ const ClientLanding = () => {
   }, [clients, searchText])
 
   // Handle search input
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
     setSearchText(event.target.value)
   }
 
   // Handle client selection
-  const handleClientClick = async (clientId: number, apiKey: string) => {
+  const handleClientClick = async (clientId: number, apiKey: string): Promise<void> => {
     setIsLoading(true)
 
     try {
@@ -163,7 +163,7 @@ const ClientLanding = () => {
 
       // Get bearer token from API (returns plain string)
       const token = await loginApi.getToken({
-        loginName: localStorage.getItem('loginName') || '',
+        loginName: localStorage.getItem('loginName') ?? '',
         apiKey: apiKey,
       })
 
@@ -194,6 +194,7 @@ const ClientLanding = () => {
             sessionStorage.setItem('userPermissions', JSON.stringify([]))
           }
         } catch (error) {
+          // eslint-disable-next-line no-console
           console.error('Failed to fetch user permissions:', error)
           // Continue even if permissions fetch fails - user can still access dashboard
           sessionStorage.setItem('userPermissions', JSON.stringify([]))
@@ -205,6 +206,7 @@ const ClientLanding = () => {
       // Navigate to dashboard
       navigate(APP_ROUTES.DASHBOARD.ROOT)
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Failed to get token:', error)
       // Error is handled by axios interceptor
     } finally {
@@ -261,7 +263,7 @@ const ClientLanding = () => {
           {filteredClients.length === 0 && searchText && (
             <Box textAlign="center" className={styles['client-landing__empty-state']}>
               <Typography variant="h6" color="text.secondary" gutterBottom>
-                No clients found matching "{searchText}"
+                No clients found matching &ldquo;{searchText}&rdquo;
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Try searching with a different term

@@ -10,6 +10,62 @@ import { RenderLongCellItem } from '../../components/datagrid'
 import { APP_ROUTES } from '../../constants/routes'
 
 /**
+ * Purchase Order data structure matching API response
+ */
+export interface PurchaseOrderData {
+  purchaseOrderId?: number
+  purchaseOrder?: {
+    purchaseOrderId: number
+    deleted?: boolean
+    expectedDeliveryDate?: string
+    expectedShipmentDate?: string
+    vendorNumber?: string
+    purchaseOrderReceipt?: string
+    orderReceipt?: string
+    approvedDate?: string
+    rejectedDate?: string
+  }
+  expectedDeliveryDate?: string
+  expectedShipmentDate?: string
+  vendorNumber?: string
+  purchaseOrderReceipt?: string
+  orderReceipt?: string
+  approvedDate?: string
+  rejectedDate?: string
+  isDeleted?: boolean
+  deleted?: boolean
+  approvedByUser?: {
+    userId: number
+    firstName?: string
+    lastName?: string
+    loginName?: string
+    email?: string
+  }
+  rejectedByUser?: {
+    userId: number
+    firstName?: string
+    lastName?: string
+    loginName?: string
+    email?: string
+  }
+  lead?: {
+    leadId: number
+    firstName?: string
+    lastName?: string
+    email?: string
+  }
+  address?: {
+    city?: string
+    state?: string
+    streetAddress?: string
+    streetAddress2?: string
+    streetAddress3?: string
+    postalCode?: string
+    country?: string
+  }
+}
+
+/**
  * Get purchase order grid columns with action handlers
  */
 export const getPurchaseOrderGridColumns = (
@@ -32,16 +88,8 @@ export const getPurchaseOrderGridColumns = (
     minWidth: 180,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: unknown) => {
-      const rowData = row as {
-        address?: {
-          city?: string
-          state?: string
-          streetAddress?: string
-          streetAddress2?: string
-          streetAddress3?: string
-        }
-      }
+    valueGetter: (value, row: PurchaseOrderData) => {
+      const rowData = row
       const addr = rowData.address ?? {}
       const city = addr.city ?? ''
       const state = addr.state ?? ''
@@ -49,22 +97,16 @@ export const getPurchaseOrderGridColumns = (
       if (city === '' && state === '') return '—'
       return `${city}${city !== '' && state !== '' ? ', ' : ''}${state}`.trim()
     },
-    renderCell: (params: GridRenderCellParams) => {
-      const rowData = params.row as {
-        address?: {
-          streetAddress?: string
-          streetAddress2?: string
-          streetAddress3?: string
-        }
-      }
+    renderCell: (params: GridRenderCellParams<PurchaseOrderData>) => {
+      const rowData = params.row
       const addr = rowData.address ?? {}
       const streetAddress = addr.streetAddress ?? ''
       const streetAddress2 = addr.streetAddress2 ?? ''
       const streetAddress3 = addr.streetAddress3 ?? ''
-      const city = addr.city || ''
-      const state = addr.state || ''
-      const postalCode = addr.postalCode || ''
-      const country = addr.country || ''
+      const city = addr.city ?? ''
+      const state = addr.state ?? ''
+      const postalCode = addr.postalCode ?? ''
+      const country = addr.country ?? ''
 
       const fullAddress = [
         streetAddress,
@@ -102,8 +144,13 @@ export const getPurchaseOrderGridColumns = (
     minWidth: 150,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: any) => {
-      const date = row.expectedDeliveryDate || row.expectedShipmentDate || row.purchaseOrder?.expectedDeliveryDate || row.purchaseOrder?.expectedShipmentDate
+    valueGetter: (value, row: PurchaseOrderData) => {
+      const rowData = row
+      const date =
+        rowData.expectedDeliveryDate ??
+        rowData.expectedShipmentDate ??
+        rowData.purchaseOrder?.expectedDeliveryDate ??
+        rowData.purchaseOrder?.expectedShipmentDate
       if (!date) return '—'
       try {
         return format(new Date(date), 'do MMM yyyy')
@@ -126,7 +173,10 @@ export const getPurchaseOrderGridColumns = (
     minWidth: 200,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: any) => row.vendorNumber || row.purchaseOrder?.vendorNumber || '—',
+    valueGetter: (value, row: PurchaseOrderData) => {
+      const rowData = row
+      return rowData.vendorNumber ?? rowData.purchaseOrder?.vendorNumber ?? '—'
+    },
     renderCell: (params: GridRenderCellParams) => (
       <Box sx={{ display: 'flex',
         alignItems: 'center',
@@ -145,7 +195,16 @@ export const getPurchaseOrderGridColumns = (
     minWidth: 200,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: any) => row.purchaseOrderReceipt || row.orderReceipt || row.purchaseOrder?.purchaseOrderReceipt || row.purchaseOrder?.orderReceipt || '—',
+    valueGetter: (value, row: PurchaseOrderData) => {
+      const rowData = row
+      return (
+        rowData.purchaseOrderReceipt ??
+        rowData.orderReceipt ??
+        rowData.purchaseOrder?.purchaseOrderReceipt ??
+        rowData.purchaseOrder?.orderReceipt ??
+        '—'
+      )
+    },
     renderCell: (params: GridRenderCellParams) => (
       <Box sx={{ display: 'flex',
         alignItems: 'center',
@@ -164,13 +223,15 @@ export const getPurchaseOrderGridColumns = (
     minWidth: 220,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: any) => {
-      const user = row.approvedByUser
+    valueGetter: (value, row: PurchaseOrderData) => {
+      const rowData = row
+      const user = rowData.approvedByUser
       if (!user) return '—'
-      return `${user.firstName || ''} ${user.lastName || ''} (${user.loginName || user.email || ''})`.trim()
+      return `${user.firstName ?? ''} ${user.lastName ?? ''} (${user.loginName ?? user.email ?? ''})`.trim()
     },
-    renderCell: (params: GridRenderCellParams) => {
-      const user = params.row.approvedByUser
+    renderCell: (params: GridRenderCellParams<PurchaseOrderData>) => {
+      const rowData = params.row
+      const user = rowData.approvedByUser
       const userId = user?.userId
 
       if (!user || !userId) {
@@ -205,8 +266,9 @@ export const getPurchaseOrderGridColumns = (
     minWidth: 150,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: any) => {
-      const date = row.approvedDate || row.purchaseOrder?.approvedDate
+    valueGetter: (value, row: PurchaseOrderData) => {
+      const rowData = row
+      const date = rowData.approvedDate ?? rowData.purchaseOrder?.approvedDate
       if (!date) return '—'
       try {
         return format(new Date(date), 'do MMM yyyy')
@@ -229,13 +291,15 @@ export const getPurchaseOrderGridColumns = (
     minWidth: 220,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: any) => {
-      const user = row.rejectedByUser
+    valueGetter: (value, row: PurchaseOrderData) => {
+      const rowData = row
+      const user = rowData.rejectedByUser
       if (!user) return '—'
-      return `${user.firstName || ''} ${user.lastName || ''} (${user.loginName || user.email || ''})`.trim()
+      return `${user.firstName ?? ''} ${user.lastName ?? ''} (${user.loginName ?? user.email ?? ''})`.trim()
     },
-    renderCell: (params: GridRenderCellParams) => {
-      const user = params.row.rejectedByUser
+    renderCell: (params: GridRenderCellParams<PurchaseOrderData>) => {
+      const rowData = params.row
+      const user = rowData.rejectedByUser
       const userId = user?.userId
 
       if (!user || !userId) {
@@ -270,8 +334,9 @@ export const getPurchaseOrderGridColumns = (
     minWidth: 150,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: any) => {
-      const date = row.rejectedDate || row.purchaseOrder?.rejectedDate
+    valueGetter: (value, row: PurchaseOrderData) => {
+      const rowData = row
+      const date = rowData.rejectedDate ?? rowData.purchaseOrder?.rejectedDate
       if (!date) return '—'
       try {
         return format(new Date(date), 'do MMM yyyy')
@@ -294,13 +359,15 @@ export const getPurchaseOrderGridColumns = (
     minWidth: 220,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: any) => {
-      const { lead } = row
+    valueGetter: (value, row: PurchaseOrderData) => {
+      const rowData = row
+      const { lead } = rowData
       if (!lead) return '—'
-      return `${lead.firstName || ''} ${lead.lastName || ''} (${lead.email || ''})`.trim()
+      return `${lead.firstName ?? ''} ${lead.lastName ?? ''} (${lead.email ?? ''})`.trim()
     },
-    renderCell: (params: GridRenderCellParams) => {
-      const { lead } = params.row
+    renderCell: (params: GridRenderCellParams<PurchaseOrderData>) => {
+      const rowData = params.row
+      const { lead } = rowData
       const leadId = lead?.leadId
 
       if (!lead || !leadId) {
@@ -335,11 +402,12 @@ export const getPurchaseOrderGridColumns = (
     minWidth: 220,
     sortable: false,
     filterable: false,
-    renderCell: (params: GridRenderCellParams) => {
-      const isDeleted = params.row.isDeleted || params.row.deleted || params.row.purchaseOrder?.deleted
-      const isApproved = params.row.approvedByUser != null
-      const isRejected = params.row.rejectedByUser != null
-      const purchaseOrderId = params.row.purchaseOrderId || params.row.purchaseOrder?.purchaseOrderId
+    renderCell: (params: GridRenderCellParams<PurchaseOrderData>) => {
+      const rowData = params.row
+      const isDeleted = Boolean(rowData.isDeleted ?? rowData.deleted ?? rowData.purchaseOrder?.deleted)
+      const isApproved = rowData.approvedByUser != null
+      const isRejected = rowData.rejectedByUser != null
+      const purchaseOrderId = rowData.purchaseOrderId ?? rowData.purchaseOrder?.purchaseOrderId
 
       // Don't show buttons if deleted, already approved, or already rejected
       if (isDeleted || isApproved || isRejected) {
@@ -358,7 +426,9 @@ export const getPurchaseOrderGridColumns = (
             size="small"
             color="success"
             onClick={() => {
-              onApprovePurchaseOrder(purchaseOrderId)
+              if (purchaseOrderId != null) {
+                onApprovePurchaseOrder(purchaseOrderId)
+              }
             }}
             sx={{
               minWidth: '80px',
@@ -373,7 +443,9 @@ export const getPurchaseOrderGridColumns = (
             size="small"
             color="error"
             onClick={() => {
-              onRejectPurchaseOrder(purchaseOrderId)
+              if (purchaseOrderId != null) {
+                onRejectPurchaseOrder(purchaseOrderId)
+              }
             }}
             sx={{
               minWidth: '80px',
@@ -396,16 +468,18 @@ export const getPurchaseOrderGridColumns = (
     filterable: false,
     align: 'center',
     headerAlign: 'center',
-    renderCell: (params: GridRenderCellParams) => {
-      const isDeleted = params.row.isDeleted || params.row.deleted || params.row.purchaseOrder?.deleted
-      const isApproved = params.row.approvedByUser != null
-      const purchaseOrderId = params.row.purchaseOrderId || params.row.purchaseOrder?.purchaseOrderId
+    renderCell: (params: GridRenderCellParams<PurchaseOrderData>) => {
+      const rowData = params.row
+      const isDeleted = Boolean(rowData.isDeleted ?? rowData.deleted ?? rowData.purchaseOrder?.deleted)
+      const isApproved = rowData.approvedByUser != null
+      const purchaseOrderId = rowData.purchaseOrderId ?? rowData.purchaseOrder?.purchaseOrderId
 
       if (isDeleted || !isApproved) {
         return null
       }
 
-      const handleDownload = async () => {
+      const handleDownload = async (): Promise<void> => {
+        if (purchaseOrderId == null) return
         try {
           toast.info('Downloading PDF...')
           const blob = await purchaseOrderApi.downloadPurchaseOrderPdf(purchaseOrderId)
@@ -419,11 +493,9 @@ export const getPurchaseOrderGridColumns = (
           window.URL.revokeObjectURL(downloadUrl)
           toast.success('PDF downloaded successfully!')
         } catch (error: unknown) {
-          // eslint-disable-next-line no-console -- Error logging for PDF download failures
-          console.error('Error downloading PDF:', error)
           const errorMessage =
-            (error as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ??
-            (error as { message?: string })?.message ??
+            (error as { response?: { data?: { message?: string } }; message?: string }).response?.data?.message ??
+            (error as { message?: string }).message ??
             'Failed to download PDF. Please check your permissions.'
           toast.error(errorMessage)
         }
@@ -448,17 +520,20 @@ export const getPurchaseOrderGridColumns = (
     minWidth: 180,
     sortable: false,
     filterable: false,
-    renderCell: (params: GridRenderCellParams) => {
-      const purchaseOrderId = params.row.purchaseOrderId || params.row.purchaseOrder?.purchaseOrderId
+    renderCell: (params: GridRenderCellParams<PurchaseOrderData>) => {
+      const rowData = params.row
+      const purchaseOrderId = rowData.purchaseOrderId ?? rowData.purchaseOrder?.purchaseOrderId
 
-      if (params.row.isDeleted || params.row.deleted || params.row.purchaseOrder?.deleted) {
+      if (rowData.isDeleted ?? rowData.deleted ?? rowData.purchaseOrder?.deleted) {
         return (
           <div>
             <Link
               href="#"
               onClick={e => {
                 e.preventDefault()
-                onTogglePurchaseOrder(purchaseOrderId)
+                if (purchaseOrderId != null) {
+                  onTogglePurchaseOrder(purchaseOrderId)
+                }
               }}
               sx={{ cursor: 'pointer',
                 color: 'success.main' }}
@@ -488,7 +563,9 @@ export const getPurchaseOrderGridColumns = (
             href="#"
             onClick={e => {
               e.preventDefault()
-              onTogglePurchaseOrder(purchaseOrderId)
+              if (purchaseOrderId != null) {
+                onTogglePurchaseOrder(purchaseOrderId)
+              }
             }}
             sx={{ cursor: 'pointer',
               color: 'error.main' }}

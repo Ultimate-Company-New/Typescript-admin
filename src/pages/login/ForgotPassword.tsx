@@ -10,9 +10,8 @@ import { Box, Container, Stack } from '@mui/material'
 import { loginApi } from '../../api/loginApi'
 import { BlueButton, BodyText, Header, LinkButton, Logo, Subheader, TextFieldInput } from '../../components'
 import { APP_ROUTES } from '../../constants/routes'
-import { passwordResetSchema, type PasswordResetFormData } from '../../utils/validationSchemas'
-
 import styles from '../../styles/Login.module.scss'
+import { passwordResetSchema, type PasswordResetFormData } from '../../utils/validationSchemas'
 
 /**
  * Forgot Password Page Component

@@ -2,9 +2,9 @@ import React from 'react'
 
 import { Tooltip } from '@mui/material'
 
+import styles from '../../styles/DataGrid.module.scss'
 import { BodyText } from '../fonts'
 
-import styles from '../../styles/DataGrid.module.scss'
 interface RenderLongCellItemProps {
   value: string
 }

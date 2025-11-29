@@ -1,3 +1,4 @@
+import type React from 'react'
 import { useState, useEffect, useMemo } from 'react'
 
 import { Box } from '@mui/material'
@@ -25,6 +26,7 @@ import {
 } from '../../components/datagrid'
 import { getPromoGridColumns } from '../../models/gridModels/promoGridColumns'
 import { type PaginatedGridInterface } from '../../types/grid.types'
+
 import styles from './Promos.module.scss'
 
 /**
@@ -54,14 +56,16 @@ interface PromoData {
  * - Responsive design
  */
 
-const Promos = () => {
+const Promos = (): React.JSX.Element => {
   const [rows, setRows] = useState<PromoData[]>([])
   const [loading, setLoading] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
   const [includeDeleted, setIncludeDeleted] = useState(false)
   const [density, setDensity] = useState<GridDensityType>(getInitialDensity())
-  const [activeFilterGroup, setActiveFilterGroup] = useState<FilterGroup>({ logicOperator: LogicOperator.AND,
-    filters: [] })
+  const [activeFilterGroup, setActiveFilterGroup] = useState<FilterGroup>({
+    logicOperator: LogicOperator.AND,
+    filters: [],
+  })
   const [columnVisibilityModel, setColumnVisibilityModel] = useState<GridColumnVisibilityModel>({
     isDeleted: false,
     promoId: false,
@@ -113,7 +117,7 @@ const Promos = () => {
 
   // Fetch promos on mount and when pagination model changes
   useEffect(() => {
-    createFetchFunction(
+    void createFetchFunction(
       promoApi.getPromosInBatches,
       setLoading,
       setRows,
@@ -144,28 +148,25 @@ const Promos = () => {
             density={density}
             columnVisibilityModel={columnVisibilityModel}
             onColumnVisibilityModelChange={model => {
-              setColumnVisibilityModel(model)
+              setColumnVisibilityModel(model as GridColumnVisibilityModel)
             }}
             paginationModel={{
               page: Math.floor(paginationModel.start / paginationModel.pageSize),
               pageSize: paginationModel.pageSize,
             }}
             onPaginationModelChange={model => {
-              handlePaginationModelChange(model, setPaginationModel)
-            }
-            }
+              void handlePaginationModelChange(model, setPaginationModel)
+            }}
             onFilterModelChange={model => {
-              handleFilterModelChange(model, paginationModel, setPaginationModel)
-            }
-            }
+              void handleFilterModelChange(model, paginationModel, setPaginationModel)
+            }}
             onSortModelChange={model => {
-              handleSortModelChange(model, setPaginationModel)
-            }
-            }
-            getRowId={row => row.promoId}
+              void handleSortModelChange(model, setPaginationModel)
+            }}
+            getRowId={row => (row as PromoData).promoId}
             getRowClassName={params => {
-              const classes = [params.indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd']
-              if (params.row.isDeleted || params.row.deleted) {
+              const classes = [(params as { indexRelativeToCurrentPage: number }).indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd']
+              if ((params.row as PromoData).isDeleted ?? (params.row as PromoData).deleted) {
                 classes.push('deleted')
               }
               return classes.join(' ')

@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
+import { toast } from 'react-toastify'
+
 import { Box, Divider, Paper } from '@mui/material'
 import {
   type GridColDef,
@@ -14,25 +16,24 @@ import {
   type GridToolbarProps,
   type GridValidRowModel,
 } from '@mui/x-data-grid'
-import { toast } from 'react-toastify'
 
 import { userGroupApi } from '../../api/userGroupApi'
-import { BodyText, Subheader } from '../fonts'
+import styles from '../../styles/Users.module.scss'
 import { type PaginatedGridInterface } from '../../types/grid.types'
+import { BodyText, Subheader } from '../fonts'
 
+import { type FilterGroup } from './FilterPanel'
 import {
-  LogicOperator,
-  SimpleToolbar,
-  StyledDataGrid,
   getInitialDensity,
   getRowClassName,
   handleFilterModelChange,
   handlePaginationModelChange,
   handleSortModelChange,
-  type FilterGroup,
+  LogicOperator,
   type GridDensityType,
-} from './index'
-import styles from '../../pages/users/Users.module.scss'
+} from './gridHelpers'
+import SimpleToolbar from './SimpleToolbar'
+import { StyledDataGrid } from './StyledDataGrid'
 
 export interface UserGroupData {
   groupId: number
@@ -182,7 +183,7 @@ const UserGroupSelectionGrid = ({
       columns
         .filter(col => {
           const visibility = columnVisibilityModel[col.field]
-          const isVisible = visibility !== false
+          const isVisible = visibility
           const isNotExcluded = !['actions', 'groupId', 'userGroupId'].includes(col.field)
           return isVisible && isNotExcluded
         })
@@ -381,4 +382,3 @@ const UserGroupSelectionGrid = ({
 }
 
 export default UserGroupSelectionGrid
-

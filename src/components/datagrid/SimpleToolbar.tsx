@@ -25,6 +25,7 @@ import {
 } from '@mui/x-data-grid'
 
 import styles from '../../styles/DataGrid.module.scss'
+
 import FilterPanel, { type FilterGroup } from './FilterPanel'
 import { DENSITY_STORAGE_KEY, GridDensity, type GridDensityType } from './gridHelpers'
 

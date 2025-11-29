@@ -1,6 +1,6 @@
 import { Box, Divider, Grid, Paper } from '@mui/material'
 
-import styles from '../../../pages/users/Users.module.scss'
+import styles from '../../../styles/Users.module.scss'
 import { BodyText, Subheader } from '../../fonts'
 
 interface AddressDetailsViewProps {

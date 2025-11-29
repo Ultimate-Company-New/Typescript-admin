@@ -110,9 +110,8 @@ const logApiRequest = (config: InternalAxiosRequestConfig): void => {
     // Dispatch custom event for DevLogger
     const event = new CustomEvent('api-log', { detail: apiLog })
     window.dispatchEvent(event)
-  } catch (error) {
+  } catch {
     // Silently fail - don't break the request
-    console.error('Failed to log API request:', error)
   }
 }
 

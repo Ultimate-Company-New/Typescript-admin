@@ -10,12 +10,11 @@ import {
   CalendarToday as CalendarIcon,
   Email as EmailIcon,
 } from '@mui/icons-material'
-import { Box, Card, CardContent, Typography, Chip, Divider, Button, CircularProgress, Grid } from '@mui/material'
+import { Box, Card, CardContent, Typography, Chip, Divider, Button, CircularProgress } from '@mui/material'
 
 import messageApi from '../../api/messageApi'
 import { APP_ROUTES } from '../../constants/routes'
 import { type MessageResponseModel } from '../../models/MessageModels'
-import styles from './ViewMessage.module.scss'
 
 const ViewMessage: React.FC = () => {
   const { messageId } = useParams<{ messageId: string }>()
@@ -24,7 +23,7 @@ const ViewMessage: React.FC = () => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const fetchMessage = async () => {
+    const fetchMessage = async (): Promise<void> => {
       if (!messageId) {
         toast.error('Message ID not provided')
         navigate(APP_ROUTES.DASHBOARD.MESSAGES_INBOX)
@@ -35,26 +34,27 @@ const ViewMessage: React.FC = () => {
         setLoading(true)
         const data = await messageApi.getMessageDetailsById(parseInt(messageId))
         setMessage(data)
-      } catch (error) {
+      } catch {
         toast.error('Failed to load message')
-        console.error('Error fetching message:', error)
         navigate(APP_ROUTES.DASHBOARD.MESSAGES_INBOX)
       } finally {
         setLoading(false)
       }
     }
 
-    fetchMessage()
+    void fetchMessage()
   }, [messageId, navigate])
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string): string => {
     const date = new Date(dateString)
     const day = date.getDate()
     const month = date.toLocaleString('default', { month: 'long' })
     const year = date.getFullYear()
-    const time = date.toLocaleString('default', { hour: 'numeric', minute: '2-digit', hour12: true })
+    const time = date.toLocaleString('default', { hour: 'numeric',
+minute: '2-digit',
+hour12: true })
 
-    const suffix = (day: number) => {
+    const suffix = (day: number): string => {
       if (day > 3 && day < 21) return 'th'
       switch (day % 10) {
         case 1:

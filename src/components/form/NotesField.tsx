@@ -1,5 +1,6 @@
-import { TextField } from '@mui/material'
 import { Controller, type Control, type FieldErrors, type FieldValues } from 'react-hook-form'
+
+import { TextField } from '@mui/material'
 
 interface NotesFieldProps<TFieldValues extends FieldValues = FieldValues> {
   name: string
@@ -63,4 +64,3 @@ const NotesField = <TFieldValues extends FieldValues = FieldValues>({
 }
 
 export default NotesField
-

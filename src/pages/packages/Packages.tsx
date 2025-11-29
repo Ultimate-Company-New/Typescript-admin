@@ -1,3 +1,4 @@
+import type React from 'react'
 import { useState, useEffect, useMemo } from 'react'
 
 import { Box } from '@mui/material'
@@ -21,6 +22,7 @@ import {
 } from '../../components/datagrid'
 import { getPackageGridColumns } from '../../models/gridModels/packageGridColumns'
 import { type PaginatedGridInterface } from '../../types/grid.types'
+
 import styles from './Packages.module.scss'
 
 /**
@@ -46,7 +48,7 @@ interface PackageData {
  * - Responsive design
  */
 
-const Packages = () => {
+const Packages = (): React.JSX.Element => {
   const [rows, setRows] = useState<PackageData[]>([])
   const [loading, setLoading] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
@@ -107,7 +109,7 @@ const Packages = () => {
 
   // Fetch packages on mount and when pagination model changes
   useEffect(() => {
-    createFetchFunction(
+    void createFetchFunction(
       packageApi.getPackagesInBatches,
       setLoading,
       setRows,
@@ -138,25 +140,25 @@ const Packages = () => {
             density={density}
             columnVisibilityModel={columnVisibilityModel}
             onColumnVisibilityModelChange={model => {
-              setColumnVisibilityModel(model)
+              setColumnVisibilityModel(model as GridColumnVisibilityModel)
             }}
             paginationModel={{
               page: Math.floor(paginationModel.start / paginationModel.pageSize),
               pageSize: paginationModel.pageSize,
             }}
             onPaginationModelChange={model => {
-              handlePaginationModelChange(model, setPaginationModel)
+              void handlePaginationModelChange(model, setPaginationModel)
             }}
             onFilterModelChange={model => {
-              handleFilterModelChange(model, paginationModel, setPaginationModel)
+              void handleFilterModelChange(model, paginationModel, setPaginationModel)
             }}
             onSortModelChange={model => {
-              handleSortModelChange(model, setPaginationModel)
+              void handleSortModelChange(model, setPaginationModel)
             }}
-            getRowId={row => row.packageId || row._package?.packageId}
+            getRowId={row => (row as PackageData).packageId ?? (row as PackageData)._package?.packageId ?? 0}
             getRowClassName={params => {
-              const classes = [params.indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd']
-              if (params.row.isDeleted || params.row.deleted) {
+              const classes = [(params as { indexRelativeToCurrentPage: number }).indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd']
+              if ((params.row as PackageData).isDeleted ?? (params.row as PackageData).deleted) {
                 classes.push('deleted')
               }
               return classes.join(' ')

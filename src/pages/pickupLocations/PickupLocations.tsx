@@ -1,26 +1,28 @@
-import { useState, useEffect, useMemo } from 'react'
+import type React from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { Box } from '@mui/material'
-import { type GridColumnVisibilityModel, type GridToolbarProps, type GridSlotsComponent } from '@mui/x-data-grid'
+import { type GridColumnVisibilityModel, type GridSlotsComponent, type GridToolbarProps } from '@mui/x-data-grid'
 
 import { pickupLocationApi } from '../../api/pickupLocationApi'
 import {
-  StyledDataGrid,
   CustomNoRowsOverlay,
-  SimpleToolbar,
-  type FilterGroup,
-  handlePaginationModelChange,
-  handleFilterModelChange,
-  handleSortModelChange,
-  handleIncludeDeletedChange,
-  getInitialDensity,
-  type GridDensityType,
   LogicOperator,
+  SimpleToolbar,
+  StyledDataGrid,
   createFetchFunction,
   createToggleFunction,
+  getInitialDensity,
+  handleFilterModelChange,
+  handleIncludeDeletedChange,
+  handlePaginationModelChange,
+  handleSortModelChange,
+  type FilterGroup,
+  type GridDensityType,
 } from '../../components/datagrid'
 import { getPickupLocationGridColumns } from '../../models/gridModels/pickupLocationGridColumns'
 import { type PaginatedGridInterface } from '../../types/grid.types'
+
 import styles from './PickupLocations.module.scss'
 
 /**
@@ -46,7 +48,7 @@ interface PickupLocationData {
  * - Responsive design
  */
 
-const PickupLocations = () => {
+const PickupLocations = (): React.JSX.Element => {
   const [rows, setRows] = useState<PickupLocationData[]>([])
   const [loading, setLoading] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
@@ -107,7 +109,7 @@ const PickupLocations = () => {
 
   // Fetch pickup locations on mount and when pagination model changes
   useEffect(() => {
-    createFetchFunction(
+    void createFetchFunction(
       pickupLocationApi.getPickupLocationsInBatches,
       setLoading,
       setRows,
@@ -138,25 +140,37 @@ const PickupLocations = () => {
             density={density}
             columnVisibilityModel={columnVisibilityModel}
             onColumnVisibilityModelChange={model => {
-              setColumnVisibilityModel(model)
+              setColumnVisibilityModel(model as GridColumnVisibilityModel)
             }}
             paginationModel={{
               page: Math.floor(paginationModel.start / paginationModel.pageSize),
               pageSize: paginationModel.pageSize,
             }}
             onPaginationModelChange={model => {
-              handlePaginationModelChange(model, setPaginationModel)
+              void handlePaginationModelChange(model, setPaginationModel)
             }}
             onFilterModelChange={model => {
-              handleFilterModelChange(model, paginationModel, setPaginationModel)
+              void handleFilterModelChange(model, paginationModel, setPaginationModel)
             }}
             onSortModelChange={model => {
-              handleSortModelChange(model, setPaginationModel)
+              void handleSortModelChange(model, setPaginationModel)
             }}
-            getRowId={row => row.pickupLocationId || row.pickupLocation?.pickupLocationId}
+            getRowId={row =>
+              (row as PickupLocationData).pickupLocationId ??
+              (row as PickupLocationData).pickupLocation?.pickupLocationId ??
+              0
+            }
             getRowClassName={params => {
-              const classes = [params.indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd']
-              if (params.row.isDeleted || params.row.deleted || params.row.pickupLocation?.deleted) {
+              const classes = [
+                (params as { indexRelativeToCurrentPage: number }).indexRelativeToCurrentPage % 2 === 0
+                  ? 'even'
+                  : 'odd',
+              ]
+              if (
+                (params.row as PickupLocationData).isDeleted ??
+                (params.row as PickupLocationData).deleted ??
+                (params.row as PickupLocationData).pickupLocation?.deleted
+              ) {
                 classes.push('deleted')
               }
               return classes.join(' ')

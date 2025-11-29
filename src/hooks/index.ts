@@ -1,2 +1,1 @@
 export { usePermissions } from './usePermissions'
-

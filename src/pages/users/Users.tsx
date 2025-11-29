@@ -1,3 +1,4 @@
+import type React from 'react'
 import { useEffect, useMemo, useState } from 'react'
 
 import { Box } from '@mui/material'
@@ -22,9 +23,8 @@ import {
 } from '../../components/datagrid'
 import { getUserGridColumns } from '../../models/gridModels/userGridColumns'
 import { type UserResponseModel } from '../../models/UserModels'
-import { type PaginatedGridInterface } from '../../types/grid.types'
-
 import styles from '../../styles/Users.module.scss'
+import { type PaginatedGridInterface } from '../../types/grid.types'
 
 /**
  * Users Management Page with DataGrid
@@ -36,7 +36,7 @@ import styles from '../../styles/Users.module.scss'
  * - Responsive design
  */
 
-const Users = (): JSX.Element => {
+const Users = (): React.JSX.Element => {
   const [rows, setRows] = useState<UserResponseModel[]>([])
   const [loading, setLoading] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
@@ -149,22 +149,22 @@ const Users = (): JSX.Element => {
             density={density}
             columnVisibilityModel={columnVisibilityModel}
             onColumnVisibilityModelChange={model => {
-              setColumnVisibilityModel(model)
+              setColumnVisibilityModel(model as GridColumnVisibilityModel)
             }}
             paginationModel={{
               page: Math.floor(paginationModel.start / paginationModel.pageSize),
               pageSize: paginationModel.pageSize,
             }}
             onPaginationModelChange={model => {
-              handlePaginationModelChange(model, setPaginationModel)
+              void handlePaginationModelChange(model, setPaginationModel)
             }}
             onFilterModelChange={model => {
-              handleFilterModelChange(model, paginationModel, setPaginationModel)
+              void handleFilterModelChange(model, paginationModel, setPaginationModel)
             }}
             onSortModelChange={model => {
-              handleSortModelChange(model, setPaginationModel)
+              void handleSortModelChange(model, setPaginationModel)
             }}
-            getRowId={(row): number => (row as UserResponseModel).userId}
+            getRowId={row => (row as UserResponseModel).userId}
             getRowClassName={params => getRowClassName<UserResponseModel>(params)}
             slots={{
               toolbar: SimpleToolbar as GridSlotsComponent['toolbar'],

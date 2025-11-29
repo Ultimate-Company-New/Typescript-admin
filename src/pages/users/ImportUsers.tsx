@@ -1,3 +1,4 @@
+import type React from 'react'
 import { useCallback, useState } from 'react'
 
 import { useNavigate } from 'react-router-dom'
@@ -91,7 +92,7 @@ interface BulkUserImportRequest {
  * - Set max records limit
  * - Validate and submit bulk import
  */
-const ImportUsers = () => {
+const ImportUsers = (): React.JSX.Element => {
   const navigate = useNavigate()
   const [file, setFile] = useState<File | null>(null)
   const [importData, setImportData] = useState<ImportUserData[]>([])
@@ -102,7 +103,7 @@ const ImportUsers = () => {
   /**
    * Download Excel template with sample data
    */
-  const handleDownloadTemplate = () => {
+  const handleDownloadTemplate = (): void => {
     // Create template data
     const templateData = [
       {
@@ -161,103 +162,108 @@ const ImportUsers = () => {
   /**
    * Handle file upload and parse CSV/Excel
    */
-  const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const uploadedFile = event.target.files?.[0]
-    if (!uploadedFile) return
+  const handleFileUpload = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const uploadedFile = event.target.files?.[0]
+      if (!uploadedFile) return
 
-    // Validate file type
-    const validTypes = [
-      'text/csv',
-      'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    ]
-    if (
-      !validTypes.includes(uploadedFile.type) &&
-      !uploadedFile.name.endsWith('.csv') &&
-      !uploadedFile.name.endsWith('.xlsx')
-    ) {
-      toast.error('Please upload a valid CSV or Excel file')
-      return
-    }
+      // Validate file type
+      const validTypes = [
+        'text/csv',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      ]
+      if (
+        !validTypes.includes(uploadedFile.type) &&
+        !uploadedFile.name.endsWith('.csv') &&
+        !uploadedFile.name.endsWith('.xlsx')
+      ) {
+        toast.error('Please upload a valid CSV or Excel file')
+        return
+      }
 
-    setFile(uploadedFile)
-    parseFile(uploadedFile)
-  }, [])
+      setFile(uploadedFile)
+      parseFile(uploadedFile)
+    },
+    [parseFile],
+  )
 
   /**
    * Parse CSV/Excel file
    */
-  const parseFile = (file: File) => {
-    setIsLoading(true)
-    const reader = new FileReader()
+  const parseFile = useCallback(
+    (file: File): void => {
+      setIsLoading(true)
+      const reader = new FileReader()
 
-    reader.onload = e => {
-      try {
-        const text = e.target?.result as string
-        const lines = text.split('\n').filter(line => line.trim())
+      reader.onload = e => {
+        try {
+          const text = e.target?.result as string
+          const lines = text.split('\n').filter(line => line.trim())
 
-        if (lines.length < 2) {
-          toast.error('File is empty or invalid')
+          if (lines.length < 2) {
+            toast.error('File is empty or invalid')
+            setIsLoading(false)
+            return
+          }
+
+          // Parse CSV
+          const _headers = lines[0].split(',').map(h => h.trim())
+          const parsedData: ImportUserData[] = []
+
+          for (let i = 1; i < Math.min(lines.length, maxRecords + 1); i++) {
+            const values = lines[i].split(',').map(v => v.trim())
+            const errors: string[] = []
+
+            // Validate required fields
+            if (!values[0]) errors.push('First name is required')
+            if (!values[1]) errors.push('Last name is required')
+            if (!values[2]) errors.push('Email is required')
+            if (!values[3]) errors.push('Phone is required')
+            if (!values[4]) errors.push('Role is required')
+
+            // Parse permission and group IDs
+            const permissionIds = values[12] ? values[12].split(';').map(id => parseInt(id.trim())) : []
+            const groupIds = values[13] ? values[13].split(';').map(id => parseInt(id.trim())) : []
+
+            parsedData.push({
+              rowNumber: i,
+              firstName: values[0] || '',
+              lastName: values[1] || '',
+              email: values[2] || '',
+              phone: values[3] || '',
+              role: values[4] || '',
+              dob: values[5] || '',
+              streetAddress: values[6] || '',
+              streetAddress2: values[7] || undefined,
+              city: values[8] || '',
+              state: values[9] || '',
+              zipCode: values[10] || '',
+              country: values[11] || 'USA',
+              permissionIds,
+              groupIds,
+              errors: errors.length > 0 ? errors : undefined,
+            })
+          }
+
+          setImportData(parsedData)
+          toast.success(`Parsed ${parsedData.length} records successfully!`)
+        } catch {
+          toast.error('Failed to parse file. Please check the format.')
+        } finally {
           setIsLoading(false)
-          return
         }
+      }
 
-        // Parse CSV
-        const headers = lines[0].split(',').map(h => h.trim())
-        const parsedData: ImportUserData[] = []
-
-        for (let i = 1; i < Math.min(lines.length, maxRecords + 1); i++) {
-          const values = lines[i].split(',').map(v => v.trim())
-          const errors: string[] = []
-
-          // Validate required fields
-          if (!values[0]) errors.push('First name is required')
-          if (!values[1]) errors.push('Last name is required')
-          if (!values[2]) errors.push('Email is required')
-          if (!values[3]) errors.push('Phone is required')
-          if (!values[4]) errors.push('Role is required')
-
-          // Parse permission and group IDs
-          const permissionIds = values[12] ? values[12].split(';').map(id => parseInt(id.trim())) : []
-          const groupIds = values[13] ? values[13].split(';').map(id => parseInt(id.trim())) : []
-
-          parsedData.push({
-            rowNumber: i,
-            firstName: values[0] || '',
-            lastName: values[1] || '',
-            email: values[2] || '',
-            phone: values[3] || '',
-            role: values[4] || '',
-            dob: values[5] || '',
-            streetAddress: values[6] || '',
-            streetAddress2: values[7] || undefined,
-            city: values[8] || '',
-            state: values[9] || '',
-            zipCode: values[10] || '',
-            country: values[11] || 'USA',
-            permissionIds,
-            groupIds,
-            errors: errors.length > 0 ? errors : undefined,
-          })
-        }
-
-        setImportData(parsedData)
-        toast.success(`Parsed ${parsedData.length} records successfully!`)
-      } catch (error) {
-        console.error('Error parsing file:', error)
-        toast.error('Failed to parse file. Please check the format.')
-      } finally {
+      reader.onerror = () => {
+        toast.error('Failed to read file')
         setIsLoading(false)
       }
-    }
 
-    reader.onerror = () => {
-      toast.error('Failed to read file')
-      setIsLoading(false)
-    }
-
-    reader.readAsText(file)
-  }
+      reader.readAsText(file)
+    },
+    [maxRecords],
+  )
 
   /**
    * Clear uploaded file and data
@@ -315,10 +321,13 @@ const ImportUsers = () => {
       const jsonData = generateImportJSON()
 
       // TODO: Call API endpoint
-      console.log('JSON to be sent to API:', JSON.stringify(jsonData, null, 2))
 
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      await new Promise<void>(resolve => {
+        setTimeout(() => {
+          resolve()
+        }, 1000)
+      })
 
       toast.success(`Successfully imported ${importData.length} users!`)
 
@@ -326,8 +335,7 @@ const ImportUsers = () => {
       setTimeout(() => {
         navigate(APP_ROUTES.DASHBOARD.USERS)
       }, 1500)
-    } catch (error) {
-      console.error('Import failed:', error)
+    } catch {
       toast.error('Failed to import users')
     } finally {
       setIsLoading(false)
@@ -390,9 +398,10 @@ const ImportUsers = () => {
       headerName: 'Status',
       width: 120,
       renderCell: params => {
-        if (params.row.errors && params.row.errors.length > 0) {
+        const row = params.row as ImportUserData
+        if (row.errors && row.errors.length > 0) {
           return (
-            <Tooltip title={params.row.errors.join(', ')}>
+            <Tooltip title={row.errors.join(', ')}>
               <Chip label="Error" color="error" size="small" />
             </Tooltip>
           )
@@ -481,7 +490,11 @@ const ImportUsers = () => {
             <ToggleButtonGroup
               value={viewMode}
               exclusive
-              onChange={(_, newMode) => newMode && setViewMode(newMode)}
+              onChange={(_, newMode) => {
+                if (newMode) {
+                  setViewMode(newMode)
+                }
+              }}
               className="import-users-page__view-toggle"
             >
               <ToggleButton value="grid">
@@ -536,9 +549,10 @@ const ImportUsers = () => {
                   }}
                   disableRowSelectionOnClick
                   autoHeight
-                  getRowClassName={params =>
-                    params.row.errors && params.row.errors.length > 0 ? 'import-users-page__error-row' : ''
-                  }
+                  getRowClassName={params => {
+                    const row = params.row as ImportUserData
+                    return row.errors && row.errors.length > 0 ? 'import-users-page__error-row' : ''
+                  }}
                 />
               </Box>
             ) : (

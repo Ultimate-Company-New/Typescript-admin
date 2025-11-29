@@ -4,6 +4,34 @@ import { type GridColDef, type GridRenderCellParams } from '@mui/x-data-grid'
 import { APP_ROUTES } from '../../constants/routes'
 
 /**
+ * Package data structure matching API response
+ */
+export interface PackageData {
+  packageId?: number
+  _package?: {
+    packageId: number
+    packageName?: string
+    packageType?: string
+    length?: number
+    breadth?: number
+    width?: number
+    height?: number
+    weight?: number
+    pricePerUnit?: number
+  }
+  packageName?: string
+  packageType?: string
+  length?: number
+  breadth?: number
+  width?: number
+  height?: number
+  weight?: number
+  pricePerUnit?: number
+  isDeleted?: boolean
+  deleted?: boolean
+}
+
+/**
  * Get package grid columns with action handlers
  */
 export const getPackageGridColumns = (
@@ -24,18 +52,8 @@ export const getPackageGridColumns = (
     minWidth: 180,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: unknown) => {
-      const rowData = row as {
-        length?: number
-        breadth?: number
-        width?: number
-        height?: number
-        _package?: {
-          length?: number
-          breadth?: number
-          height?: number
-        }
-      }
+    valueGetter: (value, row: PackageData) => {
+      const rowData = row
       const length = rowData.length ?? rowData._package?.length ?? 0
       const breadth = rowData.breadth ?? rowData.width ?? rowData._package?.breadth ?? 0
       const height = rowData.height ?? rowData._package?.height ?? 0
@@ -48,8 +66,9 @@ export const getPackageGridColumns = (
     width: 120,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: any) => {
-      const weight = row.weight || row._package?.weight || 0
+    valueGetter: (value, row: PackageData) => {
+      const rowData = row
+      const weight = rowData.weight ?? rowData._package?.weight ?? 0
       return `${weight} kg`
     },
   },
@@ -59,8 +78,9 @@ export const getPackageGridColumns = (
     width: 150,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: any) => {
-      const price = row.pricePerUnit || row._package?.pricePerUnit || 0
+    valueGetter: (value, row: PackageData) => {
+      const rowData = row
+      const price = rowData.pricePerUnit ?? rowData._package?.pricePerUnit ?? 0
       return `₹ ${price}`
     },
   },
@@ -71,7 +91,10 @@ export const getPackageGridColumns = (
     minWidth: 200,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: any) => row.packageName || row._package?.packageName || '—',
+    valueGetter: (value, row: PackageData) => {
+      const rowData = row
+      return rowData.packageName ?? rowData._package?.packageName ?? '—'
+    },
   },
   {
     field: 'packageType',
@@ -79,9 +102,12 @@ export const getPackageGridColumns = (
     width: 150,
     align: 'center',
     headerAlign: 'center',
-    valueGetter: (value, row: any) => row.packageType || row._package?.packageType || '',
-    renderCell: (params: GridRenderCellParams) => {
-      const packageType = params.value
+    valueGetter: (value, row: PackageData) => {
+      const rowData = row
+      return rowData.packageType ?? rowData._package?.packageType ?? ''
+    },
+    renderCell: (params: GridRenderCellParams<PackageData>) => {
+      const packageType = params.value as string
       if (!packageType) return '—'
 
       // Color mapping for different package types
@@ -116,17 +142,20 @@ export const getPackageGridColumns = (
     width: 200,
     sortable: false,
     filterable: false,
-    renderCell: (params: GridRenderCellParams) => {
-      const packageId = params.row.packageId || params.row._package?.packageId
+    renderCell: (params: GridRenderCellParams<PackageData>) => {
+      const rowData = params.row
+      const packageId = rowData.packageId ?? rowData._package?.packageId
 
-      if (params.row.isDeleted || params.row.deleted) {
+      if (rowData.isDeleted ?? rowData.deleted) {
         return (
           <div>
             <Link
               href="#"
               onClick={e => {
                 e.preventDefault()
-                onTogglePackage(packageId)
+                if (packageId != null) {
+                  onTogglePackage(packageId)
+                }
               }}
               sx={{ cursor: 'pointer',
                 color: 'success.main' }}
@@ -156,7 +185,9 @@ export const getPackageGridColumns = (
             href="#"
             onClick={e => {
               e.preventDefault()
-              onTogglePackage(packageId)
+              if (packageId != null) {
+                onTogglePackage(packageId)
+              }
             }}
             sx={{ cursor: 'pointer',
               color: 'error.main' }}

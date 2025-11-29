@@ -4,9 +4,10 @@ import { Outlet } from 'react-router-dom'
 
 import { Box, CssBaseline } from '@mui/material'
 
+import styles from '../../styles/Layouts.module.scss'
+
 import DashboardNavbar from './DashboardNavbar'
 import DashboardSidebar from './DashboardSidebar'
-import styles from '../../styles/Layouts.module.scss'
 
 /**
  * Dashboard Layout Component

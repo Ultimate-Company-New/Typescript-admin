@@ -53,11 +53,10 @@ import { type AddressResponseModel } from '../../models/AddressModels'
 import { getUserGroupGridColumns } from '../../models/gridModels/userGroupGridColumns'
 import { getUserLogGridColumns } from '../../models/gridModels/userLogGridColumns'
 import { type UserRequestModel, type UserResponseModel } from '../../models/UserModels'
+import styles from '../../styles/Users.module.scss'
 import { type PaginatedGridInterface } from '../../types/grid.types'
 import { getAllStates, getCitiesByState } from '../../utils/stateCityMapper'
 import { userFormSchema, type UserFormData } from '../../utils/validationSchemas'
-
-import styles from '../../styles/Users.module.scss'
 
 /**
  * Normalize permission codes so comparisons are consistent regardless of casing or delimiters
@@ -606,8 +605,8 @@ const AddEditUsers = (): JSX.Element => {
 
     // Map permission codes to permission IDs (case / delimiter insensitive)
     const permissionIds = availablePermissions
-      .filter(permission => normalizedRoleCodes.includes(normalizePermissionCode(permission.permissionCode)))
-      .map(permission => permission.permissionId)
+      .filter(permission => normalizedRoleCodes.includes(normalizePermissionCode(permission.permissionCode as string)))
+      .map(permission => permission.permissionId as number)
 
     // Update selected permissions only if there's a difference
     if (!haveSameIds(selectedPermissionIds, permissionIds)) {
@@ -797,18 +796,18 @@ const AddEditUsers = (): JSX.Element => {
   }, [])
 
   const handleUserLogsPaginationChange = useCallback((model: GridPaginationModel) => {
-    handlePaginationModelChange(model, setUserLogsPaginationModel)
+    void handlePaginationModelChange(model, setUserLogsPaginationModel)
   }, [])
 
   const handleUserLogsFilterChange = useCallback(
     (model: GridFilterModel) => {
-      handleFilterModelChange(model, userLogsPaginationModel, setUserLogsPaginationModel)
+      void handleFilterModelChange(model, userLogsPaginationModel, setUserLogsPaginationModel)
     },
     [userLogsPaginationModel],
   )
 
   const handleUserLogsSortChange = useCallback((model: GridSortModel) => {
-    handleSortModelChange(model, setUserLogsPaginationModel)
+    void handleSortModelChange(model, setUserLogsPaginationModel)
   }, [])
 
   const getUserLogsRowId = useCallback((row: GridValidRowModel): number => {
@@ -817,7 +816,7 @@ const AddEditUsers = (): JSX.Element => {
   }, [])
 
   const getUserLogsRowClassName = useCallback(
-    (params: GridRowClassNameParams<GridValidRowModel>) => getRowClassName<UserLogResponseModel>(params),
+    (params: GridRowClassNameParams<GridValidRowModel>): string => getRowClassName<UserLogResponseModel>(params),
     [],
   )
 

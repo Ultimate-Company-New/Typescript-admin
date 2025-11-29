@@ -1,29 +1,29 @@
-import { useState, useEffect, useMemo } from 'react'
+import type React from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { Box } from '@mui/material'
-import { type GridColumnVisibilityModel, type GridToolbarProps, type GridSlotsComponent } from '@mui/x-data-grid'
+import { type GridColumnVisibilityModel, type GridSlotsComponent, type GridToolbarProps } from '@mui/x-data-grid'
 
 import messageApi from '../../api/messageApi'
 import {
-  StyledDataGrid,
   CustomNoRowsOverlay,
-  SimpleToolbar,
-  type FilterGroup,
-  handlePaginationModelChange,
-  handleFilterModelChange,
-  handleSortModelChange,
-  handleIncludeDeletedChange,
-  getRowClassName,
-  getInitialDensity,
-  type GridDensityType,
   LogicOperator,
+  SimpleToolbar,
+  StyledDataGrid,
   createFetchFunction,
   createToggleFunction,
+  getInitialDensity,
+  getRowClassName,
+  handleFilterModelChange,
+  handleIncludeDeletedChange,
+  handlePaginationModelChange,
+  handleSortModelChange,
+  type FilterGroup,
+  type GridDensityType,
 } from '../../components/datagrid'
 import { getMessageGridColumns } from '../../models/gridModels/messageGridColumns'
 import { type MessageResponseModel } from '../../models/MessageModels'
 import { type PaginatedGridInterface } from '../../types/grid.types'
-import styles from './Messages.module.scss'
 
 /**
  * Messages Management Page with DataGrid
@@ -35,7 +35,7 @@ import styles from './Messages.module.scss'
  * - Responsive design
  */
 
-const Messages = () => {
+const Messages = (): React.JSX.Element => {
   const [rows, setRows] = useState<MessageResponseModel[]>([])
   const [loading, setLoading] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
@@ -96,7 +96,7 @@ const Messages = () => {
 
   // Fetch messages on mount and when pagination model changes
   useEffect(() => {
-    createFetchFunction(
+    void createFetchFunction(
       messageApi.getMessagesInBatches,
       setLoading,
       setRows,
@@ -127,22 +127,22 @@ const Messages = () => {
             density={density}
             columnVisibilityModel={columnVisibilityModel}
             onColumnVisibilityModelChange={model => {
-              setColumnVisibilityModel(model)
+              setColumnVisibilityModel(model as GridColumnVisibilityModel)
             }}
             paginationModel={{
               page: Math.floor(paginationModel.start / paginationModel.pageSize),
               pageSize: paginationModel.pageSize,
             }}
             onPaginationModelChange={model => {
-              handlePaginationModelChange(model, setPaginationModel)
+              void handlePaginationModelChange(model, setPaginationModel)
             }}
             onFilterModelChange={model => {
-              handleFilterModelChange(model, paginationModel, setPaginationModel)
+              void handleFilterModelChange(model, paginationModel, setPaginationModel)
             }}
             onSortModelChange={model => {
-              handleSortModelChange(model, setPaginationModel)
+              void handleSortModelChange(model, setPaginationModel)
             }}
-            getRowId={row => row.messageId}
+            getRowId={row => (row as MessageResponseModel).messageId}
             getRowClassName={params => getRowClassName<MessageResponseModel>(params)}
             slots={{
               toolbar: SimpleToolbar as GridSlotsComponent['toolbar'],

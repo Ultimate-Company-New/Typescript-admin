@@ -1,3 +1,5 @@
+import type React from 'react'
+
 import { useNavigate } from 'react-router-dom'
 
 import { Container, Box, Stack } from '@mui/material'
@@ -8,7 +10,7 @@ import { APP_ROUTES } from '../constants/routes'
 /**
  * 404 Not Found Page
  */
-const NotFound = () => {
+const NotFound = (): React.JSX.Element => {
   const navigate = useNavigate()
 
   return (

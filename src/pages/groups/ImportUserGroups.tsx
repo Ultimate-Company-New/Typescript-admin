@@ -1,3 +1,4 @@
+import type React from 'react'
 import { useState, useCallback } from 'react'
 
 import { useNavigate } from 'react-router-dom'
@@ -33,7 +34,6 @@ import { DataGrid, type GridColDef } from '@mui/x-data-grid'
 
 import { Header, Subheader } from '../../components'
 import { APP_ROUTES } from '../../constants/routes'
-import styles from './UserGroups.module.scss'
 
 /**
  * Interface for parsed user group data from Excel/CSV
@@ -69,7 +69,7 @@ interface BulkUserGroupImportRequest {
  * - Set max records limit
  * - Validate and submit bulk import
  */
-const ImportUserGroups = () => {
+const ImportUserGroups = (): React.JSX.Element => {
   const navigate = useNavigate()
   const [file, setFile] = useState<File | null>(null)
   const [importData, setImportData] = useState<ImportUserGroupData[]>([])
@@ -80,7 +80,7 @@ const ImportUserGroups = () => {
   /**
    * Download Excel template with sample data
    */
-  const handleDownloadTemplate = () => {
+  const handleDownloadTemplate = (): void => {
     const templateData = [
       {
         name: 'Administrators',
@@ -122,35 +122,9 @@ const ImportUserGroups = () => {
   }
 
   /**
-   * Handle file upload and parse CSV/Excel
-   */
-  const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const uploadedFile = event.target.files?.[0]
-    if (!uploadedFile) return
-
-    // Validate file type
-    const validTypes = [
-      'text/csv',
-      'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    ]
-    if (
-      !validTypes.includes(uploadedFile.type) &&
-      !uploadedFile.name.endsWith('.csv') &&
-      !uploadedFile.name.endsWith('.xlsx')
-    ) {
-      toast.error('Please upload a valid CSV or Excel file')
-      return
-    }
-
-    setFile(uploadedFile)
-    parseFile(uploadedFile)
-  }, [])
-
-  /**
    * Parse CSV/Excel file
    */
-  const parseFile = (file: File) => {
+  const parseFile = useCallback((file: File): void => {
     setIsLoading(true)
     const reader = new FileReader()
 
@@ -166,7 +140,7 @@ const ImportUserGroups = () => {
         }
 
         // Parse CSV
-        const headers = lines[0].split(',').map(h => h.trim())
+        const _headers = lines[0].split(',').map(h => h.trim())
         const parsedData: ImportUserGroupData[] = []
 
         for (let i = 1; i < Math.min(lines.length, maxRecords + 1); i++) {
@@ -196,8 +170,7 @@ const ImportUserGroups = () => {
 
         setImportData(parsedData)
         toast.success(`Parsed ${parsedData.length} records successfully!`)
-      } catch (error) {
-        console.error('Error parsing file:', error)
+      } catch {
         toast.error('Failed to parse file. Please check the format.')
       } finally {
         setIsLoading(false)
@@ -210,12 +183,38 @@ const ImportUserGroups = () => {
     }
 
     reader.readAsText(file)
-  }
+  }, [maxRecords])
+
+  /**
+   * Handle file upload and parse CSV/Excel
+   */
+  const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const uploadedFile = event.target.files?.[0]
+    if (!uploadedFile) return
+
+    // Validate file type
+    const validTypes = [
+      'text/csv',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    ]
+    if (
+      !validTypes.includes(uploadedFile.type) &&
+      !uploadedFile.name.endsWith('.csv') &&
+      !uploadedFile.name.endsWith('.xlsx')
+    ) {
+      toast.error('Please upload a valid CSV or Excel file')
+      return
+    }
+
+    setFile(uploadedFile)
+    parseFile(uploadedFile)
+  }, [parseFile])
 
   /**
    * Clear uploaded file and data
    */
-  const handleClearFile = () => {
+  const handleClearFile = (): void => {
     setFile(null)
     setImportData([])
     toast.info('File cleared')
@@ -237,7 +236,7 @@ const ImportUserGroups = () => {
   /**
    * Submit bulk import to API
    */
-  const handleSubmit = async () => {
+  const handleSubmit = async (): Promise<void> => {
     if (importData.length === 0) {
       toast.error('No data to import')
       return
@@ -252,13 +251,16 @@ const ImportUserGroups = () => {
 
     setIsLoading(true)
     try {
-      const jsonData = generateImportJSON()
+      const _jsonData = generateImportJSON()
 
-      // TODO: Call API endpoint
-      console.log('JSON to be sent to API:', JSON.stringify(jsonData, null, 2))
+      // TODO: Call API endpoint with _jsonData
 
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      await new Promise<void>(resolve => {
+        setTimeout(() => {
+          resolve()
+        }, 1000)
+      })
 
       toast.success(`Successfully imported ${importData.length} user groups!`)
 
@@ -266,8 +268,7 @@ const ImportUserGroups = () => {
       setTimeout(() => {
         navigate(APP_ROUTES.DASHBOARD.GROUPS)
       }, 1500)
-    } catch (error) {
-      console.error('Import failed:', error)
+    } catch {
       toast.error('Failed to import user groups')
     } finally {
       setIsLoading(false)
@@ -309,16 +310,17 @@ const ImportUserGroups = () => {
       width: 120,
       align: 'center',
       headerAlign: 'center',
-      valueGetter: value => (Array.isArray(value) ? value.length : 0),
+      valueGetter: (value: unknown): number => (Array.isArray(value) ? value.length : 0),
     },
     {
       field: 'errors',
       headerName: 'Status',
       width: 120,
       renderCell: params => {
-        if (params.row.errors && params.row.errors.length > 0) {
+        const rowData = params.row as ImportUserGroupData
+        if (rowData.errors && rowData.errors.length > 0) {
           return (
-            <Tooltip title={params.row.errors.join(', ')}>
+            <Tooltip title={rowData.errors.join(', ')}>
               <Chip label="Error" color="error" size="small" />
             </Tooltip>
           )
@@ -403,7 +405,11 @@ const ImportUserGroups = () => {
             <ToggleButtonGroup
               value={viewMode}
               exclusive
-              onChange={(_, newMode) => newMode && setViewMode(newMode)}
+              onChange={(_, newMode) => {
+                if (newMode) {
+                  setViewMode(newMode)
+                }
+              }}
               className="import-user-groups-page__view-toggle"
             >
               <ToggleButton value="grid">
@@ -451,16 +457,17 @@ const ImportUserGroups = () => {
                 <DataGrid
                   rows={importData}
                   columns={columns}
-                  getRowId={row => row.rowNumber}
+                  getRowId={(row: ImportUserGroupData) => row.rowNumber}
                   pageSizeOptions={[10, 25, 50, 100]}
                   initialState={{
                     pagination: { paginationModel: { pageSize: 25 } },
                   }}
                   disableRowSelectionOnClick
                   autoHeight
-                  getRowClassName={params =>
-                    params.row.errors && params.row.errors.length > 0 ? 'import-user-groups-page__error-row' : ''
-                  }
+                  getRowClassName={params => {
+                    const rowData = params.row
+                    return rowData.errors && rowData.errors.length > 0 ? 'import-user-groups-page__error-row' : ''
+                  }}
                 />
               </Box>
             ) : (

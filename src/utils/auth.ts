@@ -28,7 +28,7 @@ export const decodeJWT = (token: string): JWTPayload | null => {
         .join(''),
     )
 
-    return JSON.parse(jsonPayload)
+    return JSON.parse(jsonPayload) as JWTPayload
   } catch (error) {
     // eslint-disable-next-line no-console -- Error logging for JWT decode failures
     console.error('Failed to decode JWT:', error)

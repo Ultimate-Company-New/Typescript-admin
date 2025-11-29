@@ -70,9 +70,9 @@ export const getLeadGridColumns = (onToggleLead: (leadId: number) => void): Grid
     filterable: false,
     width: 0,
     minWidth: 0,
-    valueGetter: (value, row: unknown) => {
-      const rowData = row as { leadId?: number; lead?: { leadId?: number } }
-      return rowData.leadId ?? rowData.lead?.leadId ?? ''
+    valueGetter: (value, row: LeadData) => {
+      const rowData = row as LeadData & { leadId?: number }
+      return rowData.leadId ?? rowData.lead.leadId
     },
   },
   {
@@ -82,12 +82,12 @@ export const getLeadGridColumns = (onToggleLead: (leadId: number) => void): Grid
     minWidth: 140,
     align: 'center',
     headerAlign: 'center',
-    valueGetter: (value, row: unknown) => {
-      const rowData = row as { leadStatus?: string; lead?: { leadStatus?: string } }
-      return rowData.leadStatus ?? rowData.lead?.leadStatus ?? ''
+    valueGetter: (value, row: LeadData) => {
+      const rowData = row as LeadData & { leadStatus?: string }
+      return rowData.leadStatus ?? rowData.lead.leadStatus
     },
-    renderCell: (params: GridRenderCellParams) => {
-      const status = params.value
+    renderCell: (params: GridRenderCellParams<LeadData>) => {
+      const status = params.value as string
       let color: 'success' | 'warning' | 'error' | 'info' | 'default' = 'default'
 
       // Map status to colors
@@ -102,7 +102,11 @@ export const getLeadGridColumns = (onToggleLead: (leadId: number) => void): Grid
       }
 
       return (
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', width: '100%' }}>
+        <Box sx={{ display: 'flex',
+alignItems: 'center',
+justifyContent: 'center',
+height: '100%',
+width: '100%' }}>
           <Chip label={status} color={color} size="small" />
         </Box>
       )
@@ -114,10 +118,15 @@ export const getLeadGridColumns = (onToggleLead: (leadId: number) => void): Grid
     flex: 1,
     minWidth: 120,
     headerAlign: 'left',
-    valueGetter: (value, row: any) => row.firstName || row.lead?.firstName || '',
-    renderCell: (params: GridRenderCellParams) => (
-      <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-        <RenderLongCellItem columnWidth={params.colDef.computedWidth} value={params.value} />
+    valueGetter: (value, row: LeadData) => {
+      const rowData = row as LeadData & { firstName?: string }
+      return rowData.firstName ?? rowData.lead.firstName
+    },
+    renderCell: (params: GridRenderCellParams<LeadData>) => (
+      <Box sx={{ display: 'flex',
+alignItems: 'center',
+height: '100%' }}>
+        <RenderLongCellItem columnWidth={params.colDef.computedWidth} value={params.value as string} />
       </Box>
     ),
   },
@@ -127,10 +136,15 @@ export const getLeadGridColumns = (onToggleLead: (leadId: number) => void): Grid
     flex: 1,
     minWidth: 120,
     headerAlign: 'left',
-    valueGetter: (value, row: any) => row.lastName || row.lead?.lastName || '',
-    renderCell: (params: GridRenderCellParams) => (
-      <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-        <RenderLongCellItem columnWidth={params.colDef.computedWidth} value={params.value} />
+    valueGetter: (value, row: LeadData) => {
+      const rowData = row as LeadData & { lastName?: string }
+      return rowData.lastName ?? rowData.lead.lastName
+    },
+    renderCell: (params: GridRenderCellParams<LeadData>) => (
+      <Box sx={{ display: 'flex',
+alignItems: 'center',
+height: '100%' }}>
+        <RenderLongCellItem columnWidth={params.colDef.computedWidth} value={params.value as string} />
       </Box>
     ),
   },
@@ -140,10 +154,15 @@ export const getLeadGridColumns = (onToggleLead: (leadId: number) => void): Grid
     flex: 1.4,
     minWidth: 200,
     headerAlign: 'left',
-    valueGetter: (value, row: any) => row.email || row.lead?.email || '',
-    renderCell: (params: GridRenderCellParams) => (
-      <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-        <RenderLongCellItem columnWidth={params.colDef.computedWidth} value={params.value} />
+    valueGetter: (value, row: LeadData) => {
+      const rowData = row as LeadData & { email?: string }
+      return rowData.email ?? rowData.lead.email
+    },
+    renderCell: (params: GridRenderCellParams<LeadData>) => (
+      <Box sx={{ display: 'flex',
+alignItems: 'center',
+height: '100%' }}>
+        <RenderLongCellItem columnWidth={params.colDef.computedWidth} value={params.value as string} />
       </Box>
     ),
   },
@@ -153,9 +172,14 @@ export const getLeadGridColumns = (onToggleLead: (leadId: number) => void): Grid
     flex: 0.9,
     minWidth: 140,
     headerAlign: 'left',
-    valueGetter: (value, row: any) => formatPhone(row.phone || row.lead?.phone || ''),
-    renderCell: (params: GridRenderCellParams) => (
-      <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>{params.value}</Box>
+    valueGetter: (value, row: LeadData) => {
+      const rowData = row as LeadData & { phone?: string }
+      return formatPhone(rowData.phone ?? rowData.lead.phone)
+    },
+    renderCell: (params: GridRenderCellParams<LeadData>) => (
+      <Box sx={{ display: 'flex',
+alignItems: 'center',
+height: '100%' }}>{params.value as string}</Box>
     ),
   },
   {
@@ -164,10 +188,15 @@ export const getLeadGridColumns = (onToggleLead: (leadId: number) => void): Grid
     flex: 1.1,
     minWidth: 150,
     headerAlign: 'left',
-    valueGetter: (value, row: any) => row.company || row.lead?.company || '',
-    renderCell: (params: GridRenderCellParams) => (
-      <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-        <RenderLongCellItem columnWidth={params.colDef.computedWidth} value={params.value} />
+    valueGetter: (value, row: LeadData) => {
+      const rowData = row as LeadData & { company?: string }
+      return rowData.company ?? rowData.lead.company
+    },
+    renderCell: (params: GridRenderCellParams<LeadData>) => (
+      <Box sx={{ display: 'flex',
+alignItems: 'center',
+height: '100%' }}>
+        <RenderLongCellItem columnWidth={params.colDef.computedWidth} value={params.value as string} />
       </Box>
     ),
   },
@@ -177,10 +206,15 @@ export const getLeadGridColumns = (onToggleLead: (leadId: number) => void): Grid
     flex: 1,
     minWidth: 130,
     headerAlign: 'left',
-    valueGetter: (value, row: any) => row.title || row.lead?.title || '',
-    renderCell: (params: GridRenderCellParams) => (
-      <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-        <RenderLongCellItem columnWidth={params.colDef.computedWidth} value={params.value} />
+    valueGetter: (value, row: LeadData) => {
+      const rowData = row as LeadData & { title?: string }
+      return rowData.title ?? rowData.lead.title
+    },
+    renderCell: (params: GridRenderCellParams<LeadData>) => (
+      <Box sx={{ display: 'flex',
+alignItems: 'center',
+height: '100%' }}>
+        <RenderLongCellItem columnWidth={params.colDef.computedWidth} value={params.value as string} />
       </Box>
     ),
   },
@@ -192,33 +226,24 @@ export const getLeadGridColumns = (onToggleLead: (leadId: number) => void): Grid
     headerAlign: 'left',
     valueGetter: (value, row: LeadData) => {
       const addr = row.address
-      if (!addr) return '—'
-
       // Only show city and state in the grid
-      const parts = []
+      const parts: string[] = []
       if (addr.city) parts.push(addr.city)
       if (addr.state) parts.push(addr.state)
 
       return parts.length > 0 ? parts.join(', ') : '—'
     },
-    renderCell: (params: GridRenderCellParams) => {
-      const addr = params.row.address
-      if (!addr) {
-        return (
-          <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', gap: '8px' }}>
-            <LocationIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
-            <span>—</span>
-          </Box>
-        )
-      }
+    renderCell: (params: GridRenderCellParams<LeadData>) => {
+      const rowData = params.row
+      const addr = rowData.address
 
       // Build full address with all parts on separate lines
-      const addressParts = []
+      const addressParts: string[] = []
       if (addr.streetAddress) addressParts.push(addr.streetAddress)
       if (addr.streetAddress2) addressParts.push(addr.streetAddress2)
       if (addr.streetAddress3) addressParts.push(addr.streetAddress3)
 
-      const cityStateZip = []
+      const cityStateZip: string[] = []
       if (addr.city) cityStateZip.push(addr.city)
       if (addr.state) cityStateZip.push(addr.state)
       if (addr.postalCode) cityStateZip.push(addr.postalCode)
@@ -228,7 +253,7 @@ export const getLeadGridColumns = (onToggleLead: (leadId: number) => void): Grid
       }
 
       const fullAddress = addressParts.join('\n')
-      const shortAddress = params.value
+      const shortAddress = params.value as string
 
       return (
         <Tooltip title={<div style={{ whiteSpace: 'pre-line' }}>{fullAddress}</div>} placement="top">
@@ -243,8 +268,12 @@ export const getLeadGridColumns = (onToggleLead: (leadId: number) => void): Grid
               whiteSpace: 'nowrap',
             }}
           >
-            <LocationIcon sx={{ fontSize: 18, color: 'text.secondary', flexShrink: 0 }} />
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shortAddress}</span>
+            <LocationIcon sx={{ fontSize: 18,
+color: 'text.secondary',
+flexShrink: 0 }} />
+            <span style={{ overflow: 'hidden',
+textOverflow: 'ellipsis',
+whiteSpace: 'nowrap' }}>{shortAddress}</span>
           </Box>
         </Tooltip>
       )
@@ -256,9 +285,14 @@ export const getLeadGridColumns = (onToggleLead: (leadId: number) => void): Grid
     flex: 0.7,
     minWidth: 110,
     headerAlign: 'left',
-    valueGetter: (value, row: any) => row.companySize || row.lead?.companySize || '',
-    renderCell: (params: GridRenderCellParams) => (
-      <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>{params.value}</Box>
+    valueGetter: (value, row: LeadData) => {
+      const rowData = row as LeadData & { companySize?: number }
+      return rowData.companySize ?? rowData.lead.companySize
+    },
+    renderCell: (params: GridRenderCellParams<LeadData>) => (
+      <Box sx={{ display: 'flex',
+alignItems: 'center',
+height: '100%' }}>{params.value as number}</Box>
     ),
   },
   {
@@ -267,9 +301,14 @@ export const getLeadGridColumns = (onToggleLead: (leadId: number) => void): Grid
     flex: 0.9,
     minWidth: 150,
     headerAlign: 'left',
-    valueGetter: (value, row: any) => formatCurrency(row.annualRevenue || row.lead?.annualRevenue || ''),
-    renderCell: (params: GridRenderCellParams) => (
-      <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>{params.value}</Box>
+    valueGetter: (value, row: LeadData) => {
+      const rowData = row as LeadData & { annualRevenue?: string }
+      return formatCurrency(rowData.annualRevenue ?? rowData.lead.annualRevenue)
+    },
+    renderCell: (params: GridRenderCellParams<LeadData>) => (
+      <Box sx={{ display: 'flex',
+alignItems: 'center',
+height: '100%' }}>{params.value as string}</Box>
     ),
   },
   {
@@ -280,12 +319,13 @@ export const getLeadGridColumns = (onToggleLead: (leadId: number) => void): Grid
     headerAlign: 'left',
     valueGetter: (value, row: LeadData) => {
       const agent = row.assignedAgent
-      if (!agent) return '—'
-      return `${agent.firstName || ''} ${agent.lastName || ''} (${agent.loginName || ''})`.trim() || '—'
+      return `${agent.firstName} ${agent.lastName} (${agent.loginName})`.trim() || '—'
     },
-    renderCell: (params: GridRenderCellParams) => (
-      <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-        <RenderLongCellItem columnWidth={params.colDef.computedWidth} value={params.value} />
+    renderCell: (params: GridRenderCellParams<LeadData>) => (
+      <Box sx={{ display: 'flex',
+alignItems: 'center',
+height: '100%' }}>
+        <RenderLongCellItem columnWidth={params.colDef.computedWidth} value={params.value as string} />
       </Box>
     ),
   },
@@ -296,10 +336,10 @@ export const getLeadGridColumns = (onToggleLead: (leadId: number) => void): Grid
     flex: 1.2,
     sortable: false,
     filterable: false,
-    renderCell: (params: GridRenderCellParams<LeadData>) => {
-      const rowLead = params.row.lead ?? ({ leadId: params.row.leadId } as LeadData['lead'])
-      const resolvedLeadId = params.row.leadId ?? rowLead?.leadId
-      const isDeleted = Boolean(params.row.isDeleted ?? rowLead?.deleted)
+    renderCell: (params: GridRenderCellParams<LeadData & { leadId?: number; isDeleted?: boolean }>) => {
+      const rowData = params.row as LeadData & { leadId?: number; isDeleted?: boolean }
+      const resolvedLeadId = rowData.leadId ?? rowData.lead.leadId
+      const isDeleted = Boolean(rowData.isDeleted ?? rowData.lead.deleted)
 
       if (isDeleted) {
         return (
@@ -308,11 +348,10 @@ export const getLeadGridColumns = (onToggleLead: (leadId: number) => void): Grid
               href="#"
               onClick={e => {
                 e.preventDefault()
-                if (resolvedLeadId != null) {
-                  onToggleLead(resolvedLeadId)
-                }
+                onToggleLead(resolvedLeadId)
               }}
-              sx={{ cursor: 'pointer', color: 'success.main' }}
+              sx={{ cursor: 'pointer',
+color: 'success.main' }}
             >
               Activate
             </Link>
@@ -321,25 +360,25 @@ export const getLeadGridColumns = (onToggleLead: (leadId: number) => void): Grid
       }
 
       return (
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ display: 'flex',
+gap: '12px' }}>
           <Link
-            href={`${APP_ROUTES.DASHBOARD.ADD_LEAD}?leadId=${resolvedLeadId ?? ''}&isView`}
+            href={`${APP_ROUTES.DASHBOARD.ADD_LEAD}?leadId=${resolvedLeadId}&isView`}
             sx={{ cursor: 'pointer' }}
           >
             View
           </Link>
-          <Link href={`${APP_ROUTES.DASHBOARD.ADD_LEAD}?leadId=${resolvedLeadId ?? ''}`} sx={{ cursor: 'pointer' }}>
+          <Link href={`${APP_ROUTES.DASHBOARD.ADD_LEAD}?leadId=${resolvedLeadId}`} sx={{ cursor: 'pointer' }}>
             Edit
           </Link>
           <Link
             href="#"
             onClick={e => {
               e.preventDefault()
-              if (resolvedLeadId != null) {
-                onToggleLead(resolvedLeadId)
-              }
+              onToggleLead(resolvedLeadId)
             }}
-            sx={{ cursor: 'pointer', color: 'error.main' }}
+            sx={{ cursor: 'pointer',
+color: 'error.main' }}
           >
             Deactivate
           </Link>

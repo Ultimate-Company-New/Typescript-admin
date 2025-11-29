@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 
 import { Box, Checkbox, Divider, FormControlLabel, Grid, Paper, Typography } from '@mui/material'
 
-import styles from '../../../pages/users/Users.module.scss'
+import styles from '../../../styles/Users.module.scss'
 
 export interface Permission {
   permissionId: number

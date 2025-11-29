@@ -10,9 +10,8 @@ import { Box, Container, Divider, Link, Stack } from '@mui/material'
 import { loginApi } from '../../api/loginApi'
 import { BlueButton, Header, Logo, PasswordInput, Subheader, TextFieldInput } from '../../components'
 import { APP_ROUTES } from '../../constants/routes'
-import { loginSchema, type LoginFormData } from '../../utils/validationSchemas'
-
 import styles from '../../styles/Login.module.scss'
+import { loginSchema, type LoginFormData } from '../../utils/validationSchemas'
 
 /**
  * Login Page Component

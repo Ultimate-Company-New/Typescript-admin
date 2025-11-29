@@ -1,7 +1,9 @@
-import { Code as CodeIcon, Api as ApiIcon, Book as BookIcon, Security as SecurityIcon } from '@mui/icons-material'
-import { Box, Typography, Card, CardContent, Grid, List, ListItem, ListItemIcon, ListItemText } from '@mui/material'
+import type React from 'react'
 
-const DeveloperDocs = () => (
+import { Api as ApiIcon, Book as BookIcon, Code as CodeIcon, Security as SecurityIcon } from '@mui/icons-material'
+import { Box, Card, CardContent, Grid, List, ListItem, ListItemIcon, ListItemText, Typography } from '@mui/material'
+
+const DeveloperDocs = (): React.JSX.Element => (
   <Box sx={{ p: 3 }}>
     <Typography variant="h4" gutterBottom>
       Developer Documentation
@@ -14,8 +16,12 @@ const DeveloperDocs = () => (
       <Grid item xs={12} md={6}>
         <Card>
           <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <ApiIcon sx={{ fontSize: 32, color: 'primary.main', mr: 2 }} />
+            <Box sx={{ display: 'flex',
+alignItems: 'center',
+mb: 2 }}>
+              <ApiIcon sx={{ fontSize: 32,
+color: 'primary.main',
+mr: 2 }} />
               <Typography variant="h6">API Reference</Typography>
             </Box>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -48,8 +54,12 @@ const DeveloperDocs = () => (
       <Grid item xs={12} md={6}>
         <Card>
           <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <BookIcon sx={{ fontSize: 32, color: 'primary.main', mr: 2 }} />
+            <Box sx={{ display: 'flex',
+alignItems: 'center',
+mb: 2 }}>
+              <BookIcon sx={{ fontSize: 32,
+color: 'primary.main',
+mr: 2 }} />
               <Typography variant="h6">Getting Started</Typography>
             </Box>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -82,8 +92,12 @@ const DeveloperDocs = () => (
       <Grid item xs={12} md={6}>
         <Card>
           <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <SecurityIcon sx={{ fontSize: 32, color: 'primary.main', mr: 2 }} />
+            <Box sx={{ display: 'flex',
+alignItems: 'center',
+mb: 2 }}>
+              <SecurityIcon sx={{ fontSize: 32,
+color: 'primary.main',
+mr: 2 }} />
               <Typography variant="h6">Security</Typography>
             </Box>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -116,8 +130,12 @@ const DeveloperDocs = () => (
       <Grid item xs={12} md={6}>
         <Card>
           <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <CodeIcon sx={{ fontSize: 32, color: 'primary.main', mr: 2 }} />
+            <Box sx={{ display: 'flex',
+alignItems: 'center',
+mb: 2 }}>
+              <CodeIcon sx={{ fontSize: 32,
+color: 'primary.main',
+mr: 2 }} />
               <Typography variant="h6">SDKs & Libraries</Typography>
             </Box>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>

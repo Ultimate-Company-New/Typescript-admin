@@ -3,9 +3,8 @@ import React from 'react'
 import { Box } from '@mui/material'
 import { DataGrid, type DataGridProps, type GridValidRowModel } from '@mui/x-data-grid'
 
-import { type PaginatedGridInterface } from '../../types/grid.types'
-
 import styles from '../../styles/DataGrid.module.scss'
+import { type PaginatedGridInterface } from '../../types/grid.types'
 
 /**
  * Extended props for StyledDataGrid with pagination

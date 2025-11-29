@@ -1,5 +1,5 @@
 declare module 'react-input-mask' {
-  import { Component, InputHTMLAttributes } from 'react'
+  import { Component, type InputHTMLAttributes } from 'react'
 
   export interface InputState {
     value: string
@@ -45,4 +45,3 @@ declare module 'react-input-mask' {
 
   export default class InputMask extends Component<Props> {}
 }
-

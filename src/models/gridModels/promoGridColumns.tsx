@@ -33,7 +33,7 @@ export const getPromoGridColumns = (
         }}
       >
         <RenderLongCellItem
-          columnWidth={params.colDef.computedWidth ?? 0}
+          columnWidth={params.colDef.computedWidth}
           value={params.value as string | undefined}
         />
       </Box>
@@ -54,7 +54,7 @@ export const getPromoGridColumns = (
         }}
       >
         <RenderLongCellItem
-          columnWidth={params.colDef.computedWidth ?? 0}
+          columnWidth={params.colDef.computedWidth}
           value={params.value as string | undefined}
         />
       </Box>

@@ -40,7 +40,6 @@ import {
 import { styled, useTheme } from '@mui/material/styles'
 
 import { APP_ROUTES } from '../../constants/routes'
-
 import styles from '../../styles/Layouts.module.scss'
 
 interface DashboardSidebarProps {

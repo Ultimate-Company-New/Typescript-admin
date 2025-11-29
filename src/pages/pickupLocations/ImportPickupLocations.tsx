@@ -1,6 +1,8 @@
+import type React from 'react'
+
 import { Box, Typography } from '@mui/material'
 
-const ImportPickupLocations = () => (
+const ImportPickupLocations = (): React.JSX.Element => (
   <Box sx={{ p: 3 }}>
     <Typography variant="h4" gutterBottom>
       Import Pickup Locations

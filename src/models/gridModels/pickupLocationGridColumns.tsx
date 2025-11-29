@@ -6,6 +6,37 @@ import { RenderLongCellItem } from '../../components/datagrid'
 import { APP_ROUTES } from '../../constants/routes'
 
 /**
+ * Pickup Location data structure matching API response
+ */
+export interface PickupLocationData {
+  pickupLocationId?: number
+  pickupLocation?: {
+    pickupLocationId: number
+    deleted?: boolean
+    shipRocketPickupLocationId?: string
+    addressNickName?: string
+  }
+  addressNickName?: string
+  shipRocketPickupLocationId?: string
+  nameOnAddress?: string
+  phoneOnAddress?: string
+  emailOnAddress?: string
+  isDeleted?: boolean
+  deleted?: boolean
+  address?: {
+    nameOnAddress?: string
+    phoneOnAddress?: string
+    emailOnAddress?: string
+    city?: string
+    state?: string
+    streetAddress?: string
+    streetAddress2?: string
+    streetAddress3?: string
+    postalCode?: string
+  }
+}
+
+/**
  * Format phone number with () and -
  */
 const formatPhone = (phone: string): string => {
@@ -34,17 +65,17 @@ export const getPickupLocationGridColumns = (
     minWidth: 200,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: unknown) => {
-      const rowData = row as { addressNickName?: string; pickupLocation?: { addressNickName?: string } }
+    valueGetter: (value, row: PickupLocationData) => {
+      const rowData = row
       return rowData.addressNickName ?? rowData.pickupLocation?.addressNickName ?? ''
     },
-    renderCell: (params: GridRenderCellParams) => (
+    renderCell: (params: GridRenderCellParams<PickupLocationData>) => (
       <Box sx={{ display: 'flex',
         alignItems: 'center',
         height: '100%' }}>
         <RenderLongCellItem
           columnWidth={params.colDef.computedWidth}
-          value={params.value}
+          value={params.value as string}
         />
       </Box>
     ),
@@ -56,19 +87,21 @@ export const getPickupLocationGridColumns = (
     minWidth: 220,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: any) => {
-      const addr = row.address
+    valueGetter: (value, row: PickupLocationData) => {
+      const rowData = row
+      const addr = rowData.address
       if (!addr) return '—'
 
       // Only show city and state in the grid
-      const parts = []
+      const parts: string[] = []
       if (addr.city) parts.push(addr.city)
       if (addr.state) parts.push(addr.state)
 
       return parts.length > 0 ? parts.join(', ') : '—'
     },
-    renderCell: (params: GridRenderCellParams) => {
-      const addr = params.row.address
+    renderCell: (params: GridRenderCellParams<PickupLocationData>) => {
+      const rowData = params.row
+      const addr = rowData.address
       if (!addr) {
         return (
           <Box sx={{ display: 'flex',
@@ -83,12 +116,12 @@ export const getPickupLocationGridColumns = (
       }
 
       // Build full address with all parts on separate lines
-      const addressParts = []
+      const addressParts: string[] = []
       if (addr.streetAddress) addressParts.push(addr.streetAddress)
       if (addr.streetAddress2) addressParts.push(addr.streetAddress2)
       if (addr.streetAddress3) addressParts.push(addr.streetAddress3)
 
-      const cityStateZip = []
+      const cityStateZip: string[] = []
       if (addr.city) cityStateZip.push(addr.city)
       if (addr.state) cityStateZip.push(addr.state)
       if (addr.postalCode) cityStateZip.push(addr.postalCode)
@@ -98,7 +131,7 @@ export const getPickupLocationGridColumns = (
       }
 
       const fullAddress = addressParts.join('\n')
-      const shortAddress = params.value
+      const shortAddress = params.value as string
 
       return (
         <Tooltip title={<div style={{ whiteSpace: 'pre-line' }}>{fullAddress}</div>} placement="top">
@@ -133,14 +166,17 @@ export const getPickupLocationGridColumns = (
     minWidth: 200,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: any) => row.address?.nameOnAddress || row.nameOnAddress || '',
-    renderCell: (params: GridRenderCellParams) => (
+    valueGetter: (value, row: PickupLocationData) => {
+      const rowData = row
+      return rowData.address?.nameOnAddress ?? rowData.nameOnAddress ?? ''
+    },
+    renderCell: (params: GridRenderCellParams<PickupLocationData>) => (
       <Box sx={{ display: 'flex',
         alignItems: 'center',
         height: '100%' }}>
         <RenderLongCellItem
           columnWidth={params.colDef.computedWidth}
-          value={params.value}
+          value={params.value as string}
         />
       </Box>
     ),
@@ -151,8 +187,9 @@ export const getPickupLocationGridColumns = (
     width: 160,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: any) => {
-      const phone = row.address?.phoneOnAddress || row.phoneOnAddress || ''
+    valueGetter: (value, row: PickupLocationData) => {
+      const rowData = row
+      const phone = rowData.address?.phoneOnAddress ?? rowData.phoneOnAddress ?? ''
       return formatPhone(phone)
     },
     renderCell: (params: GridRenderCellParams) => (
@@ -170,14 +207,17 @@ export const getPickupLocationGridColumns = (
     minWidth: 220,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: any) => row.address?.emailOnAddress || row.emailOnAddress || '—',
+    valueGetter: (value, row: PickupLocationData) => {
+      const rowData = row
+      return rowData.address?.emailOnAddress ?? rowData.emailOnAddress ?? '—'
+    },
     renderCell: (params: GridRenderCellParams) => (
       <Box sx={{ display: 'flex',
         alignItems: 'center',
         height: '100%' }}>
         <RenderLongCellItem
           columnWidth={params.colDef.computedWidth}
-          value={params.value || '—'}
+          value={(params.value as string) || '—'}
         />
       </Box>
     ),
@@ -188,7 +228,10 @@ export const getPickupLocationGridColumns = (
     width: 150,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: any) => row.shipRocketPickupLocationId || row.pickupLocation?.shipRocketPickupLocationId || '—',
+    valueGetter: (value, row: PickupLocationData) => {
+      const rowData = row
+      return rowData.shipRocketPickupLocationId ?? rowData.pickupLocation?.shipRocketPickupLocationId ?? '—'
+    },
     renderCell: (params: GridRenderCellParams) => (
       <Box sx={{ display: 'flex',
         alignItems: 'center',
@@ -203,17 +246,20 @@ export const getPickupLocationGridColumns = (
     width: 200,
     sortable: false,
     filterable: false,
-    renderCell: (params: GridRenderCellParams) => {
-      const pickupLocationId = params.row.pickupLocationId || params.row.pickupLocation?.pickupLocationId
+    renderCell: (params: GridRenderCellParams<PickupLocationData>) => {
+      const rowData = params.row
+      const pickupLocationId = rowData.pickupLocationId ?? rowData.pickupLocation?.pickupLocationId
 
-      if (params.row.isDeleted || params.row.deleted || params.row.pickupLocation?.deleted) {
+      if (rowData.isDeleted ?? rowData.deleted ?? rowData.pickupLocation?.deleted) {
         return (
           <div>
             <Link
               href="#"
               onClick={e => {
                 e.preventDefault()
-                onTogglePickupLocation(pickupLocationId)
+                if (pickupLocationId != null) {
+                  onTogglePickupLocation(pickupLocationId)
+                }
               }}
               sx={{ cursor: 'pointer',
                 color: 'success.main' }}
@@ -243,7 +289,9 @@ export const getPickupLocationGridColumns = (
             href="#"
             onClick={e => {
               e.preventDefault()
-              onTogglePickupLocation(pickupLocationId)
+              if (pickupLocationId != null) {
+                onTogglePickupLocation(pickupLocationId)
+              }
             }}
             sx={{ cursor: 'pointer',
               color: 'error.main' }}

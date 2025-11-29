@@ -7,7 +7,7 @@ import { PERMISSIONS } from '../../../constants/appConstants'
 import { APP_ROUTES } from '../../../constants/routes'
 import { usePermissions } from '../../../hooks/usePermissions'
 import { type UserGroupResponseModel, type UserPermissionInfo } from '../../../models/UserModels'
-import styles from '../../../pages/users/Users.module.scss'
+import styles from '../../../styles/Users.module.scss'
 import { getRandomColor } from '../../datagrid/gridHelpers'
 
 import { PermissionsModal, UserGroupsModal } from './index'

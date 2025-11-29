@@ -236,7 +236,7 @@ const PickupLocationsModal = ({ open, onClose, locations, productTitle }: Pickup
                           emailOnAddress != null
 
                         // Debug: Log the data structure
-                        if ((import.meta.env.DEV as boolean) === true) {
+                        if (import.meta.env.DEV as boolean) {
                           // eslint-disable-next-line no-console -- Debug logging in development
                           console.log('Pickup Location Data:', {
                             item,

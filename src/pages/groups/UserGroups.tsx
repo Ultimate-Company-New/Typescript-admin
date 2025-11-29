@@ -1,4 +1,7 @@
+import type React from 'react'
 import { useState, useEffect, useMemo, useCallback } from 'react'
+
+import { toast } from 'react-toastify'
 
 import { Box } from '@mui/material'
 import { type GridColumnVisibilityModel, type GridToolbarProps, type GridSlotsComponent } from '@mui/x-data-grid'
@@ -21,6 +24,7 @@ import {
 } from '../../components/datagrid'
 import { getUserGroupGridColumns, type UserGroupData } from '../../models/gridModels/userGroupGridColumns'
 import { type PaginatedGridInterface } from '../../types/grid.types'
+
 import styles from './UserGroups.module.scss'
 
 /**
@@ -33,12 +37,12 @@ import styles from './UserGroups.module.scss'
  * - Responsive design
  */
 
-const UserGroups = () => {
+const UserGroups = (): React.JSX.Element => {
   const [rows, setRows] = useState<UserGroupData[]>([])
   const [loading, setLoading] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
   const [includeDeleted, setIncludeDeleted] = useState(false)
-  const [density, setDensity] = useState<GridDensityType>(getInitialDensity())
+  const [density, setDensity] = useState<GridDensityType>(getInitialDensity() as GridDensityType)
   const [activeFilterGroup, setActiveFilterGroup] = useState<FilterGroup>({
     logicOperator: LogicOperator.AND,
     filters: [],
@@ -69,7 +73,7 @@ const UserGroups = () => {
       const response = await userGroupApi.getUserGroups({
         start: paginationModel.start,
         end: paginationModel.end,
-        includeDeleted: includeDeleted,
+        includeDeleted,
         logicOperator: activeFilterGroup.logicOperator,
         filters: activeFilterGroup.filters,
       })
@@ -78,16 +82,16 @@ const UserGroups = () => {
       const mappedData = (response.data || []).map(
         (group: UserGroupResponseModel & { groupId?: number; groupName?: string; memberCount?: number }) => ({
           ...group,
-          groupId: group.groupId || group.userGroupId,
-          groupName: group.groupName || group.name,
-          memberCount: group.memberCount || group.userCount || (group.userIds ? group.userIds.length : 0),
+          groupId: group.groupId ?? group.userGroupId,
+          groupName: group.groupName ?? group.name,
+          memberCount: group.memberCount ?? group.userCount ?? (group.userIds ? group.userIds.length : 0),
         }),
       )
 
       setRows(mappedData)
-      setTotalCount(response.totalDataCount || 0)
-    } catch (error) {
-      console.error('Failed to fetch user groups', error)
+      setTotalCount(response.totalDataCount ?? 0)
+    } catch {
+      toast.error('Failed to fetch user groups')
       setRows([])
       setTotalCount(0)
     } finally {
@@ -119,7 +123,7 @@ const UserGroups = () => {
 
   // Fetch user groups on mount and when pagination model changes
   useEffect(() => {
-    fetchUserGroups()
+    void fetchUserGroups()
   }, [fetchUserGroups])
 
   return (
@@ -141,22 +145,22 @@ const UserGroups = () => {
             density={density}
             columnVisibilityModel={columnVisibilityModel}
             onColumnVisibilityModelChange={model => {
-              setColumnVisibilityModel(model)
+              setColumnVisibilityModel(model as GridColumnVisibilityModel)
             }}
             paginationModel={{
               page: Math.floor(paginationModel.start / paginationModel.pageSize),
               pageSize: paginationModel.pageSize,
             }}
             onPaginationModelChange={model => {
-              handlePaginationModelChange(model, setPaginationModel)
+              void handlePaginationModelChange(model, setPaginationModel)
             }}
             onFilterModelChange={model => {
-              handleFilterModelChange(model, paginationModel, setPaginationModel)
+              void handleFilterModelChange(model, paginationModel, setPaginationModel)
             }}
             onSortModelChange={model => {
-              handleSortModelChange(model, setPaginationModel)
+              void handleSortModelChange(model, setPaginationModel)
             }}
-            getRowId={row => row.groupId || row.userGroupId}
+            getRowId={row => (row as UserGroupData).groupId ?? (row as UserGroupData).userGroupId}
             getRowClassName={params => getRowClassName<UserGroupData>(params)}
             slots={{
               toolbar: SimpleToolbar as GridSlotsComponent['toolbar'],

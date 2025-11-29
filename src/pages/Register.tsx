@@ -1,3 +1,4 @@
+import type React from 'react'
 import { useState } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -27,7 +28,7 @@ import { registrationSchema, type RegistrationFormData } from '../utils/validati
  * - Form validation with Zod
  * - Toast notifications
  */
-const Register = () => {
+const Register = (): React.JSX.Element => {
   const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(false)
 
@@ -44,11 +45,10 @@ const Register = () => {
     },
   })
 
-  const onSubmit = async (data: RegistrationFormData) => {
+  const onSubmit = (_data: RegistrationFormData): void => {
     setIsLoading(true)
     try {
       // TODO: Implement registration API call
-      console.log('Registration data:', data)
 
       toast.success('Registration successful! Please check your email to confirm.')
 
@@ -56,8 +56,7 @@ const Register = () => {
       setTimeout(() => {
         navigate(APP_ROUTES.LOGIN)
       }, 2000)
-    } catch (error) {
-      console.error('Registration failed:', error)
+    } catch {
       toast.error('Registration failed. Please try again.')
     } finally {
       setIsLoading(false)
