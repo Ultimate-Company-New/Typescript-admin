@@ -92,6 +92,7 @@
     display: flex;
     flex-direction: column;
     transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid #e0e0e0; // Always show border for clear boundaries
 
     &:hover {
       transform: translateY(-4px);
@@ -99,11 +100,11 @@
     }
 
     &--selected {
-      border: 2px solid;
+      border: 2px solid; // Thicker border when selected
     }
 
     &--unselected {
-      border: 0;
+      border: 1px solid #e0e0e0; // Light border when not selected
     }
   }
 
@@ -116,11 +117,12 @@
 
   &__card-media {
     padding-top: 75%; // 4:3 aspect ratio
-    background-color: #e0e0e0; // Corresponds to MUI grey.200
+    background-color: #ffffff; // White background for images
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
+    border-bottom: 1px solid #e0e0e0; // Separator between image and text
   }
 
   &__card-logo {
@@ -129,8 +131,8 @@
     left: 0;
     width: 100%;
     height: 100%;
-    object-fit: contain;
-    padding: 16px; // Corresponds to MUI p: 2
+    object-fit: contain; // Maintain aspect ratio and fit within bounds
+    padding: 20px; // Padding around the logo for breathing room
   }
 
   &__card-placeholder {
@@ -145,6 +147,27 @@
     flex-grow: 1;
     display: flex;
     align-items: center;
+    justify-content: center;
+  }
+}
+
+// ============================================================================
+// Pagination Component Styles
+// ============================================================================
+
+.pagination-component {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 0;
+
+  &__count {
+    text-align: center;
+  }
+
+  &__controls {
+    display: flex;
     justify-content: center;
   }
 }

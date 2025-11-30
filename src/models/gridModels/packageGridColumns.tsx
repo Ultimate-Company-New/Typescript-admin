@@ -52,7 +52,7 @@ export const getPackageGridColumns = (
     minWidth: 180,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: PackageData) => {
+    valueGetter: (_value, row: PackageData) => {
       const rowData = row
       const length = rowData.length ?? rowData._package?.length ?? 0
       const breadth = rowData.breadth ?? rowData.width ?? rowData._package?.breadth ?? 0
@@ -66,7 +66,7 @@ export const getPackageGridColumns = (
     width: 120,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: PackageData) => {
+    valueGetter: (_value, row: PackageData) => {
       const rowData = row
       const weight = rowData.weight ?? rowData._package?.weight ?? 0
       return `${weight} kg`
@@ -78,7 +78,7 @@ export const getPackageGridColumns = (
     width: 150,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: PackageData) => {
+    valueGetter: (_value, row: PackageData) => {
       const rowData = row
       const price = rowData.pricePerUnit ?? rowData._package?.pricePerUnit ?? 0
       return `₹ ${price}`
@@ -91,7 +91,7 @@ export const getPackageGridColumns = (
     minWidth: 200,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: PackageData) => {
+    valueGetter: (_value, row: PackageData) => {
       const rowData = row
       return rowData.packageName ?? rowData._package?.packageName ?? '—'
     },
@@ -102,7 +102,7 @@ export const getPackageGridColumns = (
     width: 150,
     align: 'center',
     headerAlign: 'center',
-    valueGetter: (value, row: PackageData) => {
+    valueGetter: (_value, row: PackageData) => {
       const rowData = row
       return rowData.packageType ?? rowData._package?.packageType ?? ''
     },

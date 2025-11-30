@@ -191,7 +191,7 @@ export const getMessageGridColumns = (onToggleMessage?: (messageId: number) => v
     align: 'center',
     headerAlign: 'center',
     filterable: false,
-    valueGetter: (value, row: { userIds?: number[] }) =>
+    valueGetter: (_value, row: { userIds?: number[] }) =>
       // Calculate from userIds array length
       row.userIds?.length ?? 0,
     renderCell: (params: GridRenderCellParams) => (
@@ -215,7 +215,7 @@ export const getMessageGridColumns = (onToggleMessage?: (messageId: number) => v
     align: 'center',
     headerAlign: 'center',
     filterable: false,
-    valueGetter: (value, row: MessageData) =>
+    valueGetter: (_value, row: MessageData) =>
       // Calculate from userGroupIds array length
       row.userGroupIds?.length ?? 0,
     renderCell: (params: GridRenderCellParams) => (
@@ -237,7 +237,7 @@ export const getMessageGridColumns = (onToggleMessage?: (messageId: number) => v
     minWidth: 250,
     flex: 1.8,
     sortable: false,
-    valueGetter: (value, row: MessageData) => {
+    valueGetter: (_value, row: MessageData) => {
       const user = row.createdByUser
       if (!user) return '—'
       const name = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()

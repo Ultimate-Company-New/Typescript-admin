@@ -16,7 +16,7 @@ export interface TextFieldInputProps extends Omit<TextFieldProps, 'variant' | 'm
  */
 const TextFieldInput = forwardRef<HTMLDivElement, TextFieldInputProps>(
   (
-    { maxLength, variant = 'filled', margin = 'normal', fullWidth = true, InputLabelProps, inputProps, ...props },
+    { maxLength, variant = 'filled', margin = 'normal', fullWidth = true, InputLabelProps, InputProps, inputProps, ...props },
     ref,
   ) => (
     <TextField
@@ -35,6 +35,7 @@ const TextFieldInput = forwardRef<HTMLDivElement, TextFieldInputProps>(
       }}
       InputProps={{
         disableUnderline: true,
+        ...InputProps,
       }}
       sx={props.sx}
       {...props}

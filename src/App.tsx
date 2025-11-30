@@ -1,6 +1,6 @@
 import { RouterProvider } from 'react-router-dom'
 
-import { DevLogger } from './components/DevLogger'
+import { DevLogger } from './components/devlogger'
 import router from './routes'
 
 /**

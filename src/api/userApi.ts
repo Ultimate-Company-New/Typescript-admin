@@ -1,5 +1,4 @@
-import { type Permission } from '../components/users/components/UserPermissions'
-import { type UserRequestModel, type UserResponseModel, type PaginationBaseResponseModel } from '../models/UserModels'
+import { type PaginationBaseResponseModel, type UserRequestModel, type UserResponseModel } from '../models/UserModels'
 
 import axiosInstance from './axiosConfig'
 
@@ -92,12 +91,20 @@ export const confirmEmail = async (userId: number, token: string): Promise<void>
   await axiosInstance.post(`${API_ROUTES.CONFIRM_EMAIL}/${userId}?token=${encodeURIComponent(token)}`)
 }
 
+export interface Permission {
+  permissionId: number
+  permissionName: string
+  permissionCode: string
+  description: string
+  category: string
+}
+
 /**
  * Fetches all permissions available in the system
  */
 export const getAllPermissions = async (): Promise<Permission[]> => {
-  const response = await axiosInstance.get<Permission[]>(API_ROUTES.GET_ALL_PERMISSIONS)
-  return response.data
+  const response = await axiosInstance.get(API_ROUTES.GET_ALL_PERMISSIONS)
+  return response.data as Permission[]
 }
 
 export const userApi: UserApi = {

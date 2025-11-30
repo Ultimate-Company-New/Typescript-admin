@@ -2,24 +2,33 @@ import type React from 'react'
 import { useEffect, useMemo, useState } from 'react'
 
 import { Box } from '@mui/material'
-import { type GridColumnVisibilityModel, type GridSlotsComponent, type GridToolbarProps } from '@mui/x-data-grid'
+import {
+  type GridColumnVisibilityModel,
+  type GridFilterModel,
+  type GridPaginationModel,
+  type GridSlotsComponent,
+  type GridSortModel,
+  type GridToolbarProps,
+} from '@mui/x-data-grid'
 
 import { userApi } from '../../api/userApi'
 import {
   CustomNoRowsOverlay,
+  GridDensity,
   LogicOperator,
   SimpleToolbar,
   StyledDataGrid,
   createFetchFunction,
   createToggleFunction,
-  getInitialDensity,
   getRowClassName,
   handleFilterModelChange,
   handleIncludeDeletedChange,
   handlePaginationModelChange,
   handleSortModelChange,
+  type FilterCondition,
   type FilterGroup,
   type GridDensityType,
+  type LogicOperatorType,
 } from '../../components/datagrid'
 import { getUserGridColumns } from '../../models/gridModels/userGridColumns'
 import { type UserResponseModel } from '../../models/UserModels'
@@ -41,7 +50,7 @@ const Users = (): React.JSX.Element => {
   const [loading, setLoading] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
   const [includeDeleted, setIncludeDeleted] = useState(false)
-  const [density, setDensity] = useState<GridDensityType>(getInitialDensity())
+  const [density, setDensity] = useState<GridDensityType>(GridDensity.STANDARD)
   const [activeFilterGroup, setActiveFilterGroup] = useState<FilterGroup>({
     logicOperator: LogicOperator.AND,
     filters: [],
@@ -71,7 +80,13 @@ const Users = (): React.JSX.Element => {
           userId,
           async () => {
             await createFetchFunction(
-              async params => {
+              async (params: {
+                start: number
+                end: number
+                includeDeleted: boolean
+                logicOperator: LogicOperatorType
+                filters: FilterCondition[]
+              }) => {
                 const result = await userApi.fetchUsersInCarrierInBatches({
                   ...params,
                   filters: params.filters as never,
@@ -87,10 +102,9 @@ const Users = (): React.JSX.Element => {
               paginationModel,
               includeDeleted,
               activeFilterGroup,
-              'Failed to fetch users',
+
             )
           },
-          'Failed to toggle user',
         )
       }),
     [paginationModel, includeDeleted, activeFilterGroup],
@@ -111,7 +125,13 @@ const Users = (): React.JSX.Element => {
   // Fetch users on mount and when pagination model changes
   useEffect(() => {
     void createFetchFunction(
-      async params => {
+      async (params: {
+        start: number
+        end: number
+        includeDeleted: boolean
+        logicOperator: LogicOperatorType
+        filters: FilterCondition[]
+      }) => {
         const result = await userApi.fetchUsersInCarrierInBatches({
           ...params,
           filters: params.filters as never,
@@ -127,7 +147,7 @@ const Users = (): React.JSX.Element => {
       paginationModel,
       includeDeleted,
       activeFilterGroup,
-      'Failed to fetch users',
+
     )
   }, [paginationModel, includeDeleted, activeFilterGroup])
 
@@ -149,20 +169,20 @@ const Users = (): React.JSX.Element => {
             density={density}
             columnVisibilityModel={columnVisibilityModel}
             onColumnVisibilityModelChange={model => {
-              setColumnVisibilityModel(model as GridColumnVisibilityModel)
+              setColumnVisibilityModel(model)
             }}
             paginationModel={{
               page: Math.floor(paginationModel.start / paginationModel.pageSize),
               pageSize: paginationModel.pageSize,
             }}
-            onPaginationModelChange={model => {
-              void handlePaginationModelChange(model, setPaginationModel)
+            onPaginationModelChange={(model: GridPaginationModel) => {
+              handlePaginationModelChange(model, setPaginationModel)
             }}
-            onFilterModelChange={model => {
-              void handleFilterModelChange(model, paginationModel, setPaginationModel)
+            onFilterModelChange={(model: GridFilterModel) => {
+              handleFilterModelChange(model, paginationModel, setPaginationModel)
             }}
-            onSortModelChange={model => {
-              void handleSortModelChange(model, setPaginationModel)
+            onSortModelChange={(model: GridSortModel) => {
+              handleSortModelChange(model, setPaginationModel)
             }}
             getRowId={row => (row as UserResponseModel).userId}
             getRowClassName={params => getRowClassName<UserResponseModel>(params)}

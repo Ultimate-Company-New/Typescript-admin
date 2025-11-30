@@ -299,13 +299,8 @@ export const getRowClassName = <T extends DeletableRow>(params: GridRowClassName
  * @returns Promise that resolves when fetch is complete
  */
 export const createFetchFunction = async <T>(
-  apiCall: (params: {
-    start: number
-    end: number
-    includeDeleted: boolean
-    logicOperator: LogicOperatorType
-    filters: FilterCondition[]
-  }) => Promise<{ data: T[]; totalDataCount: number }>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  apiCall: (params: any) => Promise<{ data: any; totalDataCount: number }>,
   setLoading: React.Dispatch<React.SetStateAction<boolean>>,
   setRows: React.Dispatch<React.SetStateAction<T[]>>,
   setTotalCount: React.Dispatch<React.SetStateAction<number>>,
@@ -318,12 +313,13 @@ export const createFetchFunction = async <T>(
     const response = await apiCall({
       start: paginationModel.start,
       end: paginationModel.end,
+      pageSize: paginationModel.pageSize,
       includeDeleted: includeDeleted,
       logicOperator: activeFilterGroup.logicOperator,
       filters: activeFilterGroup.filters,
     })
 
-    setRows(response.data)
+    setRows(response.data as T[])
     setTotalCount(response.totalDataCount)
   } catch (error) {
     // Error is logged by axios interceptor
@@ -344,7 +340,8 @@ export const createFetchFunction = async <T>(
  * @returns Promise that resolves when toggle is complete
  */
 export const createToggleFunction = async (
-  toggleApiCall: (id: number) => Promise<void>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  toggleApiCall: (id: number) => Promise<any>,
   entityId: number,
   refetchFunction: () => Promise<void>,
 ): Promise<void> => {

@@ -1,28 +1,31 @@
 import type React from 'react'
-import { useState, useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { Box } from '@mui/material'
 import {
   type GridColumnVisibilityModel,
-
+  type GridFilterModel,
+  type GridPaginationModel,
+  type GridSlotsComponent,
+  type GridSortModel,
   type GridToolbarProps,
-  type GridSlotsComponent } from '@mui/x-data-grid'
+} from '@mui/x-data-grid'
 
 import { purchaseOrderApi } from '../../api/purchaseOrderApi'
 import {
-  StyledDataGrid,
   CustomNoRowsOverlay,
-  SimpleToolbar,
-  type FilterGroup,
-  handlePaginationModelChange,
-  handleFilterModelChange,
-  handleSortModelChange,
-  handleIncludeDeletedChange,
-  getInitialDensity,
-  type GridDensityType,
+  GridDensity,
   LogicOperator,
+  SimpleToolbar,
+  StyledDataGrid,
   createFetchFunction,
   createToggleFunction,
+  handleFilterModelChange,
+  handleIncludeDeletedChange,
+  handlePaginationModelChange,
+  handleSortModelChange,
+  type FilterGroup,
+  type GridDensityType,
 } from '../../components/datagrid'
 import { getPurchaseOrderGridColumns } from '../../models/gridModels/purchaseOrderGridColumns'
 import { type PaginatedGridInterface } from '../../types/grid.types'
@@ -57,7 +60,7 @@ const PurchaseOrders = (): React.JSX.Element => {
   const [loading, setLoading] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
   const [includeDeleted, setIncludeDeleted] = useState(false)
-  const [density, setDensity] = useState<GridDensityType>(getInitialDensity())
+  const [density, setDensity] = useState<GridDensityType>(GridDensity.STANDARD)
   const [activeFilterGroup, setActiveFilterGroup] = useState<FilterGroup>({
     logicOperator: LogicOperator.AND,
     filters: [],
@@ -83,61 +86,43 @@ const PurchaseOrders = (): React.JSX.Element => {
     () =>
       getPurchaseOrderGridColumns(
         async (purchaseOrderId: number) => {
-          await createToggleFunction(
-            purchaseOrderApi.togglePurchaseOrder,
-            purchaseOrderId,
-            async () => {
-              await createFetchFunction(
-                purchaseOrderApi.getPurchaseOrdersInBatches,
-                setLoading,
-                setRows,
-                setTotalCount,
-                paginationModel,
-                includeDeleted,
-                activeFilterGroup,
-                'Failed to fetch purchase orders',
-              )
-            },
-            'Failed to toggle purchase order',
-          )
+          await createToggleFunction(purchaseOrderApi.togglePurchaseOrder, purchaseOrderId, async () => {
+            await createFetchFunction(
+              purchaseOrderApi.getPurchaseOrdersInBatches,
+              setLoading,
+              setRows,
+              setTotalCount,
+              paginationModel,
+              includeDeleted,
+              activeFilterGroup,
+            )
+          })
         },
         async (purchaseOrderId: number) => {
-          await createToggleFunction(
-            purchaseOrderApi.approvePurchaseOrder,
-            purchaseOrderId,
-            async () => {
-              await createFetchFunction(
-                purchaseOrderApi.getPurchaseOrdersInBatches,
-                setLoading,
-                setRows,
-                setTotalCount,
-                paginationModel,
-                includeDeleted,
-                activeFilterGroup,
-                'Failed to fetch purchase orders',
-              )
-            },
-            'Failed to approve purchase order',
-          )
+          await createToggleFunction(purchaseOrderApi.approvePurchaseOrder, purchaseOrderId, async () => {
+            await createFetchFunction(
+              purchaseOrderApi.getPurchaseOrdersInBatches,
+              setLoading,
+              setRows,
+              setTotalCount,
+              paginationModel,
+              includeDeleted,
+              activeFilterGroup,
+            )
+          })
         },
         async (purchaseOrderId: number) => {
-          await createToggleFunction(
-            purchaseOrderApi.rejectPurchaseOrder,
-            purchaseOrderId,
-            async () => {
-              await createFetchFunction(
-                purchaseOrderApi.getPurchaseOrdersInBatches,
-                setLoading,
-                setRows,
-                setTotalCount,
-                paginationModel,
-                includeDeleted,
-                activeFilterGroup,
-                'Failed to fetch purchase orders',
-              )
-            },
-            'Failed to reject purchase order',
-          )
+          await createToggleFunction(purchaseOrderApi.rejectPurchaseOrder, purchaseOrderId, async () => {
+            await createFetchFunction(
+              purchaseOrderApi.getPurchaseOrdersInBatches,
+              setLoading,
+              setRows,
+              setTotalCount,
+              paginationModel,
+              includeDeleted,
+              activeFilterGroup,
+            )
+          })
         },
       ),
     [paginationModel, includeDeleted, activeFilterGroup],
@@ -161,7 +146,6 @@ const PurchaseOrders = (): React.JSX.Element => {
       paginationModel,
       includeDeleted,
       activeFilterGroup,
-      'Failed to fetch purchase orders',
     )
   }, [paginationModel, includeDeleted, activeFilterGroup])
 
@@ -179,30 +163,36 @@ const PurchaseOrders = (): React.JSX.Element => {
             totalCount={totalCount}
             paginationModelState={paginationModel}
             setPaginationModel={setPaginationModel}
-            itemLabel="purchase orders"
-            paginationTestId="purchase-orders-pagination"
             density={density}
             columnVisibilityModel={columnVisibilityModel}
             onColumnVisibilityModelChange={model => {
-              setColumnVisibilityModel(model as GridColumnVisibilityModel)
+              setColumnVisibilityModel(model)
             }}
             paginationModel={{
               page: Math.floor(paginationModel.start / paginationModel.pageSize),
               pageSize: paginationModel.pageSize,
             }}
-            onPaginationModelChange={model => {
-              void handlePaginationModelChange(model, setPaginationModel)
+            onPaginationModelChange={(model: GridPaginationModel) => {
+              handlePaginationModelChange(model, setPaginationModel)
             }}
-            onFilterModelChange={model => {
-              void handleFilterModelChange(model, paginationModel, setPaginationModel)
+            onFilterModelChange={(model: GridFilterModel) => {
+              handleFilterModelChange(model, paginationModel, setPaginationModel)
             }}
-            onSortModelChange={model => {
-              void handleSortModelChange(model, setPaginationModel)
+            onSortModelChange={(model: GridSortModel) => {
+              handleSortModelChange(model, setPaginationModel)
             }}
-            getRowId={row => (row as PurchaseOrderData).purchaseOrderId ?? (row as PurchaseOrderData).purchaseOrder?.purchaseOrderId ?? 0}
+            getRowId={row => {
+              const rowData = row as PurchaseOrderData
+              return rowData.purchaseOrderId ?? rowData.purchaseOrder?.purchaseOrderId ?? 0
+            }}
             getRowClassName={params => {
-              const classes = [(params as { indexRelativeToCurrentPage: number }).indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd']
-              if ((params.row as PurchaseOrderData).isDeleted ?? (params.row as PurchaseOrderData).deleted ?? (params.row as PurchaseOrderData).purchaseOrder?.deleted) {
+              const classes = [
+                (params as { indexRelativeToCurrentPage: number }).indexRelativeToCurrentPage % 2 === 0
+                  ? 'even'
+                  : 'odd',
+              ]
+              const rowData = params.row as PurchaseOrderData
+              if (rowData.isDeleted ?? rowData.deleted ?? rowData.purchaseOrder?.deleted) {
                 classes.push('deleted')
               }
               return classes.join(' ')

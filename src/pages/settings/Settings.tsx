@@ -34,6 +34,9 @@ const Settings = (): JSX.Element => {
   // Use ref to track if permission check has been performed
   const hasCheckedPermissions = useRef(false)
 
+  // Use ref to track if client settings have been fetched
+  const hasFetchedSettings = useRef(false)
+
   // Form setup with react-hook-form and Zod validation
   const formMethods = useForm<ClientSettingsFormData>({
     resolver: zodResolver(clientSettingsSchema),
@@ -59,7 +62,7 @@ const Settings = (): JSX.Element => {
       notes: '',
     },
   })
-  const { control, handleSubmit: handleFormSubmit, formState, reset } = formMethods
+  const { control, handleSubmit: handleFormSubmit, formState, reset, setValue } = formMethods
   const errors = formState.errors as Record<string, { message?: string } | undefined>
 
   // Check permissions on mount
@@ -80,7 +83,7 @@ const Settings = (): JSX.Element => {
   /**
    * Fetch current client settings
    */
-  const fetchClientSettings = useCallback(async (): Promise<void> => {
+  const fetchClientSettings = useCallback(async (silent = false): Promise<void> => {
     setLoading(true)
     try {
       // Get client ID from localStorage (set during client selection)
@@ -119,7 +122,9 @@ const Settings = (): JSX.Element => {
         notes: response.notes ?? '',
       })
 
-      toast.success('Client settings loaded successfully')
+      if (!silent) {
+        toast.success('Client settings loaded successfully')
+      }
     } catch (error) {
       toast.error('Failed to fetch client settings')
     } finally {
@@ -129,6 +134,12 @@ const Settings = (): JSX.Element => {
 
   // Fetch client settings on mount
   useEffect(() => {
+    // Skip if already fetched (prevents duplicate calls in React Strict Mode)
+    if (hasFetchedSettings.current) {
+      return
+    }
+
+    hasFetchedSettings.current = true
     void fetchClientSettings()
   }, [fetchClientSettings])
 
@@ -195,8 +206,8 @@ const Settings = (): JSX.Element => {
 
         toast.success('Client settings updated successfully')
 
-        // Reload settings
-        await fetchClientSettings()
+        // Reload settings silently (don't show "loaded" toast after update)
+        await fetchClientSettings(true)
       } catch (error) {
         toast.error('Failed to update client settings')
       } finally {
@@ -448,7 +459,7 @@ const Settings = (): JSX.Element => {
   return (
     <Container maxWidth="xl">
       {/* Fill Test Data Button */}
-      <FillSettingsTestDataButton reset={reset} />
+      <FillSettingsTestDataButton setValue={setValue} />
 
       <form onSubmit={handleFormSubmit(onSubmit)}>
         <Box className={styles['settings-page__container']}>

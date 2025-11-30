@@ -4,23 +4,13 @@ import { useCallback, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
+import { Download as DownloadIcon, GridOn as GridIcon, Code as JsonIcon, Send as SendIcon } from '@mui/icons-material'
 import {
-  Delete as DeleteIcon,
-  Download as DownloadIcon,
-  GridOn as GridIcon,
-  Info as InfoIcon,
-  Code as JsonIcon,
-  Send as SendIcon,
-  CloudUpload as UploadIcon,
-} from '@mui/icons-material'
-import {
-  Alert,
   Box,
   Button,
   Chip,
   Container,
   FormControl,
-  IconButton,
   InputLabel,
   MenuItem,
   Paper,
@@ -28,47 +18,73 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Tooltip,
-  Typography,
 } from '@mui/material'
 import { DataGrid, type GridColDef } from '@mui/x-data-grid'
 
-import { Header, Subheader } from '../../components'
+import { ImportInstructions } from '../../components'
+import { BlueButton, RedButton } from '../../components/buttons'
+import { BodyText } from '../../components/fonts'
+import { ExcelUploadInput } from '../../components/form-input'
 import { APP_ROUTES } from '../../constants/routes'
+import styles from '../../styles/Users.module.scss'
 
 /**
  * Interface for parsed user data from Excel/CSV
+ * Matches UserRequestModel structure from Spring API
  */
 interface ImportUserData {
   rowNumber: number
+  // User Info
+  loginName: string
   firstName: string
   lastName: string
   email: string
   phone: string
   role: string
   dob: string
+  isGuest: boolean
+  locked: boolean
+  emailConfirmed: boolean
+  isDeleted: boolean
+  apiKey?: string
+  profilePictureBase64?: string
+  notes?: string
+  // Address Info
   streetAddress: string
   streetAddress2?: string
   city: string
   state: string
   zipCode: string
   country?: string
+  isPrimary: boolean
+  // Other
   permissionIds: number[]
-  groupIds: number[]
+  selectedGroupIds: number[]
+  selectedUserIds: number[]
   errors?: string[]
 }
 
 /**
  * JSON structure for bulk user import API
+ * Matches UserRequestModel from Spring API
  */
 interface BulkUserImportRequest {
   maxRecords: number
   users: Array<{
+    loginName: string
     firstName: string
     lastName: string
     email: string
     phone: string
     role: string
     dob: string
+    isGuest: boolean
+    locked: boolean
+    emailConfirmed: boolean
+    isDeleted: boolean
+    apiKey?: string
+    profilePictureBase64?: string
+    notes?: string
     address: {
       streetAddress: string
       streetAddress2?: string
@@ -80,6 +96,7 @@ interface BulkUserImportRequest {
     }
     permissionIds: number[]
     selectedGroupIds: number[]
+    selectedUserIds: number[]
   }>
 }
 
@@ -102,51 +119,110 @@ const ImportUsers = (): React.JSX.Element => {
 
   /**
    * Download Excel template with sample data
+   * Template structure matches UserRequestModel columns:
+   * - User Info: loginName, firstName, lastName, email, phone, role, dob, isGuest, locked, emailConfirmed, isDeleted, apiKey, profilePictureBase64, notes
+   * - Address Info: streetAddress, streetAddress2, city, state, zipCode, country, isPrimary
+   * - Other: permissionIds, selectedGroupIds, selectedUserIds
    */
   const handleDownloadTemplate = (): void => {
-    // Create template data
-    const templateData = [
-      {
-        firstName: 'John',
-        lastName: 'Doe',
-        email: 'john.doe@example.com',
-        phone: '1234567890',
-        role: 'Manager',
-        dob: '1990-01-15',
-        streetAddress: '123 Main St',
-        streetAddress2: 'Apt 4B',
-        city: 'New York',
-        state: 'NY',
-        zipCode: '10001',
-        country: 'USA',
-        permissionIds: '1,2,3',
-        groupIds: '1,2',
-      },
-      {
-        firstName: 'Jane',
-        lastName: 'Smith',
-        email: 'jane.smith@example.com',
-        phone: '0987654321',
-        role: 'Employee',
-        dob: '1992-05-20',
-        streetAddress: '456 Oak Ave',
-        streetAddress2: '',
-        city: 'Los Angeles',
-        state: 'CA',
-        zipCode: '90001',
-        country: 'USA',
-        permissionIds: '1,2',
-        groupIds: '2',
-      },
+    // Define headers in logical groups matching UserRequestModel
+    const headers = [
+      // User Info columns
+      'loginName',
+      'firstName',
+      'lastName',
+      'email',
+      'phone',
+      'role',
+      'dob',
+      'isGuest',
+      'locked',
+      'emailConfirmed',
+      'isDeleted',
+      'apiKey',
+      'profilePictureBase64',
+      'notes',
+      // Address columns
+      'streetAddress',
+      'streetAddress2',
+      'city',
+      'state',
+      'zipCode',
+      'country',
+      'isPrimary',
+      // Other columns
+      'permissionIds',
+      'selectedGroupIds',
+      'selectedUserIds',
+    ]
+
+    // Create sample data rows
+    const sampleRows = [
+      [
+        // User Info
+        'john.doe@example.com',
+        'John',
+        'Doe',
+        'john.doe@example.com',
+        '1234567890',
+        'Manager',
+        '1990-01-15',
+        'false',
+        'false',
+        'true',
+        'false',
+        '',
+        '',
+        'Sample user for testing',
+        // Address
+        '123 Main St',
+        'Apt 4B',
+        'New York',
+        'NY',
+        '10001',
+        'USA',
+        'true',
+        // Other
+        '1;2;3',
+        '1;2',
+        '',
+      ],
+      [
+        // User Info
+        'jane.smith@example.com',
+        'Jane',
+        'Smith',
+        'jane.smith@example.com',
+        '0987654321',
+        'Employee',
+        '1992-05-20',
+        'false',
+        'false',
+        'true',
+        'false',
+        '',
+        '',
+        'Another sample user',
+        // Address
+        '456 Oak Ave',
+        '',
+        'Los Angeles',
+        'CA',
+        '90001',
+        'USA',
+        'true',
+        // Other
+        '1;2',
+        '2',
+        '',
+      ],
     ]
 
     // Convert to CSV
-    const headers = Object.keys(templateData[0]).join(',')
-    const rows = templateData.map(row => Object.values(row).join(','))
-    const csv = [headers, ...rows].join('\n')
+    const csvContent = [headers.join(','), ...sampleRows.map(row => row.map(cell => `"${cell}"`).join(','))].join('\n')
 
     // Download
-    const blob = new Blob([csv], { type: 'text/csv' })
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
     const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
@@ -160,33 +236,20 @@ const ImportUsers = (): React.JSX.Element => {
   }
 
   /**
-   * Handle file upload and parse CSV/Excel
+   * Helper function to parse boolean values
    */
-  const handleFileUpload = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const uploadedFile = event.target.files?.[0]
-      if (!uploadedFile) return
+  const parseBoolean = (val: string): boolean => val.toLowerCase() === 'true'
 
-      // Validate file type
-      const validTypes = [
-        'text/csv',
-        'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      ]
-      if (
-        !validTypes.includes(uploadedFile.type) &&
-        !uploadedFile.name.endsWith('.csv') &&
-        !uploadedFile.name.endsWith('.xlsx')
-      ) {
-        toast.error('Please upload a valid CSV or Excel file')
-        return
-      }
-
-      setFile(uploadedFile)
-      parseFile(uploadedFile)
-    },
-    [parseFile],
-  )
+  /**
+   * Helper function to parse semicolon-separated IDs
+   */
+  const parseIds = (val: string): number[] => {
+    if (!val) return []
+    return val
+      .split(';')
+      .map(id => parseInt(id.trim()))
+      .filter(id => !isNaN(id))
+  }
 
   /**
    * Parse CSV/Excel file
@@ -208,40 +271,50 @@ const ImportUsers = (): React.JSX.Element => {
           }
 
           // Parse CSV
-          const _headers = lines[0].split(',').map(h => h.trim())
           const parsedData: ImportUserData[] = []
 
           for (let i = 1; i < Math.min(lines.length, maxRecords + 1); i++) {
-            const values = lines[i].split(',').map(v => v.trim())
+            // Handle quoted CSV values
+            const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''))
             const errors: string[] = []
 
-            // Validate required fields
-            if (!values[0]) errors.push('First name is required')
-            if (!values[1]) errors.push('Last name is required')
-            if (!values[2]) errors.push('Email is required')
-            if (!values[3]) errors.push('Phone is required')
-            if (!values[4]) errors.push('Role is required')
-
-            // Parse permission and group IDs
-            const permissionIds = values[12] ? values[12].split(';').map(id => parseInt(id.trim())) : []
-            const groupIds = values[13] ? values[13].split(';').map(id => parseInt(id.trim())) : []
+            // Validate required fields (User Info)
+            if (!values[0]) errors.push('Login name is required')
+            if (!values[1]) errors.push('First name is required')
+            if (!values[2]) errors.push('Last name is required')
+            if (!values[3]) errors.push('Email is required')
+            if (!values[4]) errors.push('Phone is required')
+            if (!values[5]) errors.push('Role is required')
 
             parsedData.push({
               rowNumber: i,
-              firstName: values[0] || '',
-              lastName: values[1] || '',
-              email: values[2] || '',
-              phone: values[3] || '',
-              role: values[4] || '',
-              dob: values[5] || '',
-              streetAddress: values[6] || '',
-              streetAddress2: values[7] || undefined,
-              city: values[8] || '',
-              state: values[9] || '',
-              zipCode: values[10] || '',
-              country: values[11] || 'USA',
-              permissionIds,
-              groupIds,
+              // User Info (indices 0-13)
+              loginName: values[0] || '',
+              firstName: values[1] || '',
+              lastName: values[2] || '',
+              email: values[3] || '',
+              phone: values[4] || '',
+              role: values[5] || '',
+              dob: values[6] || '',
+              isGuest: parseBoolean(values[7]),
+              locked: parseBoolean(values[8]),
+              emailConfirmed: parseBoolean(values[9]),
+              isDeleted: parseBoolean(values[10]),
+              apiKey: values[11] || undefined,
+              profilePictureBase64: values[12] || undefined,
+              notes: values[13] || undefined,
+              // Address Info (indices 14-20)
+              streetAddress: values[14] || '',
+              streetAddress2: values[15] || undefined,
+              city: values[16] || '',
+              state: values[17] || '',
+              zipCode: values[18] || '',
+              country: values[19] || 'USA',
+              isPrimary: parseBoolean(values[20]),
+              // Other (indices 21-23)
+              permissionIds: parseIds(values[21]),
+              selectedGroupIds: parseIds(values[22]),
+              selectedUserIds: parseIds(values[23]),
               errors: errors.length > 0 ? errors : undefined,
             })
           }
@@ -266,9 +339,20 @@ const ImportUsers = (): React.JSX.Element => {
   )
 
   /**
+   * Handle file upload and parse CSV/Excel
+   */
+  const handleFileUpload = useCallback(
+    (uploadedFile: File) => {
+      setFile(uploadedFile)
+      parseFile(uploadedFile)
+    },
+    [parseFile],
+  )
+
+  /**
    * Clear uploaded file and data
    */
-  const handleClearFile = () => {
+  const handleClearFile = (): void => {
     setFile(null)
     setImportData([])
     toast.info('File cleared')
@@ -280,30 +364,39 @@ const ImportUsers = (): React.JSX.Element => {
   const generateImportJSON = (): BulkUserImportRequest => ({
     maxRecords,
     users: importData.map(user => ({
+      loginName: user.loginName,
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
       phone: user.phone,
       role: user.role,
       dob: user.dob,
+      isGuest: user.isGuest,
+      locked: user.locked,
+      emailConfirmed: user.emailConfirmed,
+      isDeleted: user.isDeleted,
+      apiKey: user.apiKey,
+      profilePictureBase64: user.profilePictureBase64,
+      notes: user.notes,
       address: {
         streetAddress: user.streetAddress,
         streetAddress2: user.streetAddress2,
         city: user.city,
         state: user.state,
         zipCode: user.zipCode,
-        country: user.country || 'USA',
-        isPrimary: true,
+        country: user.country ?? 'USA',
+        isPrimary: user.isPrimary,
       },
       permissionIds: user.permissionIds,
-      selectedGroupIds: user.groupIds,
+      selectedGroupIds: user.selectedGroupIds,
+      selectedUserIds: user.selectedUserIds,
     })),
   })
 
   /**
    * Submit bulk import to API
    */
-  const handleSubmit = async () => {
+  const handleSubmit = async (): Promise<void> => {
     if (importData.length === 0) {
       toast.error('No data to import')
       return
@@ -318,9 +411,7 @@ const ImportUsers = (): React.JSX.Element => {
 
     setIsLoading(true)
     try {
-      const jsonData = generateImportJSON()
-
-      // TODO: Call API endpoint
+      // TODO: Call API endpoint with generateImportJSON()
 
       // Simulate API call
       await new Promise<void>(resolve => {
@@ -352,6 +443,11 @@ const ImportUsers = (): React.JSX.Element => {
       width: 70,
       align: 'center',
       headerAlign: 'center',
+    },
+    {
+      field: 'loginName',
+      headerName: 'Login Name',
+      width: 200,
     },
     {
       field: 'firstName',
@@ -394,6 +490,15 @@ const ImportUsers = (): React.JSX.Element => {
       width: 80,
     },
     {
+      field: 'locked',
+      headerName: 'Locked',
+      width: 90,
+      renderCell: params => {
+        const row = params.row as ImportUserData
+        return <Chip label={row.locked ? 'Yes' : 'No'} color={row.locked ? 'error' : 'success'} size="small" />
+      },
+    },
+    {
       field: 'errors',
       headerName: 'Status',
       width: 120,
@@ -413,61 +518,32 @@ const ImportUsers = (): React.JSX.Element => {
 
   return (
     <Container maxWidth="xl">
-      <Box className="import-users-page__container">
-        <Header label="Import Users" variant="h3" gutterBottom />
-        <Subheader label="Bulk import users from CSV or Excel files" />
-
+      <Box className={styles['import-users-page__container']}>
         {/* Instructions */}
-        <Paper className="import-users-page__instructions-paper">
-          <Box className="import-users-page__instructions-header">
-            <InfoIcon color="primary" />
-            <Typography variant="h6" className="import-users-page__instructions-title">
-              Import Instructions
-            </Typography>
-          </Box>
-          <Typography variant="body2" color="text.secondary" paragraph>
-            1. Download the template file to see the required format
-          </Typography>
-          <Typography variant="body2" color="text.secondary" paragraph>
-            2. Fill in your user data following the template structure
-          </Typography>
-          <Typography variant="body2" color="text.secondary" paragraph>
-            3. Upload the file and preview the data
-          </Typography>
-          <Typography variant="body2" color="text.secondary" paragraph>
-            4. Set the maximum number of records to import
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            5. Review and submit the import
-          </Typography>
-        </Paper>
+        <ImportInstructions
+          instructions={[
+            'Download the template file to see the required format',
+            'Fill in your user data following the template structure',
+            'Upload the file and preview the data',
+            'Set the maximum number of records to import',
+            'Review and submit the import',
+          ]}
+        />
 
         {/* Actions Bar */}
-        <Box className="import-users-page__actions-bar">
+        <Box className={styles['import-users-page__actions-bar']}>
           {/* Download Template */}
           <Button
             variant="outlined"
             startIcon={<DownloadIcon />}
             onClick={handleDownloadTemplate}
-            className="import-users-page__action-button"
+            className={styles['import-users-page__action-button']}
           >
             Download Template
           </Button>
 
-          {/* Upload File */}
-          <Button
-            variant="contained"
-            component="label"
-            startIcon={<UploadIcon />}
-            disabled={isLoading}
-            className="import-users-page__action-button"
-          >
-            Upload File
-            <input type="file" hidden accept=".csv,.xlsx,.xls" onChange={handleFileUpload} />
-          </Button>
-
           {/* Max Records Dropdown */}
-          <FormControl className="import-users-page__max-records-select">
+          <FormControl className={styles['import-users-page__max-records-select']}>
             <InputLabel>Max Records</InputLabel>
             <Select
               value={maxRecords}
@@ -490,59 +566,56 @@ const ImportUsers = (): React.JSX.Element => {
             <ToggleButtonGroup
               value={viewMode}
               exclusive
-              onChange={(_, newMode) => {
+              onChange={(_, newMode: 'grid' | 'json' | null) => {
                 if (newMode) {
                   setViewMode(newMode)
                 }
               }}
-              className="import-users-page__view-toggle"
+              className={styles['import-users-page__view-toggle']}
             >
               <ToggleButton value="grid">
                 <GridIcon fontSize="small" />
-                <Typography variant="body2" sx={{ ml: 1 }}>
-                  Grid
-                </Typography>
+                <BodyText text="Grid" variant="body2" sx={{ ml: 1 }} />
               </ToggleButton>
               <ToggleButton value="json">
                 <JsonIcon fontSize="small" />
-                <Typography variant="body2" sx={{ ml: 1 }}>
-                  JSON
-                </Typography>
+                <BodyText text="JSON" variant="body2" sx={{ ml: 1 }} />
               </ToggleButton>
             </ToggleButtonGroup>
           )}
         </Box>
 
-        {/* File Info */}
-        {file && (
-          <Alert
-            severity="info"
-            className="import-users-page__file-alert"
-            action={
-              <IconButton size="small" onClick={handleClearFile} disabled={isLoading}>
-                <DeleteIcon fontSize="small" />
-              </IconButton>
-            }
-          >
-            <Typography variant="body2">
-              <strong>File:</strong> {file.name} ({importData.length} records)
-            </Typography>
-          </Alert>
-        )}
+        {/* Excel Upload Component */}
+        <ExcelUploadInput
+          onFileSelect={handleFileUpload}
+          onFileClear={handleClearFile}
+          currentFile={file}
+          disabled={isLoading}
+          showFileInfo
+          accept=".csv,.xlsx,.xls"
+          maxSizeMB={10}
+        />
 
         {/* Data Preview */}
         {importData.length > 0 && (
-          <Paper className="import-users-page__preview-paper">
-            <Box className="import-users-page__preview-header">
-              <Typography variant="h6">Data Preview ({importData.length} records)</Typography>
+          <Paper className={styles['import-users-page__preview-paper']}>
+            <Box className={styles['import-users-page__preview-header']}>
+              <BodyText
+                text={`Data Preview (${importData.length} records)`}
+                variant="body1"
+                sx={{
+                  fontWeight: 600,
+                  fontSize: '1.25rem',
+                }}
+              />
             </Box>
 
             {viewMode === 'grid' ? (
-              <Box className="import-users-page__grid-container">
+              <Box className={styles['import-users-page__grid-container']}>
                 <DataGrid
                   rows={importData}
                   columns={columns}
-                  getRowId={row => row.rowNumber}
+                  getRowId={(row: ImportUserData) => row.rowNumber}
                   pageSizeOptions={[10, 25, 50, 100]}
                   initialState={{
                     pagination: { paginationModel: { pageSize: 25 } },
@@ -550,56 +623,35 @@ const ImportUsers = (): React.JSX.Element => {
                   disableRowSelectionOnClick
                   autoHeight
                   getRowClassName={params => {
-                    const row = params.row as ImportUserData
-                    return row.errors && row.errors.length > 0 ? 'import-users-page__error-row' : ''
+                    const { row } = params
+                    return row.errors && row.errors.length > 0 ? styles['import-users-page__error-row'] : ''
                   }}
                 />
               </Box>
             ) : (
-              <Box className="import-users-page__json-container">
-                <pre className="import-users-page__json-pre">{JSON.stringify(generateImportJSON(), null, 2)}</pre>
+              <Box className={styles['import-users-page__json-container']}>
+                <pre className={styles['import-users-page__json-pre']}>
+                  {JSON.stringify(generateImportJSON(), null, 2)}
+                </pre>
               </Box>
             )}
 
-            {/* Submit Button */}
-            <Box className="import-users-page__submit-container">
-              <Button
-                variant="outlined"
+            {/* Submit Buttons */}
+            <Box className={styles['import-users-page__submit-container']}>
+              <RedButton
                 onClick={() => {
                   navigate(APP_ROUTES.DASHBOARD.USERS)
                 }}
                 disabled={isLoading}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="contained"
-                color="primary"
+                label="Cancel"
+              />
+              <BlueButton
                 startIcon={<SendIcon />}
                 onClick={handleSubmit}
                 disabled={isLoading}
-                className="import-users-page__submit-button"
-              >
-                {isLoading ? 'Importing...' : `Import ${importData.length} Users`}
-              </Button>
+                label={isLoading ? 'Importing...' : `Import ${importData.length} Users`}
+              />
             </Box>
-          </Paper>
-        )}
-
-        {/* Empty State */}
-        {!file && (
-          <Paper className="import-users-page__empty-state">
-            <UploadIcon className="import-users-page__empty-icon" />
-            <Typography variant="h6" gutterBottom>
-              No file uploaded
-            </Typography>
-            <Typography variant="body2" color="text.secondary" paragraph>
-              Download the template, fill in your data, and upload the file to get started
-            </Typography>
-            <Button variant="contained" component="label" startIcon={<UploadIcon />}>
-              Upload File
-              <input type="file" hidden accept=".csv,.xlsx,.xls" onChange={handleFileUpload} />
-            </Button>
           </Paper>
         )}
       </Box>

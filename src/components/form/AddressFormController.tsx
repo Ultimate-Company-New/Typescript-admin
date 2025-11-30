@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react'
 
 import {
+  Controller,
   useWatch,
   type Control,
   type FieldErrors,
@@ -12,8 +13,9 @@ import {
 import { Grid } from '@mui/material'
 
 import { ADDRESS_TYPES_ARRAY } from '../../constants/appConstants'
+import { AutocompleteInput, EmailInput, PhoneInput, SelectInput, TextFieldInput } from '../form-input'
 
-import { FieldType, FormFieldRenderer, type FieldConfig, type FieldOption } from './FormFieldRenderer'
+import { FieldType, type FieldConfig, type FieldOption } from './FormFieldRenderer'
 
 export interface AddressFormData {
   streetAddress: string
@@ -244,10 +246,120 @@ const AddressFormController = <TFieldValues extends AddressableFormValues>({
     return fields as unknown as Array<FieldConfig<TFieldValues>>
   }, [baseCityFieldPath, baseStateFieldPath, cityOptions, disabled, isCityDisabled, stateOptions])
 
+  // Helper to get field error
+  const getFieldError = (path: Path<TFieldValues>): { message?: string } | undefined => {
+    const segments = (path as string).split('.')
+    let current: unknown = formErrors
+    for (const segment of segments) {
+      if (current && typeof current === 'object' && segment in (current as Record<string, unknown>)) {
+        current = (current as Record<string, unknown>)[segment]
+      } else {
+        return undefined
+      }
+    }
+    if (current && typeof current === 'object' && 'message' in (current as Record<string, unknown>)) {
+      return current as { message?: string }
+    }
+    return undefined
+  }
+
+  // Render each address field as a Grid item to match the spacing of other sections
   return (
-    <Grid container spacing={2}>
-      <FormFieldRenderer fields={addressFields} control={control} errors={formErrors} disabled={disabled} />
-    </Grid>
+    <>
+      {addressFields.map(fieldConfig => {
+        const { name, label, type = FieldType.Text, required = false, gridSize, options = [] } = fieldConfig
+        const { sortOptions = false } = fieldConfig
+        const fieldError = getFieldError(name)
+        const isFieldDisabled = disabled || fieldConfig.disabled
+
+        return (
+          <Grid item xs={gridSize?.xs ?? 12} sm={gridSize?.sm ?? 6} key={name as string}>
+            <Controller
+              name={name}
+              control={control}
+              render={({ field }) => {
+                // Email field
+                if (type === FieldType.Email) {
+                  return (
+                    <EmailInput
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      {...(field as any)}
+                      label={label}
+                      required={required}
+                      disabled={isFieldDisabled}
+                      error={!!fieldError}
+                      helperText={fieldError?.message}
+                    />
+                  )
+                }
+
+                // Phone field
+                if (type === FieldType.Phone) {
+                  return (
+                    <PhoneInput
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      {...(field as any)}
+                      label={label}
+                      required={required}
+                      disabled={isFieldDisabled}
+                      error={!!fieldError}
+                      helperText={fieldError?.message}
+                    />
+                  )
+                }
+
+                // Select field
+                if (type === FieldType.Select) {
+                  return (
+                    <SelectInput
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      {...(field as any)}
+                      label={label}
+                      required={required}
+                      disabled={isFieldDisabled}
+                      error={!!fieldError}
+                      helperText={fieldError?.message}
+                      options={options}
+                    />
+                  )
+                }
+
+                // Autocomplete/Dropdown field
+                if (type === FieldType.Autocomplete) {
+                  return (
+                    <AutocompleteInput
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      {...(field as any)}
+                      label={label}
+                      required={required}
+                      disabled={isFieldDisabled}
+                      error={!!fieldError}
+                      helperText={fieldError?.message}
+                      options={options}
+                      sortOptions={sortOptions}
+                    />
+                  )
+                }
+
+                // Default: Text field
+                return (
+                  <TextFieldInput
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    {...(field as any)}
+                    type={type}
+                    label={label}
+                    required={required}
+                    disabled={isFieldDisabled}
+                    error={!!fieldError}
+                    helperText={fieldError?.message}
+                  />
+                )
+              }}
+            />
+          </Grid>
+        )
+      })}
+    </>
   )
 }
 

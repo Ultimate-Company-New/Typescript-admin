@@ -1,26 +1,33 @@
 import type React from 'react'
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { toast } from 'react-toastify'
 
 import { Box } from '@mui/material'
-import { type GridColumnVisibilityModel, type GridToolbarProps, type GridSlotsComponent } from '@mui/x-data-grid'
+import {
+  type GridColumnVisibilityModel,
+  type GridFilterModel,
+  type GridPaginationModel,
+  type GridSlotsComponent,
+  type GridSortModel,
+  type GridToolbarProps,
+} from '@mui/x-data-grid'
 
 import { userGroupApi, type UserGroupResponseModel } from '../../api/userGroupApi'
 import {
-  StyledDataGrid,
   CustomNoRowsOverlay,
-  SimpleToolbar,
-  type FilterGroup,
-  handlePaginationModelChange,
-  handleFilterModelChange,
-  handleSortModelChange,
-  handleIncludeDeletedChange,
-  getRowClassName,
-  getInitialDensity,
-  type GridDensityType,
+  GridDensity,
   LogicOperator,
+  SimpleToolbar,
+  StyledDataGrid,
   createToggleFunction,
+  getRowClassName,
+  handleFilterModelChange,
+  handleIncludeDeletedChange,
+  handlePaginationModelChange,
+  handleSortModelChange,
+  type FilterGroup,
+  type GridDensityType,
 } from '../../components/datagrid'
 import { getUserGroupGridColumns, type UserGroupData } from '../../models/gridModels/userGroupGridColumns'
 import { type PaginatedGridInterface } from '../../types/grid.types'
@@ -42,7 +49,7 @@ const UserGroups = (): React.JSX.Element => {
   const [loading, setLoading] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
   const [includeDeleted, setIncludeDeleted] = useState(false)
-  const [density, setDensity] = useState<GridDensityType>(getInitialDensity() as GridDensityType)
+  const [density, setDensity] = useState<GridDensityType>(GridDensity.STANDARD)
   const [activeFilterGroup, setActiveFilterGroup] = useState<FilterGroup>({
     logicOperator: LogicOperator.AND,
     filters: [],
@@ -73,23 +80,22 @@ const UserGroups = (): React.JSX.Element => {
       const response = await userGroupApi.getUserGroups({
         start: paginationModel.start,
         end: paginationModel.end,
+        pageSize: paginationModel.pageSize,
         includeDeleted,
         logicOperator: activeFilterGroup.logicOperator,
         filters: activeFilterGroup.filters,
       })
 
       // Map API response to grid data structure
-      const mappedData = (response.data || []).map(
-        (group: UserGroupResponseModel & { groupId?: number; groupName?: string; memberCount?: number }) => ({
-          ...group,
-          groupId: group.groupId ?? group.userGroupId,
-          groupName: group.groupName ?? group.name,
-          memberCount: group.memberCount ?? group.userCount ?? (group.userIds ? group.userIds.length : 0),
-        }),
-      )
+      const mappedData = (response.data as UserGroupResponseModel[]).map(group => ({
+        ...group,
+        groupId: group.userGroupId,
+        groupName: group.name,
+        memberCount: group.userCount,
+      }))
 
       setRows(mappedData)
-      setTotalCount(response.totalDataCount ?? 0)
+      setTotalCount(response.totalDataCount)
     } catch {
       toast.error('Failed to fetch user groups')
       setRows([])
@@ -103,12 +109,7 @@ const UserGroups = (): React.JSX.Element => {
   const columns = useMemo(
     () =>
       getUserGroupGridColumns(async (userGroupId: number) => {
-        await createToggleFunction(
-          userGroupApi.toggleUserGroup,
-          userGroupId,
-          fetchUserGroups,
-          'Failed to toggle user group',
-        )
+        await createToggleFunction(userGroupApi.toggleUserGroup, userGroupId, fetchUserGroups)
       }),
     [fetchUserGroups],
   )
@@ -140,27 +141,25 @@ const UserGroups = (): React.JSX.Element => {
             totalCount={totalCount}
             paginationModelState={paginationModel}
             setPaginationModel={setPaginationModel}
-            itemLabel="groups"
-            paginationTestId="user-groups-pagination"
             density={density}
             columnVisibilityModel={columnVisibilityModel}
             onColumnVisibilityModelChange={model => {
-              setColumnVisibilityModel(model as GridColumnVisibilityModel)
+              setColumnVisibilityModel(model)
             }}
             paginationModel={{
               page: Math.floor(paginationModel.start / paginationModel.pageSize),
               pageSize: paginationModel.pageSize,
             }}
-            onPaginationModelChange={model => {
-              void handlePaginationModelChange(model, setPaginationModel)
+            onPaginationModelChange={(model: GridPaginationModel) => {
+              handlePaginationModelChange(model, setPaginationModel)
             }}
-            onFilterModelChange={model => {
-              void handleFilterModelChange(model, paginationModel, setPaginationModel)
+            onFilterModelChange={(model: GridFilterModel) => {
+              handleFilterModelChange(model, paginationModel, setPaginationModel)
             }}
-            onSortModelChange={model => {
-              void handleSortModelChange(model, setPaginationModel)
+            onSortModelChange={(model: GridSortModel) => {
+              handleSortModelChange(model, setPaginationModel)
             }}
-            getRowId={row => (row as UserGroupData).groupId ?? (row as UserGroupData).userGroupId}
+            getRowId={row => (row as UserGroupData).groupId ?? (row as UserGroupData).userGroupId ?? 0}
             getRowClassName={params => getRowClassName<UserGroupData>(params)}
             slots={{
               toolbar: SimpleToolbar as GridSlotsComponent['toolbar'],

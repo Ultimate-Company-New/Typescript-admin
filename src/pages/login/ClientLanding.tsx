@@ -12,10 +12,12 @@ import { APP_ROUTES } from '../../constants/routes'
 import { type ClientResponseModel } from '../../models/LoginModels'
 import styles from '../../styles/Login.module.scss'
 
+import { PaginationComponent } from './components'
+
 interface CarrierGridItem {
   id: number
   name: string
-  logo?: string
+  logoUrl?: string
   apiKey: string
 }
 
@@ -63,10 +65,10 @@ const CarrierGrid = ({ carriers, onCarrierClick }: CarrierGridProps): JSX.Elemen
               className={styles['carrier-grid__card-action-area']}
             >
               <CardMedia component="div" className={styles['carrier-grid__card-media']}>
-                {carrier.logo ? (
+                {carrier.logoUrl ? (
                   <Box
                     component="img"
-                    src={carrier.logo}
+                    src={carrier.logoUrl}
                     alt={carrier.name}
                     className={styles['carrier-grid__card-logo']}
                   />
@@ -100,7 +102,10 @@ const ClientLanding = (): JSX.Element => {
   const navigate = useNavigate()
   const [clients, setClients] = useState<ClientResponseModel[]>([])
   const [searchText, setSearchText] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
+
+  const pageSize = 9 // 3x3 grid layout
 
   // Route protection: Check authentication and load clients from localStorage on mount
   useEffect(() => {
@@ -143,9 +148,28 @@ const ClientLanding = (): JSX.Element => {
     return clients.filter(client => client.name.toLowerCase().includes(searchLower))
   }, [clients, searchText])
 
+  // Client-side pagination
+  const paginatedClients = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize
+    const endIndex = startIndex + pageSize
+    return filteredClients.slice(startIndex, endIndex)
+  }, [filteredClients, currentPage, pageSize])
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchText])
+
   // Handle search input
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
     setSearchText(event.target.value)
+  }
+
+  // Handle page change
+  const handlePageChange = (_event: React.ChangeEvent<unknown>, page: number): void => {
+    setCurrentPage(page)
+    // Scroll to top on page change
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   // Handle client selection
@@ -173,6 +197,7 @@ const ClientLanding = (): JSX.Element => {
       localStorage.setItem('selectedClientId', clientId.toString()) // Also store as selectedClientId for consistency
       localStorage.setItem('clientId', clientId.toString()) // Also store as clientId for backwards compatibility
       localStorage.setItem('selectedCarrierName', selectedClient.name)
+      localStorage.setItem('selectedCarrierLogo', selectedClient.logoUrl ?? '') // Store logo URL
 
       // Fetch current user's details including permissions using their login name (email)
       const storedLoginName = localStorage.getItem('loginName')
@@ -214,11 +239,11 @@ const ClientLanding = (): JSX.Element => {
     }
   }
 
-  // Convert to grid items
-  const gridItems: CarrierGridItem[] = filteredClients.map(client => ({
+  // Convert to grid items (using paginated data)
+  const gridItems: CarrierGridItem[] = paginatedClients.map(client => ({
     id: client.clientId,
     name: client.name,
-    logo: client.logo,
+    logoUrl: client.logoUrl,
     apiKey: client.apiKey,
   }))
 
@@ -258,6 +283,18 @@ const ClientLanding = (): JSX.Element => {
           >
             <CarrierGrid carriers={gridItems} onCarrierClick={handleClientClick} />
           </Box>
+
+          {/* Pagination */}
+          {filteredClients.length > 0 && (
+            <PaginationComponent
+              totalItems={filteredClients.length}
+              currentPage={currentPage}
+              pageSize={pageSize}
+              onPageChange={handlePageChange}
+              itemLabel="clients"
+              data-test-id="client-pagination"
+            />
+          )}
 
           {/* Empty State */}
           {filteredClients.length === 0 && searchText && (

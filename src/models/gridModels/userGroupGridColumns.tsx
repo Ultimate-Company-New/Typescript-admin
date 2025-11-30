@@ -1,4 +1,4 @@
-import { Chip, Tooltip, Link } from '@mui/material'
+import { Chip, Link, Tooltip } from '@mui/material'
 import { type GridColDef, type GridRenderCellParams } from '@mui/x-data-grid'
 
 import { APP_ROUTES } from '../../constants/routes'
@@ -23,9 +23,7 @@ export interface UserGroupData {
 /**
  * Get user group grid columns with action handlers
  */
-export const getUserGroupGridColumns = (
-  onToggleGroup: (userGroupId: number) => void,
-): GridColDef[] => [
+export const getUserGroupGridColumns = (onToggleGroup: (userGroupId: number) => void): GridColDef[] => [
   {
     field: 'groupId',
     headerName: 'Group ID',
@@ -62,14 +60,7 @@ export const getUserGroupGridColumns = (
     headerAlign: 'center',
     renderCell: (params: GridRenderCellParams) => {
       const value = params.value as number | undefined
-      return (
-        <Chip
-          label={value ?? 0}
-          size="small"
-          color="primary"
-          variant="outlined"
-        />
-      )
+      return <Chip label={value ?? 0} size="small" color="primary" variant="outlined" />
     },
   },
   {
@@ -94,9 +85,9 @@ export const getUserGroupGridColumns = (
                 }
               }}
               sx={{ cursor: 'pointer',
-                color: 'success.main' }}
+color: 'success.main' }}
             >
-                Activate
+              Activate
             </Link>
           </div>
         )
@@ -104,29 +95,28 @@ export const getUserGroupGridColumns = (
 
       return (
         <div style={{ display: 'flex',
-          gap: '12px' }}>
+gap: '12px' }}>
           <Link
             href={`${APP_ROUTES.DASHBOARD.ADD_GROUPS}?userGroupId=${groupId ?? ''}&isView`}
             sx={{ cursor: 'pointer' }}
           >
-              View
+            View
           </Link>
-          <Link
-            href={`${APP_ROUTES.DASHBOARD.ADD_GROUPS}?userGroupId=${groupId ?? ''}`}
-            sx={{ cursor: 'pointer' }}
-          >
-              Edit
+          <Link href={`${APP_ROUTES.DASHBOARD.ADD_GROUPS}?userGroupId=${groupId ?? ''}`} sx={{ cursor: 'pointer' }}>
+            Edit
           </Link>
           <Link
             href="#"
             onClick={e => {
               e.preventDefault()
-              onToggleGroup(groupId)
+              if (groupId != null) {
+                onToggleGroup(groupId)
+              }
             }}
             sx={{ cursor: 'pointer',
-              color: 'error.main' }}
+color: 'error.main' }}
           >
-              Deactivate
+            Deactivate
           </Link>
         </div>
       )

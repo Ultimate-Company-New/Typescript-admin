@@ -1,34 +1,34 @@
 import type React from 'react'
-import { useState, useCallback } from 'react'
+import { useCallback, useState } from 'react'
 
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
 import {
-  CloudUpload as UploadIcon,
+  Delete as DeleteIcon,
   Download as DownloadIcon,
   GridOn as GridIcon,
-  Code as JsonIcon,
-  Delete as DeleteIcon,
-  Send as SendIcon,
   Info as InfoIcon,
+  Code as JsonIcon,
+  Send as SendIcon,
+  CloudUpload as UploadIcon,
 } from '@mui/icons-material'
 import {
-  Container,
+  Alert,
   Box,
   Button,
-  Typography,
+  Chip,
+  Container,
+  FormControl,
+  IconButton,
+  InputLabel,
+  MenuItem,
   Paper,
   Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   ToggleButton,
   ToggleButtonGroup,
-  Alert,
-  Chip,
-  IconButton,
   Tooltip,
+  Typography,
 } from '@mui/material'
 import { DataGrid, type GridColDef } from '@mui/x-data-grid'
 
@@ -124,92 +124,98 @@ const ImportUserGroups = (): React.JSX.Element => {
   /**
    * Parse CSV/Excel file
    */
-  const parseFile = useCallback((file: File): void => {
-    setIsLoading(true)
-    const reader = new FileReader()
+  const parseFile = useCallback(
+    (file: File): void => {
+      setIsLoading(true)
+      const reader = new FileReader()
 
-    reader.onload = e => {
-      try {
-        const text = e.target?.result as string
-        const lines = text.split('\n').filter(line => line.trim())
+      reader.onload = e => {
+        try {
+          const text = e.target?.result as string
+          const lines = text.split('\n').filter(line => line.trim())
 
-        if (lines.length < 2) {
-          toast.error('File is empty or invalid')
-          setIsLoading(false)
-          return
-        }
-
-        // Parse CSV
-        const _headers = lines[0].split(',').map(h => h.trim())
-        const parsedData: ImportUserGroupData[] = []
-
-        for (let i = 1; i < Math.min(lines.length, maxRecords + 1); i++) {
-          const values = lines[i].split(',').map(v => v.trim())
-          const errors: string[] = []
-
-          // Validate required fields
-          if (!values[0]) errors.push('Name is required')
-          if (!values[1]) errors.push('Description is required')
-
-          // Parse user IDs
-          const userIds = values[3] ? values[3].split(';').map(id => parseInt(id.trim())) : []
-
-          if (userIds.length === 0) {
-            errors.push('At least one user ID is required')
+          if (lines.length < 2) {
+            toast.error('File is empty or invalid')
+            setIsLoading(false)
+            return
           }
 
-          parsedData.push({
-            rowNumber: i,
-            name: values[0] || '',
-            description: values[1] || '',
-            notes: values[2] || undefined,
-            userIds,
-            errors: errors.length > 0 ? errors : undefined,
-          })
-        }
+          // Parse CSV
+          // Skip headers: lines[0].split(',').map(h => h.trim())
+          const parsedData: ImportUserGroupData[] = []
 
-        setImportData(parsedData)
-        toast.success(`Parsed ${parsedData.length} records successfully!`)
-      } catch {
-        toast.error('Failed to parse file. Please check the format.')
-      } finally {
+          for (let i = 1; i < Math.min(lines.length, maxRecords + 1); i++) {
+            const values = lines[i].split(',').map(v => v.trim())
+            const errors: string[] = []
+
+            // Validate required fields
+            if (!values[0]) errors.push('Name is required')
+            if (!values[1]) errors.push('Description is required')
+
+            // Parse user IDs
+            const userIds = values[3] ? values[3].split(';').map(id => parseInt(id.trim())) : []
+
+            if (userIds.length === 0) {
+              errors.push('At least one user ID is required')
+            }
+
+            parsedData.push({
+              rowNumber: i,
+              name: values[0] || '',
+              description: values[1] || '',
+              notes: values[2] || undefined,
+              userIds,
+              errors: errors.length > 0 ? errors : undefined,
+            })
+          }
+
+          setImportData(parsedData)
+          toast.success(`Parsed ${parsedData.length} records successfully!`)
+        } catch {
+          toast.error('Failed to parse file. Please check the format.')
+        } finally {
+          setIsLoading(false)
+        }
+      }
+
+      reader.onerror = () => {
+        toast.error('Failed to read file')
         setIsLoading(false)
       }
-    }
 
-    reader.onerror = () => {
-      toast.error('Failed to read file')
-      setIsLoading(false)
-    }
-
-    reader.readAsText(file)
-  }, [maxRecords])
+      reader.readAsText(file)
+    },
+    [maxRecords],
+  )
 
   /**
    * Handle file upload and parse CSV/Excel
    */
-  const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const uploadedFile = event.target.files?.[0]
-    if (!uploadedFile) return
+  const handleFileUpload = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const uploadedFile = event.target.files?.[0]
+      if (!uploadedFile) return
 
-    // Validate file type
-    const validTypes = [
-      'text/csv',
-      'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    ]
-    if (
-      !validTypes.includes(uploadedFile.type) &&
-      !uploadedFile.name.endsWith('.csv') &&
-      !uploadedFile.name.endsWith('.xlsx')
-    ) {
-      toast.error('Please upload a valid CSV or Excel file')
-      return
-    }
+      // Validate file type
+      const validTypes = [
+        'text/csv',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      ]
+      if (
+        !validTypes.includes(uploadedFile.type) &&
+        !uploadedFile.name.endsWith('.csv') &&
+        !uploadedFile.name.endsWith('.xlsx')
+      ) {
+        toast.error('Please upload a valid CSV or Excel file')
+        return
+      }
 
-    setFile(uploadedFile)
-    parseFile(uploadedFile)
-  }, [parseFile])
+      setFile(uploadedFile)
+      parseFile(uploadedFile)
+    },
+    [parseFile],
+  )
 
   /**
    * Clear uploaded file and data
@@ -251,9 +257,7 @@ const ImportUserGroups = (): React.JSX.Element => {
 
     setIsLoading(true)
     try {
-      const _jsonData = generateImportJSON()
-
-      // TODO: Call API endpoint with _jsonData
+      // TODO: Call API endpoint with generateImportJSON()
 
       // Simulate API call
       await new Promise<void>(resolve => {
@@ -405,7 +409,7 @@ const ImportUserGroups = (): React.JSX.Element => {
             <ToggleButtonGroup
               value={viewMode}
               exclusive
-              onChange={(_, newMode) => {
+              onChange={(_, newMode: 'grid' | 'json' | null) => {
                 if (newMode) {
                   setViewMode(newMode)
                 }

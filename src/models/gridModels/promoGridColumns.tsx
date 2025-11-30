@@ -1,4 +1,4 @@
-import { Link, Box } from '@mui/material'
+import { Box, Link } from '@mui/material'
 import { type GridColDef, type GridRenderCellParams } from '@mui/x-data-grid'
 
 import { RenderLongCellItem } from '../../components/datagrid'
@@ -7,9 +7,7 @@ import { APP_ROUTES } from '../../constants/routes'
 /**
  * Get promo grid columns with action handlers
  */
-export const getPromoGridColumns = (
-  onTogglePromo: (promoId: number) => void,
-): GridColDef[] => [
+export const getPromoGridColumns = (onTogglePromo: (promoId: number) => void): GridColDef[] => [
   {
     field: 'promoId',
     headerName: 'Promo ID',
@@ -32,10 +30,7 @@ export const getPromoGridColumns = (
           height: '100%',
         }}
       >
-        <RenderLongCellItem
-          columnWidth={params.colDef.computedWidth}
-          value={params.value as string | undefined}
-        />
+        <RenderLongCellItem value={(params.value as string) || '—'} />
       </Box>
     ),
   },
@@ -53,10 +48,7 @@ export const getPromoGridColumns = (
           height: '100%',
         }}
       >
-        <RenderLongCellItem
-          columnWidth={params.colDef.computedWidth}
-          value={params.value as string | undefined}
-        />
+        <RenderLongCellItem value={(params.value as string) || '—'} />
       </Box>
     ),
   },
@@ -65,7 +57,7 @@ export const getPromoGridColumns = (
     headerName: 'Discount Value',
     width: 150,
     headerAlign: 'left',
-    valueGetter: (value, row: unknown) => {
+    valueGetter: (_value, row: unknown) => {
       const rowData = row as {
         discountValue?: number
         percent?: boolean
@@ -79,10 +71,8 @@ export const getPromoGridColumns = (
     },
     renderCell: (params: GridRenderCellParams) => (
       <Box sx={{ display: 'flex',
-        alignItems: 'center',
-        height: '100%' }}>
-        {params.value}
-      </Box>
+alignItems: 'center',
+height: '100%' }}>{params.value}</Box>
     ),
   },
   {
@@ -126,16 +116,10 @@ export const getPromoGridColumns = (
             gap: '12px',
           }}
         >
-          <Link
-            href={`${APP_ROUTES.DASHBOARD.ADD_PROMO}?promoId=${promoId}&isView`}
-            sx={{ cursor: 'pointer' }}
-          >
+          <Link href={`${APP_ROUTES.DASHBOARD.ADD_PROMO}?promoId=${promoId}&isView`} sx={{ cursor: 'pointer' }}>
             View
           </Link>
-          <Link
-            href={`${APP_ROUTES.DASHBOARD.ADD_PROMO}?promoId=${promoId}`}
-            sx={{ cursor: 'pointer' }}
-          >
+          <Link href={`${APP_ROUTES.DASHBOARD.ADD_PROMO}?promoId=${promoId}`} sx={{ cursor: 'pointer' }}>
             Edit
           </Link>
           <Link

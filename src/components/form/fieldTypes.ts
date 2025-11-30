@@ -12,4 +12,5 @@ export enum FieldType {
   Autocomplete = 'autocomplete',
   Textarea = 'textarea',
   Image = 'image',
+  Address = 'address',
 }

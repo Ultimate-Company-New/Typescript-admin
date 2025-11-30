@@ -3,12 +3,12 @@ import { useEffect, useState } from 'react'
 import { Group as GroupIcon, Security as SecurityIcon } from '@mui/icons-material'
 import { Avatar, Badge, IconButton, Link } from '@mui/material'
 
+import { getRandomColor } from '../../../components/datagrid/gridHelpers'
 import { PERMISSIONS } from '../../../constants/appConstants'
 import { APP_ROUTES } from '../../../constants/routes'
 import { usePermissions } from '../../../hooks/usePermissions'
 import { type UserGroupResponseModel, type UserPermissionInfo } from '../../../models/UserModels'
 import styles from '../../../styles/Users.module.scss'
-import { getRandomColor } from '../../datagrid/gridHelpers'
 
 import { PermissionsModal, UserGroupsModal } from './index'
 
@@ -31,7 +31,7 @@ export const UserAvatar = ({
 }): JSX.Element => {
   const [imageError, setImageError] = useState(false)
   const initials = `${(firstName || '').charAt(0).toUpperCase()}${(lastName || '').charAt(0).toUpperCase()}`
-  const avatarColor = getRandomColor(userId)
+  const avatarColor: string = getRandomColor(userId)
 
   useEffect(() => {
     setImageError(false)

@@ -7,6 +7,7 @@ import {
   type FieldErrors,
   type FieldValues,
   type Path,
+  type UseFormSetValue,
 } from 'react-hook-form'
 
 import { Box, Divider, Grid, Paper } from '@mui/material'
@@ -22,6 +23,7 @@ import {
   TextFieldInput,
 } from '../form-input'
 
+import AddressFormController from './AddressFormController'
 import { FieldType } from './fieldTypes'
 
 // Re-export for backwards compatibility
@@ -59,6 +61,11 @@ export interface FieldConfig<TFieldValues extends FieldValues = FieldValues> {
   imageSize?: number
   maxSizeMB?: number
   onImageChange?: (value: string) => void
+  // For address fields
+  states?: string[]
+  cities?: string[]
+  onStateChange?: (state: string) => void
+  setValue?: UseFormSetValue<TFieldValues>
   modifyFieldProps?: (
     field: ControllerRenderProps<TFieldValues, Path<TFieldValues>>,
   ) => ControllerRenderProps<TFieldValues, Path<TFieldValues>>
@@ -144,10 +151,33 @@ export const FormFieldRenderer = <TFieldValues extends FieldValues = FieldValues
       imageSize = 150,
       maxSizeMB = 5,
       onImageChange,
+      states = [],
+      cities = [],
+      onStateChange,
+      setValue,
       modifyFieldProps,
     } = fieldConfig
 
     const isFieldDisabled = disabled || fieldDisabled || isView
+
+    // Address field - render full address form (returns multiple Grid items directly)
+    if (type === FieldType.Address) {
+      return (
+        <AddressFormController
+          key={name as string}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          control={control as any}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          errors={errors as any}
+          disabled={isFieldDisabled}
+          states={states}
+          cities={cities}
+          onStateChange={onStateChange}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          setValue={setValue! as any}
+        />
+      )
+    }
 
     return (
       <Grid item xs={gridSize.xs} sm={gridSize.sm} key={name as string}>

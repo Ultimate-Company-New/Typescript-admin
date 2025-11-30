@@ -2,17 +2,24 @@ import type React from 'react'
 import { useEffect, useMemo, useState } from 'react'
 
 import { Box } from '@mui/material'
-import { type GridColumnVisibilityModel, type GridSlotsComponent, type GridToolbarProps } from '@mui/x-data-grid'
+import {
+  type GridColumnVisibilityModel,
+  type GridFilterModel,
+  type GridPaginationModel,
+  type GridSlotsComponent,
+  type GridSortModel,
+  type GridToolbarProps,
+} from '@mui/x-data-grid'
 
 import { pickupLocationApi } from '../../api/pickupLocationApi'
 import {
   CustomNoRowsOverlay,
+  GridDensity,
   LogicOperator,
   SimpleToolbar,
   StyledDataGrid,
   createFetchFunction,
   createToggleFunction,
-  getInitialDensity,
   handleFilterModelChange,
   handleIncludeDeletedChange,
   handlePaginationModelChange,
@@ -53,7 +60,7 @@ const PickupLocations = (): React.JSX.Element => {
   const [loading, setLoading] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
   const [includeDeleted, setIncludeDeleted] = useState(false)
-  const [density, setDensity] = useState<GridDensityType>(getInitialDensity())
+  const [density, setDensity] = useState<GridDensityType>(GridDensity.STANDARD)
   const [activeFilterGroup, setActiveFilterGroup] = useState<FilterGroup>({
     logicOperator: LogicOperator.AND,
     filters: [],
@@ -90,10 +97,9 @@ const PickupLocations = (): React.JSX.Element => {
               paginationModel,
               includeDeleted,
               activeFilterGroup,
-              'Failed to fetch pickup locations',
+
             )
           },
-          'Failed to toggle pickup location',
         )
       }),
     [paginationModel, includeDeleted, activeFilterGroup],
@@ -117,7 +123,7 @@ const PickupLocations = (): React.JSX.Element => {
       paginationModel,
       includeDeleted,
       activeFilterGroup,
-      'Failed to fetch pickup locations',
+
     )
   }, [paginationModel, includeDeleted, activeFilterGroup])
 
@@ -135,25 +141,23 @@ const PickupLocations = (): React.JSX.Element => {
             totalCount={totalCount}
             paginationModelState={paginationModel}
             setPaginationModel={setPaginationModel}
-            itemLabel="pickup locations"
-            paginationTestId="pickup-locations-pagination"
             density={density}
             columnVisibilityModel={columnVisibilityModel}
             onColumnVisibilityModelChange={model => {
-              setColumnVisibilityModel(model as GridColumnVisibilityModel)
+              setColumnVisibilityModel(model)
             }}
             paginationModel={{
               page: Math.floor(paginationModel.start / paginationModel.pageSize),
               pageSize: paginationModel.pageSize,
             }}
-            onPaginationModelChange={model => {
-              void handlePaginationModelChange(model, setPaginationModel)
+            onPaginationModelChange={(model: GridPaginationModel) => {
+              handlePaginationModelChange(model, setPaginationModel)
             }}
-            onFilterModelChange={model => {
-              void handleFilterModelChange(model, paginationModel, setPaginationModel)
+            onFilterModelChange={(model: GridFilterModel) => {
+              handleFilterModelChange(model, paginationModel, setPaginationModel)
             }}
-            onSortModelChange={model => {
-              void handleSortModelChange(model, setPaginationModel)
+            onSortModelChange={(model: GridSortModel) => {
+              handleSortModelChange(model, setPaginationModel)
             }}
             getRowId={row =>
               (row as PickupLocationData).pickupLocationId ??

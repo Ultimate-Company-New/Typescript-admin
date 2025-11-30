@@ -1,5 +1,5 @@
 import { LocationOn as LocationIcon } from '@mui/icons-material'
-import { Link, Box, Tooltip } from '@mui/material'
+import { Box, Link, Tooltip } from '@mui/material'
 import { type GridColDef, type GridRenderCellParams } from '@mui/x-data-grid'
 
 import { RenderLongCellItem } from '../../components/datagrid'
@@ -65,18 +65,15 @@ export const getPickupLocationGridColumns = (
     minWidth: 200,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: PickupLocationData) => {
+    valueGetter: (_value, row: PickupLocationData) => {
       const rowData = row
       return rowData.addressNickName ?? rowData.pickupLocation?.addressNickName ?? ''
     },
     renderCell: (params: GridRenderCellParams<PickupLocationData>) => (
       <Box sx={{ display: 'flex',
-        alignItems: 'center',
-        height: '100%' }}>
-        <RenderLongCellItem
-          columnWidth={params.colDef.computedWidth}
-          value={params.value as string}
-        />
+alignItems: 'center',
+height: '100%' }}>
+        <RenderLongCellItem value={params.value as string} />
       </Box>
     ),
   },
@@ -87,7 +84,7 @@ export const getPickupLocationGridColumns = (
     minWidth: 220,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: PickupLocationData) => {
+    valueGetter: (_value, row: PickupLocationData) => {
       const rowData = row
       const addr = rowData.address
       if (!addr) return '—'
@@ -105,11 +102,11 @@ export const getPickupLocationGridColumns = (
       if (!addr) {
         return (
           <Box sx={{ display: 'flex',
-            alignItems: 'center',
-            height: '100%',
-            gap: '8px' }}>
+alignItems: 'center',
+height: '100%',
+gap: '8px' }}>
             <LocationIcon sx={{ fontSize: 18,
-              color: 'text.secondary' }} />
+color: 'text.secondary' }} />
             <span>—</span>
           </Box>
         )
@@ -147,13 +144,11 @@ export const getPickupLocationGridColumns = (
             }}
           >
             <LocationIcon sx={{ fontSize: 18,
-              color: 'text.secondary',
-              flexShrink: 0 }} />
+color: 'text.secondary',
+flexShrink: 0 }} />
             <span style={{ overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap' }}>
-              {shortAddress}
-            </span>
+textOverflow: 'ellipsis',
+whiteSpace: 'nowrap' }}>{shortAddress}</span>
           </Box>
         </Tooltip>
       )
@@ -166,18 +161,15 @@ export const getPickupLocationGridColumns = (
     minWidth: 200,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: PickupLocationData) => {
+    valueGetter: (_value, row: PickupLocationData) => {
       const rowData = row
       return rowData.address?.nameOnAddress ?? rowData.nameOnAddress ?? ''
     },
     renderCell: (params: GridRenderCellParams<PickupLocationData>) => (
       <Box sx={{ display: 'flex',
-        alignItems: 'center',
-        height: '100%' }}>
-        <RenderLongCellItem
-          columnWidth={params.colDef.computedWidth}
-          value={params.value as string}
-        />
+alignItems: 'center',
+height: '100%' }}>
+        <RenderLongCellItem value={params.value as string} />
       </Box>
     ),
   },
@@ -187,17 +179,15 @@ export const getPickupLocationGridColumns = (
     width: 160,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: PickupLocationData) => {
+    valueGetter: (_value, row: PickupLocationData) => {
       const rowData = row
       const phone = rowData.address?.phoneOnAddress ?? rowData.phoneOnAddress ?? ''
       return formatPhone(phone)
     },
     renderCell: (params: GridRenderCellParams) => (
       <Box sx={{ display: 'flex',
-        alignItems: 'center',
-        height: '100%' }}>
-        {params.value}
-      </Box>
+alignItems: 'center',
+height: '100%' }}>{params.value}</Box>
     ),
   },
   {
@@ -207,18 +197,15 @@ export const getPickupLocationGridColumns = (
     minWidth: 220,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: PickupLocationData) => {
+    valueGetter: (_value, row: PickupLocationData) => {
       const rowData = row
       return rowData.address?.emailOnAddress ?? rowData.emailOnAddress ?? '—'
     },
     renderCell: (params: GridRenderCellParams) => (
       <Box sx={{ display: 'flex',
-        alignItems: 'center',
-        height: '100%' }}>
-        <RenderLongCellItem
-          columnWidth={params.colDef.computedWidth}
-          value={(params.value as string) || '—'}
-        />
+alignItems: 'center',
+height: '100%' }}>
+        <RenderLongCellItem value={(params.value as string) || '—'} />
       </Box>
     ),
   },
@@ -228,16 +215,14 @@ export const getPickupLocationGridColumns = (
     width: 150,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: PickupLocationData) => {
+    valueGetter: (_value, row: PickupLocationData) => {
       const rowData = row
       return rowData.shipRocketPickupLocationId ?? rowData.pickupLocation?.shipRocketPickupLocationId ?? '—'
     },
     renderCell: (params: GridRenderCellParams) => (
       <Box sx={{ display: 'flex',
-        alignItems: 'center',
-        height: '100%' }}>
-        {params.value}
-      </Box>
+alignItems: 'center',
+height: '100%' }}>{params.value}</Box>
     ),
   },
   {
@@ -262,9 +247,9 @@ export const getPickupLocationGridColumns = (
                 }
               }}
               sx={{ cursor: 'pointer',
-                color: 'success.main' }}
+color: 'success.main' }}
             >
-                Activate
+              Activate
             </Link>
           </div>
         )
@@ -272,18 +257,18 @@ export const getPickupLocationGridColumns = (
 
       return (
         <div style={{ display: 'flex',
-          gap: '12px' }}>
+gap: '12px' }}>
           <Link
             href={`${APP_ROUTES.DASHBOARD.ADD_PICKUP_LOCATION}?pickupLocationId=${pickupLocationId}&isView`}
             sx={{ cursor: 'pointer' }}
           >
-              View
+            View
           </Link>
           <Link
             href={`${APP_ROUTES.DASHBOARD.ADD_PICKUP_LOCATION}?pickupLocationId=${pickupLocationId}`}
             sx={{ cursor: 'pointer' }}
           >
-              Edit
+            Edit
           </Link>
           <Link
             href="#"
@@ -294,9 +279,9 @@ export const getPickupLocationGridColumns = (
               }
             }}
             sx={{ cursor: 'pointer',
-              color: 'error.main' }}
+color: 'error.main' }}
           >
-              Deactivate
+            Deactivate
           </Link>
         </div>
       )

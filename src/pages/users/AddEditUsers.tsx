@@ -20,23 +20,13 @@ import {
 
 import { createUser, getAllPermissions, getUserById, updateUser } from '../../api/userApi'
 import { getUserLogsInBatches, type UserLogResponseModel } from '../../api/userLogApi'
-import {
-  AddressDetailsView,
-  AddressFormController,
-  FillTestDataButton,
-  FormFieldRenderer,
-  UserDetailsView,
-  UserGroupSelectionGrid,
-  UserPermissions,
-  type Permission,
-  type SectionConfig,
-} from '../../components'
+import { FormFieldRenderer, UserGroupSelectionGrid } from '../../components'
 import { BlueButton, RedButton } from '../../components/buttons'
 import {
+  GridDensity,
   LogicOperator,
   SimpleToolbar,
   StyledDataGrid,
-  getInitialDensity,
   getRowClassName,
   handleFilterModelChange,
   handlePaginationModelChange,
@@ -57,6 +47,15 @@ import styles from '../../styles/Users.module.scss'
 import { type PaginatedGridInterface } from '../../types/grid.types'
 import { getAllStates, getCitiesByState } from '../../utils/stateCityMapper'
 import { userFormSchema, type UserFormData } from '../../utils/validationSchemas'
+
+import {
+  AddressDetailsView,
+  FillTestDataButton,
+  UserDetailsView,
+  UserPermissions,
+  type Permission,
+  type SectionConfig,
+} from './components'
 
 /**
  * Normalize permission codes so comparisons are consistent regardless of casing or delimiters
@@ -238,7 +237,7 @@ const AddEditUsers = (): JSX.Element => {
     actualDataCount: 0,
     totalPaginationBlockCount: 0,
   })
-  const [userLogsDensity, setUserLogsDensity] = useState<GridDensityType>(getInitialDensity())
+  const [userLogsDensity, setUserLogsDensity] = useState<GridDensityType>(GridDensity.STANDARD)
   const [userLogsActiveFilterGroup, setUserLogsActiveFilterGroup] = useState<FilterGroup>({
     logicOperator: LogicOperator.AND,
     filters: [],
@@ -604,9 +603,12 @@ const AddEditUsers = (): JSX.Element => {
     const normalizedRoleCodes = rolePermissionCodes.map(normalizePermissionCode)
 
     // Map permission codes to permission IDs (case / delimiter insensitive)
-    const permissionIds = availablePermissions
-      .filter(permission => normalizedRoleCodes.includes(normalizePermissionCode(permission.permissionCode as string)))
-      .map(permission => permission.permissionId as number)
+    const permissionIds: number[] = []
+    for (const perm of availablePermissions) {
+      if (normalizedRoleCodes.includes(normalizePermissionCode(perm.permissionCode))) {
+        permissionIds.push(perm.permissionId)
+      }
+    }
 
     // Update selected permissions only if there's a difference
     if (!haveSameIds(selectedPermissionIds, permissionIds)) {
@@ -770,6 +772,32 @@ const AddEditUsers = (): JSX.Element => {
         ],
       },
       {
+        title: 'Address Details',
+        fields: [
+          {
+            name: 'address' as const,
+            label: 'Address Details',
+            type: FieldType.Address as FieldType,
+            required: true,
+            gridSize: {
+              xs: 12,
+              sm: 12,
+            },
+            states: allStates,
+            cities: citiesForState,
+            onStateChange: setSelectedState,
+            setValue: setValue,
+          },
+        ],
+      },
+    ],
+    [roleOptions, isEdit, allStates, citiesForState, setValue],
+  )
+
+  // Notes section configuration - separate to place after User Permissions
+  const notesSections = useMemo<Array<SectionConfig<UserFormData>>>(
+    () => [
+      {
         title: 'Notes',
         fields: [
           {
@@ -787,7 +815,7 @@ const AddEditUsers = (): JSX.Element => {
         ],
       },
     ],
-    [roleOptions, isEdit],
+    [],
   )
 
   // User Logs grid callbacks - memoized outside of conditional rendering
@@ -796,18 +824,18 @@ const AddEditUsers = (): JSX.Element => {
   }, [])
 
   const handleUserLogsPaginationChange = useCallback((model: GridPaginationModel) => {
-    void handlePaginationModelChange(model, setUserLogsPaginationModel)
+    handlePaginationModelChange(model, setUserLogsPaginationModel)
   }, [])
 
   const handleUserLogsFilterChange = useCallback(
     (model: GridFilterModel) => {
-      void handleFilterModelChange(model, userLogsPaginationModel, setUserLogsPaginationModel)
+      handleFilterModelChange(model, userLogsPaginationModel, setUserLogsPaginationModel)
     },
     [userLogsPaginationModel],
   )
 
   const handleUserLogsSortChange = useCallback((model: GridSortModel) => {
-    void handleSortModelChange(model, setUserLogsPaginationModel)
+    handleSortModelChange(model, setUserLogsPaginationModel)
   }, [])
 
   const getUserLogsRowId = useCallback((row: GridValidRowModel): number => {
@@ -837,7 +865,7 @@ const AddEditUsers = (): JSX.Element => {
         <Box className={styles['add-users-page__container']}>
           {isView ? (
             <>
-              {/* View Mode - Personal Information */}
+              {/* View Mode - Personal Information (includes Notes) */}
               <UserDetailsView
                 profilePictureBase64={formMethods.getValues('profilePictureBase64') ?? ''}
                 firstName={formMethods.getValues('firstName')}
@@ -866,7 +894,7 @@ const AddEditUsers = (): JSX.Element => {
             </>
           ) : (
             <>
-              {/* Edit/Add Mode - Personal Information and Notes Sections */}
+              {/* Edit/Add Mode - Personal Information and Address Sections */}
               <FormFieldRenderer
                 sections={formSections}
                 control={control}
@@ -877,17 +905,6 @@ const AddEditUsers = (): JSX.Element => {
                 sectionTitleClassName={styles['add-users-page__section-title']}
                 dividerClassName={styles['add-users-page__divider']}
                 dividerSpacerClassName={styles['add-users-page__divider-spacer']}
-              />
-
-              {/* Edit/Add Mode - Address Details Section - Keep as is for now due to complex logic */}
-              <AddressFormController
-                control={control}
-                errors={errors}
-                disabled={loading}
-                states={allStates}
-                cities={citiesForState}
-                onStateChange={setSelectedState}
-                setValue={setValue}
               />
             </>
           )}
@@ -906,6 +923,21 @@ const AddEditUsers = (): JSX.Element => {
               disabled={selectedRole !== USER_ROLES.CUSTOM}
             />
           </Paper>
+
+          {/* Notes Section - Only in Edit/Add Mode (View mode shows notes in UserDetailsView) */}
+          {!isView && (
+            <FormFieldRenderer
+              sections={notesSections}
+              control={control}
+              errors={errors}
+              disabled={loading}
+              isView={false}
+              sectionClassName={styles['add-users-page__section']}
+              sectionTitleClassName={styles['add-users-page__section-title']}
+              dividerClassName={styles['add-users-page__divider']}
+              dividerSpacerClassName={styles['add-users-page__divider-spacer']}
+            />
+          )}
 
           {/* User Groups Section */}
           <UserGroupSelectionGrid

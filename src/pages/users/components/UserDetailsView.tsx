@@ -1,7 +1,7 @@
 import { Avatar, Box, Divider, Grid, Paper } from '@mui/material'
 
+import { BodyText, Subheader } from '../../../components/fonts'
 import styles from '../../../styles/Users.module.scss'
-import { BodyText, Subheader } from '../../fonts'
 
 interface UserDetailsViewProps {
   profilePictureBase64: string

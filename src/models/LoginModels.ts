@@ -15,7 +15,7 @@ export interface LoginRequestModel {
 export interface ClientResponseModel {
   clientId: number
   name: string
-  logo?: string
+  logoUrl?: string
   apiKey: string
 }
 

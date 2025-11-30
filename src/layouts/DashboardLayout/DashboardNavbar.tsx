@@ -56,6 +56,7 @@ const StyledAppBar = styled(AppBar, {
 const DashboardNavbar = forwardRef<HTMLDivElement, DashboardNavbarProps>(({ open, onDrawerToggle }, ref) => {
   // Get selected carrier info from localStorage
   const selectedCarrierName = localStorage.getItem('selectedCarrierName') ?? 'Admin Portal'
+  const selectedCarrierLogo = localStorage.getItem('selectedCarrierLogo') ?? ''
 
   // State for unread message count
   const [unreadMessageCount, setUnreadMessageCount] = useState<number>(0)
@@ -97,6 +98,7 @@ const DashboardNavbar = forwardRef<HTMLDivElement, DashboardNavbarProps>(({ open
     localStorage.removeItem('selectedClientId')
     localStorage.removeItem('clientId')
     localStorage.removeItem('selectedCarrierName')
+    localStorage.removeItem('selectedCarrierLogo')
     localStorage.removeItem('clients')
     localStorage.removeItem('loginName')
     localStorage.removeItem('userId')
@@ -125,8 +127,13 @@ const DashboardNavbar = forwardRef<HTMLDivElement, DashboardNavbarProps>(({ open
 
         {/* Client Logo & Name */}
         <Box className={styles['dashboard-navbar__client-info']}>
-          <Avatar sx={{ bgcolor: 'primary.light' }} className={styles['dashboard-navbar__client-avatar']}>
-            {selectedCarrierName.charAt(0).toUpperCase()}
+          <Avatar
+            sx={{ bgcolor: 'primary.light' }}
+            className={styles['dashboard-navbar__client-avatar']}
+            src={selectedCarrierLogo}
+            alt={selectedCarrierName}
+          >
+            {!selectedCarrierLogo && selectedCarrierName.charAt(0).toUpperCase()}
           </Avatar>
           <Typography variant="h6" noWrap component="div" className={styles['dashboard-navbar__client-name']}>
             {selectedCarrierName}

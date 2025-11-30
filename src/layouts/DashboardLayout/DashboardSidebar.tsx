@@ -4,6 +4,7 @@ import { Link as RouterLink, useLocation } from 'react-router-dom'
 
 import {
   Add as AddIcon,
+  BugReport as BugReportIcon,
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
   Description as DescriptionIcon,
@@ -909,6 +910,25 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
             </ListItemIcon>
             <ListItemText
               primary="Settings"
+              className={`dashboard-sidebar__list-item-text ${open ? 'dashboard-sidebar__list-item-text--visible' : 'dashboard-sidebar__list-item-text--hidden'}`}
+            />
+          </ListItemButton>
+
+          {/* QA Dashboard */}
+          <ListItemButton
+            component={RouterLink}
+            to={APP_ROUTES.DASHBOARD.QA_DASHBOARD}
+            selected={isActive(APP_ROUTES.DASHBOARD.QA_DASHBOARD)}
+            data-test-id="sidebar-qa-dashboard-item"
+            className={`dashboard-sidebar__list-item dashboard-sidebar__parent-item ${open ? 'dashboard-sidebar__list-item--open' : 'dashboard-sidebar__list-item--closed'}`}
+          >
+            <ListItemIcon
+              className={`dashboard-sidebar__list-item-icon ${open ? 'dashboard-sidebar__list-item-icon--open' : 'dashboard-sidebar__list-item-icon--closed'}`}
+            >
+              <BugReportIcon />
+            </ListItemIcon>
+            <ListItemText
+              primary="QA Dashboard"
               className={`dashboard-sidebar__list-item-text ${open ? 'dashboard-sidebar__list-item-text--visible' : 'dashboard-sidebar__list-item-text--hidden'}`}
             />
           </ListItemButton>

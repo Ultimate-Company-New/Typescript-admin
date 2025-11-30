@@ -167,3 +167,55 @@
     flex-wrap: wrap;
   }
 }
+
+// ============================================================================
+// Excel Upload Input Styles
+// ============================================================================
+
+.excel-upload {
+  width: 100%;
+
+  &__button-container {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 16px;
+  }
+
+  &__button {
+    text-transform: none;
+  }
+
+  &__file-alert {
+    margin-bottom: 16px;
+  }
+
+  &__file-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+    text-align: center;
+    background-color: #fafafa;
+    border: 2px dashed #e0e0e0;
+    border-radius: 8px;
+    transition: all 0.2s ease-in-out;
+
+    &:hover {
+      border-color: #bdbdbd;
+      background-color: #f5f5f5;
+    }
+  }
+
+  &__empty-icon {
+    font-size: 64px;
+    color: #bdbdbd;
+    margin-bottom: 16px;
+  }
+}

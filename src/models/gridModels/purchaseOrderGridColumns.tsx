@@ -88,7 +88,7 @@ export const getPurchaseOrderGridColumns = (
     minWidth: 180,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: PurchaseOrderData) => {
+    valueGetter: (_value, row: PurchaseOrderData) => {
       const rowData = row
       const addr = rowData.address ?? {}
       const city = addr.city ?? ''
@@ -144,7 +144,7 @@ export const getPurchaseOrderGridColumns = (
     minWidth: 150,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: PurchaseOrderData) => {
+    valueGetter: (_value, row: PurchaseOrderData) => {
       const rowData = row
       const date =
         rowData.expectedDeliveryDate ??
@@ -173,7 +173,7 @@ export const getPurchaseOrderGridColumns = (
     minWidth: 200,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: PurchaseOrderData) => {
+    valueGetter: (_value, row: PurchaseOrderData) => {
       const rowData = row
       return rowData.vendorNumber ?? rowData.purchaseOrder?.vendorNumber ?? '—'
     },
@@ -182,7 +182,6 @@ export const getPurchaseOrderGridColumns = (
         alignItems: 'center',
         height: '100%' }}>
         <RenderLongCellItem
-          columnWidth={params.colDef.computedWidth}
           value={String(params.value || '—')}
         />
       </Box>
@@ -195,7 +194,7 @@ export const getPurchaseOrderGridColumns = (
     minWidth: 200,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: PurchaseOrderData) => {
+    valueGetter: (_value, row: PurchaseOrderData) => {
       const rowData = row
       return (
         rowData.purchaseOrderReceipt ??
@@ -210,7 +209,6 @@ export const getPurchaseOrderGridColumns = (
         alignItems: 'center',
         height: '100%' }}>
         <RenderLongCellItem
-          columnWidth={params.colDef.computedWidth}
           value={String(params.value || '—')}
         />
       </Box>
@@ -223,7 +221,7 @@ export const getPurchaseOrderGridColumns = (
     minWidth: 220,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: PurchaseOrderData) => {
+    valueGetter: (_value, row: PurchaseOrderData) => {
       const rowData = row
       const user = rowData.approvedByUser
       if (!user) return '—'
@@ -266,7 +264,7 @@ export const getPurchaseOrderGridColumns = (
     minWidth: 150,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: PurchaseOrderData) => {
+    valueGetter: (_value, row: PurchaseOrderData) => {
       const rowData = row
       const date = rowData.approvedDate ?? rowData.purchaseOrder?.approvedDate
       if (!date) return '—'
@@ -291,7 +289,7 @@ export const getPurchaseOrderGridColumns = (
     minWidth: 220,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: PurchaseOrderData) => {
+    valueGetter: (_value, row: PurchaseOrderData) => {
       const rowData = row
       const user = rowData.rejectedByUser
       if (!user) return '—'
@@ -334,7 +332,7 @@ export const getPurchaseOrderGridColumns = (
     minWidth: 150,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: PurchaseOrderData) => {
+    valueGetter: (_value, row: PurchaseOrderData) => {
       const rowData = row
       const date = rowData.rejectedDate ?? rowData.purchaseOrder?.rejectedDate
       if (!date) return '—'
@@ -359,7 +357,7 @@ export const getPurchaseOrderGridColumns = (
     minWidth: 220,
     align: 'left',
     headerAlign: 'left',
-    valueGetter: (value, row: PurchaseOrderData) => {
+    valueGetter: (_value, row: PurchaseOrderData) => {
       const rowData = row
       const { lead } = rowData
       if (!lead) return '—'

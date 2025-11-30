@@ -1,28 +1,31 @@
 import type React from 'react'
-import { useState, useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { Box } from '@mui/material'
 import {
   type GridColumnVisibilityModel,
-
+  type GridFilterModel,
+  type GridPaginationModel,
+  type GridSlotsComponent,
+  type GridSortModel,
   type GridToolbarProps,
-  type GridSlotsComponent } from '@mui/x-data-grid'
+} from '@mui/x-data-grid'
 
 import { promoApi } from '../../api/promoApi'
 import {
-  StyledDataGrid,
   CustomNoRowsOverlay,
-  SimpleToolbar,
-  type FilterGroup,
-  handlePaginationModelChange,
-  handleFilterModelChange,
-  handleSortModelChange,
-  handleIncludeDeletedChange,
-  getInitialDensity,
-  type GridDensityType,
+  GridDensity,
   LogicOperator,
+  SimpleToolbar,
+  StyledDataGrid,
   createFetchFunction,
   createToggleFunction,
+  handleFilterModelChange,
+  handleIncludeDeletedChange,
+  handlePaginationModelChange,
+  handleSortModelChange,
+  type FilterGroup,
+  type GridDensityType,
 } from '../../components/datagrid'
 import { getPromoGridColumns } from '../../models/gridModels/promoGridColumns'
 import { type PaginatedGridInterface } from '../../types/grid.types'
@@ -61,7 +64,7 @@ const Promos = (): React.JSX.Element => {
   const [loading, setLoading] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
   const [includeDeleted, setIncludeDeleted] = useState(false)
-  const [density, setDensity] = useState<GridDensityType>(getInitialDensity())
+  const [density, setDensity] = useState<GridDensityType>(GridDensity.STANDARD)
   const [activeFilterGroup, setActiveFilterGroup] = useState<FilterGroup>({
     logicOperator: LogicOperator.AND,
     filters: [],
@@ -98,10 +101,9 @@ const Promos = (): React.JSX.Element => {
               paginationModel,
               includeDeleted,
               activeFilterGroup,
-              'Failed to fetch promos',
+
             )
           },
-          'Failed to toggle promo',
         )
       }),
     [paginationModel, includeDeleted, activeFilterGroup],
@@ -125,7 +127,7 @@ const Promos = (): React.JSX.Element => {
       paginationModel,
       includeDeleted,
       activeFilterGroup,
-      'Failed to fetch promos',
+
     )
   }, [paginationModel, includeDeleted, activeFilterGroup])
 
@@ -143,29 +145,31 @@ const Promos = (): React.JSX.Element => {
             totalCount={totalCount}
             paginationModelState={paginationModel}
             setPaginationModel={setPaginationModel}
-            itemLabel="promos"
-            paginationTestId="promos-pagination"
             density={density}
             columnVisibilityModel={columnVisibilityModel}
             onColumnVisibilityModelChange={model => {
-              setColumnVisibilityModel(model as GridColumnVisibilityModel)
+              setColumnVisibilityModel(model)
             }}
             paginationModel={{
               page: Math.floor(paginationModel.start / paginationModel.pageSize),
               pageSize: paginationModel.pageSize,
             }}
-            onPaginationModelChange={model => {
-              void handlePaginationModelChange(model, setPaginationModel)
+            onPaginationModelChange={(model: GridPaginationModel) => {
+              handlePaginationModelChange(model, setPaginationModel)
             }}
-            onFilterModelChange={model => {
-              void handleFilterModelChange(model, paginationModel, setPaginationModel)
+            onFilterModelChange={(model: GridFilterModel) => {
+              handleFilterModelChange(model, paginationModel, setPaginationModel)
             }}
-            onSortModelChange={model => {
-              void handleSortModelChange(model, setPaginationModel)
+            onSortModelChange={(model: GridSortModel) => {
+              handleSortModelChange(model, setPaginationModel)
             }}
             getRowId={row => (row as PromoData).promoId}
             getRowClassName={params => {
-              const classes = [(params as { indexRelativeToCurrentPage: number }).indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd']
+              const classes = [
+                (params as { indexRelativeToCurrentPage: number }).indexRelativeToCurrentPage % 2 === 0
+                  ? 'even'
+                  : 'odd',
+              ]
               if ((params.row as PromoData).isDeleted ?? (params.row as PromoData).deleted) {
                 classes.push('deleted')
               }

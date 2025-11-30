@@ -41,6 +41,7 @@ export interface LeadData {
     lastName: string
     loginName: string
   }
+  isDeleted?: boolean
 }
 
 /**
@@ -70,7 +71,7 @@ export const getLeadGridColumns = (onToggleLead: (leadId: number) => void): Grid
     filterable: false,
     width: 0,
     minWidth: 0,
-    valueGetter: (value, row: LeadData) => {
+    valueGetter: (_value, row: LeadData) => {
       const rowData = row as LeadData & { leadId?: number }
       return rowData.leadId ?? rowData.lead.leadId
     },
@@ -82,7 +83,7 @@ export const getLeadGridColumns = (onToggleLead: (leadId: number) => void): Grid
     minWidth: 140,
     align: 'center',
     headerAlign: 'center',
-    valueGetter: (value, row: LeadData) => {
+    valueGetter: (_value, row: LeadData) => {
       const rowData = row as LeadData & { leadStatus?: string }
       return rowData.leadStatus ?? rowData.lead.leadStatus
     },
@@ -118,7 +119,7 @@ width: '100%' }}>
     flex: 1,
     minWidth: 120,
     headerAlign: 'left',
-    valueGetter: (value, row: LeadData) => {
+    valueGetter: (_value, row: LeadData) => {
       const rowData = row as LeadData & { firstName?: string }
       return rowData.firstName ?? rowData.lead.firstName
     },
@@ -126,7 +127,7 @@ width: '100%' }}>
       <Box sx={{ display: 'flex',
 alignItems: 'center',
 height: '100%' }}>
-        <RenderLongCellItem columnWidth={params.colDef.computedWidth} value={params.value as string} />
+        <RenderLongCellItem value={params.value as string} />
       </Box>
     ),
   },
@@ -136,7 +137,7 @@ height: '100%' }}>
     flex: 1,
     minWidth: 120,
     headerAlign: 'left',
-    valueGetter: (value, row: LeadData) => {
+    valueGetter: (_value, row: LeadData) => {
       const rowData = row as LeadData & { lastName?: string }
       return rowData.lastName ?? rowData.lead.lastName
     },
@@ -144,7 +145,7 @@ height: '100%' }}>
       <Box sx={{ display: 'flex',
 alignItems: 'center',
 height: '100%' }}>
-        <RenderLongCellItem columnWidth={params.colDef.computedWidth} value={params.value as string} />
+        <RenderLongCellItem value={params.value as string} />
       </Box>
     ),
   },
@@ -154,7 +155,7 @@ height: '100%' }}>
     flex: 1.4,
     minWidth: 200,
     headerAlign: 'left',
-    valueGetter: (value, row: LeadData) => {
+    valueGetter: (_value, row: LeadData) => {
       const rowData = row as LeadData & { email?: string }
       return rowData.email ?? rowData.lead.email
     },
@@ -162,7 +163,7 @@ height: '100%' }}>
       <Box sx={{ display: 'flex',
 alignItems: 'center',
 height: '100%' }}>
-        <RenderLongCellItem columnWidth={params.colDef.computedWidth} value={params.value as string} />
+        <RenderLongCellItem value={params.value as string} />
       </Box>
     ),
   },
@@ -172,7 +173,7 @@ height: '100%' }}>
     flex: 0.9,
     minWidth: 140,
     headerAlign: 'left',
-    valueGetter: (value, row: LeadData) => {
+    valueGetter: (_value, row: LeadData) => {
       const rowData = row as LeadData & { phone?: string }
       return formatPhone(rowData.phone ?? rowData.lead.phone)
     },
@@ -188,7 +189,7 @@ height: '100%' }}>{params.value as string}</Box>
     flex: 1.1,
     minWidth: 150,
     headerAlign: 'left',
-    valueGetter: (value, row: LeadData) => {
+    valueGetter: (_value, row: LeadData) => {
       const rowData = row as LeadData & { company?: string }
       return rowData.company ?? rowData.lead.company
     },
@@ -196,7 +197,7 @@ height: '100%' }}>{params.value as string}</Box>
       <Box sx={{ display: 'flex',
 alignItems: 'center',
 height: '100%' }}>
-        <RenderLongCellItem columnWidth={params.colDef.computedWidth} value={params.value as string} />
+        <RenderLongCellItem value={params.value as string} />
       </Box>
     ),
   },
@@ -206,7 +207,7 @@ height: '100%' }}>
     flex: 1,
     minWidth: 130,
     headerAlign: 'left',
-    valueGetter: (value, row: LeadData) => {
+    valueGetter: (_value, row: LeadData) => {
       const rowData = row as LeadData & { title?: string }
       return rowData.title ?? rowData.lead.title
     },
@@ -214,7 +215,7 @@ height: '100%' }}>
       <Box sx={{ display: 'flex',
 alignItems: 'center',
 height: '100%' }}>
-        <RenderLongCellItem columnWidth={params.colDef.computedWidth} value={params.value as string} />
+        <RenderLongCellItem value={params.value as string} />
       </Box>
     ),
   },
@@ -224,7 +225,7 @@ height: '100%' }}>
     flex: 1.5,
     minWidth: 220,
     headerAlign: 'left',
-    valueGetter: (value, row: LeadData) => {
+    valueGetter: (_value, row: LeadData) => {
       const addr = row.address
       // Only show city and state in the grid
       const parts: string[] = []
@@ -285,7 +286,7 @@ whiteSpace: 'nowrap' }}>{shortAddress}</span>
     flex: 0.7,
     minWidth: 110,
     headerAlign: 'left',
-    valueGetter: (value, row: LeadData) => {
+    valueGetter: (_value, row: LeadData) => {
       const rowData = row as LeadData & { companySize?: number }
       return rowData.companySize ?? rowData.lead.companySize
     },
@@ -301,7 +302,7 @@ height: '100%' }}>{params.value as number}</Box>
     flex: 0.9,
     minWidth: 150,
     headerAlign: 'left',
-    valueGetter: (value, row: LeadData) => {
+    valueGetter: (_value, row: LeadData) => {
       const rowData = row as LeadData & { annualRevenue?: string }
       return formatCurrency(rowData.annualRevenue ?? rowData.lead.annualRevenue)
     },
@@ -317,7 +318,7 @@ height: '100%' }}>{params.value as string}</Box>
     flex: 1.2,
     minWidth: 180,
     headerAlign: 'left',
-    valueGetter: (value, row: LeadData) => {
+    valueGetter: (_value, row: LeadData) => {
       const agent = row.assignedAgent
       return `${agent.firstName} ${agent.lastName} (${agent.loginName})`.trim() || '—'
     },
@@ -325,7 +326,7 @@ height: '100%' }}>{params.value as string}</Box>
       <Box sx={{ display: 'flex',
 alignItems: 'center',
 height: '100%' }}>
-        <RenderLongCellItem columnWidth={params.colDef.computedWidth} value={params.value as string} />
+        <RenderLongCellItem value={params.value as string} />
       </Box>
     ),
   },
@@ -362,10 +363,7 @@ color: 'success.main' }}
       return (
         <div style={{ display: 'flex',
 gap: '12px' }}>
-          <Link
-            href={`${APP_ROUTES.DASHBOARD.ADD_LEAD}?leadId=${resolvedLeadId}&isView`}
-            sx={{ cursor: 'pointer' }}
-          >
+          <Link href={`${APP_ROUTES.DASHBOARD.ADD_LEAD}?leadId=${resolvedLeadId}&isView`} sx={{ cursor: 'pointer' }}>
             View
           </Link>
           <Link href={`${APP_ROUTES.DASHBOARD.ADD_LEAD}?leadId=${resolvedLeadId}`} sx={{ cursor: 'pointer' }}>

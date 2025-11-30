@@ -1,3 +1,4 @@
+export type { SectionConfig } from '../../../components/form/FormFieldRenderer'
 export { default as AddressDetailsView } from './AddressDetailsView'
 export { default as FillTestDataButton } from './FillTestDataButton'
 export { default as PermissionsModal } from './PermissionsModal'

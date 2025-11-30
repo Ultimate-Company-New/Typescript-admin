@@ -1,11 +1,11 @@
 import type React from 'react'
-import { useState, useEffect, useCallback } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
-import { Save as SaveIcon, Cancel as CancelIcon } from '@mui/icons-material'
-import { Container, Box, Paper, TextField, Button, Typography, Divider } from '@mui/material'
+import { Cancel as CancelIcon, Save as SaveIcon } from '@mui/icons-material'
+import { Box, Button, Container, Divider, Paper, TextField, Typography } from '@mui/material'
 import { DataGrid, type GridColDef, type GridRowSelectionModel } from '@mui/x-data-grid'
 
 import { Header, Subheader } from '../../components'
@@ -46,7 +46,7 @@ const AddUserGroups = (): React.JSX.Element => {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [notes, setNotes] = useState('')
-  const [selectedUserIds, setSelectedUserIds] = useState<GridRowSelectionModel>([])
+  const [selectedUserIds, setSelectedUserIds] = useState<GridRowSelectionModel>([] as unknown as GridRowSelectionModel)
   const [users, setUsers] = useState<UserData[]>([])
 
   /**
@@ -70,7 +70,7 @@ const AddUserGroups = (): React.JSX.Element => {
       setName(mockGroup.name)
       setDescription(mockGroup.description)
       setNotes(mockGroup.notes || '')
-      setSelectedUserIds(mockGroup.userIds)
+      setSelectedUserIds(mockGroup.userIds as unknown as GridRowSelectionModel)
     } catch {
       toast.error('Failed to fetch user group details')
     } finally {
@@ -154,20 +154,21 @@ const AddUserGroups = (): React.JSX.Element => {
       return
     }
 
-    if (selectedUserIds.length === 0) {
+    if ((selectedUserIds as unknown as number[]).length === 0) {
       toast.error('Please select at least one user')
       return
     }
 
     setLoading(true)
     try {
-      const _requestData = {
-        userGroupId: isEdit ? parseInt(userGroupId ?? '0') : undefined,
-        name: name.trim(),
-        description: description.trim(),
-        notes: notes.trim(),
-        userIds: selectedUserIds.map((id: number | string) => (typeof id === 'number' ? id : parseInt(String(id), 10))),
-      }
+      // TODO: Prepare request data
+      // const requestData = {
+      //   userGroupId: isEdit && userGroupId ? parseInt(userGroupId, 10) : undefined,
+      //   name: name.trim(),
+      //   description: description.trim(),
+      //   notes: notes.trim(),
+      //   userIds: (selectedUserIds as Array<number | string>).map((id): number => (typeof id === 'number' ? id : parseInt(String(id), 10))),
+      // }
 
       if (isEdit) {
         // TODO: Call update API
@@ -246,7 +247,11 @@ const AddUserGroups = (): React.JSX.Element => {
       <Box className="add-user-groups-page__container">
         {/* Header */}
         <Header
-          label={isView ? 'View User Group' : isEdit ? 'Edit User Group' : 'Add User Group'}
+          label={(() => {
+            if (isView) return 'View User Group'
+            if (isEdit) return 'Edit User Group'
+            return 'Add User Group'
+          })()}
           variant="h3"
           gutterBottom
         />
@@ -339,7 +344,7 @@ const AddUserGroups = (): React.JSX.Element => {
           </Box>
 
           <Typography variant="body2" color="text.secondary" className="add-user-groups-page__selection-info">
-            {selectedUserIds.length} user(s) selected
+            {(selectedUserIds as unknown as number[]).length} user(s) selected
           </Typography>
         </Paper>
 
@@ -362,7 +367,11 @@ const AddUserGroups = (): React.JSX.Element => {
               disabled={loading}
               className="add-user-groups-page__action-button"
             >
-              {loading ? 'Saving...' : isEdit ? 'Update Group' : 'Create Group'}
+              {(() => {
+                if (loading) return 'Saving...'
+                if (isEdit) return 'Update Group'
+                return 'Create Group'
+              })()}
             </Button>
           </Box>
         )}

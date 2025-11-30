@@ -184,17 +184,19 @@ const UserPermissions = ({
 
   const categories = Object.keys(groupedPermissions).sort()
 
+  const stylesTyped = styles as Record<string, string>
+
   return (
-    <Box className={styles['user-permissions__container']}>
+    <Box className={stylesTyped['user-permissions__container']}>
       <Grid container spacing={2}>
         {categories.map(category => (
           <Grid item xs={12} sm={6} md={4} key={category}>
-            <Paper elevation={1} className={styles['user-permissions__category-paper']}>
-              <Typography variant="subtitle1" className={styles['user-permissions__category-title']} gutterBottom>
+            <Paper elevation={1} className={stylesTyped['user-permissions__category-paper']}>
+              <Typography variant="subtitle1" className={stylesTyped['user-permissions__category-title']} gutterBottom>
                 {category.charAt(0) + category.slice(1).toLowerCase().replace(/_/g, ' ')} Permissions
               </Typography>
-              <Divider className={styles['user-permissions__divider']} />
-              <Box className={styles['user-permissions__permissions-list']}>
+              <Divider className={stylesTyped['user-permissions__divider']} />
+              <Box className={stylesTyped['user-permissions__permissions-list']}>
                 {groupedPermissions[category].map(permission => (
                   <FormControlLabel
                     key={permission.permissionId}

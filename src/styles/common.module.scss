@@ -543,3 +543,31 @@
     }
   }
 }
+
+// ============================================================================
+// Import Instructions Component
+// ============================================================================
+
+.import-instructions {
+  padding: 24px;
+  margin-top: 24px;
+  margin-bottom: 24px;
+  background-color: #f5f9ff;
+  border-left: 4px solid #1976d2;
+  border-radius: 4px;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+}
+
+// Dark mode support for import instructions
+@media (prefers-color-scheme: dark) {
+  .import-instructions {
+    background-color: rgba(25, 118, 210, 0.08);
+    border-left-color: #90caf9;
+  }
+}

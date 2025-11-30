@@ -1,7 +1,7 @@
 import axios, { type AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from 'axios'
 import { toast } from 'react-toastify'
 
-import type { ApiLog } from '../components/DevLogger'
+import type { ApiLog } from '../components/devlogger'
 
 /**
  * Dynamically determine API base URL based on environment

@@ -33,8 +33,6 @@ export interface UserRequestModel {
   selectedGroupIds?: number[]
   // Profile Picture
   profilePictureBase64?: string
-  // Notes
-  notes?: string
   // Pagination fields
   start?: number
   end?: number

@@ -1,4 +1,4 @@
-import { Controller, type Control, type FieldErrors, type FieldValues } from 'react-hook-form'
+import { Controller, type Control, type FieldErrors, type FieldValues, type Path } from 'react-hook-form'
 
 import { TextField } from '@mui/material'
 
@@ -39,7 +39,7 @@ const NotesField = <TFieldValues extends FieldValues = FieldValues>({
 
   return (
     <Controller
-      name={name}
+      name={name as Path<TFieldValues>}
       control={control}
       render={({ field }) => (
         <TextField

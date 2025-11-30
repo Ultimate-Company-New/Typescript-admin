@@ -15,6 +15,7 @@ import { AddProducts, ImportProducts, Products } from './pages/products'
 import { AddPromos, ImportPromos, Promos } from './pages/promos'
 import { AddPurchaseOrders, ImportPurchaseOrders, PurchaseOrders } from './pages/purchaseOrders'
 import { AddSalesOrders, SalesOrders } from './pages/salesOrders'
+import { QADashboard } from './pages/qaDashboard'
 import { Settings } from './pages/settings'
 import { Support } from './pages/support'
 import { TodoList } from './pages/todo'
@@ -225,6 +226,10 @@ export const routes: RouteObject[] = [
       {
         path: 'settings',
         element: <Settings />,
+      },
+      {
+        path: 'qa-dashboard',
+        element: <QADashboard />,
       },
       {
         path: 'support',
