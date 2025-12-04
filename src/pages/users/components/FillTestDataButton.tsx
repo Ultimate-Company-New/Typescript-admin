@@ -5,8 +5,8 @@ import { type UseFormGetValues, type UseFormReset, type UseFormSetValue } from '
 import { Science as ScienceIcon } from '@mui/icons-material'
 import { Fab, Tooltip } from '@mui/material'
 
-import { USER_ROLES } from '../../../constants/appConstants'
 import styles from '../../../styles/Users.module.scss'
+import { generateUserTest } from '../../../utils/generateTestData'
 import { type UserFormData } from '../../../utils/validationSchemas'
 
 interface FillTestDataButtonProps {
@@ -39,39 +39,36 @@ const FillTestDataButton = ({
     setFilling(true)
 
     try {
-      // Generate timestamp for unique email
-      const timestamp = Date.now()
-
-      // Randomly select between HOME or WORK
-      const randomAddressType: string = Math.random() < 0.5 ? 'HOME' : 'WORK'
+      // Generate test data using utility function
+      const [testUser] = generateUserTest(1)
 
       // Get current loginName if in edit mode
       const currentLoginName = isEdit ? getValues('loginName') : ''
 
-      // Fill form with test data - FIRST set the state, THEN the city
+      // Map test data to UserFormData format
       const testData: UserFormData = {
-        firstName: 'UI Test',
-        lastName: `User ${timestamp}`,
-        // Preserve loginName in edit mode, generate new one in add mode
-        loginName: isEdit ? currentLoginName : `nahushrai+ui_testuser${timestamp}@gmail.com`,
-        phone: '9876543210',
-        role: USER_ROLES.SUPER_ADMIN,
-        dob: new Date('1990-01-15'),
+        firstName: testUser.firstName ?? '',
+        lastName: testUser.lastName ?? '',
+        // Preserve loginName in edit mode, use generated one in add mode
+        loginName: isEdit ? currentLoginName : testUser.loginName ?? '',
+        phone: testUser.phone ?? '',
+        role: testUser.role ?? '',
+        dob: new Date(testUser.dob ?? '1990-01-15'),
         profilePictureBase64: '',
         address: {
-          streetAddress: '123 Test Street',
-          streetAddress2: 'Suite 100',
-          streetAddress3: 'Building A, Floor 5',
+          streetAddress: testUser.address?.streetAddress ?? '',
+          streetAddress2: testUser.address?.streetAddress2 ?? '',
+          streetAddress3: testUser.address?.streetAddress3 ?? '',
           city: '', // Set empty initially
-          state: 'Maharashtra',
-          postalCode: '400001',
-          country: 'India',
-          addressType: randomAddressType,
-          nameOnAddress: 'Test User',
-          emailOnAddress: `test${timestamp}@example.com`,
-          phoneOnAddress: '9123456789',
+          state: testUser.address?.state ?? '',
+          postalCode: testUser.address?.postalCode ?? testUser.address?.zipCode ?? '',
+          country: testUser.address?.country ?? '',
+          addressType: testUser.address?.addressType ?? '',
+          nameOnAddress: testUser.address?.nameOnAddress ?? '',
+          emailOnAddress: testUser.address?.emailOnAddress ?? '',
+          phoneOnAddress: testUser.address?.phoneOnAddress ?? '',
         },
-        notes: 'This is a test user created for automated testing purposes.',
+        notes: testUser.notes ?? '',
       }
 
       // Reset form with test data (state first, city empty)
@@ -83,7 +80,7 @@ const FillTestDataButton = ({
           ...testData,
           address: {
             ...testData.address,
-            city: 'Mumbai', // Now set the city after state has been processed
+            city: testUser.address?.city ?? 'Mumbai', // Now set the city after state has been processed
           },
         })
       }, 100)

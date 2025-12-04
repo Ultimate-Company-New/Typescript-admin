@@ -1,11 +1,11 @@
 import { RouterProvider } from 'react-router-dom'
 
-import { DevLogger } from './components/devlogger'
-import router from './routes'
+import { DevLogger } from './components'
+import router from './Routes'
 
 /**
  * Main App Component
- * Simple and minimal - routing configuration is in routes.tsx
+ * Simple and minimal - routing configuration is in Routes.tsx
  */
 function App(): JSX.Element {
   // Enable DevLogger only in development mode

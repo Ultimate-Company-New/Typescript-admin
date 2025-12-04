@@ -3,7 +3,7 @@ import { format } from 'date-fns'
 import { Close as CloseIcon, Group as GroupIcon } from '@mui/icons-material'
 import { Dialog, DialogTitle, DialogContent, IconButton, Typography, Box, Chip, Paper, Grid } from '@mui/material'
 
-import { type UserGroupResponseModel } from '../../../models/UserModels'
+import { type UserGroupResponseModel } from '../../../models/api-models'
 import styles from '../../../styles/DataGrid.module.scss'
 
 interface UserGroupsModalProps {

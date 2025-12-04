@@ -26,8 +26,9 @@ import {
   Tooltip,
 } from '@mui/material'
 
-import styles from '../../styles/DevLogger.module.scss'
-import { BodyText, Header, PrimaryFont } from '../fonts'
+import styles from '../styles/DevLogger.module.scss'
+
+import { BodyText, Header, PrimaryFont } from './fonts'
 
 export interface ApiLog {
   id: string
@@ -170,6 +171,10 @@ const DevLogger: React.FC<DevLoggerProps> = ({ enabled = true }) => {
         className={styles['dev-logger__drawer']}
         PaperProps={{
           className: styles['dev-logger__drawer-paper'],
+          sx: {
+            maxHeight: '50vh',
+            height: 'auto',
+          },
         }}
         ModalProps={{
           keepMounted: true,

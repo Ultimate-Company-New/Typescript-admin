@@ -27,9 +27,9 @@ import {
   handleSortModelChange,
   type FilterGroup,
   type GridDensityType,
-} from '../../components/datagrid'
-import { getMessageGridColumns } from '../../models/gridModels/messageGridColumns'
-import { type MessageResponseModel } from '../../models/MessageModels'
+} from '../../components/datagrid/index.ts'
+import { type MessageResponseModel } from '../../models/api-models'
+import { getMessageGridColumns } from '../../models/grid-models/MessageGridColumns'
 import { type PaginatedGridInterface } from '../../types/grid.types'
 
 /**

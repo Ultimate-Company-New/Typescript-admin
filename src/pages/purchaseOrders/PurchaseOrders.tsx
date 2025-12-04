@@ -26,8 +26,8 @@ import {
   handleSortModelChange,
   type FilterGroup,
   type GridDensityType,
-} from '../../components/datagrid'
-import { getPurchaseOrderGridColumns } from '../../models/gridModels/purchaseOrderGridColumns'
+} from '../../components/datagrid/index.ts'
+import { getPurchaseOrderGridColumns } from '../../models/grid-models/PurchaseOrderGridColumns'
 import { type PaginatedGridInterface } from '../../types/grid.types'
 
 import styles from './PurchaseOrders.module.scss'

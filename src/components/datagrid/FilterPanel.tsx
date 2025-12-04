@@ -29,8 +29,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 
 import styles from '../../styles/DataGrid.module.scss'
-
-import { LogicOperator, type LogicOperatorType } from './gridHelpers'
+import { LogicOperator, type LogicOperatorType } from '../../utils/gridUtil'
 
 // Operator definitions for different column types
 const OPERATORS = {
@@ -223,6 +222,17 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     const column = columns.find(col => col.field === columnField)
     if (!column) return 'string'
 
+    // Prefer explicit column type when provided
+    if (column.type === 'number') {
+      return 'number'
+    }
+    if (column.type === 'boolean') {
+      return 'boolean'
+    }
+    if (column.type === 'date' || column.type === 'dateTime') {
+      return 'date'
+    }
+
     // Determine type based on field name or column configuration
     if (
       columnField.includes('date') ||
@@ -232,7 +242,12 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     ) {
       return 'date'
     }
-    if (columnField === 'userId' || columnField.includes('Id')) {
+    if (
+      columnField === 'userId' ||
+      columnField.includes('Id') ||
+      columnField.toLowerCase().includes('count') ||
+      columnField.toLowerCase().includes('total')
+    ) {
       return 'number'
     }
     if (columnField === 'emailConfirmed' || columnField === 'locked') {
@@ -311,10 +326,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
       logicOperator,
       filters: validFilters,
     }
-
-    // Log the JSON structure for API integration
-    // eslint-disable-next-line no-console -- Debug logging for filter structure
-    console.log('Filter JSON for API:', JSON.stringify(filterGroup, null, 2))
 
     onApplyFilters(filterGroup)
     onClose()

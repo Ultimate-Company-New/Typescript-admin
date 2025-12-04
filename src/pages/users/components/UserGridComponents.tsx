@@ -3,12 +3,12 @@ import { useEffect, useState } from 'react'
 import { Group as GroupIcon, Security as SecurityIcon } from '@mui/icons-material'
 import { Avatar, Badge, IconButton, Link } from '@mui/material'
 
-import { getRandomColor } from '../../../components/datagrid/gridHelpers'
 import { PERMISSIONS } from '../../../constants/appConstants'
 import { APP_ROUTES } from '../../../constants/routes'
 import { usePermissions } from '../../../hooks/usePermissions'
-import { type UserGroupResponseModel, type UserPermissionInfo } from '../../../models/UserModels'
+import { type UserGroupResponseModel, type UserPermissionInfo } from '../../../models/api-models'
 import styles from '../../../styles/Users.module.scss'
+import { getRandomColor } from '../../../utils/gridUtil'
 
 import { PermissionsModal, UserGroupsModal } from './index'
 

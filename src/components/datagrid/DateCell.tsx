@@ -1,4 +1,4 @@
-import { formatDate } from './gridHelpers'
+import { formatDate } from '../../utils/gridUtil'
 
 /**
  * Props for DateCell component

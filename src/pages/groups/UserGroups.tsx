@@ -13,7 +13,7 @@ import {
   type GridToolbarProps,
 } from '@mui/x-data-grid'
 
-import { userGroupApi, type UserGroupResponseModel } from '../../api/userGroupApi'
+import { userGroupApi } from '../../api/userGroupApi'
 import {
   CustomNoRowsOverlay,
   GridDensity,
@@ -28,8 +28,8 @@ import {
   handleSortModelChange,
   type FilterGroup,
   type GridDensityType,
-} from '../../components/datagrid'
-import { getUserGroupGridColumns, type UserGroupData } from '../../models/gridModels/userGroupGridColumns'
+} from '../../components/datagrid/index.ts'
+import { getUserGroupGridColumns, type UserGroupData } from '../../models/grid-models/UserGroupGridColumns'
 import { type PaginatedGridInterface } from '../../types/grid.types'
 
 import styles from './UserGroups.module.scss'
@@ -56,10 +56,9 @@ const UserGroups = (): React.JSX.Element => {
   })
   const [columnVisibilityModel, setColumnVisibilityModel] = useState<GridColumnVisibilityModel>({
     isDeleted: false,
-    userGroupId: false,
-    groupId: false,
     createdAt: false,
     updatedAt: false,
+    notes: false,
   })
   const [visibleColumnFields, setVisibleColumnFields] = useState<string[]>([])
 
@@ -86,15 +85,8 @@ const UserGroups = (): React.JSX.Element => {
         filters: activeFilterGroup.filters,
       })
 
-      // Map API response to grid data structure
-      const mappedData = (response.data as UserGroupResponseModel[]).map(group => ({
-        ...group,
-        groupId: group.userGroupId,
-        groupName: group.name,
-        memberCount: group.userCount,
-      }))
-
-      setRows(mappedData)
+      // API response already matches grid structure
+      setRows(response.data as UserGroupData[])
       setTotalCount(response.totalDataCount)
     } catch {
       toast.error('Failed to fetch user groups')
@@ -117,7 +109,7 @@ const UserGroups = (): React.JSX.Element => {
   useEffect(() => {
     setVisibleColumnFields(
       columns
-        .filter(col => columnVisibilityModel[col.field] && !['isDeleted', 'userGroupId', 'groupId'].includes(col.field))
+        .filter(col => columnVisibilityModel[col.field] && !['isDeleted', 'createdAt', 'updatedAt', 'notes'].includes(col.field))
         .map(col => col.field),
     )
   }, [columnVisibilityModel, columns])
@@ -159,7 +151,10 @@ const UserGroups = (): React.JSX.Element => {
             onSortModelChange={(model: GridSortModel) => {
               handleSortModelChange(model, setPaginationModel)
             }}
-            getRowId={row => (row as UserGroupData).groupId ?? (row as UserGroupData).userGroupId ?? 0}
+            getRowId={row => {
+              const data = row as UserGroupData
+              return data.groupId ?? data.userGroupId ?? 0
+            }}
             getRowClassName={params => getRowClassName<UserGroupData>(params)}
             slots={{
               toolbar: SimpleToolbar as GridSlotsComponent['toolbar'],

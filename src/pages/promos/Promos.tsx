@@ -26,8 +26,8 @@ import {
   handleSortModelChange,
   type FilterGroup,
   type GridDensityType,
-} from '../../components/datagrid'
-import { getPromoGridColumns } from '../../models/gridModels/promoGridColumns'
+} from '../../components/datagrid/index.ts'
+import { getPromoGridColumns } from '../../models/grid-models/PromoGridColumns'
 import { type PaginatedGridInterface } from '../../types/grid.types'
 
 import styles from './Promos.module.scss'

@@ -20,18 +20,18 @@ import {
 import { userGroupApi } from '../../api/userGroupApi'
 import styles from '../../styles/Users.module.scss'
 import { type PaginatedGridInterface } from '../../types/grid.types'
-import { BodyText, Subheader } from '../fonts'
-
-import { type FilterGroup } from './FilterPanel'
 import {
+  LogicOperator,
   getInitialDensity,
   getRowClassName,
   handleFilterModelChange,
   handlePaginationModelChange,
   handleSortModelChange,
-  LogicOperator,
   type GridDensityType,
-} from './gridHelpers'
+} from '../../utils/gridUtil'
+import { BodyText, Subheader } from '../fonts'
+
+import { type FilterGroup } from './FilterPanel'
 import SimpleToolbar from './SimpleToolbar'
 import { StyledDataGrid } from './StyledDataGrid'
 

@@ -26,8 +26,8 @@ import {
   handleSortModelChange,
   type FilterGroup,
   type GridDensityType,
-} from '../../components/datagrid'
-import { getPickupLocationGridColumns } from '../../models/gridModels/pickupLocationGridColumns'
+} from '../../components/datagrid/index.ts'
+import { getPickupLocationGridColumns } from '../../models/grid-models/PickupLocationGridColumns'
 import { type PaginatedGridInterface } from '../../types/grid.types'
 
 import styles from './PickupLocations.module.scss'

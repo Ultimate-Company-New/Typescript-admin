@@ -12,6 +12,7 @@ import {
 
 import { Box, Divider, Grid, Paper } from '@mui/material'
 
+import { FieldType } from '../../constants/appConstants'
 import { Subheader } from '../fonts'
 import {
   AutocompleteInput,
@@ -23,8 +24,7 @@ import {
   TextFieldInput,
 } from '../form-input'
 
-import AddressFormController from './AddressFormController'
-import { FieldType } from './fieldTypes'
+import AddressFormController, { type AddressableFormValues } from './AddressFormController'
 
 // Re-export for backwards compatibility
 export { FieldType }
@@ -162,19 +162,24 @@ export const FormFieldRenderer = <TFieldValues extends FieldValues = FieldValues
 
     // Address field - render full address form (returns multiple Grid items directly)
     if (type === FieldType.Address) {
+      if (!setValue) {
+        throw new Error('Address fields require setValue to be provided in the field configuration.')
+      }
+
+      const addressControl = control as unknown as Control<AddressableFormValues>
+      const addressErrors = errors as FieldErrors<AddressableFormValues>
+      const addressSetValue = setValue as unknown as UseFormSetValue<AddressableFormValues>
+
       return (
         <AddressFormController
           key={name as string}
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          control={control as any}
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          errors={errors as any}
+          control={addressControl}
+          errors={addressErrors}
           disabled={isFieldDisabled}
           states={states}
           cities={cities}
           onStateChange={onStateChange}
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          setValue={setValue! as any}
+          setValue={addressSetValue}
         />
       )
     }

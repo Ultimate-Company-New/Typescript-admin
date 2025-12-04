@@ -25,7 +25,7 @@ import {
 } from '@mui/material'
 
 import todoApi from '../../api/todoApi'
-import { type TodoResponseModel, type TodoRequestModel } from '../../models/TodoModels'
+import { type TodoResponseModel, type TodoRequestModel } from '../../models/api-models'
 
 import styles from './TodoList.module.scss'
 

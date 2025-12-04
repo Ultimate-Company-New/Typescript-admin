@@ -1,4 +1,4 @@
-import { formatPhone } from './gridHelpers'
+import { formatPhone } from '../../utils/gridUtil'
 
 /**
  * Props for PhoneCell component

@@ -15,14 +15,14 @@ export interface SelectInputProps extends Omit<TextFieldProps, 'variant' | 'marg
  * Provides sensible defaults and consistent styling with other form inputs
  */
 const SelectInput = forwardRef<HTMLDivElement, SelectInputProps>(
-  ({ options, variant = 'filled', margin = 'normal', fullWidth = true, InputLabelProps, ...props }, ref) => (
+  ({ options, variant = 'filled', margin = 'normal', fullWidth = true, InputLabelProps, className, ...props }, ref) => (
     <TextField
       ref={ref}
       select
       variant={variant}
       margin={margin}
       fullWidth={fullWidth}
-      className={styles['filled-input']}
+      className={`${styles['filled-input']} ${className ?? ''}`}
       InputLabelProps={{
         shrink: true,
         ...InputLabelProps,

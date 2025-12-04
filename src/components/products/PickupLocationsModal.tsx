@@ -235,29 +235,6 @@ const PickupLocationsModal = ({ open, onClose, locations, productTitle }: Pickup
                           phoneOnAddress != null ||
                           emailOnAddress != null
 
-                        // Debug: Log the data structure
-                        if (import.meta.env.DEV as boolean) {
-                          // eslint-disable-next-line no-console -- Debug logging in development
-                          console.log('Pickup Location Data:', {
-                            item,
-                            location,
-                            address,
-                            hasAddress,
-                            fields: {
-                              nameOnAddress,
-                              streetAddress,
-                              streetAddress2,
-                              streetAddress3,
-                              city,
-                              state,
-                              postalCode,
-                              country,
-                              phoneOnAddress,
-                              emailOnAddress,
-                            },
-                          })
-                        }
-
                         return (
                           <Box
                             sx={{

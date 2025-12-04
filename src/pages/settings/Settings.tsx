@@ -83,54 +83,57 @@ const Settings = (): JSX.Element => {
   /**
    * Fetch current client settings
    */
-  const fetchClientSettings = useCallback(async (silent = false): Promise<void> => {
-    setLoading(true)
-    try {
-      // Get client ID from localStorage (set during client selection)
-      const clientIdStr = localStorage.getItem('selectedClientId') ?? localStorage.getItem('clientId')
-      if (!clientIdStr) {
-        toast.error('No client selected. Please select a client first.')
-        return
+  const fetchClientSettings = useCallback(
+    async (silent = false): Promise<void> => {
+      setLoading(true)
+      try {
+        // Get client ID from localStorage (set during client selection)
+        const clientIdStr = localStorage.getItem('selectedClientId') ?? localStorage.getItem('clientId')
+        if (!clientIdStr) {
+          toast.error('No client selected. Please select a client first.')
+          return
+        }
+
+        const clientId = parseInt(clientIdStr)
+        const response: ClientResponseModel = await clientApi.getClientById(clientId)
+
+        setCurrentClient(response)
+
+        // Reset form with client data
+        reset({
+          name: response.name,
+          description: response.description,
+          supportEmail: response.supportEmail,
+          website: response.website,
+          logoBase64: response.logoUrl ?? '',
+          sendGridApiKey: response.sendGridApiKey ?? '',
+          sendGridEmailAddress: response.sendGridEmailAddress ?? '',
+          sendgridSenderName: response.sendgridSenderName ?? '',
+          razorpayApiKey: response.razorpayApiKey ?? '',
+          razorpayApiSecret: response.razorpayApiSecret ?? '',
+          imgbbApiKey: response.imgbbApiKey ?? '',
+          shipRocketEmail: response.shipRocketEmail ?? '',
+          shipRocketPassword: response.shipRocketPassword ?? '',
+          jiraUserName: response.jiraUserName ?? '',
+          jiraPassword: response.jiraPassword ?? '',
+          jiraProjectUrl: response.jiraProjectUrl ?? '',
+          jiraProjectKey: response.jiraProjectKey ?? '',
+          issueTypes: response.issueTypes ?? '',
+          googleCredId: response.googleCredId,
+          notes: response.notes ?? '',
+        })
+
+        if (!silent) {
+          toast.success('Client settings loaded successfully')
+        }
+      } catch (error) {
+        toast.error('Failed to fetch client settings')
+      } finally {
+        setLoading(false)
       }
-
-      const clientId = parseInt(clientIdStr)
-      const response: ClientResponseModel = await clientApi.getClientById(clientId)
-
-      setCurrentClient(response)
-
-      // Reset form with client data
-      reset({
-        name: response.name,
-        description: response.description,
-        supportEmail: response.supportEmail,
-        website: response.website,
-        logoBase64: response.logoUrl ?? '',
-        sendGridApiKey: response.sendGridApiKey ?? '',
-        sendGridEmailAddress: response.sendGridEmailAddress ?? '',
-        sendgridSenderName: response.sendgridSenderName ?? '',
-        razorpayApiKey: response.razorpayApiKey ?? '',
-        razorpayApiSecret: response.razorpayApiSecret ?? '',
-        imgbbApiKey: response.imgbbApiKey ?? '',
-        shipRocketEmail: response.shipRocketEmail ?? '',
-        shipRocketPassword: response.shipRocketPassword ?? '',
-        jiraUserName: response.jiraUserName ?? '',
-        jiraPassword: response.jiraPassword ?? '',
-        jiraProjectUrl: response.jiraProjectUrl ?? '',
-        jiraProjectKey: response.jiraProjectKey ?? '',
-        issueTypes: response.issueTypes ?? '',
-        googleCredId: response.googleCredId,
-        notes: response.notes ?? '',
-      })
-
-      if (!silent) {
-        toast.success('Client settings loaded successfully')
-      }
-    } catch (error) {
-      toast.error('Failed to fetch client settings')
-    } finally {
-      setLoading(false)
-    }
-  }, [reset])
+    },
+    [reset],
+  )
 
   // Fetch client settings on mount
   useEffect(() => {
@@ -457,7 +460,16 @@ const Settings = (): JSX.Element => {
   )
 
   return (
-    <Container maxWidth="xl">
+    <Container
+      maxWidth="xl"
+      disableGutters
+      sx={{
+        px: {
+          xs: 2,
+          sm: 3,
+        },
+      }}
+    >
       {/* Fill Test Data Button */}
       <FillSettingsTestDataButton setValue={setValue} />
 

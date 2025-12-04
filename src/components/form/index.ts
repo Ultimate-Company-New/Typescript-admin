@@ -1,3 +1,4 @@
+export { default as AddressDetailsView } from './AddressDetailsView'
 export { default as AddressFormController } from './AddressFormController'
 export type { AddressFormData } from './AddressFormController'
 export { default as NotesField } from './NotesField'

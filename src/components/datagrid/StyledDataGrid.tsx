@@ -1,15 +1,37 @@
 import React from 'react'
 
 import { Box } from '@mui/material'
-import { DataGrid, type DataGridProps, type GridValidRowModel } from '@mui/x-data-grid'
+import { DataGrid, type DataGridProps, type GridColumnGroupingModel, type GridValidRowModel } from '@mui/x-data-grid'
 
 import styles from '../../styles/DataGrid.module.scss'
 import { type PaginatedGridInterface } from '../../types/grid.types'
 
 /**
- * Extended props for StyledDataGrid with pagination
+ * Interface for grouped/parent column headers (simplified)
  */
-export interface StyledDataGridProps extends DataGridProps<GridValidRowModel> {
+export interface ColumnGroup {
+  /**
+   * Group identifier (must be unique)
+   */
+  groupId: string
+  /**
+   * Display name for the group header
+   */
+  headerName: string
+  /**
+   * Array of field names that belong to this group
+   */
+  children: string[]
+  /**
+   * Optional description shown as tooltip
+   */
+  description?: string
+}
+
+/**
+ * Extended props for StyledDataGrid with pagination and column grouping
+ */
+export interface StyledDataGridProps extends Omit<DataGridProps<GridValidRowModel>, 'columnGroupingModel'> {
   /**
    * Total count of items for pagination (used for server-side pagination)
    */
@@ -30,6 +52,10 @@ export interface StyledDataGridProps extends DataGridProps<GridValidRowModel> {
    * Optional data-test-id applied to the pagination component
    */
   paginationTestId?: string
+  /**
+   * Optional column groups for parent headers (simplified format)
+   */
+  columnGroupingModel?: ColumnGroup[]
 }
 
 /**
@@ -38,8 +64,9 @@ export interface StyledDataGridProps extends DataGridProps<GridValidRowModel> {
 const DEFAULT_PAGE_SIZE_OPTIONS = [10, 25, 50, 100]
 
 /**
- * Styled DataGrid component with integrated MUI pagination footer
+ * Styled DataGrid component with integrated MUI pagination footer and column grouping support
  * Uses MUI's built-in pagination instead of custom component
+ * Supports optional parent/grouped column headers
  */
 export const StyledDataGrid = React.forwardRef<HTMLDivElement, StyledDataGridProps>(
   (
@@ -52,6 +79,7 @@ export const StyledDataGrid = React.forwardRef<HTMLDivElement, StyledDataGridPro
       filterMode = 'server',
       sortingMode = 'server',
       dataTestId,
+      columnGroupingModel,
       ...dataGridProps
     },
     ref,
@@ -80,7 +108,7 @@ export const StyledDataGrid = React.forwardRef<HTMLDivElement, StyledDataGridPro
       }
     }, [paginationModelState])
 
-    const { slotProps, paginationModel, ...restDataGridProps } = dataGridProps
+    const { slotProps, paginationModel, slots, ...restDataGridProps } = dataGridProps
 
     // Build merged slot props with data-test-id if provided
     const mergedSlotProps = React.useMemo(() => {
@@ -103,17 +131,38 @@ export const StyledDataGrid = React.forwardRef<HTMLDivElement, StyledDataGridPro
       return slotProps
     }, [dataTestId, slotProps])
 
+    // Convert column grouping model to MUI's columnGroupingModel format
+    const muiColumnGroupingModel: GridColumnGroupingModel | undefined = React.useMemo(() => {
+      if (!columnGroupingModel || columnGroupingModel.length === 0) return undefined
+
+      return columnGroupingModel.map(group => ({
+        groupId: group.groupId,
+        headerName: group.headerName,
+        description: group.description,
+        children: group.children.map(field => ({ field })),
+      }))
+    }, [columnGroupingModel])
+
+    // Only pass rowCount for server-side pagination
+    // For client-side, MUI calculates it from rows array
+    const rowCountProps = paginationMode === 'server' ? { rowCount: totalCount } : {}
+
+    // Only pass columnGroupingModel if it exists
+    const columnGroupingProps = muiColumnGroupingModel ? { columnGroupingModel: muiColumnGroupingModel } : {}
+
     return (
       <Box ref={ref}>
         <DataGrid
           {...restDataGridProps}
           className={styles['data-grid']}
+          slots={slots}
           slotProps={mergedSlotProps}
           pageSizeOptions={pageSizeOptions}
           paginationMode={paginationMode}
           filterMode={filterMode}
           sortingMode={sortingMode}
-          rowCount={totalCount}
+          {...rowCountProps}
+          {...columnGroupingProps}
           paginationModel={muiPaginationModel ?? paginationModel}
           onPaginationModelChange={handlePaginationModelChange}
         />

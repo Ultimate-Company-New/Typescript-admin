@@ -23,7 +23,7 @@ import {
 } from '@mui/material'
 
 import messageApi from '../../api/messageApi'
-import { type MessageResponseModel } from '../../models/MessageModels'
+import { type MessageResponseModel } from '../../models/api-models'
 import { getCurrentUserId } from '../../utils/auth'
 
 const MESSAGES_PER_PAGE = 25

@@ -17,7 +17,7 @@
 
   // Add spacing between toolbar buttons and their wrappers
   & > button,
-  & > div[role="button"],
+  & > div[role='button'],
   & > :global(.MuiTooltip-root),
   & > :global(.MuiBadge-root) {
     margin-right: 12px;
@@ -241,7 +241,10 @@
 .permissions-modal {
   &__dialog-paper {
     border-radius: 16px;
-    box-shadow: 0px 11px 15px -7px rgba(0,0,0,0.2), 0px 24px 38px 3px rgba(0,0,0,0.14), 0px 9px 46px 8px rgba(0,0,0,0.12);
+    box-shadow:
+      0px 11px 15px -7px rgba(0, 0, 0, 0.2),
+      0px 24px 38px 3px rgba(0, 0, 0, 0.14),
+      0px 9px 46px 8px rgba(0, 0, 0, 0.12);
   }
 
   &__header {
@@ -284,7 +287,7 @@
     transition: box-shadow 0.3s ease;
 
     &:hover {
-      box-shadow: 0px 4px 20px rgba(0,0,0,0.1);
+      box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
     }
   }
 
@@ -341,7 +344,10 @@
 .user-groups-modal {
   &__dialog-paper {
     border-radius: 16px;
-    box-shadow: 0px 11px 15px -7px rgba(0,0,0,0.2), 0px 24px 38px 3px rgba(0,0,0,0.14), 0px 9px 46px 8px rgba(0,0,0,0.12);
+    box-shadow:
+      0px 11px 15px -7px rgba(0, 0, 0, 0.2),
+      0px 24px 38px 3px rgba(0, 0, 0, 0.14),
+      0px 9px 46px 8px rgba(0, 0, 0, 0.12);
   }
 
   &__header {
@@ -379,11 +385,13 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition:
+      transform 0.2s ease,
+      box-shadow 0.2s ease;
 
     &:hover {
       transform: translateY(-2px);
-      box-shadow: 0px 6px 24px rgba(0,0,0,0.15);
+      box-shadow: 0px 6px 24px rgba(0, 0, 0, 0.15);
     }
   }
 
@@ -425,6 +433,11 @@
 // ODD_OPACITY constant equivalent: 0.2
 $odd-opacity: 0.2;
 
+.data-grid-wrapper {
+  width: 100%;
+  overflow: hidden;
+}
+
 .data-grid {
   border: 0;
   transition: box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
@@ -432,7 +445,9 @@ $odd-opacity: 0.2;
   padding: 20px;
   min-height: 700px;
   width: 100%;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   letter-spacing: normal;
@@ -449,10 +464,20 @@ $odd-opacity: 0.2;
       }
 
       &.Mui-selected {
-        background-color: rgba(25, 118, 210, calc($odd-opacity + 0.08)); // primary.main with ODD_OPACITY + selectedOpacity (0.08)
+        background-color: rgba(
+          25,
+          118,
+          210,
+          calc($odd-opacity + 0.08)
+        ); // primary.main with ODD_OPACITY + selectedOpacity (0.08)
 
         &:hover {
-          background-color: rgba(0, 128, 0, calc($odd-opacity + 0.08 + 0.04)); // secondary.main with ODD_OPACITY + selectedOpacity + hoverOpacity
+          background-color: rgba(
+            0,
+            128,
+            0,
+            calc($odd-opacity + 0.08 + 0.04)
+          ); // secondary.main with ODD_OPACITY + selectedOpacity + hoverOpacity
 
           @media (hover: none) {
             background-color: rgba(25, 118, 210, calc($odd-opacity + 0.08));
@@ -474,10 +499,20 @@ $odd-opacity: 0.2;
       }
 
       &.Mui-selected {
-        background-color: rgba(25, 118, 210, calc($odd-opacity + 0.08)); // primary.main with ODD_OPACITY + selectedOpacity
+        background-color: rgba(
+          25,
+          118,
+          210,
+          calc($odd-opacity + 0.08)
+        ); // primary.main with ODD_OPACITY + selectedOpacity
 
         &:hover {
-          background-color: rgba(0, 128, 0, calc($odd-opacity + 0.08 + 0.04)); // secondary.main with ODD_OPACITY + selectedOpacity + hoverOpacity
+          background-color: rgba(
+            0,
+            128,
+            0,
+            calc($odd-opacity + 0.08 + 0.04)
+          ); // secondary.main with ODD_OPACITY + selectedOpacity + hoverOpacity
 
           @media (hover: none) {
             background-color: rgba(25, 118, 210, calc($odd-opacity + 0.08));
@@ -503,11 +538,12 @@ $odd-opacity: 0.2;
 
     // Column headers with green theme
     .MuiDataGrid-columnHeader {
-      background-color: #2E7D32 !important; // Matches our avatar color palette (Dark Green)
+      background-color: #2e7d32 !important; // Matches our avatar color palette (Dark Green)
       color: #ffffff !important;
       font-weight: 600 !important;
       font-size: 0.875rem !important;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+      font-family:
+        -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
@@ -594,6 +630,266 @@ $odd-opacity: 0.2;
           color: #bdbdbd; // grey[400]
         }
       }
+    }
+  }
+}
+
+// ============================================================================
+// Table As JSON (Tree View) Styles
+// ============================================================================
+
+.table-as-json {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__title {
+    font-weight: 600;
+    color: #424242;
+  }
+
+  &__tree-container {
+    position: relative;
+    padding: 16px;
+    max-height: 600px;
+    overflow: auto;
+    background-color: #fafafa;
+    border-radius: 8px;
+  }
+
+  &__copy-button {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 1;
+    color: #1976d2;
+    background-color: #ffffff;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.04);
+    }
+  }
+
+  &__tree-view {
+    flex-grow: 1;
+    max-width: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 8px;
+
+    &--with-copy-button {
+      padding-top: 40px; // Space for copy button
+    }
+  }
+
+  // Custom TreeItem styles
+  :global {
+    .MuiTreeItem-content {
+      padding: 4px 8px;
+      margin: 1.6px 0;
+      border-radius: 4px;
+
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.04);
+      }
+
+      &.Mui-selected {
+        background-color: rgba(25, 118, 210, 0.08);
+
+        &:hover {
+          background-color: rgba(25, 118, 210, 0.12);
+        }
+      }
+    }
+
+    .MuiTreeItem-iconContainer {
+      .close {
+        opacity: 0.3;
+      }
+    }
+
+    .MuiTreeItem-group {
+      margin-left: 15px;
+      padding-left: 18px;
+      border-left: 1px dashed rgba(0, 0, 0, 0.4);
+    }
+
+    .MuiTreeItem-label {
+      font-family: monospace;
+      font-size: 0.875rem;
+    }
+  }
+
+  // Icon styles
+  &__expand-icon,
+  &__collapse-icon {
+    opacity: 0.8;
+  }
+
+  &__end-icon {
+    opacity: 0.3;
+  }
+}
+
+// Dark mode support for TableAsJson
+@media (prefers-color-scheme: dark) {
+  .table-as-json {
+    &__tree-container {
+      background-color: #1e1e1e;
+    }
+
+    &__copy-button {
+      color: #90caf9;
+      background-color: #1e1e1e;
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.08);
+      }
+    }
+
+    :global {
+      .MuiTreeItem-content {
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.04);
+        }
+
+        &.Mui-selected {
+          background-color: rgba(144, 202, 249, 0.08);
+
+          &:hover {
+            background-color: rgba(144, 202, 249, 0.12);
+          }
+        }
+      }
+
+      .MuiTreeItem-group {
+        border-left: 1px dashed rgba(255, 255, 255, 0.4);
+      }
+    }
+  }
+}
+
+// ============================================================================
+// Error Details Modal Styles (for Import Data Preview)
+// ============================================================================
+
+.error-modal {
+  &__paper {
+    border-radius: 8px;
+  }
+
+  &__title {
+    padding: 20px 24px 16px;
+    background-color: #f5f5f5;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  &__title-content {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  &__title-icon-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__title-icon {
+    color: #d32f2f;
+    font-size: 28px;
+  }
+
+  &__subtitle {
+    margin-top: 8px;
+    color: #666;
+    font-weight: 500;
+  }
+
+  &__close-button {
+    color: #666;
+    padding: 4px;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.04);
+    }
+  }
+
+  &__content {
+    padding: 24px;
+  }
+
+  &__list {
+    padding: 0;
+  }
+
+  &__list-item {
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &::before {
+      content: '•';
+      color: #d32f2f;
+      font-weight: bold;
+      display: inline-block;
+      width: 1em;
+      margin-right: 8px;
+    }
+  }
+
+  &__error-text {
+    color: #333;
+    line-height: 1.6;
+  }
+}
+
+// Dark mode support for Error Modal
+@media (prefers-color-scheme: dark) {
+  .error-modal {
+    &__title {
+      background-color: #2d2d2d;
+      border-bottom: 1px solid #404040;
+    }
+
+    &__title-icon {
+      color: #f44336;
+    }
+
+    &__subtitle {
+      color: #b0b0b0;
+    }
+
+    &__close-button {
+      color: #b0b0b0;
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.08);
+      }
+    }
+
+    &__list-item {
+      border-bottom: 1px solid #404040;
+
+      &::before {
+        color: #f44336;
+      }
+    }
+
+    &__error-text {
+      color: #e0e0e0;
     }
   }
 }

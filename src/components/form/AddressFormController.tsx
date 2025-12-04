@@ -36,7 +36,7 @@ const ADDRESS_TYPE_OPTIONS: FieldOption[] = (ADDRESS_TYPES_ARRAY as readonly str
   label: type,
 }))
 
-interface AddressableFormValues {
+export interface AddressableFormValues {
   address: AddressFormData
 }
 

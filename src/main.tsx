@@ -5,8 +5,8 @@ import { ToastContainer } from 'react-toastify'
 
 import { CssBaseline, ThemeProvider, createTheme } from '@mui/material'
 
-import App from './App.tsx'
 import 'react-toastify/dist/ReactToastify.css'
+import App from './App.tsx'
 
 // Get theme mode from localStorage
 const themeMode = localStorage.getItem('theme')

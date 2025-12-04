@@ -1,11 +1,11 @@
 import { Box, Chip, Tooltip } from '@mui/material'
 import { type GridColDef, type GridRenderCellParams } from '@mui/x-data-grid'
 
-import { AddressCell, formatDate, formatPhone, formatUTCTimestamp } from '../../components/datagrid'
+import { AddressCell, formatDate, formatPhone, formatUTCTimestamp } from '../../components/datagrid/index.ts'
 import { USER_ROLES } from '../../constants/appConstants'
 import { PermissionsButton, UserActionsCell, UserAvatar, UserGroupsButton } from '../../pages/users/components'
 import styles from '../../styles/Users.module.scss'
-import { type UserResponseModel } from '../UserModels'
+import { type UserResponseModel } from '../api-models'
 
 // Type assertions for helper functions to ensure type safety
 type FormatPhoneFn = (value: string | number | null | undefined, emptyText?: string) => string

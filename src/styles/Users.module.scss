@@ -1,6 +1,8 @@
 // src/styles/Users.scss
 // Centralized styles for Users-related pages (Users, AddUsers, ImportUsers)
 
+@use './common.module.scss' as *;
+
 // ============================================================================
 // Users Page Styles
 // ============================================================================
@@ -13,12 +15,7 @@
   box-sizing: border-box;
 
   &__container {
-    padding-top: 32px;
-    padding-bottom: 32px;
-    width: 100%;
-    max-width: 100%;
-    min-width: 0; // Allow shrinking
-    box-sizing: border-box;
+    @extend .page__container--form;
     overflow-x: auto; // Enable horizontal scroll if needed
   }
 
@@ -51,8 +48,7 @@
 
 .add-users-page {
   &__container {
-    padding-top: 16px; // Reduced from 32px to minimize whitespace below navbar
-    padding-bottom: 32px; // Corresponds to MUI py: 4
+    @extend .page__container--form;
   }
 
   &__form-container {
@@ -180,8 +176,22 @@
 
 .import-users-page {
   &__container {
-    padding-top: 32px;
-    padding-bottom: 32px;
+    @extend .page__container--form;
+  }
+
+  &__page-wrapper {
+    padding-left: 16px;
+    padding-right: 16px;
+
+    @media (min-width: 600px) {
+      padding-left: 24px;
+      padding-right: 24px;
+    }
+
+    @media (min-width: 900px) {
+      padding-left: 32px;
+      padding-right: 32px;
+    }
   }
 
   &__instructions-paper {
@@ -201,6 +211,137 @@
 
   &__instructions-title {
     font-weight: 600;
+  }
+
+  &__section-title {
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  &__divider {
+    margin-bottom: 16px;
+  }
+
+  &__divider--large {
+    margin-bottom: 24px;
+  }
+
+  // Settings Card
+  &__settings-card {
+    padding: 24px;
+  }
+
+  &__settings-actions {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+
+    @media (max-width: 768px) {
+      justify-content: flex-start;
+    }
+  }
+
+  &__template-button {
+    text-transform: none !important;
+    padding: 8px 16px !important;
+  }
+
+  &__max-records-select {
+    min-width: 180px !important;
+    margin-top: 8px !important;
+    margin-right: 8px !important;
+  }
+
+  &__max-records-form-control {
+    min-width: 150px;
+  }
+
+  &__toggle-button-text {
+    margin-left: 8px;
+  }
+
+  // Upload Area (below actions)
+  &__upload-area {
+    width: 100%;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed #e0e0e0;
+    border-radius: 8px;
+    background-color: #fafafa;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+    min-height: 120px;
+
+    &:hover:not(&--has-file) {
+      border-color: #1976d2;
+      background-color: #f5f9ff;
+    }
+
+    &--drag-over {
+      border-color: #1976d2;
+      background-color: #e3f2fd;
+      border-style: solid;
+    }
+
+    &--has-file {
+      border-style: solid;
+      border-color: #4caf50;
+      background-color: #f1f8e9;
+      cursor: default;
+    }
+  }
+
+  &__upload-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__file-info {
+    display: flex;
+    align-items: center;
+    width: 100%;
+  }
+
+  &__file-icon {
+    font-size: 40px;
+    color: var(--primary-main, #1976d2);
+  }
+
+  &__file-details {
+    margin-left: 16px;
+    flex: 1;
+  }
+
+  &__upload-icon {
+    font-size: 40px;
+    color: var(--text-secondary, #666);
+    margin-right: 16px;
+    transition: color 0.2s;
+
+    &--drag-over {
+      color: var(--primary-main, #1976d2);
+    }
+  }
+
+  // Reference Cards (Permissions & User Groups)
+  &__reference-card {
+    padding: 24px;
+    overflow: hidden;
+  }
+
+  &__grid-wrapper {
+    width: 100%;
+    overflow-x: auto;
+
+    :global(.MuiDataGrid-root) {
+      border: none;
+    }
   }
 
   &__actions-bar {
@@ -233,14 +374,47 @@
     padding: 24px;
   }
 
+  &__loading-paper {
+    margin-top: 24px;
+    padding: 48px 24px;
+  }
+
+  &__loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    min-height: 200px;
+  }
+
+  &__loading-text {
+    margin-top: 8px;
+    font-weight: 500;
+    color: #1976d2;
+  }
+
   &__preview-header {
-    margin-bottom: 20px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0;
+  }
+
+  &__preview-title {
+    font-weight: 600;
+    font-size: 1.25rem;
+  }
+
+  &__view-toggle-container {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 12px 16px;
+    margin-bottom: 16px;
   }
 
   &__grid-container {
-    margin-top: 16px;
     min-height: 400px;
   }
 
@@ -253,16 +427,29 @@
   }
 
   &__json-container {
-    margin-top: 16px;
-    max-height: 600px;
-    overflow: auto;
-    background-color: #f5f5f5;
-    border-radius: 8px;
-    padding: 16px;
+    padding: 0;
+  }
+
+  &__json-header {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 1;
+  }
+
+  &__copy-button {
+    background-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
   }
 
   &__json-pre {
     margin: 0;
+    padding-top: 32px;
     font-family: 'Courier New', monospace;
     font-size: 13px;
     line-height: 1.6;
@@ -278,6 +465,44 @@
     margin-top: 24px;
     padding-top: 24px;
     border-top: 1px solid #e0e0e0;
+  }
+
+  &__actions-card {
+    padding: 24px;
+    margin-top: 24px;
+  }
+
+  &__error-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+    background-color: #ffebee;
+    border: 1px solid #ef5350;
+    border-radius: 8px;
+  }
+
+  &__error-warning-icon {
+    color: #d32f2f;
+    font-size: 24px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  &__error-warning-text {
+    color: #c62828;
+    line-height: 1.6;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+  }
+
+  &__action-button {
+    min-width: 140px;
   }
 
   &__submit-button {
@@ -549,4 +774,3 @@
     }
   }
 }
-

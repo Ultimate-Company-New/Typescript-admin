@@ -4,6 +4,23 @@
  */
 
 /**
+ * Enum for different input field types
+ */
+export enum FieldType {
+  Text = 'text',
+  Email = 'email',
+  Phone = 'phone',
+  Password = 'password',
+  Number = 'number',
+  Date = 'date',
+  Select = 'select',
+  Autocomplete = 'autocomplete',
+  Textarea = 'textarea',
+  Image = 'image',
+  Address = 'address',
+}
+
+/**
  * Address types available in the system
  * These must match the database constraint and backend validation
  * All types are in UPPERCASE to match the database constraint

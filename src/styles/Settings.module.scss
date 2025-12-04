@@ -1,7 +1,7 @@
 // Settings Page Styles
 // Extends common styles from ../../styles/common.module.scss
 
-@import './common.module.scss';
+@use './common.module.scss' as *;
 
 .settings-page {
   // Use common page container pattern
@@ -38,4 +38,3 @@
     @extend .action-button;
   }
 }
-

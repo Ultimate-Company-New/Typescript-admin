@@ -6,7 +6,7 @@ import { Link, Button, Box, Tooltip } from '@mui/material'
 import { type GridColDef, type GridRenderCellParams } from '@mui/x-data-grid'
 
 import { purchaseOrderApi } from '../../api/purchaseOrderApi'
-import { RenderLongCellItem } from '../../components/datagrid'
+import { RenderLongCellItem } from '../../components/datagrid/index.ts'
 import { APP_ROUTES } from '../../constants/routes'
 
 /**

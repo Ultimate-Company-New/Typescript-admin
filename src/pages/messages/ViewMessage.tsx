@@ -14,7 +14,7 @@ import { Box, Card, CardContent, Typography, Chip, Divider, Button, CircularProg
 
 import messageApi from '../../api/messageApi'
 import { APP_ROUTES } from '../../constants/routes'
-import { type MessageResponseModel } from '../../models/MessageModels'
+import { type MessageResponseModel } from '../../models/api-models'
 
 const ViewMessage: React.FC = () => {
   const { messageId } = useParams<{ messageId: string }>()

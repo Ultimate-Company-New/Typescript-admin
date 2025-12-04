@@ -1,4 +1,4 @@
-import { formatUTCTimestamp } from './gridHelpers'
+import { formatUTCTimestamp } from '../../utils/gridUtil'
 
 // Explicitly define the function type for better type safety
 type FormatUTCTimestampFn = (

@@ -9,7 +9,7 @@ import { loginApi } from '../../api/loginApi'
 import { getUserByEmail } from '../../api/userApi'
 import { Header, Logo, Subheader, TextFieldInput } from '../../components'
 import { APP_ROUTES } from '../../constants/routes'
-import { type ClientResponseModel } from '../../models/LoginModels'
+import { type ClientResponseModel } from '../../models/api-models'
 import styles from '../../styles/Login.module.scss'
 
 import { PaginationComponent } from './components'
@@ -169,7 +169,10 @@ const ClientLanding = (): JSX.Element => {
   const handlePageChange = (_event: React.ChangeEvent<unknown>, page: number): void => {
     setCurrentPage(page)
     // Scroll to top on page change
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    })
   }
 
   // Handle client selection

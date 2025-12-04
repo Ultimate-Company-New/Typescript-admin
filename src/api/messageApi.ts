@@ -1,4 +1,4 @@
-import { type MessageRequestModel, type MessageResponseModel } from '../models/MessageModels'
+import { type MessageRequestModel, type MessageResponseModel } from '../models/api-models'
 import { type PaginationBaseRequestModel, type PaginationBaseResponseModel } from '../types/grid.types'
 
 import axiosInstance from './axiosConfig'

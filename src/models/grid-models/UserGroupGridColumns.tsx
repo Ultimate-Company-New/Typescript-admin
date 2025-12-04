@@ -5,17 +5,22 @@ import { APP_ROUTES } from '../../constants/routes'
 
 /**
  * User Group data structure matching API response
+ * Note: API returns both groupId and userGroupId depending on the endpoint
  */
 export interface UserGroupData {
   groupId?: number
   userGroupId?: number
-  groupName: string
+  groupName?: string
   name?: string
   description: string
-  userIds: number[]
-  memberCount?: number
+  notes?: string
   userCount?: number
+  memberCount?: number
+  userIds: number[]
   isDeleted: boolean
+  clientId?: number
+  createdUser?: string
+  modifiedUser?: string
   createdAt: string
   updatedAt: string
 }
@@ -25,18 +30,26 @@ export interface UserGroupData {
  */
 export const getUserGroupGridColumns = (onToggleGroup: (userGroupId: number) => void): GridColDef[] => [
   {
-    field: 'groupId',
-    headerName: 'Group ID',
-    hideable: false,
-    filterable: false,
-    width: 0,
-    minWidth: 0,
+    field: 'id',
+    headerName: 'ID',
+    width: 70,
+    align: 'center',
+    headerAlign: 'center',
+    type: 'number',
+    valueGetter: (_value, row) => {
+      const data = row as UserGroupData
+      return data.groupId ?? data.userGroupId
+    },
   },
   {
     field: 'groupName',
     headerName: 'Group Name',
-    flex: 1,
-    minWidth: 200,
+    width: 180,
+    minWidth: 150,
+    valueGetter: (_value, row) => {
+      const data = row as UserGroupData
+      return data.groupName ?? data.name
+    },
   },
   {
     field: 'description',
@@ -53,11 +66,19 @@ export const getUserGroupGridColumns = (onToggleGroup: (userGroupId: number) => 
     },
   },
   {
-    field: 'memberCount',
+    field: 'members',
     headerName: 'Members',
     width: 120,
     align: 'center',
     headerAlign: 'center',
+    type: 'number',
+    filterable: true,
+    sortable: true,
+    valueGetter: (_value, row) => {
+      const data = row as UserGroupData
+      // Try userCount, memberCount, or count userIds array length
+      return data.userCount ?? data.memberCount ?? data.userIds.length
+    },
     renderCell: (params: GridRenderCellParams) => {
       const value = params.value as number | undefined
       return <Chip label={value ?? 0} size="small" color="primary" variant="outlined" />
@@ -70,22 +91,24 @@ export const getUserGroupGridColumns = (onToggleGroup: (userGroupId: number) => 
     sortable: false,
     filterable: false,
     renderCell: (params: GridRenderCellParams<UserGroupData>) => {
-      const rowData = params.row
-      const groupId = rowData.groupId ?? rowData.userGroupId
+      const { row: rowData } = params
+      const { isDeleted } = rowData
+      // Handle both groupId and userGroupId
+      const id = rowData.groupId ?? rowData.userGroupId ?? 0
 
-      if (rowData.isDeleted) {
+      if (isDeleted) {
         return (
           <div>
             <Link
               href="#"
               onClick={e => {
                 e.preventDefault()
-                if (groupId != null) {
-                  onToggleGroup(groupId)
-                }
+                onToggleGroup(id)
               }}
-              sx={{ cursor: 'pointer',
-color: 'success.main' }}
+              sx={{
+                cursor: 'pointer',
+                color: 'success.main',
+              }}
             >
               Activate
             </Link>
@@ -94,27 +117,38 @@ color: 'success.main' }}
       }
 
       return (
-        <div style={{ display: 'flex',
-gap: '12px' }}>
+        <div
+          style={{
+            display: 'flex',
+            gap: '12px',
+          }}
+        >
           <Link
-            href={`${APP_ROUTES.DASHBOARD.ADD_GROUPS}?userGroupId=${groupId ?? ''}&isView`}
-            sx={{ cursor: 'pointer' }}
+            href={`${APP_ROUTES.DASHBOARD.ADD_GROUPS}?userGroupId=${id}&isView`}
+            sx={{
+              cursor: 'pointer',
+            }}
           >
             View
           </Link>
-          <Link href={`${APP_ROUTES.DASHBOARD.ADD_GROUPS}?userGroupId=${groupId ?? ''}`} sx={{ cursor: 'pointer' }}>
+          <Link
+            href={`${APP_ROUTES.DASHBOARD.ADD_GROUPS}?userGroupId=${id}`}
+            sx={{
+              cursor: 'pointer',
+            }}
+          >
             Edit
           </Link>
           <Link
             href="#"
             onClick={e => {
               e.preventDefault()
-              if (groupId != null) {
-                onToggleGroup(groupId)
-              }
+              onToggleGroup(id)
             }}
-            sx={{ cursor: 'pointer',
-color: 'error.main' }}
+            sx={{
+              cursor: 'pointer',
+              color: 'error.main',
+            }}
           >
             Deactivate
           </Link>

@@ -12,51 +12,47 @@ import styles from '../../styles/QADashboard.module.scss'
  * - Test coverage metrics
  * - Quality reports
  */
-const QADashboard = (): JSX.Element => {
-  return (
-    <Container maxWidth="xl">
-      <Box className={styles['qa-dashboard__container']}>
-        <Header label="QA Dashboard" variant="h3" gutterBottom />
+const QADashboard = (): JSX.Element => (
+  <Container maxWidth="xl">
+    <Box className={styles['qa-dashboard__container']}>
+      <Header label="QA Dashboard" variant="h3" gutterBottom />
 
-        {/* Placeholder for QA Dashboard content */}
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6} lg={3}>
-            <Paper className={styles['qa-dashboard__card']}>
-              <Box className={styles['qa-dashboard__card-content']}>
-                {/* Placeholder for metrics/widgets */}
-                <Box>QA Metrics Coming Soon</Box>
-              </Box>
-            </Paper>
-          </Grid>
-
-          <Grid item xs={12} md={6} lg={3}>
-            <Paper className={styles['qa-dashboard__card']}>
-              <Box className={styles['qa-dashboard__card-content']}>
-                <Box>Test Results Coming Soon</Box>
-              </Box>
-            </Paper>
-          </Grid>
-
-          <Grid item xs={12} md={6} lg={3}>
-            <Paper className={styles['qa-dashboard__card']}>
-              <Box className={styles['qa-dashboard__card-content']}>
-                <Box>Bug Tracking Coming Soon</Box>
-              </Box>
-            </Paper>
-          </Grid>
-
-          <Grid item xs={12} md={6} lg={3}>
-            <Paper className={styles['qa-dashboard__card']}>
-              <Box className={styles['qa-dashboard__card-content']}>
-                <Box>Quality Reports Coming Soon</Box>
-              </Box>
-            </Paper>
-          </Grid>
+      {/* Placeholder for QA Dashboard content */}
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={6} lg={3}>
+          <Paper className={styles['qa-dashboard__card']}>
+            <Box className={styles['qa-dashboard__card-content']}>
+              {/* Placeholder for metrics/widgets */}
+              <Box>QA Metrics Coming Soon</Box>
+            </Box>
+          </Paper>
         </Grid>
-      </Box>
-    </Container>
-  )
-}
 
+        <Grid item xs={12} md={6} lg={3}>
+          <Paper className={styles['qa-dashboard__card']}>
+            <Box className={styles['qa-dashboard__card-content']}>
+              <Box>Test Results Coming Soon</Box>
+            </Box>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} md={6} lg={3}>
+          <Paper className={styles['qa-dashboard__card']}>
+            <Box className={styles['qa-dashboard__card-content']}>
+              <Box>Bug Tracking Coming Soon</Box>
+            </Box>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} md={6} lg={3}>
+          <Paper className={styles['qa-dashboard__card']}>
+            <Box className={styles['qa-dashboard__card-content']}>
+              <Box>Quality Reports Coming Soon</Box>
+            </Box>
+          </Paper>
+        </Grid>
+      </Grid>
+    </Box>
+  </Container>
+)
 export default QADashboard
-

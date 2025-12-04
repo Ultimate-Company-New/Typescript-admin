@@ -105,9 +105,35 @@ export const clientSettingsSchema = z.object({
   notes: z.string().optional(),
 })
 
+// Bulk User Import validation schema - simplified version for imports
+export const bulkUserImportSchema = z.object({
+  loginName: emailSchema, // loginName is the username field (email format)
+  firstName: z.string().min(1, 'First name is required').trim(),
+  lastName: z.string().min(1, 'Last name is required').trim(),
+  phone: phoneSchema,
+  role: z.string().min(1, 'Role is required'),
+  dob: z.string().min(1, 'Date of birth is required'), // String format for imports (YYYY-MM-DD)
+  imageUrl: z.string().url('Invalid image URL').optional().or(z.literal('')),
+  streetAddress: z.string().min(1, 'Street address is required').trim(),
+  streetAddress2: z.string().optional().or(z.literal('')),
+  streetAddress3: z.string().optional().or(z.literal('')),
+  city: z.string().min(1, 'City is required').trim(),
+  state: z.string().min(1, 'State is required'),
+  zipCode: z.string().min(1, 'Postal code is required').trim(),
+  country: z.string().min(1, 'Country is required'),
+  addressType: z.string().min(1, 'Address type is required'),
+  nameOnAddress: z.string().optional().or(z.literal('')),
+  emailOnAddress: emailSchema.optional().or(z.literal('')),
+  phoneOnAddress: phoneSchema.optional().or(z.literal('')),
+  permissionIds: z.string().optional().or(z.literal('')), // Semicolon-separated IDs
+  selectedGroupIds: z.string().optional().or(z.literal('')), // Semicolon-separated IDs
+  notes: z.string().optional().or(z.literal('')),
+})
+
 // Type inference from schemas
 export type LoginFormData = z.infer<typeof loginSchema>
 export type RegistrationFormData = z.infer<typeof registrationSchema>
 export type PasswordResetFormData = z.infer<typeof passwordResetSchema>
 export type UserFormData = z.infer<typeof userFormSchema>
 export type ClientSettingsFormData = z.infer<typeof clientSettingsSchema>
+export type BulkUserImportData = z.infer<typeof bulkUserImportSchema>

@@ -1,4 +1,4 @@
-import { type TodoRequestModel, type TodoResponseModel } from '../models/TodoModels'
+import { type TodoRequestModel, type TodoResponseModel } from '../models/api-models'
 
 import axiosInstance from './axiosConfig'
 

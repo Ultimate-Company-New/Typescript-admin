@@ -25,9 +25,9 @@ import {
 } from '@mui/x-data-grid'
 
 import styles from '../../styles/DataGrid.module.scss'
+import { DENSITY_STORAGE_KEY, GridDensity, type GridDensityType } from '../../utils/gridUtil'
 
 import FilterPanel, { type FilterGroup } from './FilterPanel'
-import { DENSITY_STORAGE_KEY, GridDensity, type GridDensityType } from './gridHelpers'
 
 const DENSITY_OPTIONS = [
   {
@@ -59,6 +59,8 @@ interface SimpleToolbarProps {
   visibleColumnFields?: string[]
   hideIncludeDeleted?: boolean
   hideExport?: boolean
+  hideFilter?: boolean
+  hideColumns?: boolean
   onClearSelection?: () => void
   selectionCount?: number
 }
@@ -86,6 +88,8 @@ const SimpleToolbar = ({
   visibleColumnFields: externalVisibleColumns,
   hideIncludeDeleted = false,
   hideExport = false,
+  hideFilter = false,
+  hideColumns = false,
   onClearSelection,
   selectionCount = 0,
 }: SimpleToolbarProps): JSX.Element => {
@@ -241,40 +245,44 @@ const SimpleToolbar = ({
           )}
 
           {/* Filter Button */}
-          <Tooltip title="Filter data">
-            <Badge badgeContent={activeFilterCount} color="primary">
-              <Button
-                size="small"
-                variant={activeFilterCount > 0 ? 'contained' : 'outlined'}
-                startIcon={<FilterListIcon />}
-                onClick={() => {
-                  setFilterPanelOpen(true)
-                }}
-                className={styles['simple-toolbar__button']}
-                data-test-id="users-toolbar-filter-button"
-              >
-                Filter
-              </Button>
-            </Badge>
-          </Tooltip>
+          {!hideFilter && (
+            <Tooltip title="Filter data">
+              <Badge badgeContent={activeFilterCount} color="primary">
+                <Button
+                  size="small"
+                  variant={activeFilterCount > 0 ? 'contained' : 'outlined'}
+                  startIcon={<FilterListIcon />}
+                  onClick={() => {
+                    setFilterPanelOpen(true)
+                  }}
+                  className={styles['simple-toolbar__button']}
+                  data-test-id="users-toolbar-filter-button"
+                >
+                  Filter
+                </Button>
+              </Badge>
+            </Tooltip>
+          )}
 
           {/* Columns Visibility Menu */}
-          <Tooltip title="Show or hide columns">
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={<ViewColumnIcon />}
-              className="simple-toolbar__button"
-              data-test-id="users-toolbar-columns-button"
-              onClick={event => {
-                setColumnsMenuAnchorEl(event.currentTarget)
-              }}
-              aria-haspopup="true"
-              aria-expanded={columnsMenuOpen ? 'true' : undefined}
-            >
-              Columns
-            </Button>
-          </Tooltip>
+          {!hideColumns && toggleableColumns.length > 0 && (
+            <Tooltip title="Show or hide columns">
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<ViewColumnIcon />}
+                className="simple-toolbar__button"
+                data-test-id="users-toolbar-columns-button"
+                onClick={event => {
+                  setColumnsMenuAnchorEl(event.currentTarget)
+                }}
+                aria-haspopup="true"
+                aria-expanded={columnsMenuOpen ? 'true' : undefined}
+              >
+                Columns
+              </Button>
+            </Tooltip>
+          )}
           <Menu
             anchorEl={columnsMenuAnchorEl}
             open={columnsMenuOpen}
@@ -286,7 +294,7 @@ const SimpleToolbar = ({
             {toggleableColumns.map(col => {
               const isVisible =
                 columnVisibilityModel != null && col.field in columnVisibilityModel
-                  ? columnVisibilityModel[col.field]
+                  ? Boolean(columnVisibilityModel[col.field])
                   : true
               return (
                 <MenuItem key={col.field} data-test-id={`users-columns-menu-item-${col.field}`}>
@@ -408,16 +416,18 @@ const SimpleToolbar = ({
       </Toolbar>
 
       {/* Filter Panel Modal */}
-      <FilterPanel
-        open={filterPanelOpen}
-        onClose={() => {
-          setFilterPanelOpen(false)
-        }}
-        columns={columns}
-        onApplyFilters={handleApplyFilters}
-        initialFilterGroup={activeFilterGroup}
-        visibleColumnFields={visibleColumnFields}
-      />
+      {!hideFilter && (
+        <FilterPanel
+          open={filterPanelOpen}
+          onClose={() => {
+            setFilterPanelOpen(false)
+          }}
+          columns={columns}
+          onApplyFilters={handleApplyFilters}
+          initialFilterGroup={activeFilterGroup}
+          visibleColumnFields={visibleColumnFields}
+        />
+      )}
     </>
   )
 }

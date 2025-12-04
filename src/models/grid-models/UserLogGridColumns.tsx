@@ -2,7 +2,7 @@ import { Chip, Tooltip } from '@mui/material'
 import { type GridColDef, type GridRenderCellParams } from '@mui/x-data-grid'
 
 import { type UserLogResponseModel } from '../../api/userLogApi'
-import { formatUTCTimestamp } from '../../components/datagrid'
+import { formatUTCTimestamp } from '../../components/datagrid/index.ts'
 
 // Type assertions for helper functions
 type FormatUTCTimestampFn = (

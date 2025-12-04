@@ -33,29 +33,22 @@ import {
   handleSortModelChange,
   type FilterGroup,
   type GridDensityType,
-} from '../../components/datagrid'
+} from '../../components/datagrid/index.ts'
 import { Subheader } from '../../components/fonts'
+import { AddressDetailsView } from '../../components/form'
 import { FieldType } from '../../components/form/FormFieldRenderer'
 import { PERMISSIONS, ROLE_PERMISSIONS, USER_ROLES, USER_ROLES_ARRAY } from '../../constants/appConstants'
 import { APP_ROUTES } from '../../constants/routes'
 import { usePermissions } from '../../hooks/usePermissions'
-import { type AddressResponseModel } from '../../models/AddressModels'
-import { getUserGroupGridColumns } from '../../models/gridModels/userGroupGridColumns'
-import { getUserLogGridColumns } from '../../models/gridModels/userLogGridColumns'
-import { type UserRequestModel, type UserResponseModel } from '../../models/UserModels'
+import { type AddressResponseModel, type UserRequestModel, type UserResponseModel } from '../../models/api-models'
+import { getUserGroupGridColumns } from '../../models/grid-models/UserGroupGridColumns'
+import { getUserLogGridColumns } from '../../models/grid-models/UserLogGridColumns'
 import styles from '../../styles/Users.module.scss'
 import { type PaginatedGridInterface } from '../../types/grid.types'
 import { getAllStates, getCitiesByState } from '../../utils/stateCityMapper'
 import { userFormSchema, type UserFormData } from '../../utils/validationSchemas'
 
-import {
-  AddressDetailsView,
-  FillTestDataButton,
-  UserDetailsView,
-  UserPermissions,
-  type Permission,
-  type SectionConfig,
-} from './components'
+import { FillTestDataButton, UserDetailsView, UserPermissions, type Permission, type SectionConfig } from './components'
 
 /**
  * Normalize permission codes so comparisons are consistent regardless of casing or delimiters
@@ -849,7 +842,17 @@ const AddEditUsers = (): JSX.Element => {
   )
 
   return (
-    <Container maxWidth="xl">
+    <Container
+      maxWidth={false}
+      disableGutters
+      sx={{
+        px: {
+          xs: 2,
+          sm: 3,
+          md: 4,
+        },
+      }}
+    >
       {/* Fill Test Data Button - Only show in development/non-view mode */}
       {!isView && (
         <FillTestDataButton

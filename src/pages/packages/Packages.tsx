@@ -26,8 +26,8 @@ import {
   handleSortModelChange,
   type FilterGroup,
   type GridDensityType,
-} from '../../components/datagrid'
-import { getPackageGridColumns } from '../../models/gridModels/packageGridColumns'
+} from '../../components/datagrid/index.ts'
+import { getPackageGridColumns } from '../../models/grid-models/PackageGridColumns'
 import { type PaginatedGridInterface } from '../../types/grid.types'
 
 import styles from './Packages.module.scss'

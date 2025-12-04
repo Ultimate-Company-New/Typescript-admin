@@ -1,4 +1,4 @@
-import { type LoginRequestModel, type ClientResponseModel } from '../models/LoginModels'
+import { type LoginRequestModel, type ClientResponseModel } from '../models/api-models'
 
 import axiosInstance from './axiosConfig'
 

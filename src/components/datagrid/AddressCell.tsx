@@ -1,9 +1,8 @@
 import { LocationOn as LocationIcon } from '@mui/icons-material'
 import { Box, Tooltip } from '@mui/material'
 
-import { type AddressResponseModel } from '../../models/AddressModels'
-
-import { getStateAbbreviation } from './gridHelpers'
+import { type AddressResponseModel } from '../../models/api-models'
+import { getStateAbbreviation } from '../../utils/gridUtil'
 
 /**
  * Props for AddressCell component

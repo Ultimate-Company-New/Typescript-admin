@@ -1,8 +1,9 @@
-import { Box, Paper } from '@mui/material'
 import { Info as InfoIcon } from '@mui/icons-material'
+import { Box, Paper } from '@mui/material'
+
+import styles from '../styles/common.module.scss'
 
 import { BodyText } from './fonts'
-import styles from '../styles/common.module.scss'
 
 export interface ImportInstructionsProps {
   instructions?: string[]
@@ -23,25 +24,29 @@ const ImportInstructions = ({
     'Review and submit the import',
   ],
   title = 'Import Instructions',
-}: ImportInstructionsProps): JSX.Element => {
-  return (
-    <Paper className={styles['import-instructions']}>
-      <Box className={styles['import-instructions__header']}>
-        <InfoIcon color="primary" />
-        <BodyText text={title} variant="body1" sx={{ fontWeight: 600, fontSize: '1.25rem' }} />
-      </Box>
-      {instructions.map((instruction, index) => (
-        <BodyText
-          key={index}
-          text={`${index + 1}. ${instruction}`}
-          variant="body2"
-          color="text.secondary"
-          paragraph={index < instructions.length - 1}
-        />
-      ))}
-    </Paper>
-  )
-}
+}: ImportInstructionsProps): JSX.Element => (
+  <Paper className={styles['import-instructions']}>
+    <Box className={styles['import-instructions__header']}>
+      <InfoIcon color="primary" />
+      <BodyText
+        text={title}
+        variant="body1"
+        sx={{
+          fontWeight: 600,
+          fontSize: '1.25rem',
+        }}
+      />
+    </Box>
+    {instructions.map((instruction, index) => (
+      <BodyText
+        key={`${instruction}-${title}`}
+        text={`${index + 1}. ${instruction}`}
+        variant="body2"
+        color="text.secondary"
+        paragraph={index < instructions.length - 1}
+      />
+    ))}
+  </Paper>
+)
 
 export default ImportInstructions
-

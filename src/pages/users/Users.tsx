@@ -13,25 +13,25 @@ import {
 
 import { userApi } from '../../api/userApi'
 import {
-  CustomNoRowsOverlay,
-  GridDensity,
-  LogicOperator,
-  SimpleToolbar,
-  StyledDataGrid,
   createFetchFunction,
   createToggleFunction,
+  CustomNoRowsOverlay,
   getRowClassName,
+  GridDensity,
   handleFilterModelChange,
   handleIncludeDeletedChange,
   handlePaginationModelChange,
   handleSortModelChange,
+  LogicOperator,
+  SimpleToolbar,
+  StyledDataGrid,
   type FilterCondition,
   type FilterGroup,
   type GridDensityType,
   type LogicOperatorType,
-} from '../../components/datagrid'
-import { getUserGridColumns } from '../../models/gridModels/userGridColumns'
-import { type UserResponseModel } from '../../models/UserModels'
+} from '../../components/datagrid/index.ts'
+import { type UserResponseModel } from '../../models/api-models'
+import { getUserGridColumns } from '../../models/grid-models/UserGridColumns'
 import styles from '../../styles/Users.module.scss'
 import { type PaginatedGridInterface } from '../../types/grid.types'
 
@@ -75,37 +75,32 @@ const Users = (): React.JSX.Element => {
   const columns = useMemo(
     () =>
       getUserGridColumns(async (userId: number) => {
-        await createToggleFunction(
-          userApi.toggleUser,
-          userId,
-          async () => {
-            await createFetchFunction(
-              async (params: {
-                start: number
-                end: number
-                includeDeleted: boolean
-                logicOperator: LogicOperatorType
-                filters: FilterCondition[]
-              }) => {
-                const result = await userApi.fetchUsersInCarrierInBatches({
-                  ...params,
-                  filters: params.filters as never,
-                })
-                return {
-                  data: result.data,
-                  totalDataCount: result.totalDataCount,
-                }
-              },
-              setLoading,
-              setRows,
-              setTotalCount,
-              paginationModel,
-              includeDeleted,
-              activeFilterGroup,
-
-            )
-          },
-        )
+        await createToggleFunction(userApi.toggleUser, userId, async () => {
+          await createFetchFunction(
+            async (params: {
+              start: number
+              end: number
+              includeDeleted: boolean
+              logicOperator: LogicOperatorType
+              filters: FilterCondition[]
+            }) => {
+              const result = await userApi.fetchUsersInCarrierInBatches({
+                ...params,
+                filters: params.filters as never,
+              })
+              return {
+                data: result.data,
+                totalDataCount: result.totalDataCount,
+              }
+            },
+            setLoading,
+            setRows,
+            setTotalCount,
+            paginationModel,
+            includeDeleted,
+            activeFilterGroup,
+          )
+        })
       }),
     [paginationModel, includeDeleted, activeFilterGroup],
   )
@@ -147,7 +142,6 @@ const Users = (): React.JSX.Element => {
       paginationModel,
       includeDeleted,
       activeFilterGroup,
-
     )
   }, [paginationModel, includeDeleted, activeFilterGroup])
 

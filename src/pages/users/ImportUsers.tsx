@@ -1,32 +1,71 @@
 import type React from 'react'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import type { ZodType } from 'zod'
 
-import { Download as DownloadIcon, GridOn as GridIcon, Code as JsonIcon, Send as SendIcon } from '@mui/icons-material'
+import {
+  Cancel as CancelIcon,
+  Download as DownloadIcon,
+  Error as ErrorIcon,
+  GridOn as GridIcon,
+  Code as JsonIcon,
+  Send as SendIcon,
+} from '@mui/icons-material'
 import {
   Box,
-  Button,
-  Chip,
+  CircularProgress,
   Container,
-  FormControl,
-  InputLabel,
-  MenuItem,
+  Divider,
   Paper,
-  Select,
   ToggleButton,
   ToggleButtonGroup,
-  Tooltip,
+  Typography,
 } from '@mui/material'
-import { DataGrid, type GridColDef } from '@mui/x-data-grid'
+import type { GridColDef, GridColumnVisibilityModel, GridSlotsComponent, GridToolbarProps } from '@mui/x-data-grid'
 
+import { bulkCreateUsers, getAllPermissions, type BulkUserInsertResponseModel } from '../../api/userApi'
+import { userGroupApi } from '../../api/userGroupApi'
 import { ImportInstructions } from '../../components'
-import { BlueButton, RedButton } from '../../components/buttons'
-import { BodyText } from '../../components/fonts'
-import { ExcelUploadInput } from '../../components/form-input'
+import { BlueButton, LinkButton, RedButton } from '../../components/buttons'
+import {
+  ErrorDetailsModal,
+  GridDensity,
+  LogicOperator,
+  SimpleToolbar,
+  StyledDataGrid,
+  TableAsJson,
+  type ColumnGroup,
+  type FilterGroup,
+  type GridDensityType,
+} from '../../components/datagrid/index.ts'
+import { BodyText, Subheader } from '../../components/fonts'
+import { FileDropZone, SelectInput } from '../../components/form-input'
 import { APP_ROUTES } from '../../constants/routes'
+import {
+  getPermissionGridColumns,
+  getUserGroupGridColumns,
+  type PermissionData,
+  type UserGroupData,
+  type UserRequestModel,
+} from '../../models'
+import {
+  getUserImportPreviewColumns,
+  userImportHeaderNames,
+  userImportTemplateStructure,
+} from '../../models/bulk-import-models/ImportUserGridModel'
+import type { TemplateStructure } from '../../models/ImportTemplateStructure'
 import styles from '../../styles/Users.module.scss'
+import { type PaginatedGridInterface } from '../../types/grid.types'
+import { applyLocalFilters, downloadImportTemplate, parseImportFile } from '../../utils/gridUtil'
+import { convertImageUrlToBase64 } from '../../utils/imageUtils'
+import { bulkUserImportSchema as rawBulkUserImportSchema, type BulkUserImportData } from '../../utils/validationSchemas'
+
+import { FillImportTestDataButton } from './components'
+
+const templateStructure: TemplateStructure = userImportTemplateStructure
+const bulkUserImportValidator = rawBulkUserImportSchema as unknown as ZodType<BulkUserImportData>
 
 /**
  * Interface for parsed user data from Excel/CSV
@@ -38,29 +77,27 @@ interface ImportUserData {
   loginName: string
   firstName: string
   lastName: string
-  email: string
   phone: string
   role: string
   dob: string
-  isGuest: boolean
-  locked: boolean
-  emailConfirmed: boolean
-  isDeleted: boolean
   apiKey?: string
-  profilePictureBase64?: string
-  notes?: string
+  imageUrl?: string
   // Address Info
   streetAddress: string
   streetAddress2?: string
+  streetAddress3?: string
   city: string
   state: string
   zipCode: string
   country?: string
-  isPrimary: boolean
+  addressType: string
+  nameOnAddress?: string
+  emailOnAddress?: string
+  phoneOnAddress?: string
   // Other
   permissionIds: number[]
   selectedGroupIds: number[]
-  selectedUserIds: number[]
+  notes?: string
   errors?: string[]
 }
 
@@ -74,29 +111,27 @@ interface BulkUserImportRequest {
     loginName: string
     firstName: string
     lastName: string
-    email: string
     phone: string
     role: string
     dob: string
-    isGuest: boolean
-    locked: boolean
-    emailConfirmed: boolean
-    isDeleted: boolean
-    apiKey?: string
-    profilePictureBase64?: string
-    notes?: string
+    imageUrl?: string
     address: {
       streetAddress: string
       streetAddress2?: string
+      streetAddress3?: string
       city: string
       state: string
-      zipCode: string
+      zipCode?: string
+      postalCode?: string
       country?: string
-      isPrimary: boolean
+      addressType: string
+      nameOnAddress?: string
+      emailOnAddress?: string
+      phoneOnAddress?: string
     }
     permissionIds: number[]
     selectedGroupIds: number[]
-    selectedUserIds: number[]
+    notes?: string
   }>
 }
 
@@ -116,235 +151,185 @@ const ImportUsers = (): React.JSX.Element => {
   const [viewMode, setViewMode] = useState<'grid' | 'json'>('grid')
   const [maxRecords, setMaxRecords] = useState<number>(25)
   const [isLoading, setIsLoading] = useState(false)
+  const [jsonPreview, setJsonPreview] = useState<string>('')
+
+  // Error modal state
+  const [errorModalOpen, setErrorModalOpen] = useState(false)
+  const [selectedRowErrors, setSelectedRowErrors] = useState<string[]>([])
+  const [selectedRowNumber, setSelectedRowNumber] = useState<number | null>(null)
+
+  // Permissions state (local pagination)
+  const [permissions, setPermissions] = useState<PermissionData[]>([])
+  const [permissionsRaw, setPermissionsRaw] = useState<PermissionData[]>([]) // Store unfiltered data
+  const [permissionsLoading, setPermissionsLoading] = useState(false)
+  const [permissionsDensity, setPermissionsDensity] = useState<GridDensityType>(GridDensity.STANDARD)
+  const [permissionsColumnVisibility, setPermissionsColumnVisibility] = useState<GridColumnVisibilityModel>({})
+  const [permissionsActiveFilterGroup, setPermissionsActiveFilterGroup] = useState<FilterGroup>({
+    logicOperator: LogicOperator.AND,
+    filters: [],
+  })
+
+  // User Groups state (server-side pagination)
+  const [userGroups, setUserGroups] = useState<UserGroupData[]>([])
+  const [userGroupsLoading, setUserGroupsLoading] = useState(false)
+  const [userGroupsTotalCount, setUserGroupsTotalCount] = useState(0)
+  const [userGroupsPaginationModel, setUserGroupsPaginationModel] = useState<PaginatedGridInterface>({
+    start: 0,
+    end: 10,
+    pageSize: 10,
+    includeDeleted: false,
+    actualDataCount: 0,
+    totalPaginationBlockCount: 0,
+  })
+  const [userGroupsActiveFilterGroup, setUserGroupsActiveFilterGroup] = useState<FilterGroup>({
+    logicOperator: LogicOperator.AND,
+    filters: [],
+  })
+  const [userGroupsDensity, setUserGroupsDensity] = useState<GridDensityType>(GridDensity.STANDARD)
+  const [userGroupsColumnVisibility, setUserGroupsColumnVisibility] = useState<GridColumnVisibilityModel>({})
 
   /**
-   * Download Excel template with sample data
-   * Template structure matches UserRequestModel columns:
-   * - User Info: loginName, firstName, lastName, email, phone, role, dob, isGuest, locked, emailConfirmed, isDeleted, apiKey, profilePictureBase64, notes
-   * - Address Info: streetAddress, streetAddress2, city, state, zipCode, country, isPrimary
-   * - Other: permissionIds, selectedGroupIds, selectedUserIds
+   * Download Excel template with merged category headers
+   * Template structure matches UserRequestModel columns
    */
   const handleDownloadTemplate = (): void => {
-    // Define headers in logical groups matching UserRequestModel
-    const headers = [
-      // User Info columns
-      'loginName',
-      'firstName',
-      'lastName',
-      'email',
-      'phone',
-      'role',
-      'dob',
-      'isGuest',
-      'locked',
-      'emailConfirmed',
-      'isDeleted',
-      'apiKey',
-      'profilePictureBase64',
-      'notes',
-      // Address columns
-      'streetAddress',
-      'streetAddress2',
-      'city',
-      'state',
-      'zipCode',
-      'country',
-      'isPrimary',
-      // Other columns
-      'permissionIds',
-      'selectedGroupIds',
-      'selectedUserIds',
-    ]
-
-    // Create sample data rows
-    const sampleRows = [
-      [
-        // User Info
-        'john.doe@example.com',
-        'John',
-        'Doe',
-        'john.doe@example.com',
-        '1234567890',
-        'Manager',
-        '1990-01-15',
-        'false',
-        'false',
-        'true',
-        'false',
-        '',
-        '',
-        'Sample user for testing',
-        // Address
-        '123 Main St',
-        'Apt 4B',
-        'New York',
-        'NY',
-        '10001',
-        'USA',
-        'true',
-        // Other
-        '1;2;3',
-        '1;2',
-        '',
-      ],
-      [
-        // User Info
-        'jane.smith@example.com',
-        'Jane',
-        'Smith',
-        'jane.smith@example.com',
-        '0987654321',
-        'Employee',
-        '1992-05-20',
-        'false',
-        'false',
-        'true',
-        'false',
-        '',
-        '',
-        'Another sample user',
-        // Address
-        '456 Oak Ave',
-        '',
-        'Los Angeles',
-        'CA',
-        '90001',
-        'USA',
-        'true',
-        // Other
-        '1;2',
-        '2',
-        '',
-      ],
-    ]
-
-    // Convert to CSV
-    const csvContent = [headers.join(','), ...sampleRows.map(row => row.map(cell => `"${cell}"`).join(','))].join('\n')
-
-    // Download
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = 'user_import_template.csv'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    window.URL.revokeObjectURL(url)
-
-    toast.success('Template downloaded successfully!')
+    try {
+      downloadImportTemplate({
+        templateStructure,
+        fileName: 'user_import_template.xlsx',
+        sheetName: 'Users',
+      })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to download template'
+      toast.error(message)
+    }
   }
 
   /**
-   * Helper function to parse boolean values
-   */
-  const parseBoolean = (val: string): boolean => val.toLowerCase() === 'true'
-
-  /**
-   * Helper function to parse semicolon-separated IDs
-   */
-  const parseIds = (val: string): number[] => {
-    if (!val) return []
-    return val
-      .split(';')
-      .map(id => parseInt(id.trim()))
-      .filter(id => !isNaN(id))
-  }
-
-  /**
-   * Parse CSV/Excel file
+   * Parse Excel/CSV file
+   * Uses ExcelRowParser for dynamic column mapping (like Python DataFrame)
+   * No hardcoded column indices - columns are accessed by field name
    */
   const parseFile = useCallback(
     (file: File): void => {
       setIsLoading(true)
-      const reader = new FileReader()
 
-      reader.onload = e => {
-        try {
-          const text = e.target?.result as string
-          const lines = text.split('\n').filter(line => line.trim())
+      void parseImportFile<ImportUserData, BulkUserImportData>({
+        file,
+        templateStructure,
+        headerNames: userImportHeaderNames,
+        maxRecords,
+        validator: bulkUserImportValidator,
+        createRowData: ({ rowNumber, rowParser, getOptionalValue, getRequiredValue }) => {
+          const loginNameValue = getRequiredValue('loginName')
+          const firstNameValue = getRequiredValue('firstName')
+          const lastNameValue = getRequiredValue('lastName')
+          const phoneValue = getRequiredValue('phone')
+          const roleValue = getRequiredValue('role')
+          const dobValue = getRequiredValue('dob')
+          const imageUrlValue = getOptionalValue('imageUrl')
+          const streetAddressValue = getRequiredValue('streetAddress')
+          const streetAddress2Value = getOptionalValue('streetAddress2')
+          const streetAddress3Value = getOptionalValue('streetAddress3')
+          const cityValue = getRequiredValue('city')
+          const stateValue = getRequiredValue('state')
+          const postalCodeValue = getRequiredValue('zipCode')
+          const countryValue = getRequiredValue('country')
+          const addressTypeValue = getRequiredValue('addressType')
+          const nameOnAddressValue = getOptionalValue('nameOnAddress')
+          const emailOnAddressValue = getOptionalValue('emailOnAddress')
+          const phoneOnAddressValue = getOptionalValue('phoneOnAddress')
+          const notesValue = getOptionalValue('notes')
+          const permissionIdsRaw = rowParser.getString('permissionIds')
+          const selectedGroupIdsRaw = rowParser.getString('selectedGroupIds')
 
-          if (lines.length < 2) {
-            toast.error('File is empty or invalid')
-            setIsLoading(false)
-            return
+          const validationPayload: BulkUserImportData = {
+            loginName: loginNameValue,
+            firstName: firstNameValue,
+            lastName: lastNameValue,
+            phone: phoneValue,
+            role: roleValue,
+            dob: dobValue,
+            imageUrl: imageUrlValue ?? '',
+            streetAddress: streetAddressValue,
+            streetAddress2: streetAddress2Value ?? '',
+            streetAddress3: streetAddress3Value ?? '',
+            city: cityValue,
+            state: stateValue,
+            zipCode: postalCodeValue,
+            country: countryValue,
+            addressType: addressTypeValue,
+            nameOnAddress: nameOnAddressValue ?? '',
+            emailOnAddress: emailOnAddressValue ?? '',
+            phoneOnAddress: phoneOnAddressValue ?? '',
+            permissionIds: permissionIdsRaw,
+            selectedGroupIds: selectedGroupIdsRaw,
+            notes: notesValue ?? '',
           }
 
-          // Parse CSV
-          const parsedData: ImportUserData[] = []
-
-          for (let i = 1; i < Math.min(lines.length, maxRecords + 1); i++) {
-            // Handle quoted CSV values
-            const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''))
-            const errors: string[] = []
-
-            // Validate required fields (User Info)
-            if (!values[0]) errors.push('Login name is required')
-            if (!values[1]) errors.push('First name is required')
-            if (!values[2]) errors.push('Last name is required')
-            if (!values[3]) errors.push('Email is required')
-            if (!values[4]) errors.push('Phone is required')
-            if (!values[5]) errors.push('Role is required')
-
-            parsedData.push({
-              rowNumber: i,
-              // User Info (indices 0-13)
-              loginName: values[0] || '',
-              firstName: values[1] || '',
-              lastName: values[2] || '',
-              email: values[3] || '',
-              phone: values[4] || '',
-              role: values[5] || '',
-              dob: values[6] || '',
-              isGuest: parseBoolean(values[7]),
-              locked: parseBoolean(values[8]),
-              emailConfirmed: parseBoolean(values[9]),
-              isDeleted: parseBoolean(values[10]),
-              apiKey: values[11] || undefined,
-              profilePictureBase64: values[12] || undefined,
-              notes: values[13] || undefined,
-              // Address Info (indices 14-20)
-              streetAddress: values[14] || '',
-              streetAddress2: values[15] || undefined,
-              city: values[16] || '',
-              state: values[17] || '',
-              zipCode: values[18] || '',
-              country: values[19] || 'USA',
-              isPrimary: parseBoolean(values[20]),
-              // Other (indices 21-23)
-              permissionIds: parseIds(values[21]),
-              selectedGroupIds: parseIds(values[22]),
-              selectedUserIds: parseIds(values[23]),
-              errors: errors.length > 0 ? errors : undefined,
-            })
+          const parsedRow: ImportUserData = {
+            rowNumber,
+            loginName: loginNameValue,
+            firstName: firstNameValue,
+            lastName: lastNameValue,
+            phone: phoneValue,
+            role: roleValue,
+            dob: dobValue,
+            imageUrl: imageUrlValue,
+            streetAddress: streetAddressValue,
+            streetAddress2: streetAddress2Value,
+            streetAddress3: streetAddress3Value,
+            city: cityValue,
+            state: stateValue,
+            zipCode: postalCodeValue,
+            country: countryValue,
+            addressType: addressTypeValue,
+            nameOnAddress: nameOnAddressValue,
+            emailOnAddress: emailOnAddressValue,
+            phoneOnAddress: phoneOnAddressValue,
+            permissionIds: rowParser.getIdArray('permissionIds'),
+            selectedGroupIds: rowParser.getIdArray('selectedGroupIds'),
+            notes: notesValue,
           }
 
-          setImportData(parsedData)
-          toast.success(`Parsed ${parsedData.length} records successfully!`)
-        } catch {
-          toast.error('Failed to parse file. Please check the format.')
-        } finally {
+          return {
+            parsedRow,
+            validationPayload,
+          } satisfies {
+            parsedRow: ImportUserData
+            validationPayload: BulkUserImportData
+          }
+        },
+      })
+        .then(results => {
+          setImportData(
+            results.map(result => ({
+              ...result.data,
+              errors: result.errors && result.errors.length > 0 ? result.errors : undefined,
+            })),
+          )
+          toast.success(`Parsed ${results.length} records successfully!`)
+        })
+        .catch(error => {
+          const message = error instanceof Error ? error.message : 'Failed to parse file. Please check the format.'
+          toast.error(message)
+          if (message.includes('maximum allowed')) {
+            setFile(null)
+          }
+        })
+        .finally(() => {
           setIsLoading(false)
-        }
-      }
-
-      reader.onerror = () => {
-        toast.error('Failed to read file')
-        setIsLoading(false)
-      }
-
-      reader.readAsText(file)
+        })
     },
     [maxRecords],
   )
-
   /**
-   * Handle file upload and parse CSV/Excel
+   * Handle file selection
    */
-  const handleFileUpload = useCallback(
-    (uploadedFile: File) => {
-      setFile(uploadedFile)
-      parseFile(uploadedFile)
+  const handleFileSelect = useCallback(
+    (selectedFile: File): void => {
+      setFile(selectedFile)
+      parseFile(selectedFile)
     },
     [parseFile],
   )
@@ -352,46 +337,134 @@ const ImportUsers = (): React.JSX.Element => {
   /**
    * Clear uploaded file and data
    */
-  const handleClearFile = (): void => {
+  const handleFileClear = useCallback((): void => {
     setFile(null)
     setImportData([])
-    toast.info('File cleared')
-  }
+  }, [])
+
+  /**
+   * Fetch available permissions (local pagination)
+   */
+  const fetchPermissions = useCallback(async (): Promise<void> => {
+    setPermissionsLoading(true)
+    try {
+      const permissionsResponse = (await getAllPermissions()) as PermissionData[]
+      // Sort by permissionId in descending order
+      const sortedPermissions = [...permissionsResponse].sort((a, b) => b.permissionId - a.permissionId)
+      setPermissionsRaw(sortedPermissions) // Store raw unfiltered data
+      setPermissions(sortedPermissions)
+    } catch {
+      toast.error('Failed to fetch permissions')
+      setPermissionsRaw([])
+      setPermissions([])
+    } finally {
+      setPermissionsLoading(false)
+    }
+  }, [])
+
+  /**
+   * Fetch user groups (server-side pagination)
+   */
+  const fetchUserGroups = useCallback(async (): Promise<void> => {
+    setUserGroupsLoading(true)
+    try {
+      const response = await userGroupApi.getUserGroups({
+        start: userGroupsPaginationModel.start,
+        end: userGroupsPaginationModel.end,
+        pageSize: userGroupsPaginationModel.pageSize,
+        includeDeleted: false,
+        logicOperator: userGroupsActiveFilterGroup.logicOperator,
+        filters: userGroupsActiveFilterGroup.filters,
+      })
+
+      // API response already matches grid structure
+      setUserGroups(response.data as UserGroupData[])
+      setUserGroupsTotalCount(response.totalDataCount)
+    } catch {
+      toast.error('Failed to fetch user groups')
+      setUserGroups([])
+      setUserGroupsTotalCount(0)
+    } finally {
+      setUserGroupsLoading(false)
+    }
+  }, [userGroupsPaginationModel, userGroupsActiveFilterGroup])
+
+  // Fetch permissions on mount
+  useEffect(() => {
+    void fetchPermissions()
+  }, [fetchPermissions])
+
+  // Apply local filters to permissions when filter changes
+  useEffect(() => {
+    if (permissionsRaw.length > 0) {
+      const filteredData = applyLocalFilters(permissionsRaw, permissionsActiveFilterGroup)
+      setPermissions(filteredData)
+    }
+  }, [permissionsRaw, permissionsActiveFilterGroup])
+
+  // Fetch user groups on mount and when pagination changes
+  useEffect(() => {
+    void fetchUserGroups()
+  }, [fetchUserGroups])
 
   /**
    * Generate JSON structure for API
    */
-  const generateImportJSON = (): BulkUserImportRequest => ({
-    maxRecords,
-    users: importData.map(user => ({
+  const generateImportJSON = useCallback((): BulkUserImportRequest => {
+    const users = importData.map(user => ({
       loginName: user.loginName,
       firstName: user.firstName,
       lastName: user.lastName,
-      email: user.email,
       phone: user.phone,
       role: user.role,
       dob: user.dob,
-      isGuest: user.isGuest,
-      locked: user.locked,
-      emailConfirmed: user.emailConfirmed,
-      isDeleted: user.isDeleted,
-      apiKey: user.apiKey,
-      profilePictureBase64: user.profilePictureBase64,
-      notes: user.notes,
+      imageUrl: user.imageUrl,
       address: {
         streetAddress: user.streetAddress,
         streetAddress2: user.streetAddress2,
+        streetAddress3: user.streetAddress3,
         city: user.city,
         state: user.state,
         zipCode: user.zipCode,
+        postalCode: user.zipCode,
         country: user.country ?? 'USA',
-        isPrimary: user.isPrimary,
+        addressType: user.addressType,
+        nameOnAddress: user.nameOnAddress,
+        emailOnAddress: user.emailOnAddress,
+        phoneOnAddress: user.phoneOnAddress,
       },
       permissionIds: user.permissionIds,
       selectedGroupIds: user.selectedGroupIds,
-      selectedUserIds: user.selectedUserIds,
-    })),
-  })
+      notes: user.notes,
+    }))
+
+    return {
+      maxRecords,
+      users,
+    }
+  }, [importData, maxRecords])
+
+  // Generate JSON preview when switching to JSON view
+  useEffect(() => {
+    if (viewMode === 'json' && importData.length > 0) {
+      const json = generateImportJSON()
+      setJsonPreview(JSON.stringify(json, null, 2))
+    }
+  }, [viewMode, importData, generateImportJSON])
+
+  const jsonPreviewData = useMemo<unknown>(() => {
+    if (!jsonPreview) {
+      return []
+    }
+
+    try {
+      const parsed = JSON.parse(jsonPreview) as BulkUserImportRequest
+      // Only show the users array, not the wrapper object with maxRecords
+      return parsed.users
+    } catch {
+      return []
+    }
+  }, [jsonPreview])
 
   /**
    * Submit bulk import to API
@@ -411,251 +484,447 @@ const ImportUsers = (): React.JSX.Element => {
 
     setIsLoading(true)
     try {
-      // TODO: Call API endpoint with generateImportJSON()
+      // Generate import payload - convert to API format (uses same UserRequestModel as add/edit)
+      // Convert image URLs to base64 in parallel
+      const usersPayload: UserRequestModel[] = await Promise.all(
+        importData.map(async user => {
+          // Convert imageUrl to base64 if provided
+          let profilePictureBase64: string | undefined
+          if (user.imageUrl) {
+            profilePictureBase64 = await convertImageUrlToBase64(user.imageUrl)
+          }
 
-      // Simulate API call
-      await new Promise<void>(resolve => {
-        setTimeout(() => {
-          resolve()
-        }, 1000)
-      })
+          return {
+            loginName: user.loginName,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            phone: user.phone,
+            role: user.role,
+            dob: user.dob,
+            profilePictureBase64,
+            address: {
+              streetAddress: user.streetAddress,
+              streetAddress2: user.streetAddress2,
+              streetAddress3: user.streetAddress3,
+              city: user.city,
+              state: user.state,
+              zipCode: user.zipCode,
+              postalCode: user.zipCode,
+              country: user.country,
+              addressType: user.addressType,
+              nameOnAddress: user.nameOnAddress,
+              emailOnAddress: user.emailOnAddress,
+              phoneOnAddress: user.phoneOnAddress,
+            },
+            permissionIds: user.permissionIds,
+            selectedGroupIds: user.selectedGroupIds,
+            notes: user.notes,
+          }
+        }),
+      )
 
-      toast.success(`Successfully imported ${importData.length} users!`)
+      // Call bulk create API
+      const response: BulkUserInsertResponseModel = await bulkCreateUsers(usersPayload)
 
-      // Navigate back to users grid
-      setTimeout(() => {
+      // Show results and navigate on success
+      if (response.failureCount === 0) {
+        toast.success(`Successfully imported ${response.successCount} users!`)
+        // Navigate to users page on full success
         navigate(APP_ROUTES.DASHBOARD.USERS)
-      }, 1500)
-    } catch {
-      toast.error('Failed to import users')
+      } else if (response.successCount === 0) {
+        toast.error(`Failed to import all ${response.failureCount} users. Check the results.`)
+      } else {
+        toast.warning(
+          `Partial success: ${response.successCount} imported, ${response.failureCount} failed. Check your messages for details.`,
+        )
+        // Navigate to users page even on partial success
+        navigate(APP_ROUTES.DASHBOARD.USERS)
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to import users'
+      toast.error(errorMessage)
     } finally {
       setIsLoading(false)
     }
   }
 
-  /**
-   * Grid columns for data preview
-   */
-  const columns: GridColDef[] = [
-    {
-      field: 'rowNumber',
-      headerName: 'Row',
-      width: 70,
-      align: 'center',
-      headerAlign: 'center',
-    },
-    {
-      field: 'loginName',
-      headerName: 'Login Name',
-      width: 200,
-    },
-    {
-      field: 'firstName',
-      headerName: 'First Name',
-      width: 130,
-    },
-    {
-      field: 'lastName',
-      headerName: 'Last Name',
-      width: 130,
-    },
-    {
-      field: 'email',
-      headerName: 'Email',
-      width: 220,
-    },
-    {
-      field: 'phone',
-      headerName: 'Phone',
-      width: 130,
-    },
-    {
-      field: 'role',
-      headerName: 'Role',
-      width: 120,
-    },
-    {
-      field: 'dob',
-      headerName: 'DOB',
-      width: 120,
-    },
-    {
-      field: 'city',
-      headerName: 'City',
-      width: 130,
-    },
-    {
-      field: 'state',
-      headerName: 'State',
-      width: 80,
-    },
-    {
-      field: 'locked',
-      headerName: 'Locked',
-      width: 90,
-      renderCell: params => {
-        const row = params.row as ImportUserData
-        return <Chip label={row.locked ? 'Yes' : 'No'} color={row.locked ? 'error' : 'success'} size="small" />
-      },
-    },
-    {
-      field: 'errors',
-      headerName: 'Status',
-      width: 120,
-      renderCell: params => {
-        const row = params.row as ImportUserData
-        if (row.errors && row.errors.length > 0) {
-          return (
-            <Tooltip title={row.errors.join(', ')}>
-              <Chip label="Error" color="error" size="small" />
-            </Tooltip>
-          )
-        }
-        return <Chip label="Valid" color="success" size="small" />
-      },
-    },
-  ]
+  const handlePreviewErrorClick = useCallback((errors: string[], rowNumber: number): void => {
+    setSelectedRowErrors(errors)
+    setSelectedRowNumber(rowNumber)
+    setErrorModalOpen(true)
+  }, [])
+
+  // Grid column configurations
+  const permissionsColumns = useMemo<GridColDef[]>(() => getPermissionGridColumns(), [])
+
+  const userGroupsColumns = useMemo<GridColDef[]>(() => {
+    const noOpToggle = (): void => {
+      // Read-only grid, no toggle support required
+    }
+    return getUserGroupGridColumns(noOpToggle).filter(col => col.field !== 'actions')
+  }, [])
+
+  const previewColumns = useMemo<GridColDef[]>(
+    () => getUserImportPreviewColumns(handlePreviewErrorClick),
+    [handlePreviewErrorClick],
+  )
+
+  const columnGroupingModel = useMemo<ColumnGroup[]>(
+    () =>
+      templateStructure.map(section => ({
+        groupId: section.category.toLowerCase().replace(/\s+/g, '-'),
+        headerName: section.category,
+        children: section.fields,
+      })),
+    [],
+  )
+
+  // Validation summary
+  const { hasValidationErrors, errorCount } = useMemo(() => {
+    let count = 0
+    for (const row of importData) {
+      if (row.errors && row.errors.length > 0) {
+        count += 1
+      }
+    }
+    return {
+      hasValidationErrors: count > 0,
+      errorCount: count,
+    }
+  }, [importData])
 
   return (
-    <Container maxWidth="xl">
-      <Box className={styles['import-users-page__container']}>
-        {/* Instructions */}
-        <ImportInstructions
-          instructions={[
-            'Download the template file to see the required format',
-            'Fill in your user data following the template structure',
-            'Upload the file and preview the data',
-            'Set the maximum number of records to import',
-            'Review and submit the import',
-          ]}
+    <>
+      {/* Test Data Button - Only show in development */}
+      {import.meta.env.DEV && (
+        <FillImportTestDataButton
+          permissionIds={permissionsRaw.map(p => p.permissionId)}
+          userGroupIds={userGroups
+            .map(g => g.groupId ?? g.userGroupId ?? 0)
+            .filter(id => id !== 0)
+            .slice(0, 5)}
         />
+      )}
 
-        {/* Actions Bar */}
-        <Box className={styles['import-users-page__actions-bar']}>
-          {/* Download Template */}
-          <Button
-            variant="outlined"
-            startIcon={<DownloadIcon />}
-            onClick={handleDownloadTemplate}
-            className={styles['import-users-page__action-button']}
-          >
-            Download Template
-          </Button>
+      <Container maxWidth={false} disableGutters className={styles['import-users-page__page-wrapper']}>
+        <Box className={styles['import-users-page__container']}>
+          {/* Instructions */}
+          <ImportInstructions
+            instructions={[
+              'Download the template file to see the required format',
+              'Fill in your user data following the template structure',
+              'Upload the file and preview the data',
+              'Set the maximum number of records to import',
+              'Review and submit the import',
+            ]}
+          />
 
-          {/* Max Records Dropdown */}
-          <FormControl className={styles['import-users-page__max-records-select']}>
-            <InputLabel>Max Records</InputLabel>
-            <Select
-              value={maxRecords}
-              label="Max Records"
-              onChange={e => {
-                setMaxRecords(e.target.value as number)
-              }}
-              disabled={isLoading}
-            >
-              <MenuItem value={25}>25</MenuItem>
-              <MenuItem value={100}>100</MenuItem>
-              <MenuItem value={200}>200</MenuItem>
-              <MenuItem value={500}>500</MenuItem>
-              <MenuItem value={1000}>1000</MenuItem>
-            </Select>
-          </FormControl>
-
-          {/* View Toggle */}
-          {importData.length > 0 && (
-            <ToggleButtonGroup
-              value={viewMode}
-              exclusive
-              onChange={(_, newMode: 'grid' | 'json' | null) => {
-                if (newMode) {
-                  setViewMode(newMode)
-                }
-              }}
-              className={styles['import-users-page__view-toggle']}
-            >
-              <ToggleButton value="grid">
-                <GridIcon fontSize="small" />
-                <BodyText text="Grid" variant="body2" sx={{ ml: 1 }} />
-              </ToggleButton>
-              <ToggleButton value="json">
-                <JsonIcon fontSize="small" />
-                <BodyText text="JSON" variant="body2" sx={{ ml: 1 }} />
-              </ToggleButton>
-            </ToggleButtonGroup>
-          )}
-        </Box>
-
-        {/* Excel Upload Component */}
-        <ExcelUploadInput
-          onFileSelect={handleFileUpload}
-          onFileClear={handleClearFile}
-          currentFile={file}
-          disabled={isLoading}
-          showFileInfo
-          accept=".csv,.xlsx,.xls"
-          maxSizeMB={10}
-        />
-
-        {/* Data Preview */}
-        {importData.length > 0 && (
-          <Paper className={styles['import-users-page__preview-paper']}>
-            <Box className={styles['import-users-page__preview-header']}>
-              <BodyText
-                text={`Data Preview (${importData.length} records)`}
-                variant="body1"
-                sx={{
-                  fontWeight: 600,
-                  fontSize: '1.25rem',
+          {/* Reference Grids - Permissions and User Groups (stacked vertically) */}
+          {/* Permissions Grid (Client-Side Pagination) */}
+          <Paper className={styles['import-users-page__reference-card']}>
+            <Subheader label="Available Permissions" className={styles['import-users-page__section-title']} />
+            <Divider className={styles['import-users-page__divider']} />
+            <Box className={styles['import-users-page__grid-wrapper']}>
+              <StyledDataGrid
+                dataTestId="permissions-reference-grid"
+                rows={permissions}
+                columns={permissionsColumns}
+                getRowId={row => (row as PermissionData).permissionId}
+                loading={permissionsLoading}
+                paginationMode="client"
+                filterMode="client"
+                sortingMode="client"
+                pageSizeOptions={[10, 25, 50]}
+                initialState={{
+                  pagination: {
+                    paginationModel: {
+                      pageSize: 10,
+                    },
+                  },
                 }}
-              />
-            </Box>
-
-            {viewMode === 'grid' ? (
-              <Box className={styles['import-users-page__grid-container']}>
-                <DataGrid
-                  rows={importData}
-                  columns={columns}
-                  getRowId={(row: ImportUserData) => row.rowNumber}
-                  pageSizeOptions={[10, 25, 50, 100]}
-                  initialState={{
-                    pagination: { paginationModel: { pageSize: 25 } },
-                  }}
-                  disableRowSelectionOnClick
-                  autoHeight
-                  getRowClassName={params => {
-                    const { row } = params
-                    return row.errors && row.errors.length > 0 ? styles['import-users-page__error-row'] : ''
-                  }}
-                />
-              </Box>
-            ) : (
-              <Box className={styles['import-users-page__json-container']}>
-                <pre className={styles['import-users-page__json-pre']}>
-                  {JSON.stringify(generateImportJSON(), null, 2)}
-                </pre>
-              </Box>
-            )}
-
-            {/* Submit Buttons */}
-            <Box className={styles['import-users-page__submit-container']}>
-              <RedButton
-                onClick={() => {
-                  navigate(APP_ROUTES.DASHBOARD.USERS)
+                disableRowSelectionOnClick
+                autoHeight
+                density={permissionsDensity}
+                columnVisibilityModel={permissionsColumnVisibility}
+                onColumnVisibilityModelChange={setPermissionsColumnVisibility}
+                slots={{
+                  toolbar: SimpleToolbar as GridSlotsComponent['toolbar'],
                 }}
-                disabled={isLoading}
-                label="Cancel"
-              />
-              <BlueButton
-                startIcon={<SendIcon />}
-                onClick={handleSubmit}
-                disabled={isLoading}
-                label={isLoading ? 'Importing...' : `Import ${importData.length} Users`}
+                slotProps={{
+                  toolbar: {
+                    density: permissionsDensity,
+                    onDensityChange: setPermissionsDensity,
+                    columns: permissionsColumns,
+                    rows: permissions,
+                    hideIncludeDeleted: true,
+                    hideExport: false,
+                    hideFilter: false,
+                    hideColumns: false,
+                    columnVisibilityModel: permissionsColumnVisibility,
+                    onColumnVisibilityChange: setPermissionsColumnVisibility,
+                    activeFilterGroup: permissionsActiveFilterGroup,
+                    onFiltersChange: setPermissionsActiveFilterGroup,
+                  } as GridToolbarProps,
+                }}
+                showToolbar
+                disableColumnMenu={false}
               />
             </Box>
           </Paper>
-        )}
-      </Box>
-    </Container>
+
+          {/* User Groups Grid (Server-Side Pagination) */}
+          <Paper className={styles['import-users-page__reference-card']}>
+            <Subheader label="Available User Groups" className={styles['import-users-page__section-title']} />
+            <Divider className={styles['import-users-page__divider']} />
+            <Box className={styles['import-users-page__grid-wrapper']}>
+              <StyledDataGrid
+                dataTestId="user-groups-reference-grid"
+                rows={userGroups}
+                columns={userGroupsColumns}
+                getRowId={row => {
+                  const data = row as UserGroupData
+                  return data.groupId ?? data.userGroupId ?? 0
+                }}
+                loading={userGroupsLoading}
+                rowCount={userGroupsTotalCount}
+                totalCount={userGroupsTotalCount}
+                paginationModelState={userGroupsPaginationModel}
+                setPaginationModel={setUserGroupsPaginationModel}
+                paginationMode="server"
+                filterMode="server"
+                sortingMode="server"
+                pageSizeOptions={[10, 25, 50]}
+                disableRowSelectionOnClick
+                autoHeight
+                density={userGroupsDensity}
+                columnVisibilityModel={userGroupsColumnVisibility}
+                onColumnVisibilityModelChange={setUserGroupsColumnVisibility}
+                slots={{
+                  toolbar: SimpleToolbar as GridSlotsComponent['toolbar'],
+                }}
+                slotProps={{
+                  toolbar: {
+                    density: userGroupsDensity,
+                    onDensityChange: setUserGroupsDensity,
+                    columns: userGroupsColumns,
+                    rows: userGroups,
+                    hideIncludeDeleted: true,
+                    hideExport: false,
+                    columnVisibilityModel: userGroupsColumnVisibility,
+                    onColumnVisibilityChange: setUserGroupsColumnVisibility,
+                    onFiltersChange: setUserGroupsActiveFilterGroup,
+                    activeFilterGroup: userGroupsActiveFilterGroup,
+                  } as GridToolbarProps,
+                }}
+                showToolbar
+                disableColumnMenu={false}
+              />
+            </Box>
+          </Paper>
+
+          {/* Import Settings Card with File Upload */}
+          <Paper className={styles['import-users-page__settings-card']}>
+            <Subheader label="Import Settings" className={styles['import-users-page__section-title']} />
+            <Divider className={styles['import-users-page__divider--large']} />
+
+            {/* Top Right - Actions */}
+            <Box className={styles['import-users-page__settings-actions']}>
+              {/* Download Template */}
+              <LinkButton
+                startIcon={<DownloadIcon />}
+                onClick={handleDownloadTemplate}
+                className={styles['import-users-page__template-button']}
+                size="small"
+                label="Download Template"
+              />
+
+              {/* Max Records Dropdown */}
+              <SelectInput
+                label="Max Records"
+                value={maxRecords}
+                onChange={e => {
+                  setMaxRecords(Number(e.target.value))
+                }}
+                disabled={isLoading}
+                options={[
+                  {
+                    value: 25,
+                    label: '25',
+                  },
+                  {
+                    value: 100,
+                    label: '100',
+                  },
+                  {
+                    value: 200,
+                    label: '200',
+                  },
+                  {
+                    value: 500,
+                    label: '500',
+                  },
+                  {
+                    value: 1000,
+                    label: '1000',
+                  },
+                ]}
+                size="small"
+                margin="none"
+                fullWidth={false}
+                className={styles['import-users-page__max-records-select']}
+              />
+            </Box>
+
+            {/* File Upload Area - Below actions */}
+            <FileDropZone
+              onFileSelect={handleFileSelect}
+              onFileClear={handleFileClear}
+              currentFile={file}
+              accept=".csv,.xlsx,.xls"
+              maxSizeMB={10}
+              disabled={isLoading}
+              isLoading={isLoading}
+            />
+          </Paper>
+
+          {/* Loading State - Processing File */}
+          {isLoading && importData.length === 0 && (
+            <Paper className={styles['import-users-page__loading-paper']}>
+              <Box className={styles['import-users-page__loading-container']}>
+                <CircularProgress size={48} />
+                <Typography variant="h6" className={styles['import-users-page__loading-text']}>
+                  Processing file...
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Parsing and validating data
+                </Typography>
+              </Box>
+            </Paper>
+          )}
+
+          {/* Data Preview */}
+          {importData.length > 0 && (
+            <Paper className={styles['import-users-page__preview-paper']}>
+              {/* Header with Title */}
+              <Subheader
+                label={`Data Preview (${importData.length} records)`}
+                className={styles['import-users-page__section-title']}
+              />
+              <Divider className={styles['import-users-page__divider']} />
+
+              {/* View Toggle - Above the table on top right */}
+              <Box className={styles['import-users-page__view-toggle-container']}>
+                <ToggleButtonGroup
+                  value={viewMode}
+                  exclusive
+                  onChange={(_, newMode: 'grid' | 'json' | null) => {
+                    if (newMode) {
+                      setViewMode(newMode)
+                    }
+                  }}
+                  size="small"
+                >
+                  <ToggleButton value="grid">
+                    <GridIcon fontSize="small" />
+                    <BodyText text="Grid" variant="body2" className={styles['import-users-page__toggle-button-text']} />
+                  </ToggleButton>
+                  <ToggleButton value="json">
+                    <JsonIcon fontSize="small" />
+                    <BodyText text="JSON" variant="body2" className={styles['import-users-page__toggle-button-text']} />
+                  </ToggleButton>
+                </ToggleButtonGroup>
+              </Box>
+
+              {/* Content Area */}
+              {viewMode === 'grid' ? (
+                <Box className={styles['import-users-page__grid-container']}>
+                  <StyledDataGrid
+                    dataTestId="import-users-preview-grid"
+                    rows={importData}
+                    columns={previewColumns}
+                    columnGroupingModel={columnGroupingModel}
+                    getRowId={row => (row as ImportUserData).rowNumber}
+                    loading={false}
+                    paginationMode="client"
+                    filterMode="client"
+                    sortingMode="client"
+                    pageSizeOptions={[10, 25, 50, 100]}
+                    initialState={{
+                      pagination: { paginationModel: { pageSize: 25 } },
+                    }}
+                    disableRowSelectionOnClick
+                    autoHeight
+                    getRowClassName={params => {
+                      const row = params.row as ImportUserData
+                      return row.errors && row.errors.length > 0 ? styles['import-users-page__error-row'] : ''
+                    }}
+                    showToolbar={false}
+                    disableColumnMenu={false}
+                  />
+                </Box>
+              ) : (
+                <Box className={styles['import-users-page__json-container']}>
+                  <TableAsJson data={jsonPreviewData} showCopyButton />
+                </Box>
+              )}
+            </Paper>
+          )}
+
+          {/* Action Buttons */}
+          {importData.length > 0 && (
+            <Paper className={styles['import-users-page__actions-card']}>
+              {/* Validation Error Warning */}
+              {hasValidationErrors && (
+                <Box className={styles['import-users-page__error-warning']}>
+                  <ErrorIcon className={styles['import-users-page__error-warning-icon']} />
+                  <Box>
+                    <Typography variant="body2" className={styles['import-users-page__error-warning-text']}>
+                      <strong>Cannot import data:</strong> {errorCount} {errorCount === 1 ? 'row has' : 'rows have'}{' '}
+                      validation errors.
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Please fix all errors before importing. Click on the red error chips to view details.
+                    </Typography>
+                  </Box>
+                </Box>
+              )}
+
+              <Box className={styles['import-users-page__actions']}>
+                <RedButton
+                  variant="outlined"
+                  startIcon={<CancelIcon />}
+                  onClick={() => {
+                    navigate(APP_ROUTES.DASHBOARD.USERS)
+                  }}
+                  disabled={isLoading}
+                  label="Cancel"
+                  className={styles['import-users-page__action-button']}
+                />
+                <BlueButton
+                  variant="contained"
+                  startIcon={<SendIcon />}
+                  onClick={handleSubmit}
+                  disabled={isLoading || hasValidationErrors}
+                  label={isLoading ? 'Importing...' : `Import ${importData.length} Users`}
+                  className={styles['import-users-page__action-button']}
+                />
+              </Box>
+            </Paper>
+          )}
+        </Box>
+      </Container>
+
+      {/* Error Details Modal */}
+      <ErrorDetailsModal
+        open={errorModalOpen}
+        onClose={() => {
+          setErrorModalOpen(false)
+        }}
+        title="Validation Errors"
+        errors={selectedRowErrors}
+        rowIdentifier={selectedRowNumber !== null ? `Row ${selectedRowNumber}` : undefined}
+      />
+    </>
   )
 }
 
