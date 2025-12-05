@@ -695,3 +695,14 @@ export const STATE_ABBREVIATIONS: Record<string, string> = {
   Lakshadweep: 'LD',
   Puducherry: 'PY',
 }
+
+/**
+ * Max records options for bulk import operations
+ * Used in import pages for setting the maximum number of records to import at once
+ */
+export const MAX_RECORDS_OPTIONS: readonly number[] = [25, 100, 200, 500, 1000]
+
+/**
+ * Default max records value for bulk import operations
+ */
+export const DEFAULT_MAX_RECORDS: number = 25

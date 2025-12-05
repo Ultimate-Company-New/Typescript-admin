@@ -109,9 +109,20 @@ const SimpleToolbar = ({
           })
           .map(col => col.field)
   const columnsMenuOpen = Boolean(columnsMenuAnchorEl)
-  const toggleableColumns = columns.filter(
-    col => col.field !== 'userActions' && col.field !== 'isDeleted' && col.field !== 'userId' && col.field !== 'avatar',
-  )
+  // Determine which columns can be toggled in the visibility menu
+  // Respect hideable property - if explicitly set to true, include it
+  const toggleableColumns = columns.filter(col => {
+    // If hideable is explicitly set to true, include it
+    if (col.hideable === true) {
+      return true
+    }
+    // If hideable is explicitly set to false, exclude it
+    if (col.hideable === false) {
+      return false
+    }
+    // Default behavior: exclude common non-toggleable columns
+    return col.field !== 'userActions' && col.field !== 'isDeleted' && col.field !== 'avatar'
+  })
 
   const handleColumnVisibilityToggle = (field: string, checked: boolean): void => {
     if (onColumnVisibilityChange == null) return
@@ -158,11 +169,19 @@ const SimpleToolbar = ({
       return
     }
 
-    // Get visible columns (exclude hidden ones)
-    const visibleColumns = columns.filter(
-      col =>
-        col.field !== 'actions' && col.field !== 'userActions' && col.field !== 'isDeleted' && col.field !== 'userId',
-    )
+    // Get visible columns for export - respect columnVisibilityModel
+    const visibleColumns = columns.filter(col => {
+      // Always exclude action columns
+      if (col.field === 'actions' || col.field === 'userActions') {
+        return false
+      }
+      // Check if column is visible in the visibility model
+      if (columnVisibilityModel != null && col.field in columnVisibilityModel) {
+        return columnVisibilityModel[col.field]
+      }
+      // By default, exclude isDeleted but include other columns
+      return col.field !== 'isDeleted'
+    })
 
     // Create CSV header
     const headers = visibleColumns.map(col => col.headerName ?? col.field).join(',')

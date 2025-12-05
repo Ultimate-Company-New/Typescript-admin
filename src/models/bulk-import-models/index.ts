@@ -12,7 +12,16 @@ export {
   getUserImportPreviewColumns,
 } from './ImportUserGridModel'
 
+// User Group Import
+export {
+  userGroupImportTemplateStructure,
+  userGroupImportHeaderNames,
+  userGroupImportHiddenFields,
+  userGroupImportFieldDisplayConfig,
+  getUserGroupImportPreviewColumns,
+  type ImportUserGroupData,
+} from './ImportUserGroupGridModel'
+
 // Add more import models here as needed:
-// export { groupImportTemplateStructure, groupImportFieldDisplayConfig } from './importGroupGridModel'
 // export { leadImportTemplateStructure, leadImportFieldDisplayConfig } from './importLeadGridModel'
 // export { salesOrderImportTemplateStructure, salesOrderImportFieldDisplayConfig } from './importSalesOrderGridModel'

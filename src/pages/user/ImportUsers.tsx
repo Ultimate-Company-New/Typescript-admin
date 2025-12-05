@@ -42,6 +42,7 @@ import {
 } from '../../components/datagrid'
 import { BodyText, Subheader } from '../../components/fonts'
 import { FileDropZone, SelectInput } from '../../components/form-input'
+import { DEFAULT_MAX_RECORDS, MAX_RECORDS_OPTIONS } from '../../constants/appConstants'
 import { APP_ROUTES } from '../../constants/routes'
 import {
   getPermissionGridColumns,
@@ -149,7 +150,7 @@ const ImportUsers = (): React.JSX.Element => {
   const [file, setFile] = useState<File | null>(null)
   const [importData, setImportData] = useState<ImportUserData[]>([])
   const [viewMode, setViewMode] = useState<'grid' | 'json'>('grid')
-  const [maxRecords, setMaxRecords] = useState<number>(25)
+  const [maxRecords, setMaxRecords] = useState<number>(DEFAULT_MAX_RECORDS)
   const [isLoading, setIsLoading] = useState(false)
   const [jsonPreview, setJsonPreview] = useState<string>('')
 
@@ -739,28 +740,10 @@ const ImportUsers = (): React.JSX.Element => {
                   setMaxRecords(Number(e.target.value))
                 }}
                 disabled={isLoading}
-                options={[
-                  {
-                    value: 25,
-                    label: '25',
-                  },
-                  {
-                    value: 100,
-                    label: '100',
-                  },
-                  {
-                    value: 200,
-                    label: '200',
-                  },
-                  {
-                    value: 500,
-                    label: '500',
-                  },
-                  {
-                    value: 1000,
-                    label: '1000',
-                  },
-                ]}
+                options={MAX_RECORDS_OPTIONS.map(value => ({
+                  value,
+                  label: String(value),
+                }))}
                 size="small"
                 margin="none"
                 fullWidth={false}

@@ -205,17 +205,25 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   )
 
   // Filter out specific columns that should not be filterable
-  // Check both the 'filterable' property and specific field names
-  const filterableColumns = columns.filter(
-    col =>
-      col.filterable !== false && // Respect the filterable property
+  // Respect the 'filterable' property - if explicitly set to true, include it even for typically hidden columns
+  const filterableColumns = columns.filter(col => {
+    // If filterable is explicitly set to true, always include it
+    if (col.filterable === true) {
+      return !visibleColumnFields || visibleColumnFields.includes(col.field)
+    }
+    // If filterable is explicitly set to false, always exclude it
+    if (col.filterable === false) {
+      return false
+    }
+    // Default behavior: exclude common non-filterable columns
+    return (
       col.field !== 'actions' &&
       col.field !== 'userActions' &&
       col.field !== 'isDeleted' &&
-      col.field !== 'userId' &&
       col.field !== 'avatar' && // Avatar/Icon column should not be filterable
-      (!visibleColumnFields || visibleColumnFields.includes(col.field)),
-  )
+      (!visibleColumnFields || visibleColumnFields.includes(col.field))
+    )
+  })
 
   // Get column type for operator selection
   const getColumnType = (columnField: string): string => {

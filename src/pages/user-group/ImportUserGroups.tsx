@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import type { ZodType } from 'zod'
 
 import {
   Cancel as CancelIcon,
@@ -14,20 +15,22 @@ import {
 } from '@mui/icons-material'
 import {
   Box,
-  Chip,
   CircularProgress,
   Container,
   Divider,
   Paper,
   ToggleButton,
   ToggleButtonGroup,
-  Tooltip,
   Typography,
 } from '@mui/material'
 import type { GridColDef, GridColumnVisibilityModel, GridSlotsComponent, GridToolbarProps } from '@mui/x-data-grid'
 
 import { userApi } from '../../api/userApi'
-import { bulkCreateUserGroups, type UserGroupBulkCreateItem } from '../../api/userGroupApi'
+import {
+  bulkCreateUserGroups,
+  type BulkUserGroupImportRequest,
+  type UserGroupBulkCreateItem,
+} from '../../api/userGroupApi'
 import { ImportInstructions } from '../../components'
 import { BlueButton, LinkButton, RedButton } from '../../components/buttons'
 import {
@@ -37,65 +40,43 @@ import {
   SimpleToolbar,
   StyledDataGrid,
   TableAsJson,
+  type ColumnGroup,
   type FilterGroup,
   type GridDensityType,
 } from '../../components/datagrid'
 import { BodyText, Subheader } from '../../components/fonts'
 import { FileDropZone, SelectInput } from '../../components/form-input'
+import { DEFAULT_MAX_RECORDS, MAX_RECORDS_OPTIONS } from '../../constants/appConstants'
 import { APP_ROUTES } from '../../constants/routes'
 import { getUserGridColumns, type UserResponseModel } from '../../models'
+import {
+  getUserGroupImportPreviewColumns,
+  userGroupImportHeaderNames,
+  userGroupImportTemplateStructure,
+  type ImportUserGroupData,
+} from '../../models/bulk-import-models/ImportUserGroupGridModel'
 import styles from '../../styles/Users.module.scss'
 import { type PaginatedGridInterface } from '../../types/grid.types'
 import { downloadImportTemplate, parseImportFile } from '../../utils/gridUtil'
+import {
+  bulkUserGroupImportSchema as rawBulkUserGroupImportSchema,
+  type BulkUserGroupImportData,
+} from '../../utils/validationSchemas'
+
+import { FillImportTestDataButton } from './components'
+
+// Validator for user group import rows
+const bulkUserGroupImportValidator = rawBulkUserGroupImportSchema as unknown as ZodType<BulkUserGroupImportData>
 
 /**
- * Interface for parsed user group data from Excel/CSV
+ * Convert ImportUserGroupData to UserGroupBulkCreateItem for API
  */
-interface ImportUserGroupData {
-  rowNumber: number
-  name: string
-  description: string
-  notes?: string
-  userIds: number[]
-  errors?: string[]
-}
-
-/**
- * Template structure for Excel generation
- */
-const templateStructure = [
-  {
-    category: 'Group Information',
-    fields: ['name', 'description', 'notes'],
-  },
-  {
-    category: 'Members',
-    fields: ['userIds'],
-  },
-]
-
-/**
- * Custom header names for display
- */
-const headerNames: Record<string, string> = {
-  name: 'Group Name',
-  description: 'Description',
-  notes: 'Notes',
-  userIds: 'User IDs (comma-separated)',
-}
-
-/**
- * JSON structure for bulk user group import API
- */
-interface BulkUserGroupImportRequest {
-  maxRecords: number
-  userGroups: Array<{
-    groupName: string
-    description: string
-    notes?: string
-    userIds: number[]
-  }>
-}
+const mapToApiPayload = (group: ImportUserGroupData): UserGroupBulkCreateItem => ({
+  groupName: group.name,
+  description: group.description,
+  notes: group.notes,
+  userIds: group.userIds,
+})
 
 /**
  * Import User Groups Page
@@ -111,7 +92,7 @@ const ImportUserGroups = (): React.JSX.Element => {
   const [file, setFile] = useState<File | null>(null)
   const [importData, setImportData] = useState<ImportUserGroupData[]>([])
   const [viewMode, setViewMode] = useState<'grid' | 'json'>('grid')
-  const [maxRecords, setMaxRecords] = useState<number>(25)
+  const [maxRecords, setMaxRecords] = useState<number>(DEFAULT_MAX_RECORDS as number)
   const [isLoading, setIsLoading] = useState(false)
   const [jsonPreview, setJsonPreview] = useState<string>('')
 
@@ -139,6 +120,7 @@ const ImportUserGroups = (): React.JSX.Element => {
   const [usersDensity, setUsersDensity] = useState<GridDensityType>(GridDensity.STANDARD)
   const [usersColumnVisibility, setUsersColumnVisibility] = useState<GridColumnVisibilityModel>({
     isDeleted: false,
+    userId: true, // Show userId column for import reference
   })
 
   /**
@@ -148,7 +130,7 @@ const ImportUserGroups = (): React.JSX.Element => {
   const handleDownloadTemplate = (): void => {
     try {
       downloadImportTemplate({
-        templateStructure,
+        templateStructure: userGroupImportTemplateStructure,
         fileName: 'user_group_import_template.xlsx',
         sheetName: 'UserGroups',
       })
@@ -161,18 +143,19 @@ const ImportUserGroups = (): React.JSX.Element => {
   /**
    * Parse Excel/CSV file
    * Uses ExcelRowParser for dynamic column mapping
+   * Validates using Zod schema (same rules as AddEditUserGroups form)
    */
   const parseFile = useCallback(
     (file: File): void => {
       setIsLoading(true)
 
-      void parseImportFile<ImportUserGroupData, unknown>({
+      void parseImportFile<ImportUserGroupData, BulkUserGroupImportData>({
         file,
-        templateStructure,
-        headerNames,
+        templateStructure: userGroupImportTemplateStructure,
+        headerNames: userGroupImportHeaderNames,
         maxRecords,
-        validator: undefined, // Simple validation in createRowData
-        createRowData: ({ rowNumber, getOptionalValue, getRequiredValue }) => {
+        validator: bulkUserGroupImportValidator,
+        createRowData: ({ rowNumber, rowParser: _rowParser, getOptionalValue, getRequiredValue }) => {
           const nameValue = getRequiredValue('name')
           const descriptionValue = getRequiredValue('description')
           const notesValue = getOptionalValue('notes')
@@ -189,16 +172,12 @@ const ImportUserGroups = (): React.JSX.Element => {
             )
           }
 
-          // Validation errors
-          const errors: string[] = []
-          if (!nameValue || String(nameValue).trim() === '') {
-            errors.push('Group name is required')
-          }
-          if (!descriptionValue || String(descriptionValue).trim() === '') {
-            errors.push('Description is required')
-          }
-          if (userIds.length === 0) {
-            errors.push('At least one user ID is required')
+          // Create validation payload for Zod schema
+          const validationPayload: BulkUserGroupImportData = {
+            name: nameValue,
+            description: descriptionValue,
+            notes: notesValue ?? '',
+            userIds: userIdsRaw,
           }
 
           const parsedRow: ImportUserGroupData = {
@@ -207,21 +186,26 @@ const ImportUserGroups = (): React.JSX.Element => {
             description: String(descriptionValue || ''),
             notes: notesValue ? String(notesValue) : undefined,
             userIds,
-            errors: errors.length > 0 ? errors : undefined,
           }
 
-          return {
+          /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+          // Return typed result - validationPayload is explicitly typed as BulkUserGroupImportData
+          const result: { parsedRow: ImportUserGroupData; validationPayload: BulkUserGroupImportData } = {
             parsedRow,
-            validationPayload: {},
+            validationPayload,
           }
+          /* eslint-enable @typescript-eslint/no-unsafe-assignment */
+          return result
         },
       })
         .then(results => {
           setImportData(
-            results.map(result => ({
-              ...result.data,
-              errors: result.errors && result.errors.length > 0 ? result.errors : undefined,
-            })),
+            results.map(
+              (result): ImportUserGroupData => ({
+                ...result.data,
+                errors: result.errors && result.errors.length > 0 ? result.errors : undefined,
+              }),
+            ),
           )
           toast.success(`Parsed ${results.length} records successfully!`)
         })
@@ -289,13 +273,7 @@ const ImportUserGroups = (): React.JSX.Element => {
    * Generate JSON structure for API
    */
   const generateImportJSON = useCallback((): BulkUserGroupImportRequest => {
-    const userGroups = importData.map(group => ({
-      groupName: group.name,
-      description: group.description,
-      notes: group.notes,
-      userIds: group.userIds,
-    }))
-
+    const userGroups: UserGroupBulkCreateItem[] = importData.map(mapToApiPayload)
     return {
       maxRecords,
       userGroups,
@@ -334,7 +312,7 @@ const ImportUserGroups = (): React.JSX.Element => {
     }
 
     // Check for errors
-    const hasErrors = importData.some(group => group.errors && group.errors.length > 0)
+    const hasErrors = importData.some((group: ImportUserGroupData) => group.errors && group.errors.length > 0)
     if (hasErrors) {
       toast.error('Please fix validation errors before submitting')
       return
@@ -343,17 +321,13 @@ const ImportUserGroups = (): React.JSX.Element => {
     setIsLoading(true)
     try {
       // Generate import payload
-      const payload: UserGroupBulkCreateItem[] = importData.map(group => ({
-        groupName: group.name,
-        description: group.description,
-        notes: group.notes,
-        userIds: group.userIds,
-      }))
+      const payload: UserGroupBulkCreateItem[] = importData.map(mapToApiPayload)
 
-      // Call bulk create API
+      // Call bulk create API - triggers async processing
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       await bulkCreateUserGroups(payload)
 
-      // Show success message
+      // Show success message - results will be sent via notification
       toast.success(
         `Bulk import started for ${importData.length} user groups! You will receive a message with the results when processing completes.`,
       )
@@ -386,94 +360,50 @@ const ImportUserGroups = (): React.JSX.Element => {
     }
     const allColumns = getUserGridColumns(noOpToggle)
 
-    // Filter out actions column and add userId column if not present
+    // Filter out actions column
     const filteredColumns = allColumns.filter(col => col.field !== 'userActions')
 
-    // Check if userId column exists and is visible
-    const userIdColumnIndex = filteredColumns.findIndex(col => col.field === 'userId')
-    if (userIdColumnIndex !== -1) {
-      // Make userId column visible
-      filteredColumns[userIdColumnIndex] = {
-        ...filteredColumns[userIdColumnIndex],
-        width: 80,
-        minWidth: 80,
-        hideable: true,
-        filterable: true,
+    // Find and override userId column configuration to make it visible and filterable
+    return filteredColumns.map(col => {
+      if (col.field === 'userId') {
+        return {
+          ...col,
+          width: 80,
+          minWidth: 80,
+          hideable: true,
+          filterable: true,
+          headerName: 'User ID',
+          align: 'center' as const,
+          headerAlign: 'center' as const,
+          type: 'number' as const,
+        }
       }
-    }
-
-    return filteredColumns
+      return col
+    })
   }, [])
 
   const previewColumns = useMemo<GridColDef[]>(
-    () => [
-      {
-        field: 'rowNumber',
-        headerName: 'Row',
-        width: 70,
-        align: 'center',
-        headerAlign: 'center',
-      },
-      {
-        field: 'name',
-        headerName: 'Group Name',
-        flex: 1.5,
-        minWidth: 200,
-      },
-      {
-        field: 'description',
-        headerName: 'Description',
-        flex: 2,
-        minWidth: 300,
-      },
-      {
-        field: 'notes',
-        headerName: 'Notes',
-        flex: 1,
-        minWidth: 150,
-      },
-      {
-        field: 'userIds',
-        headerName: 'User Count',
-        width: 120,
-        align: 'center',
-        headerAlign: 'center',
-        valueGetter: (value: unknown): number => (Array.isArray(value) ? value.length : 0),
-      },
-      {
-        field: 'errors',
-        headerName: 'Status',
-        width: 120,
-        renderCell: params => {
-          const rowData = params.row as ImportUserGroupData
-          if (rowData.errors && rowData.errors.length > 0) {
-            return (
-              <Tooltip title="Click to view errors">
-                <Chip
-                  label="Error"
-                  color="error"
-                  size="small"
-                  onClick={e => {
-                    e.stopPropagation()
-                    handlePreviewErrorClick(rowData.errors ?? [], rowData.rowNumber)
-                  }}
-                  sx={{ cursor: 'pointer' }}
-                />
-              </Tooltip>
-            )
-          }
-          return <Chip label="Valid" color="success" size="small" />
-        },
-      },
-    ],
+    () => getUserGroupImportPreviewColumns(handlePreviewErrorClick),
     [handlePreviewErrorClick],
   )
 
+  // Column grouping for preview grid (parent headers)
+  const columnGroupingModel = useMemo<ColumnGroup[]>(
+    () =>
+      userGroupImportTemplateStructure.map(section => ({
+        groupId: section.category.toLowerCase().replace(/\s+/g, '-'),
+        headerName: section.category,
+        children: section.fields,
+      })),
+    [],
+  )
+
   // Validation summary
-  const { hasValidationErrors, errorCount } = useMemo(() => {
+  const { hasValidationErrors, errorCount } = useMemo((): { hasValidationErrors: boolean; errorCount: number } => {
     let count = 0
     for (const row of importData) {
-      if (row.errors && row.errors.length > 0) {
+      const typedRow = row as unknown as ImportUserGroupData
+      if (typedRow.errors && typedRow.errors.length > 0) {
         count += 1
       }
     }
@@ -485,6 +415,9 @@ const ImportUserGroups = (): React.JSX.Element => {
 
   return (
     <>
+      {/* Test Data Button - Only show in development */}
+      {import.meta.env.DEV && <FillImportTestDataButton />}
+
       <Container maxWidth={false} disableGutters className={styles['import-users-page__page-wrapper']}>
         <Box className={styles['import-users-page__container']}>
           {/* Instructions */}
@@ -569,28 +502,10 @@ const ImportUserGroups = (): React.JSX.Element => {
                   setMaxRecords(Number(e.target.value))
                 }}
                 disabled={isLoading}
-                options={[
-                  {
-                    value: 25,
-                    label: '25',
-                  },
-                  {
-                    value: 100,
-                    label: '100',
-                  },
-                  {
-                    value: 200,
-                    label: '200',
-                  },
-                  {
-                    value: 500,
-                    label: '500',
-                  },
-                  {
-                    value: 1000,
-                    label: '1000',
-                  },
-                ]}
+                options={(MAX_RECORDS_OPTIONS as readonly number[]).map((value: number) => ({
+                  value,
+                  label: String(value),
+                }))}
                 size="small"
                 margin="none"
                 fullWidth={false}
@@ -665,7 +580,8 @@ const ImportUserGroups = (): React.JSX.Element => {
                     dataTestId="import-user-groups-preview-grid"
                     rows={importData}
                     columns={previewColumns}
-                    getRowId={row => (row as ImportUserGroupData).rowNumber}
+                    columnGroupingModel={columnGroupingModel}
+                    getRowId={row => (row as unknown as ImportUserGroupData).rowNumber}
                     loading={false}
                     paginationMode="client"
                     filterMode="client"
@@ -677,7 +593,7 @@ const ImportUserGroups = (): React.JSX.Element => {
                     disableRowSelectionOnClick
                     autoHeight
                     getRowClassName={params => {
-                      const row = params.row as ImportUserGroupData
+                      const row = params.row as unknown as ImportUserGroupData
                       return row.errors && row.errors.length > 0 ? styles['import-users-page__error-row'] : ''
                     }}
                     showToolbar={false}

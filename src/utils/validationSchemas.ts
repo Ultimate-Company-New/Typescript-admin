@@ -130,6 +130,14 @@ export const bulkUserImportSchema = z.object({
   notes: z.string().optional().or(z.literal('')),
 })
 
+// Bulk User Group Import validation schema - matches AddEditUserGroups form
+export const bulkUserGroupImportSchema = z.object({
+  name: z.string().min(1, 'Group name is required').trim(),
+  description: z.string().min(1, 'Description is required').trim(),
+  notes: z.string().optional().or(z.literal('')),
+  userIds: z.string().min(1, 'At least one user ID is required'),
+})
+
 // Type inference from schemas
 export type LoginFormData = z.infer<typeof loginSchema>
 export type RegistrationFormData = z.infer<typeof registrationSchema>
@@ -137,3 +145,11 @@ export type PasswordResetFormData = z.infer<typeof passwordResetSchema>
 export type UserFormData = z.infer<typeof userFormSchema>
 export type ClientSettingsFormData = z.infer<typeof clientSettingsSchema>
 export type BulkUserImportData = z.infer<typeof bulkUserImportSchema>
+
+// Manually defined type for bulk user group import (explicit for better type inference)
+export interface BulkUserGroupImportData {
+  name: string
+  description: string
+  notes?: string | ''
+  userIds: string
+}

@@ -60,12 +60,7 @@ export interface UserGroupPaginationRequest {
  */
 export interface BulkUserGroupImportRequest {
   maxRecords: number
-  userGroups: Array<{
-    groupName: string
-    description: string
-    notes?: string
-    userIds: number[]
-  }>
+  userGroups: UserGroupBulkCreateItem[]
 }
 
 /**
