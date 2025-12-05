@@ -1,6 +1,6 @@
-import type { UserGroupBulkCreateItem } from '../api/userGroupApi'
+import type { UserGroupRequestModel } from '../api/userGroupApi'
 import { USER_ROLES } from '../constants/appConstants'
-import type { UserRequestModel } from '../models/api-models'
+import type { LeadRequestModel, UserRequestModel } from '../models/api-models'
 
 // ============================================================================
 // User Test Data Generation
@@ -139,21 +139,21 @@ export const getRandomUserIdsArray = (allUserIds: number[], min = 3, max = 8): n
 
 /**
  * Generate test data for user group bulk import
- * Creates an array of UserGroupBulkCreateItem objects with varied test data
+ * Creates an array of UserGroupRequestModel objects with varied test data
  *
  * @param numberOfRecords - Number of test user group records to generate
  * @param allUserIds - Array of available user IDs to assign to groups
  * @param minUsersPerGroup - Minimum users per group (default: 20)
  * @param maxUsersPerGroup - Maximum users per group (default: 30)
- * @returns Array of UserGroupBulkCreateItem objects for import API
+ * @returns Array of UserGroupRequestModel objects for import API
  */
 export const generateUserGroupImportTest = (
   numberOfRecords: number,
   allUserIds: number[],
   minUsersPerGroup = 20,
   maxUsersPerGroup = 30,
-): UserGroupBulkCreateItem[] => {
-  const userGroups: UserGroupBulkCreateItem[] = []
+): UserGroupRequestModel[] => {
+  const userGroups: UserGroupRequestModel[] = []
   const baseTimestamp = Date.now()
 
   for (let i = 0; i < numberOfRecords; i++) {
@@ -176,11 +176,11 @@ export const generateUserGroupImportTest = (
  * Returns a random group template with a unique name
  *
  * @param preserveName - Optional existing name to preserve (for edit mode)
- * @returns Partial UserGroupBulkCreateItem for form population (without userIds)
+ * @returns Partial UserGroupRequestModel for form population (without userIds)
  */
 export const generateUserGroupFormTest = (
   preserveName?: string,
-): Pick<UserGroupBulkCreateItem, 'groupName' | 'description' | 'notes'> => {
+): Pick<UserGroupRequestModel, 'groupName' | 'description' | 'notes'> => {
   const template = USER_GROUP_TEMPLATES[Math.floor(Math.random() * USER_GROUP_TEMPLATES.length)]
 
   return {
@@ -188,4 +188,214 @@ export const generateUserGroupFormTest = (
     description: template.description,
     notes: template.notes,
   }
+}
+
+// ============================================================================
+// Lead Test Data Generation
+// ============================================================================
+
+/**
+ * Lead status options matching database constraints
+ */
+const LEAD_STATUSES = [
+  'Not Contacted',
+  'Attempted To Contact',
+  'Contacted',
+  'Contact In Future',
+  'Re Qualified',
+  'Not Qualified',
+  'Lost Lead',
+  'Junk Lead',
+]
+
+/**
+ * Generate a random fax number (10 digits, same format as phone)
+ * @returns 10-digit fax number string starting with 9 or 8
+ */
+const generateFaxNumber = (): string => {
+  const prefix = Math.random() > 0.5 ? '98' : '88'
+  const remaining = Math.floor(10000000 + Math.random() * 90000000)
+  return `${prefix}${remaining}`
+}
+
+/**
+ * Generate a random phone number (10 digits)
+ * @returns 10-digit phone number string starting with 98
+ */
+const generatePhoneNumber = (): string => {
+  return `98${Math.floor(10000000 + Math.random() * 90000000)}`
+}
+
+/**
+ * Lead template for test data generation
+ */
+interface LeadTemplate {
+  firstNamePrefix: string
+  lastNamePrefix: string
+  company: string
+  title: string
+  annualRevenue: string
+  companySize: number
+  notes: string
+}
+
+/**
+ * Pre-defined lead templates for variety in test data
+ */
+const LEAD_TEMPLATES: LeadTemplate[] = [
+  {
+    firstNamePrefix: 'Tech',
+    lastNamePrefix: 'Innovator',
+    company: 'TechCorp Solutions',
+    title: 'CTO',
+    annualRevenue: '50000000',
+    companySize: 250,
+    notes: 'Interested in enterprise software solutions',
+  },
+  {
+    firstNamePrefix: 'Sales',
+    lastNamePrefix: 'Manager',
+    company: 'Global Retail Inc',
+    title: 'VP of Sales',
+    annualRevenue: '100000000',
+    companySize: 500,
+    notes: 'Looking for CRM integration',
+  },
+  {
+    firstNamePrefix: 'Marketing',
+    lastNamePrefix: 'Director',
+    company: 'Creative Agency Ltd',
+    title: 'Marketing Director',
+    annualRevenue: '10000000',
+    companySize: 50,
+    notes: 'Needs marketing automation tools',
+  },
+  {
+    firstNamePrefix: 'Finance',
+    lastNamePrefix: 'Analyst',
+    company: 'Capital Finance Group',
+    title: 'CFO',
+    annualRevenue: '200000000',
+    companySize: 1000,
+    notes: 'Evaluating financial management software',
+  },
+  {
+    firstNamePrefix: 'Operations',
+    lastNamePrefix: 'Lead',
+    company: 'Logistics Pro Services',
+    title: 'Operations Manager',
+    annualRevenue: '75000000',
+    companySize: 300,
+    notes: 'Interested in supply chain optimization',
+  },
+  {
+    firstNamePrefix: 'HR',
+    lastNamePrefix: 'Executive',
+    company: 'People First Consulting',
+    title: 'HR Director',
+    annualRevenue: '25000000',
+    companySize: 100,
+    notes: 'Looking for HR management solutions',
+  },
+  {
+    firstNamePrefix: 'Product',
+    lastNamePrefix: 'Owner',
+    company: 'Innovative Startups Inc',
+    title: 'Product Manager',
+    annualRevenue: '5000000',
+    companySize: 25,
+    notes: 'Early-stage startup seeking growth tools',
+  },
+  {
+    firstNamePrefix: 'IT',
+    lastNamePrefix: 'Specialist',
+    company: 'Enterprise Systems Ltd',
+    title: 'IT Manager',
+    annualRevenue: '150000000',
+    companySize: 750,
+    notes: 'Needs infrastructure modernization',
+  },
+]
+
+/**
+ * Generate test data for a single lead form
+ * Returns realistic lead data with unique email, phone, and fax
+ *
+ * @param preserveEmail - Optional existing email to preserve (for edit mode)
+ * @returns LeadRequestModel for form population
+ */
+export const generateLeadFormTest = (preserveEmail?: string): LeadRequestModel => {
+  const template = LEAD_TEMPLATES[Math.floor(Math.random() * LEAD_TEMPLATES.length)]
+  const timestamp = Date.now()
+  const randomStatus = LEAD_STATUSES[Math.floor(Math.random() * LEAD_STATUSES.length)]
+
+  return {
+    firstName: `${template.firstNamePrefix} Test`,
+    lastName: `${template.lastNamePrefix} ${timestamp % 10000}`,
+    email: preserveEmail ?? `nahushrai+lead_test${timestamp}@gmail.com`,
+    phone: generatePhoneNumber(),
+    leadStatus: randomStatus,
+    company: template.company,
+    companySize: template.companySize,
+    annualRevenue: template.annualRevenue,
+    title: template.title,
+    website: `https://www.${template.company.toLowerCase().replace(/\s+/g, '')}.com`,
+    fax: generateFaxNumber(),
+    address: {
+      streetAddress: `${100 + Math.floor(Math.random() * 900)} Business Park Road`,
+      streetAddress2: `Floor ${1 + Math.floor(Math.random() * 20)}`,
+      streetAddress3: `Building ${String.fromCharCode(65 + Math.floor(Math.random() * 26))}`,
+      city: 'Mumbai',
+      state: 'Maharashtra',
+      postalCode: `40${String(Math.floor(1000 + Math.random() * 9000)).substring(0, 4)}`,
+      country: 'India',
+      addressType: 'OFFICE',
+    },
+    notes: template.notes,
+  }
+}
+
+/**
+ * Generate test data for lead bulk import
+ * Creates an array of lead objects with varied test data including phone and fax
+ *
+ * @param numberOfRecords - Number of test lead records to generate
+ * @returns Array of LeadRequestModel objects for import
+ */
+export const generateLeadImportTest = (numberOfRecords: number): LeadRequestModel[] => {
+  const leads: LeadRequestModel[] = []
+  const baseTimestamp = Date.now()
+
+  for (let i = 0; i < numberOfRecords; i++) {
+    const template = LEAD_TEMPLATES[i % LEAD_TEMPLATES.length]
+    const timestamp = baseTimestamp + i
+    const randomStatus = LEAD_STATUSES[Math.floor(Math.random() * LEAD_STATUSES.length)]
+
+    leads.push({
+      firstName: `${template.firstNamePrefix} Test`,
+      lastName: `${template.lastNamePrefix} ${i + 1}`,
+      email: `nahushrai+lead_import${timestamp}@gmail.com`,
+      phone: generatePhoneNumber(),
+      leadStatus: randomStatus,
+      company: template.company,
+      companySize: template.companySize,
+      annualRevenue: template.annualRevenue,
+      title: template.title,
+      website: `https://www.${template.company.toLowerCase().replace(/\s+/g, '')}.com`,
+      fax: generateFaxNumber(),
+      address: {
+        streetAddress: `${100 + Math.floor(Math.random() * 900)} Business Park Road`,
+        streetAddress2: `Floor ${1 + Math.floor(Math.random() * 20)}`,
+        streetAddress3: `Building ${String.fromCharCode(65 + Math.floor(Math.random() * 26))}`,
+        city: 'Mumbai',
+        state: 'Maharashtra',
+        postalCode: `40${String(Math.floor(1000 + Math.random() * 9000)).substring(0, 4)}`,
+        country: 'India',
+        addressType: 'OFFICE',
+      },
+      notes: template.notes,
+    })
+  }
+
+  return leads
 }

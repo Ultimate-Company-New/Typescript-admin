@@ -91,7 +91,7 @@ const ensureApiFunction = <T extends (...args: any[]) => any>(fn: unknown, name:
  * - User logs section (edit/view mode only)
  * - Profile picture upload
  */
-const AddEditUsers = (): JSX.Element => {
+const AddEditUser = (): JSX.Element => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const userId = searchParams.get('userId')
@@ -1026,4 +1026,4 @@ const AddEditUsers = (): JSX.Element => {
   )
 }
 
-export default AddEditUsers
+export default AddEditUser

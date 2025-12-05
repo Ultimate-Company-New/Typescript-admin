@@ -15,6 +15,7 @@ export enum FieldType {
   Date = 'date',
   Select = 'select',
   Autocomplete = 'autocomplete',
+  LazyAutocomplete = 'lazy-autocomplete',
   Textarea = 'textarea',
   Image = 'image',
   Address = 'address',
@@ -706,3 +707,18 @@ export const MAX_RECORDS_OPTIONS: readonly number[] = [25, 100, 200, 500, 1000]
  * Default max records value for bulk import operations
  */
 export const DEFAULT_MAX_RECORDS: number = 25
+
+/**
+ * Lead status options matching database constraint
+ * Used in lead forms and grids for status selection
+ */
+export const LEAD_STATUS_OPTIONS = [
+  { value: 'Not Contacted', label: 'Not Contacted' },
+  { value: 'Attempted To Contact', label: 'Attempted To Contact' },
+  { value: 'Contacted', label: 'Contacted' },
+  { value: 'Contact In Future', label: 'Contact In Future' },
+  { value: 'Re Qualified', label: 'Re Qualified' },
+  { value: 'Not Qualified', label: 'Not Qualified' },
+  { value: 'Lost Lead', label: 'Lost Lead' },
+  { value: 'Junk Lead', label: 'Junk Lead' },
+] as const

@@ -5,6 +5,13 @@ export type { EmailInputProps } from './EmailInput'
 export { default as FileDropZone } from './FileDropZone'
 export type { FileDropZoneProps } from './FileDropZone'
 export { default as ImageUploadInput } from './ImageUploadInput'
+export { default as LazyAutocompleteInput } from './LazyAutocompleteInput'
+export type {
+  LazyAutocompleteInputProps,
+  LazyFetchFunction,
+  LazyFetchResult,
+  LazyOption,
+} from './LazyAutocompleteInput'
 export { default as PasswordInput } from './PasswordInput'
 export type { PasswordInputProps } from './PasswordInput'
 export { default as PhoneInput } from './PhoneInput'

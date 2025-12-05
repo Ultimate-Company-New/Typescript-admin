@@ -1,0 +1,376 @@
+// src/styles/Leads.scss
+// Styles for Leads pages (Grid, Add, Import)
+
+// ============================================================================
+// Leads Grid Page Styles
+// ============================================================================
+
+.leads-page {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0; // Allow shrinking
+  padding: 0;
+  box-sizing: border-box;
+
+  &__container {
+    padding-top: 32px;
+    padding-bottom: 32px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0; // Allow shrinking
+    box-sizing: border-box;
+    overflow-x: auto; // Enable horizontal scroll if needed
+  }
+
+  &__card {
+    background-color: #ffffff;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden; // Ensure content doesn't overflow rounded corners
+
+    // Ensure DataGrid is responsive
+    .MuiDataGrid-root {
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      border: none; // Remove border since card has it
+      border-radius: 0; // Remove border radius since card has it
+    }
+  }
+
+  &__pagination {
+    padding: 16px;
+    border-top: 1px solid rgba(224, 224, 224, 1); // Divider between grid and pagination
+    background-color: #ffffff; // Ensure white background
+  }
+}
+
+// ============================================================================
+// Add Leads Page Styles
+// ============================================================================
+
+.add-leads-page {
+  &__container {
+    padding-top: 32px;
+    padding-bottom: 32px;
+  }
+
+  &__section {
+    margin-top: 24px;
+    padding: 24px;
+  }
+
+  &__section-title {
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+
+  &__divider {
+    margin-bottom: 24px;
+  }
+
+  &__divider-spacer {
+    margin-bottom: 16px;
+  }
+
+  &__grid-container {
+    width: 100%;
+    min-height: 300px;
+  }
+
+  &__data-grid {
+    border: none;
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  &__field {
+    width: 100%;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid #e0e0e0;
+  }
+
+  &__action-button {
+    text-transform: none;
+  }
+}
+
+// ============================================================================
+// Import Leads Page Styles
+// ============================================================================
+
+.import-leads-page {
+  &__page-wrapper {
+    padding: 0 24px;
+  }
+
+  &__container {
+    padding-top: 32px;
+    padding-bottom: 32px;
+  }
+
+  &__section-title {
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+
+  &__divider {
+    margin-bottom: 16px;
+  }
+
+  &__divider--large {
+    margin-bottom: 24px;
+  }
+
+  &__reference-card {
+    margin-top: 24px;
+    padding: 24px;
+  }
+
+  &__settings-card {
+    margin-top: 24px;
+    padding: 24px;
+    position: relative;
+  }
+
+  &__settings-actions {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+
+    @media (max-width: 768px) {
+      justify-content: flex-start;
+    }
+  }
+
+  &__template-button {
+    text-transform: none !important;
+    padding: 8px 16px !important;
+  }
+
+  &__max-records-select {
+    min-width: 180px !important;
+    margin-top: 8px !important;
+    margin-right: 8px !important;
+  }
+
+  &__grid-wrapper {
+    margin-top: 16px;
+    min-height: 300px;
+  }
+
+  &__loading-paper {
+    margin-top: 24px;
+    padding: 48px;
+  }
+
+  &__loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+  }
+
+  &__loading-text {
+    margin-top: 16px;
+  }
+
+  &__preview-paper {
+    margin-top: 24px;
+    padding: 24px;
+  }
+
+  &__view-toggle-container {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+  }
+
+  &__toggle-button-text {
+    margin-left: 4px;
+  }
+
+  &__grid-container {
+    min-height: 400px;
+  }
+
+  &__error-row {
+    background-color: #ffebee !important;
+
+    &:hover {
+      background-color: #ffcdd2 !important;
+    }
+  }
+
+  &__json-container {
+    margin-top: 16px;
+    max-height: 600px;
+    overflow: auto;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+    padding: 16px;
+  }
+
+  &__actions-card {
+    margin-top: 24px;
+    padding: 24px;
+  }
+
+  &__error-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    background-color: #fff3e0;
+    border-radius: 8px;
+    border-left: 4px solid #ff9800;
+  }
+
+  &__error-warning-icon {
+    color: #f44336;
+    flex-shrink: 0;
+  }
+
+  &__error-warning-text {
+    color: #333;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+  }
+
+  &__action-button {
+    text-transform: none;
+  }
+}
+
+// ============================================================================
+// Dark Mode Support
+// ============================================================================
+
+@media (prefers-color-scheme: dark) {
+  .leads-page {
+    &__card {
+      background-color: #1e1e1e;
+    }
+  }
+
+  .add-leads-page {
+    &__section {
+      background-color: #1e1e1e;
+    }
+  }
+
+  .import-leads-page {
+    &__instructions-paper {
+      background-color: rgba(25, 118, 210, 0.08);
+    }
+
+    &__json-container {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    &__json-pre {
+      color: #e0e0e0;
+    }
+  }
+}
+
+// ============================================================================
+// Lead Details View Mode Styles
+// ============================================================================
+
+.lead-details-view {
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 0;
+  }
+
+  &__label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  &__value {
+    font-size: 1rem;
+    color: rgba(0, 0, 0, 0.87);
+    word-break: break-word;
+  }
+
+  &__notes {
+    font-size: 1rem;
+    color: rgba(0, 0, 0, 0.87);
+    white-space: pre-wrap;
+    line-height: 1.6;
+  }
+}
+
+// Dark mode support for view mode
+:global(.dark-mode) {
+  .lead-details-view {
+    &__label {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    &__value,
+    &__notes {
+      color: rgba(255, 255, 255, 0.87);
+    }
+  }
+}
+
+// ============================================================================
+// Fill Test Data Button Styles
+// ============================================================================
+
+.fill-test-data-button {
+  &__fab {
+    position: fixed !important;
+    bottom: 24px;
+    right: 96px; // Position to the left of DevLogger FAB (56px width + 16px gap + 24px from right)
+    z-index: 1200;
+    background-color: #1976d2 !important; // Primary blue color matching theme
+    color: #fff !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    transition: all 0.3s ease-in-out !important;
+
+    &:hover {
+      background-color: #1565c0 !important; // Darker blue on hover
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    &.Mui-disabled {
+      background-color: rgba(0, 0, 0, 0.12) !important;
+      color: rgba(0, 0, 0, 0.26) !important;
+    }
+  }
+}

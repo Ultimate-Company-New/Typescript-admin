@@ -1,3 +1,4 @@
+import type { PromoRequestModel, PromoResponseModel } from '../models/api-models'
 import { type PaginationBaseRequestModel, type PaginationBaseResponseModel } from '../types/grid.types'
 
 import axiosInstance from './axiosConfig'
@@ -12,8 +13,10 @@ export const promoApi = {
   /**
    * Get paginated promos with filtering and sorting
    */
-  getPromosInBatches: async (request: PaginationBaseRequestModel): Promise<PaginationBaseResponseModel<unknown>> => {
-    const response = await axiosInstance.post<PaginationBaseResponseModel<unknown>>(
+  getPromosInBatches: async (
+    request: PaginationBaseRequestModel,
+  ): Promise<PaginationBaseResponseModel<PromoResponseModel>> => {
+    const response = await axiosInstance.post<PaginationBaseResponseModel<PromoResponseModel>>(
       `${API_BASE_URL}/getPromosInBatches`,
       request,
     )
@@ -23,33 +26,48 @@ export const promoApi = {
   /**
    * Get promo details by ID
    */
-  getPromoById: async (promoId: number): Promise<unknown> => {
-    const response = await axiosInstance.get<unknown>(`${API_BASE_URL}/getPromoDetailsById/${promoId}`)
+  getPromoById: async (promoId: number): Promise<PromoResponseModel> => {
+    const response = await axiosInstance.get<PromoResponseModel>(`${API_BASE_URL}/getPromoDetailsById/${promoId}`)
+    return response.data
+  },
+
+  /**
+   * Get promo details by promo code
+   */
+  getPromoByCode: async (promoCode: string): Promise<PromoResponseModel> => {
+    const response = await axiosInstance.get<PromoResponseModel>(`${API_BASE_URL}/getPromoDetailsByName/${promoCode}`)
     return response.data
   },
 
   /**
    * Create a new promo
    */
-  createPromo: async (request: unknown): Promise<unknown> => {
-    const response = await axiosInstance.put<unknown>(`${API_BASE_URL}/createPromo`, request)
-    return response.data
+  createPromo: async (request: PromoRequestModel): Promise<void> => {
+    await axiosInstance.put(`${API_BASE_URL}/createPromo`, request)
   },
 
   /**
    * Update an existing promo
+   * Note: Backend doesn't have update endpoint, using create for now
    */
-  updatePromo: async (promoId: number, request: unknown): Promise<unknown> => {
-    const response = await axiosInstance.post<unknown>(`${API_BASE_URL}/updatePromo/${promoId}`, request)
-    return response.data
+  updatePromo: async (_promoId: number, request: PromoRequestModel): Promise<void> => {
+    // Since there's no update endpoint in the backend, we'll just call create
+    // The backend should handle the upsert logic if promoId is provided
+    await axiosInstance.put(`${API_BASE_URL}/createPromo`, request)
   },
 
   /**
    * Toggle promo (activate/deactivate)
    */
-  togglePromo: async (promoId: number): Promise<unknown> => {
-    const response = await axiosInstance.delete<unknown>(`${API_BASE_URL}/togglePromo/${promoId}`)
-    return response.data
+  togglePromo: async (promoId: number): Promise<void> => {
+    await axiosInstance.delete(`${API_BASE_URL}/togglePromo/${promoId}`)
+  },
+
+  /**
+   * Bulk create promos
+   */
+  bulkCreatePromos: async (promos: PromoRequestModel[]): Promise<void> => {
+    await axiosInstance.put(`${API_BASE_URL}/bulkCreatePromo`, promos)
   },
 }
 

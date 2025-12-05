@@ -143,7 +143,7 @@ const ImportUserGroups = (): React.JSX.Element => {
   /**
    * Parse Excel/CSV file
    * Uses ExcelRowParser for dynamic column mapping
-   * Validates using Zod schema (same rules as AddEditUserGroups form)
+   * Validates using Zod schema (same rules as AddEditUserGroup form)
    */
   const parseFile = useCallback(
     (file: File): void => {

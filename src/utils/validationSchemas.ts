@@ -130,7 +130,7 @@ export const bulkUserImportSchema = z.object({
   notes: z.string().optional().or(z.literal('')),
 })
 
-// Bulk User Group Import validation schema - matches AddEditUserGroups form
+// Bulk User Group Import validation schema - matches AddEditUserGroup form
 export const bulkUserGroupImportSchema = z.object({
   name: z.string().min(1, 'Group name is required').trim(),
   description: z.string().min(1, 'Description is required').trim(),
@@ -152,4 +152,92 @@ export interface BulkUserGroupImportData {
   description: string
   notes?: string | ''
   userIds: string
+}
+
+// User Group form validation schema - matches AddEditUserGroup form
+export const userGroupFormSchema = z.object({
+  name: z.string().min(1, 'Group name is required').trim(),
+  description: z.string().min(1, 'Description is required').trim(),
+  notes: z.string().optional().or(z.literal('')),
+})
+
+export type UserGroupFormData = z.infer<typeof userGroupFormSchema>
+
+// Lead form validation schema - matches Lead entity from backend
+export const leadFormSchema = z.object({
+  firstName: z.string().min(1, 'First name is required').trim(),
+  lastName: z.string().min(1, 'Last name is required').trim(),
+  email: emailSchema,
+  phone: phoneSchema,
+  leadStatus: z.string().min(1, 'Lead status is required'),
+  company: z.string().optional().or(z.literal('')),
+  companySize: z.coerce.number().positive('Company size must be positive').optional().or(z.literal('')),
+  annualRevenue: z.string().optional().or(z.literal('')),
+  title: z.string().optional().or(z.literal('')),
+  website: z.string().url('Invalid website URL').optional().or(z.literal('')),
+  fax: z.string().optional().or(z.literal('')),
+  assignedAgentId: z.coerce.number().min(1, 'Assigned agent is required'),
+  address: z.object({
+    streetAddress: z.string().min(1, 'Street address is required').trim(),
+    streetAddress2: z.string().optional().or(z.literal('')),
+    streetAddress3: z.string().optional().or(z.literal('')),
+    city: z.string().min(1, 'City is required').trim(),
+    state: z.string().min(1, 'State is required'),
+    postalCode: z.string().min(1, 'Postal code is required').trim(),
+    country: z.string().min(1, 'Country is required'),
+    addressType: z.string().min(1, 'Address type is required'),
+  }),
+  notes: z.string().optional().or(z.literal('')),
+})
+
+export type LeadFormData = z.infer<typeof leadFormSchema>
+
+// Bulk Lead Import validation schema - matches ImportLeadData structure
+export const bulkLeadImportSchema = z.object({
+  firstName: z.string().min(1, 'First name is required').trim(),
+  lastName: z.string().min(1, 'Last name is required').trim(),
+  email: z.string().min(1, 'Email is required').email('Invalid email format'),
+  phone: z.string().min(10, 'Phone must be at least 10 digits'),
+  leadStatus: z.string().min(1, 'Lead status is required'),
+  company: z.string().optional().or(z.literal('')),
+  title: z.string().optional().or(z.literal('')),
+  companySize: z.string().optional().or(z.literal('')),
+  annualRevenue: z.string().optional().or(z.literal('')),
+  website: z.string().optional().or(z.literal('')),
+  fax: z.string().optional().or(z.literal('')),
+  assignedAgentId: z.string().min(1, 'Assigned agent ID is required'),
+  streetAddress: z.string().min(1, 'Street address is required').trim(),
+  streetAddress2: z.string().optional().or(z.literal('')),
+  streetAddress3: z.string().optional().or(z.literal('')),
+  city: z.string().min(1, 'City is required').trim(),
+  state: z.string().min(1, 'State is required'),
+  postalCode: z.string().min(1, 'Postal code is required').trim(),
+  country: z.string().min(1, 'Country is required'),
+  addressType: z.string().min(1, 'Address type is required'),
+  notes: z.string().optional().or(z.literal('')),
+})
+
+// Manually defined type for better type inference
+export interface BulkLeadImportData {
+  firstName: string
+  lastName: string
+  email: string
+  phone: string
+  leadStatus: string
+  company?: string | ''
+  title?: string | ''
+  companySize?: string | ''
+  annualRevenue?: string | ''
+  website?: string | ''
+  fax?: string | ''
+  assignedAgentId: string
+  streetAddress: string
+  streetAddress2?: string | ''
+  streetAddress3?: string | ''
+  city: string
+  state: string
+  postalCode: string
+  country: string
+  addressType: string
+  notes?: string | ''
 }

@@ -56,7 +56,7 @@ const FillImportTestDataButton = ({ permissionIds, userGroupIds }: FillImportTes
       const groupIds = userGroupIds.join(';')
 
       // Generate test data using utility function
-      const testUsers = generateUserTest(2)
+      const testUsers = generateUserTest(30)
 
       // Map test data to XLSX row format
       const dataRows: Array<Array<string | number | boolean>> = testUsers.map(user => [
@@ -189,7 +189,7 @@ const FillImportTestDataButton = ({ permissionIds, userGroupIds }: FillImportTes
   }
 
   return (
-    <Tooltip title="Generate Test Data (2 rows)" placement="left">
+    <Tooltip title="Generate Test Data (30 rows)" placement="left">
       <span>
         <Fab
           aria-label="generate test data"

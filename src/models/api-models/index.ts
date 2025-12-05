@@ -7,11 +7,30 @@
 // Address Models
 export type { AddressRequestModel, AddressResponseModel } from './AddressModels'
 
+// Lead Models
+export type {
+  BulkLeadInsertResponseModel,
+  BulkLeadResult,
+  LeadDetailsResponseModel,
+  LeadRequestModel,
+  LeadResponseModel,
+  LeadUserInfo,
+} from './LeadModels'
+
 // Login Models
 export type { ClientResponseModel, ErrorResponseModel, LoginRequestModel, TokenResponseModel } from './LoginModels'
 
 // Message Models
 export type { MessageReadStatus, MessageRequestModel, MessageResponseModel } from './MessageModels'
+
+// Promo Models
+export type {
+  BulkPromoInsertResponseModel,
+  BulkPromoResult,
+  PromoDetailsResponseModel,
+  PromoRequestModel,
+  PromoResponseModel,
+} from './PromoModels'
 
 // Todo Models
 export type { TodoRequestModel, TodoResponseModel } from './TodoModels'

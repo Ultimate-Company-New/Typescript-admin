@@ -30,7 +30,7 @@ import {
 import { getLeadGridColumns, type LeadData } from '../../models/grid-models/LeadGridColumns'
 import { type PaginatedGridInterface } from '../../types/grid.types'
 
-import styles from './Leads.module.scss'
+import styles from '../../styles/Leads.module.scss'
 
 /**
  * Leads Management Page with DataGrid
@@ -143,7 +143,7 @@ const Leads = (): React.JSX.Element => {
             }}
             getRowId={(row): number => {
               const leadData = row as LeadData
-              return leadData.lead.leadId
+              return leadData.leadId
             }}
             getRowClassName={params => {
               const classes = [
@@ -151,7 +151,7 @@ const Leads = (): React.JSX.Element => {
                   ? 'even'
                   : 'odd',
               ]
-              if ((params.row as LeadData).isDeleted ?? (params.row as LeadData).lead.deleted) {
+              if ((params.row as LeadData).isDeleted) {
                 classes.push('deleted')
               }
               return classes.join(' ')

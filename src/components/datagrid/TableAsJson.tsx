@@ -3,14 +3,9 @@ import { useMemo } from 'react'
 import { toast } from 'react-toastify'
 
 import { ContentCopy as CopyIcon } from '@mui/icons-material'
-import AddBoxRoundedIcon from '@mui/icons-material/AddBoxRounded'
-import DisabledByDefaultRoundedIcon from '@mui/icons-material/DisabledByDefaultRounded'
-import IndeterminateCheckBoxRoundedIcon from '@mui/icons-material/IndeterminateCheckBoxRounded'
-import { Box, IconButton, Paper, Tooltip, Typography } from '@mui/material'
-import { SimpleTreeView } from '@mui/x-tree-view/SimpleTreeView'
-import { TreeItem } from '@mui/x-tree-view/TreeItem'
-
-import styles from '../../styles/DataGrid.module.scss'
+import { alpha, Box, IconButton, Paper, styled, Tooltip, Typography } from '@mui/material'
+import { RichTreeView } from '@mui/x-tree-view/RichTreeView'
+import { TreeItem, treeItemClasses } from '@mui/x-tree-view/TreeItem'
 
 export interface TableAsJsonProps {
   /** JSON data to display in tree view */
@@ -22,24 +17,7 @@ export interface TableAsJsonProps {
 }
 
 /**
- * Expand icon component
- */
-const ExpandIcon = (): JSX.Element => <AddBoxRoundedIcon className={styles['table-as-json__expand-icon']} />
-
-/**
- * Collapse icon component
- */
-const CollapseIcon = (): JSX.Element => (
-  <IndeterminateCheckBoxRoundedIcon className={styles['table-as-json__collapse-icon']} />
-)
-
-/**
- * End icon component (for leaf nodes)
- */
-const EndIcon = (): JSX.Element => <DisabledByDefaultRoundedIcon className={styles['table-as-json__end-icon']} />
-
-/**
- * Tree item data structure
+ * Tree item data structure for RichTreeView
  */
 interface TreeItemData {
   id: string
@@ -48,9 +26,44 @@ interface TreeItemData {
 }
 
 /**
+ * Custom styled TreeItem matching MUI X documentation example
+ */
+const CustomTreeItem = styled(TreeItem)(({ theme }) => ({
+  color: theme.palette.grey[200],
+  [`& .${treeItemClasses.content}`]: {
+    borderRadius: theme.spacing(0.5),
+    padding: theme.spacing(0.5, 1),
+    margin: theme.spacing(0.2, 0),
+    [`& .${treeItemClasses.label}`]: {
+      fontSize: '0.8rem',
+      fontWeight: 500,
+    },
+  },
+  [`& .${treeItemClasses.iconContainer}`]: {
+    borderRadius: '50%',
+    backgroundColor: theme.palette.primary.dark,
+    padding: theme.spacing(0, 1.2),
+    ...theme.applyStyles('light', {
+      backgroundColor: alpha(theme.palette.primary.main, 0.25),
+    }),
+    ...theme.applyStyles('dark', {
+      color: theme.palette.primary.contrastText,
+    }),
+  },
+  [`& .${treeItemClasses.groupTransition}`]: {
+    marginLeft: 15,
+    paddingLeft: 18,
+    borderLeft: `1px dashed ${alpha(theme.palette.text.primary, 0.4)}`,
+  },
+  ...theme.applyStyles('light', {
+    color: theme.palette.grey[800],
+  }),
+}))
+
+/**
  * TableAsJson Component
  *
- * Displays JSON data in an interactive tree view using MUI X Tree View
+ * Displays JSON data in an interactive tree view using MUI X RichTreeView
  * Supports nested objects and arrays with expandable/collapsible nodes
  *
  * @example
@@ -158,16 +171,6 @@ export const TableAsJson = ({ data, title, showCopyButton = true }: TableAsJsonP
   }, [data])
 
   /**
-   * Recursively render tree items
-   */
-  const renderTreeItems = (items: TreeItemData[]): JSX.Element[] =>
-    items.map(item => (
-      <TreeItem key={item.id} itemId={item.id} label={item.label}>
-        {item.children && renderTreeItems(item.children)}
-      </TreeItem>
-    ))
-
-  /**
    * Copy JSON to clipboard
    */
   const handleCopyJson = async (): Promise<void> => {
@@ -183,37 +186,56 @@ export const TableAsJson = ({ data, title, showCopyButton = true }: TableAsJsonP
   const hasTitle = Boolean(title)
 
   return (
-    <Box className={styles['table-as-json']}>
+    <Box>
       {/* Optional title above the card */}
       {hasTitle && (
-        <Typography variant="subtitle2" className={styles['table-as-json__title']}>
+        <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
           {title}
         </Typography>
       )}
 
       {/* Tree View Card with Copy Button inside */}
-      <Paper className={styles['table-as-json__tree-container']} variant="outlined">
+      <Paper
+        variant="outlined"
+        sx={{
+          position: 'relative',
+          p: 2,
+          minHeight: 200,
+          maxHeight: 600,
+          overflow: 'auto',
+          backgroundColor: theme => (theme.palette.mode === 'dark' ? 'grey.900' : 'grey.50'),
+        }}
+      >
         {/* Copy button in top right corner */}
         {showCopyButton && (
           <Tooltip title="Copy JSON to clipboard">
-            <IconButton onClick={handleCopyJson} size="small" className={styles['table-as-json__copy-button']}>
+            <IconButton
+              onClick={() => void handleCopyJson()}
+              size="small"
+              sx={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                zIndex: 1,
+                backgroundColor: theme => alpha(theme.palette.primary.main, 0.1),
+                '&:hover': {
+                  backgroundColor: theme => alpha(theme.palette.primary.main, 0.2),
+                },
+              }}
+            >
               <CopyIcon fontSize="small" />
             </IconButton>
           </Tooltip>
         )}
 
-        <SimpleTreeView
-          aria-label="JSON tree view"
-          defaultExpandedItems={defaultExpandedIds}
-          slots={{
-            expandIcon: ExpandIcon,
-            collapseIcon: CollapseIcon,
-            endIcon: EndIcon,
-          }}
-          className={`${styles['table-as-json__tree-view']} ${showCopyButton ? styles['table-as-json__tree-view--with-copy-button'] : ''}`}
-        >
-          {renderTreeItems(treeItems)}
-        </SimpleTreeView>
+        <Box sx={{ minWidth: 250, pt: showCopyButton ? 3 : 0 }}>
+          <RichTreeView
+            aria-label="JSON tree view"
+            defaultExpandedItems={defaultExpandedIds}
+            slots={{ item: CustomTreeItem }}
+            items={treeItems}
+          />
+        </Box>
       </Paper>
     </Box>
   )

@@ -5,7 +5,7 @@ import DashboardLayout from './layouts/DashboardLayout'
 import { MainLayout } from './layouts/MainLayout'
 import { ClientLanding, ForgotPassword, Login, NotFound, Register } from './pages'
 import { DeveloperDocs } from './pages/developerDocs'
-import { AddLeads, ImportLeads, Leads } from './pages/leads'
+import { AddEditLead, ImportLeads, Leads } from './pages/leads'
 import ConfirmEmail from './pages/login/ConfirmEmail'
 import { AddMessages, ImportMessages, Messages, MessagesList, ViewMessage } from './pages/messages'
 import { AddPackages, ImportPackages, Packages } from './pages/packages'
@@ -18,8 +18,8 @@ import { AddSalesOrders, SalesOrders } from './pages/salesOrders'
 import { Settings } from './pages/settings'
 import { Support } from './pages/support'
 import { TodoList } from './pages/todo'
-import { AddEditUsers, ImportUsers, Users } from './pages/user'
-import { AddEditUserGroups, ImportUserGroups, UserGroups } from './pages/user-group'
+import { AddEditUser, ImportUsers, Users } from './pages/user'
+import { AddEditUserGroup, ImportUserGroups, UserGroups } from './pages/user-group'
 import { AddWebTemplates, ImportWebTemplates, WebTemplates } from './pages/webTemplates'
 
 /**
@@ -80,7 +80,7 @@ export const routes: RouteObject[] = [
       },
       {
         path: 'users/add',
-        element: <AddEditUsers />,
+        element: <AddEditUser />,
       },
       {
         path: 'users/import',
@@ -92,7 +92,7 @@ export const routes: RouteObject[] = [
       },
       {
         path: 'groups/add',
-        element: <AddEditUserGroups />,
+        element: <AddEditUserGroup />,
       },
       {
         path: 'groups/import',
@@ -104,7 +104,7 @@ export const routes: RouteObject[] = [
       },
       {
         path: 'leads/add',
-        element: <AddLeads />,
+        element: <AddEditLead />,
       },
       {
         path: 'leads/import',

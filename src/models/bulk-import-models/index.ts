@@ -22,6 +22,12 @@ export {
   type ImportUserGroupData,
 } from './ImportUserGroupGridModel'
 
-// Add more import models here as needed:
-// export { leadImportTemplateStructure, leadImportFieldDisplayConfig } from './importLeadGridModel'
-// export { salesOrderImportTemplateStructure, salesOrderImportFieldDisplayConfig } from './importSalesOrderGridModel'
+// Lead Import
+export {
+  leadImportTemplateStructure,
+  leadImportHeaderNames,
+  leadImportHiddenFields,
+  leadImportFieldDisplayConfig,
+  getLeadImportPreviewColumns,
+  type ImportLeadData,
+} from './ImportLeadGridModel'

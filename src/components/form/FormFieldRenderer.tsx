@@ -18,16 +18,20 @@ import {
   AutocompleteInput,
   EmailInput,
   ImageUploadInput,
+  LazyAutocompleteInput,
   PasswordInput,
   PhoneInput,
   SelectInput,
   TextFieldInput,
+  type LazyFetchFunction,
+  type LazyOption,
 } from '../form-input'
 
 import AddressFormController, { type AddressableFormValues } from './AddressFormController'
 
 // Re-export for backwards compatibility
 export { FieldType }
+export type { LazyFetchFunction, LazyOption }
 
 /**
  * Option type for dropdowns/autocomplete
@@ -54,6 +58,11 @@ export interface FieldConfig<TFieldValues extends FieldValues = FieldValues> {
   options?: FieldOption[]
   sortOptions?: boolean
   maxHeight?: number
+  // For lazy autocomplete fields
+  fetchOptions?: LazyFetchFunction
+  lazyPageSize?: number
+  lazyDebounceMs?: number
+  initialOption?: LazyOption
   // For textarea fields
   rows?: number
   placeholder?: string
@@ -146,6 +155,10 @@ export const FormFieldRenderer = <TFieldValues extends FieldValues = FieldValues
       options = [],
       sortOptions = false,
       maxHeight = undefined,
+      fetchOptions,
+      lazyPageSize = 10,
+      lazyDebounceMs = 300,
+      initialOption,
       rows = 4,
       placeholder,
       imageSize = 150,
@@ -249,6 +262,37 @@ export const FormFieldRenderer = <TFieldValues extends FieldValues = FieldValues
                   options={options}
                   sortOptions={sortOptions}
                   maxHeight={maxHeight}
+                />
+              )
+            }
+
+            // Lazy Autocomplete field (server-side search with pagination)
+            if (type === FieldType.LazyAutocomplete) {
+              if (!fetchOptions) {
+                throw new Error(
+                  'LazyAutocomplete fields require fetchOptions to be provided in the field configuration.',
+                )
+              }
+
+              // Cast value to the expected type for LazyAutocomplete
+              const rawValue = fieldProps.value as string | number | null | undefined
+
+              return (
+                <LazyAutocompleteInput
+                  label={label}
+                  required={required}
+                  disabled={isFieldDisabled}
+                  error={!!fieldError}
+                  helperText={fieldError?.message}
+                  fetchOptions={fetchOptions}
+                  pageSize={lazyPageSize}
+                  debounceMs={lazyDebounceMs}
+                  maxHeight={maxHeight}
+                  initialOption={initialOption}
+                  value={rawValue ?? null}
+                  onChange={(_event, newValue) => {
+                    fieldProps.onChange(newValue?.value ?? '')
+                  }}
                 />
               )
             }

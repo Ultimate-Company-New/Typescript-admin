@@ -1,3 +1,3 @@
 export { default as Leads } from './Leads'
-export { default as AddLeads } from './AddLeads'
+export { default as AddEditLead } from './AddEditLead'
 export { default as ImportLeads } from './ImportLeads'

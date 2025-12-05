@@ -5,7 +5,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
-import { z } from 'zod'
 
 import { Cancel as CancelIcon, Save as SaveIcon } from '@mui/icons-material'
 import { Box, Container, Paper } from '@mui/material'
@@ -18,19 +17,9 @@ import { FieldType } from '../../constants/appConstants'
 import { APP_ROUTES } from '../../constants/routes'
 import { getUserGridColumns } from '../../models/grid-models/UserGridColumns'
 import styles from '../../styles/UserGroups.module.scss'
+import { userGroupFormSchema, type UserGroupFormData } from '../../utils/validationSchemas'
 
 import { FillTestDataButton, UserGroupDetailsView } from './components'
-
-/**
- * User Group form validation schema
- */
-const userGroupSchema = z.object({
-  name: z.string().min(1, 'Group name is required'),
-  description: z.string().min(1, 'Description is required'),
-  notes: z.string().optional(),
-})
-
-type UserGroupFormData = z.infer<typeof userGroupSchema>
 
 /**
  * Form field configuration type
@@ -65,7 +54,7 @@ interface SectionConfig {
  * - Select users to add to group
  * - Multi-select user grid
  */
-const AddEditUserGroups = (): React.JSX.Element => {
+const AddEditUserGroup = (): React.JSX.Element => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const userGroupId = searchParams.get('userGroupId')
@@ -77,7 +66,7 @@ const AddEditUserGroups = (): React.JSX.Element => {
 
   // Form setup with react-hook-form and Zod validation
   const formMethods = useForm<UserGroupFormData>({
-    resolver: zodResolver(userGroupSchema),
+    resolver: zodResolver(userGroupFormSchema),
     defaultValues: {
       name: '',
       description: '',
@@ -328,4 +317,4 @@ const AddEditUserGroups = (): React.JSX.Element => {
   )
 }
 
-export default AddEditUserGroups
+export default AddEditUserGroup
