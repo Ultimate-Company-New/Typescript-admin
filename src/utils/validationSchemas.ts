@@ -241,3 +241,138 @@ export interface BulkLeadImportData {
   addressType: string
   notes?: string | ''
 }
+
+// ============================================================================
+// Promo Form Validation Schemas
+// ============================================================================
+
+// Promo form validation schema - matches PromoRequestModel from backend
+export const promoFormSchema = z
+  .object({
+    promoCode: z
+      .string()
+      .min(1, 'Promo code is required')
+      .max(100, 'Promo code is too long')
+      .regex(/^[A-Z0-9_-]+$/i, 'Promo code can only contain letters, numbers, underscores, and hyphens')
+      .trim(),
+    description: z.string().min(1, 'Description is required').max(500, 'Description is too long').trim(),
+    discountValue: z.coerce.number().positive('Discount value must be greater than 0'),
+    isPercent: z.boolean(),
+    notes: z.string().optional().or(z.literal('')),
+    startDate: z.string().min(1, 'Start date is required'),
+    expiryDate: z.string().optional().or(z.literal('')),
+  })
+  .refine(
+    data => {
+      // Validate startDate is today or in the future
+      if (data.startDate && data.startDate.trim() !== '') {
+        const selectedDate = new Date(data.startDate)
+        const today = new Date()
+        today.setHours(0, 0, 0, 0) // Reset time to start of day for accurate comparison
+        return selectedDate >= today
+      }
+      return true
+    },
+    {
+      message: 'Start date must be today or in the future',
+      path: ['startDate'],
+    },
+  )
+  .refine(
+    data => {
+      // If expiryDate is provided and not empty, validate it's today or in the future
+      if (data.expiryDate && data.expiryDate.trim() !== '') {
+        const selectedDate = new Date(data.expiryDate)
+        const today = new Date()
+        today.setHours(0, 0, 0, 0) // Reset time to start of day for accurate comparison
+        return selectedDate >= today
+      }
+      return true
+    },
+    {
+      message: 'Expiry date must be today or in the future',
+      path: ['expiryDate'],
+    },
+  )
+  .refine(
+    data => {
+      // If expiryDate is provided, validate it's after or equal to startDate
+      if (data.expiryDate && data.expiryDate.trim() !== '' && data.startDate && data.startDate.trim() !== '') {
+        const startDate = new Date(data.startDate)
+        const expiryDate = new Date(data.expiryDate)
+        return expiryDate >= startDate
+      }
+      return true
+    },
+    {
+      message: 'Expiry date must be after or equal to start date',
+      path: ['expiryDate'],
+    },
+  )
+
+export type PromoFormData = z.infer<typeof promoFormSchema>
+
+// Bulk Promo Import validation schema
+export const bulkPromoImportSchema = z
+  .object({
+    promoCode: z
+      .string()
+      .min(1, 'Promo code is required')
+      .max(100, 'Promo code is too long')
+      .trim(),
+    description: z.string().min(1, 'Description is required').trim(),
+    discountValue: z.coerce.number().positive('Discount value must be greater than 0'),
+    isPercent: z.boolean(),
+    notes: z.string().optional().or(z.literal('')),
+    startDate: z.string().min(1, 'Start date is required'),
+    expiryDate: z.string().optional().or(z.literal('')),
+  })
+  .refine(
+    data => {
+      // Validate startDate is today or in the future
+      if (data.startDate && data.startDate.trim() !== '') {
+        const selectedDate = new Date(data.startDate)
+        const today = new Date()
+        today.setHours(0, 0, 0, 0) // Reset time to start of day for accurate comparison
+        return selectedDate >= today
+      }
+      return true
+    },
+    {
+      message: 'Start date must be today or in the future',
+      path: ['startDate'],
+    },
+  )
+  .refine(
+    data => {
+      // If expiryDate is provided and not empty, validate it's today or in the future
+      if (data.expiryDate && data.expiryDate.trim() !== '') {
+        const selectedDate = new Date(data.expiryDate)
+        const today = new Date()
+        today.setHours(0, 0, 0, 0) // Reset time to start of day for accurate comparison
+        return selectedDate >= today
+      }
+      return true
+    },
+    {
+      message: 'Expiry date must be today or in the future',
+      path: ['expiryDate'],
+    },
+  )
+  .refine(
+    data => {
+      // If expiryDate is provided, validate it's after or equal to startDate
+      if (data.expiryDate && data.expiryDate.trim() !== '' && data.startDate && data.startDate.trim() !== '') {
+        const startDate = new Date(data.startDate)
+        const expiryDate = new Date(data.expiryDate)
+        return expiryDate >= startDate
+      }
+      return true
+    },
+    {
+      message: 'Expiry date must be after or equal to start date',
+      path: ['expiryDate'],
+    },
+  )
+
+export type BulkPromoImportData = z.infer<typeof bulkPromoImportSchema>

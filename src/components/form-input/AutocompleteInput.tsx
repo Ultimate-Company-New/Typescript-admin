@@ -19,6 +19,7 @@ export interface AutocompleteInputProps
   disabled?: boolean
   sortOptions?: boolean
   maxHeight?: number
+  placeholder?: string
 }
 
 /**
@@ -39,6 +40,7 @@ const AutocompleteInput = forwardRef<HTMLDivElement, AutocompleteInputProps>(
       disabled,
       sortOptions = true,
       maxHeight = 300,
+      placeholder,
       value,
       onChange,
       ...props
@@ -105,6 +107,7 @@ const AutocompleteInput = forwardRef<HTMLDivElement, AutocompleteInputProps>(
             required={required}
             error={error}
             helperText={helperText}
+            placeholder={placeholder}
             className={styles['filled-input']}
             InputLabelProps={{
               shrink: true,

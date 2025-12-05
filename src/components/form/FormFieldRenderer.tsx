@@ -10,7 +10,7 @@ import {
   type UseFormSetValue,
 } from 'react-hook-form'
 
-import { Box, Divider, Grid, Paper } from '@mui/material'
+import { Box, Divider, FormControlLabel, Grid, Paper, Switch } from '@mui/material'
 
 import { FieldType } from '../../constants/appConstants'
 import { Subheader } from '../fonts'
@@ -75,6 +75,9 @@ export interface FieldConfig<TFieldValues extends FieldValues = FieldValues> {
   cities?: string[]
   onStateChange?: (state: string) => void
   setValue?: UseFormSetValue<TFieldValues>
+  // For switch fields
+  switchLabel?: string
+  switchLabelPlacement?: 'start' | 'end' | 'top' | 'bottom'
   modifyFieldProps?: (
     field: ControllerRenderProps<TFieldValues, Path<TFieldValues>>,
   ) => ControllerRenderProps<TFieldValues, Path<TFieldValues>>
@@ -168,6 +171,8 @@ export const FormFieldRenderer = <TFieldValues extends FieldValues = FieldValues
       cities = [],
       onStateChange,
       setValue,
+      switchLabel,
+      switchLabelPlacement = 'end',
       modifyFieldProps,
     } = fieldConfig
 
@@ -216,6 +221,7 @@ export const FormFieldRenderer = <TFieldValues extends FieldValues = FieldValues
                   disabled={isFieldDisabled}
                   error={!!fieldError}
                   helperText={fieldError?.message}
+                  placeholder={placeholder}
                 />
               )
             }
@@ -230,6 +236,7 @@ export const FormFieldRenderer = <TFieldValues extends FieldValues = FieldValues
                   disabled={isFieldDisabled}
                   error={!!fieldError}
                   helperText={fieldError?.message}
+                  placeholder={placeholder}
                 />
               )
             }
@@ -245,6 +252,7 @@ export const FormFieldRenderer = <TFieldValues extends FieldValues = FieldValues
                   error={!!fieldError}
                   helperText={fieldError?.message}
                   options={options}
+                  placeholder={placeholder}
                 />
               )
             }
@@ -262,6 +270,7 @@ export const FormFieldRenderer = <TFieldValues extends FieldValues = FieldValues
                   options={options}
                   sortOptions={sortOptions}
                   maxHeight={maxHeight}
+                  placeholder={placeholder}
                 />
               )
             }
@@ -293,6 +302,7 @@ export const FormFieldRenderer = <TFieldValues extends FieldValues = FieldValues
                   onChange={(_event, newValue) => {
                     fieldProps.onChange(newValue?.value ?? '')
                   }}
+                  placeholder={placeholder}
                 />
               )
             }
@@ -351,6 +361,35 @@ export const FormFieldRenderer = <TFieldValues extends FieldValues = FieldValues
               )
             }
 
+            // Switch field (boolean toggle)
+            if (type === FieldType.Switch) {
+              return (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    height: '100%',
+                    minHeight: '56px',
+                  }}
+                >
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={Boolean(fieldProps.value)}
+                        onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                          fieldProps.onChange(event.target.checked)
+                        }}
+                        disabled={isFieldDisabled}
+                        color="primary"
+                      />
+                    }
+                    label={switchLabel || label}
+                    labelPlacement={switchLabelPlacement}
+                  />
+                </Box>
+              )
+            }
+
             // Textarea field (multi-line)
             if (type === FieldType.Textarea) {
               return (
@@ -378,6 +417,7 @@ export const FormFieldRenderer = <TFieldValues extends FieldValues = FieldValues
                 disabled={isFieldDisabled}
                 error={!!fieldError}
                 helperText={fieldError?.message}
+                placeholder={placeholder}
               />
             )
           }}

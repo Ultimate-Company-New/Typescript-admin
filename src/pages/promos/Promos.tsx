@@ -28,9 +28,8 @@ import {
   type GridDensityType,
 } from '../../components/datagrid'
 import { getPromoGridColumns } from '../../models/grid-models/PromoGridColumns'
+import styles from '../../styles/Promos.module.scss'
 import { type PaginatedGridInterface } from '../../types/grid.types'
-
-import styles from './Promos.module.scss'
 
 /**
  * Promo data structure matching API response

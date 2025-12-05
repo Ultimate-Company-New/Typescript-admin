@@ -11,7 +11,7 @@ import { AddMessages, ImportMessages, Messages, MessagesList, ViewMessage } from
 import { AddPackages, ImportPackages, Packages } from './pages/packages'
 import { AddPickupLocations, ImportPickupLocations, PickupLocations } from './pages/pickupLocations'
 import { AddProducts, ImportProducts, Products } from './pages/products'
-import { AddPromos, ImportPromos, Promos } from './pages/promos'
+import { AddEditPromo, ImportPromos, Promos } from './pages/promos'
 import { AddPurchaseOrders, ImportPurchaseOrders, PurchaseOrders } from './pages/purchaseOrders'
 import { QADashboard } from './pages/qaDashboard'
 import { AddSalesOrders, SalesOrders } from './pages/salesOrders'
@@ -116,7 +116,7 @@ export const routes: RouteObject[] = [
       },
       {
         path: 'promos/add',
-        element: <AddPromos />,
+        element: <AddEditPromo />,
       },
       {
         path: 'promos/import',

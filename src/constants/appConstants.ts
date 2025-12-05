@@ -19,6 +19,7 @@ export enum FieldType {
   Textarea = 'textarea',
   Image = 'image',
   Address = 'address',
+  Switch = 'switch',
 }
 
 /**

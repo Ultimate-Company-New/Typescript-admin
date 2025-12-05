@@ -215,7 +215,7 @@ const UserSelectionGrid = ({
         columnVisibilityModel,
         onColumnVisibilityChange: setColumnVisibilityModel,
         hideIncludeDeleted: true,
-        hideExport: true,
+        hideExport: false,
         // Only show selection-related features when not in view mode
         onClearSelection: isView ? undefined : handleClearSelection,
         selectionCount: isView ? undefined : selectedUserIds.length,

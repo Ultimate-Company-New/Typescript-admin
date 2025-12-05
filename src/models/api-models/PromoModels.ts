@@ -25,8 +25,9 @@ export interface PromoRequestModel {
   // Notes
   notes?: string
 
-  // Related entities
-  clientId?: number
+  // Date range
+  startDate: string // Required
+  expiryDate?: string
 
   // Pagination fields (extends PaginationBaseRequestModel)
   start?: number
@@ -57,6 +58,10 @@ export interface PromoResponseModel {
 
   // Notes
   notes?: string
+
+  // Date range
+  startDate: string // Required
+  expiryDate?: string
 
   // Related entity IDs
   clientId: number
@@ -101,4 +106,3 @@ export interface BulkPromoInsertResponseModel {
   successResults: BulkPromoResult[]
   failureResults: BulkPromoResult[]
 }
-

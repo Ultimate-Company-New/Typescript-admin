@@ -31,3 +31,13 @@ export {
   getLeadImportPreviewColumns,
   type ImportLeadData,
 } from './ImportLeadGridModel'
+
+// Promo Import
+export {
+  promoImportTemplateStructure,
+  promoImportHeaderNames,
+  promoImportHiddenFields,
+  promoImportFieldDisplayConfig,
+  getPromoImportPreviewColumns,
+  type ImportPromoData,
+} from './ImportPromoGridModel'

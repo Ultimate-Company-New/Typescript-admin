@@ -707,6 +707,7 @@ const AddEditUser = (): JSX.Element => {
               xs: 12,
               sm: 6,
             },
+            placeholder: 'Enter first name',
           },
           {
             name: 'lastName' as const,
@@ -717,6 +718,7 @@ const AddEditUser = (): JSX.Element => {
               xs: 12,
               sm: 6,
             },
+            placeholder: 'Enter last name',
           },
           {
             name: 'loginName' as const,
@@ -728,6 +730,7 @@ const AddEditUser = (): JSX.Element => {
               xs: 12,
               sm: 6,
             },
+            placeholder: 'user@example.com',
           },
           {
             name: 'phone' as const,
@@ -738,6 +741,7 @@ const AddEditUser = (): JSX.Element => {
               xs: 12,
               sm: 6,
             },
+            placeholder: '(555) 123-4567',
           },
           {
             name: 'role' as const,
@@ -751,6 +755,7 @@ const AddEditUser = (): JSX.Element => {
             options: roleOptions,
             sortOptions: true,
             maxHeight: 300,
+            placeholder: 'Select user role',
           },
           {
             name: 'dob' as const,
@@ -761,6 +766,7 @@ const AddEditUser = (): JSX.Element => {
               xs: 12,
               sm: 6,
             },
+            placeholder: 'Select date of birth',
           },
         ],
       },

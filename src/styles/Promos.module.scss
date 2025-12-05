@@ -1,0 +1,444 @@
+// src/styles/Promos.scss
+// Centralized styles for Promos-related pages (Promos, AddPromos, ImportPromos)
+
+@use './common.module.scss' as *;
+
+// ============================================================================
+// Promos Page Styles
+// ============================================================================
+
+.promos-page {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: 0;
+  box-sizing: border-box;
+
+  &__container {
+    @extend .page__container--form;
+    overflow-x: auto;
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  &__action-button {
+    white-space: nowrap;
+  }
+
+  &__card {
+    background-color: #ffffff;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+
+    .MuiDataGrid-root {
+      width: 100%;
+      max-width: 100%;
+      min-width: 800px;
+      box-sizing: border-box;
+      border: none;
+      border-radius: 0;
+    }
+  }
+
+  &__pagination {
+    padding: 16px;
+    border-top: 1px solid rgba(224, 224, 224, 1);
+    background-color: #fff;
+  }
+
+  // Deleted row styling
+  :global(.MuiDataGrid-row.deleted) {
+    background-color: rgba(0, 0, 0, 0.04) !important;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.08) !important;
+    }
+  }
+}
+
+// ============================================================================
+// Add Promos Page Styles
+// ============================================================================
+
+.add-promos-page {
+  &__container {
+    @extend .page__container--form;
+  }
+
+  &__form-container {
+    margin-top: 32px;
+    padding: 32px;
+    border-radius: 8px;
+  }
+
+  &__section {
+    margin-top: 24px;
+    padding: 24px;
+  }
+
+  &__section-title {
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+
+  &__divider {
+    margin-bottom: 24px;
+  }
+
+  &__divider-spacer {
+    margin-bottom: 16px;
+  }
+
+  &__grid-container {
+    margin-top: -8px;
+    min-height: 300px;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    padding: 24px;
+  }
+
+  &__action-button {
+    text-transform: none;
+  }
+}
+
+// ============================================================================
+// Import Promos Page Styles
+// ============================================================================
+
+.import-promos-page {
+  &__container {
+    @extend .page__container--form;
+  }
+
+  &__page-wrapper {
+    padding-left: 16px;
+    padding-right: 16px;
+
+    @media (min-width: 600px) {
+      padding-left: 24px;
+      padding-right: 24px;
+    }
+
+    @media (min-width: 900px) {
+      padding-left: 32px;
+      padding-right: 32px;
+    }
+  }
+
+  &__instructions-paper {
+    padding: 24px;
+    margin-top: 24px;
+    margin-bottom: 24px;
+    background-color: #f5f9ff;
+    border-left: 4px solid #1976d2;
+  }
+
+  &__instructions-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  &__instructions-title {
+    font-weight: 600;
+  }
+
+  &__section-title {
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  &__divider {
+    margin-bottom: 16px;
+  }
+
+  &__divider--large {
+    margin-bottom: 24px;
+  }
+
+  &__settings-card {
+    padding: 24px;
+  }
+
+  &__settings-actions {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+
+    @media (max-width: 768px) {
+      justify-content: flex-start;
+    }
+  }
+
+  &__template-button {
+    text-transform: none !important;
+    padding: 8px 16px !important;
+  }
+
+  &__max-records-select {
+    min-width: 180px !important;
+    margin-top: 8px !important;
+    margin-right: 8px !important;
+  }
+
+  &__reference-card {
+    padding: 24px;
+    overflow: hidden;
+  }
+
+  &__grid-wrapper {
+    width: 100%;
+    overflow-x: auto;
+
+    :global(.MuiDataGrid-root) {
+      border: none;
+    }
+  }
+
+  &__preview-paper {
+    margin-top: 24px;
+    padding: 24px;
+  }
+
+  &__loading-paper {
+    margin-top: 24px;
+    padding: 48px 24px;
+  }
+
+  &__loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    min-height: 200px;
+  }
+
+  &__loading-text {
+    margin-top: 8px;
+    font-weight: 500;
+    color: #1976d2;
+  }
+
+  &__view-toggle-container {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+  }
+
+  &__grid-container {
+    min-height: 400px;
+  }
+
+  &__error-row {
+    background-color: #ffebee !important;
+
+    &:hover {
+      background-color: #ffcdd2 !important;
+    }
+  }
+
+  &__actions-card {
+    padding: 24px;
+    margin-top: 24px;
+  }
+
+  &__error-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+    background-color: #ffebee;
+    border: 1px solid #ef5350;
+    border-radius: 8px;
+  }
+
+  &__error-warning-icon {
+    color: #d32f2f;
+    font-size: 24px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  &__error-warning-text {
+    color: #c62828;
+    line-height: 1.6;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+  }
+
+  &__action-button {
+    min-width: 140px;
+  }
+
+  &__toggle-button-text {
+    margin-left: 4px;
+  }
+
+  &__json-container {
+    padding: 16px;
+    min-height: 300px;
+    max-height: 600px;
+    overflow: auto;
+  }
+}
+
+// ============================================================================
+// Promo Details View Component Styles
+// ============================================================================
+
+.promo-details-view {
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 0;
+  }
+
+  &__label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  &__value {
+    font-size: 1rem;
+    color: rgba(0, 0, 0, 0.87);
+    word-break: break-word;
+  }
+
+  &__notes {
+    margin-top: 24px;
+    padding: 16px;
+    background-color: rgba(0, 0, 0, 0.02);
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+  }
+
+  &__badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 0.875rem;
+    font-weight: 500;
+
+    &--percent {
+      background-color: #e3f2fd;
+      color: #1565c0;
+    }
+
+    &--fixed {
+      background-color: #e8f5e9;
+      color: #2e7d32;
+    }
+  }
+}
+
+// ============================================================================
+// Fill Test Data Button Styles
+// ============================================================================
+
+.fill-test-data-button {
+  &__fab {
+    position: fixed !important;
+    bottom: 24px;
+    right: 96px;
+    z-index: 1200;
+    background-color: #1976d2 !important;
+    color: #fff !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    transition: all 0.3s ease-in-out !important;
+
+    &:hover {
+      background-color: #1565c0 !important;
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    &.Mui-disabled {
+      background-color: rgba(0, 0, 0, 0.12) !important;
+      color: rgba(0, 0, 0, 0.26) !important;
+    }
+  }
+}
+
+// ============================================================================
+// Dark Mode Support
+// ============================================================================
+
+@media (prefers-color-scheme: dark) {
+  .promo-details-view {
+    &__label {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    &__value {
+      color: rgba(255, 255, 255, 0.87);
+    }
+
+    &__notes {
+      background-color: rgba(255, 255, 255, 0.02);
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    &__badge {
+      &--percent {
+        background-color: rgba(25, 118, 210, 0.2);
+        color: #90caf9;
+      }
+
+      &--fixed {
+        background-color: rgba(46, 125, 50, 0.2);
+        color: #a5d6a7;
+      }
+    }
+  }
+}
+
+:global(.dark-mode) {
+  .promo-details-view {
+    &__label {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    &__value {
+      color: rgba(255, 255, 255, 0.87);
+    }
+  }
+}

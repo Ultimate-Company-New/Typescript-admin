@@ -25,11 +25,7 @@ import { FieldType } from '../../components/form/FormFieldRenderer'
 import { LEAD_STATUS_OPTIONS, PERMISSIONS } from '../../constants/appConstants'
 import { APP_ROUTES } from '../../constants/routes'
 import { usePermissions } from '../../hooks/usePermissions'
-import {
-  type LeadDetailsResponseModel,
-  type LeadRequestModel,
-  type UserResponseModel,
-} from '../../models/api-models'
+import { type LeadDetailsResponseModel, type LeadRequestModel, type UserResponseModel } from '../../models/api-models'
 import styles from '../../styles/Leads.module.scss'
 import { getAllStates, getCitiesByState } from '../../utils/stateCityMapper'
 import { leadFormSchema, type LeadFormData } from '../../utils/validationSchemas'
@@ -56,7 +52,9 @@ const AddEditLead = (): React.JSX.Element => {
   const [loading, setLoading] = useState(false)
   const [selectedState, setSelectedState] = useState<string>('')
   // Initial option for assigned agent dropdown (for edit mode)
+  /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-redundant-type-constituents */
   const [initialAgentOption, setInitialAgentOption] = useState<LazyOption | undefined>(undefined)
+  /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-redundant-type-constituents */
 
   // Get user permissions for authorization
   const { hasPermission } = usePermissions()
@@ -105,7 +103,7 @@ const AddEditLead = (): React.JSX.Element => {
       title: '',
       website: '',
       fax: '',
-      assignedAgentId: '',
+      assignedAgentId: 0,
       address: {
         streetAddress: '',
         streetAddress2: '',
@@ -160,9 +158,21 @@ const AddEditLead = (): React.JSX.Element => {
         // Build filter if search text is provided
         const filters = searchText
           ? [
-              { column: 'firstName', operator: 'contains', value: searchText },
-              { column: 'lastName', operator: 'contains', value: searchText },
-              { column: 'loginName', operator: 'contains', value: searchText },
+              {
+                column: 'firstName',
+                operator: 'contains',
+                value: searchText,
+              },
+              {
+                column: 'lastName',
+                operator: 'contains',
+                value: searchText,
+              },
+              {
+                column: 'loginName',
+                operator: 'contains',
+                value: searchText,
+              },
             ]
           : undefined
 
@@ -175,8 +185,10 @@ const AddEditLead = (): React.JSX.Element => {
           filters,
         })
 
+        /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unnecessary-type-assertion */
         const users = response.data as UserResponseModel[]
         const totalCount = response.totalDataCount
+        /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unnecessary-type-assertion */
 
         // Map users to LazyOption format
         const options: LazyOption[] = users.map(user => ({
@@ -207,12 +219,14 @@ const AddEditLead = (): React.JSX.Element => {
     async (id: string): Promise<void> => {
       setLoading(true)
       try {
-        const response: LeadDetailsResponseModel = await leadApi.getLeadById(parseInt(id))
+        /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
+        const response = (await leadApi.getLeadById(parseInt(id))) as LeadDetailsResponseModel
 
         // Set the selected state FIRST so cities can be loaded
         // Backend returns flat structure - address is nested under response.address
         const leadState = response.address?.state ?? ''
         if (leadState) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
           setSelectedState(leadState)
         }
 
@@ -240,7 +254,7 @@ const AddEditLead = (): React.JSX.Element => {
           title: response.title ?? '',
           website: response.website ?? '',
           fax: response.fax ?? '',
-          assignedAgentId: response.assignedAgent?.userId ?? '',
+          assignedAgentId: response.assignedAgent?.userId ?? 0,
           address: {
             streetAddress: response.address?.streetAddress ?? '',
             streetAddress2: response.address?.streetAddress2 ?? '',
@@ -253,6 +267,7 @@ const AddEditLead = (): React.JSX.Element => {
           },
           notes: response.notes ?? '',
         }
+        /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
         reset(formValues)
 
         // Set the city after a small delay to ensure the cities dropdown is populated
@@ -367,6 +382,7 @@ const AddEditLead = (): React.JSX.Element => {
               xs: 12,
               sm: 6,
             },
+            placeholder: 'Enter first name',
           },
           {
             name: 'lastName',
@@ -377,6 +393,7 @@ const AddEditLead = (): React.JSX.Element => {
               xs: 12,
               sm: 6,
             },
+            placeholder: 'Enter last name',
           },
           {
             name: 'email',
@@ -387,6 +404,7 @@ const AddEditLead = (): React.JSX.Element => {
               xs: 12,
               sm: 6,
             },
+            placeholder: 'lead@company.com',
           },
           {
             name: 'phone',
@@ -397,6 +415,7 @@ const AddEditLead = (): React.JSX.Element => {
               xs: 12,
               sm: 6,
             },
+            placeholder: '(555) 123-4567',
           },
           {
             name: 'leadStatus',
@@ -408,6 +427,7 @@ const AddEditLead = (): React.JSX.Element => {
               sm: 6,
             },
             options: leadStatusOptions,
+            placeholder: 'Select lead status',
           },
           {
             name: 'title',
@@ -418,20 +438,25 @@ const AddEditLead = (): React.JSX.Element => {
               xs: 12,
               sm: 6,
             },
+            placeholder: 'e.g., VP of Sales, Marketing Director',
           },
           {
             name: 'assignedAgentId',
             label: 'Assigned Agent',
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             type: FieldType.LazyAutocomplete,
             required: true,
             gridSize: {
               xs: 12,
               sm: 6,
             },
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             fetchOptions: fetchAgentOptions,
             lazyPageSize: 10,
             lazyDebounceMs: 300,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             initialOption: initialAgentOption,
+            placeholder: 'Search and select agent',
           },
         ],
       },
@@ -447,6 +472,7 @@ const AddEditLead = (): React.JSX.Element => {
               xs: 12,
               sm: 6,
             },
+            placeholder: 'Enter company name',
           },
           {
             name: 'companySize',
@@ -457,6 +483,7 @@ const AddEditLead = (): React.JSX.Element => {
               xs: 12,
               sm: 6,
             },
+            placeholder: 'Number of employees',
           },
           {
             name: 'annualRevenue',
@@ -467,6 +494,7 @@ const AddEditLead = (): React.JSX.Element => {
               xs: 12,
               sm: 6,
             },
+            placeholder: 'e.g., $1M - $5M',
           },
           {
             name: 'website',
@@ -488,6 +516,7 @@ const AddEditLead = (): React.JSX.Element => {
               xs: 12,
               sm: 6,
             },
+            placeholder: '(555) 123-4567',
           },
         ],
       },
@@ -539,18 +568,19 @@ const AddEditLead = (): React.JSX.Element => {
   )
 
   // Get assigned agent name for view mode
-  const assignedAgentName = useMemo(() => {
+  const assignedAgentName = useMemo((): string | undefined => {
     // Use initialAgentOption if available (for edit mode)
     if (initialAgentOption) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access
       return initialAgentOption.label
     }
     return undefined
   }, [initialAgentOption])
 
   // Get view mode values from watched values
-  const viewCompanySize = useMemo(() => {
+  const viewCompanySize = useMemo((): number | undefined => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-    const size = watchedValues.companySize
+    const size = watchedValues.companySize as number | string | undefined
     return typeof size === 'number' ? size : undefined
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   }, [watchedValues.companySize])
@@ -580,7 +610,7 @@ const AddEditLead = (): React.JSX.Element => {
           },
         }}
       >
-        <form onSubmit={handleFormSubmit(onSubmit)}>
+        <form onSubmit={handleFormSubmit(onSubmit) as React.FormEventHandler<HTMLFormElement>}>
           <Box className={styles['add-leads-page__container']}>
             {/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */}
             {isView ? (
@@ -627,7 +657,7 @@ const AddEditLead = (): React.JSX.Element => {
               /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
               <>
                 {/* Edit/Add Mode - Lead Information and Address Sections */}
-                <FormFieldRenderer
+                <FormFieldRenderer<LeadFormData>
                   sections={formSections}
                   control={control}
                   errors={errors}
@@ -639,7 +669,7 @@ const AddEditLead = (): React.JSX.Element => {
                 />
 
                 {/* Notes Section */}
-                <FormFieldRenderer
+                <FormFieldRenderer<LeadFormData>
                   sections={notesSections}
                   control={control}
                   errors={errors}

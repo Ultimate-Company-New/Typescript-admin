@@ -181,6 +181,7 @@ const AddEditUserGroup = (): React.JSX.Element => {
               xs: 12,
               sm: 12,
             },
+            placeholder: 'e.g., Sales Team, Marketing Department',
           },
           {
             name: 'description',
@@ -192,7 +193,7 @@ const AddEditUserGroup = (): React.JSX.Element => {
               sm: 12,
             },
             rows: 3,
-            placeholder: 'Enter group description',
+            placeholder: 'Describe the purpose and responsibilities of this group',
           },
           {
             name: 'notes',
@@ -204,7 +205,7 @@ const AddEditUserGroup = (): React.JSX.Element => {
               sm: 12,
             },
             rows: 3,
-            placeholder: 'Additional notes (optional)',
+            placeholder: 'Any additional notes or comments about this group (optional)',
           },
         ],
       },

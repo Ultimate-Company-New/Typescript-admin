@@ -41,18 +41,9 @@ export const promoApi = {
 
   /**
    * Create a new promo
+   * Note: Promos cannot be edited after creation
    */
   createPromo: async (request: PromoRequestModel): Promise<void> => {
-    await axiosInstance.put(`${API_BASE_URL}/createPromo`, request)
-  },
-
-  /**
-   * Update an existing promo
-   * Note: Backend doesn't have update endpoint, using create for now
-   */
-  updatePromo: async (_promoId: number, request: PromoRequestModel): Promise<void> => {
-    // Since there's no update endpoint in the backend, we'll just call create
-    // The backend should handle the upsert logic if promoId is provided
     await axiosInstance.put(`${API_BASE_URL}/createPromo`, request)
   },
 

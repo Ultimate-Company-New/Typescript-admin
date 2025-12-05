@@ -131,6 +131,7 @@ const AddressFormController = <TFieldValues extends AddressableFormValues>({
           xs: 12,
           sm: 12,
         },
+        placeholder: 'e.g., 123 Main Street',
       },
       {
         name: 'address.streetAddress2' as Path<AddressableFormValues>,
@@ -141,6 +142,7 @@ const AddressFormController = <TFieldValues extends AddressableFormValues>({
           xs: 12,
           sm: 6,
         },
+        placeholder: 'Apt, Suite, Floor (optional)',
       },
       {
         name: 'address.streetAddress3' as Path<AddressableFormValues>,
@@ -151,6 +153,7 @@ const AddressFormController = <TFieldValues extends AddressableFormValues>({
           xs: 12,
           sm: 6,
         },
+        placeholder: 'Additional address info (optional)',
       },
       {
         name: 'address.postalCode' as Path<AddressableFormValues>,
@@ -162,6 +165,7 @@ const AddressFormController = <TFieldValues extends AddressableFormValues>({
           xs: 12,
           sm: 6,
         },
+        placeholder: 'Enter 6-digit postal code',
       },
       {
         name: 'address.country' as Path<AddressableFormValues>,
@@ -173,6 +177,7 @@ const AddressFormController = <TFieldValues extends AddressableFormValues>({
           xs: 12,
           sm: 6,
         },
+        placeholder: 'Country',
       },
       {
         name: 'address.addressType' as Path<AddressableFormValues>,
@@ -185,6 +190,7 @@ const AddressFormController = <TFieldValues extends AddressableFormValues>({
           sm: 6,
         },
         options: ADDRESS_TYPE_OPTIONS,
+        placeholder: 'Select address type',
       },
       {
         name: baseStateFieldPath,
@@ -197,6 +203,7 @@ const AddressFormController = <TFieldValues extends AddressableFormValues>({
           sm: 6,
         },
         options: stateOptions,
+        placeholder: 'Select state',
       },
       {
         name: baseCityFieldPath,
@@ -210,6 +217,7 @@ const AddressFormController = <TFieldValues extends AddressableFormValues>({
         },
         options: cityOptions,
         sortOptions: true,
+        placeholder: 'Select city',
       },
       {
         name: 'address.nameOnAddress' as Path<AddressableFormValues>,
@@ -220,6 +228,7 @@ const AddressFormController = <TFieldValues extends AddressableFormValues>({
           xs: 12,
           sm: 6,
         },
+        placeholder: 'Full name (optional)',
       },
       {
         name: 'address.emailOnAddress' as Path<AddressableFormValues>,
@@ -230,6 +239,7 @@ const AddressFormController = <TFieldValues extends AddressableFormValues>({
           xs: 12,
           sm: 6,
         },
+        placeholder: 'email@example.com (optional)',
       },
       {
         name: 'address.phoneOnAddress' as Path<AddressableFormValues>,
@@ -240,6 +250,7 @@ const AddressFormController = <TFieldValues extends AddressableFormValues>({
           xs: 12,
           sm: 6,
         },
+        placeholder: '(555) 123-4567 (optional)',
       },
     ]
 
@@ -267,7 +278,7 @@ const AddressFormController = <TFieldValues extends AddressableFormValues>({
   return (
     <>
       {addressFields.map(fieldConfig => {
-        const { name, label, type = FieldType.Text, required = false, gridSize, options = [] } = fieldConfig
+        const { name, label, type = FieldType.Text, required = false, gridSize, options = [], placeholder } = fieldConfig
         const { sortOptions = false } = fieldConfig
         const fieldError = getFieldError(name)
         const isFieldDisabled = disabled || fieldConfig.disabled
@@ -289,6 +300,7 @@ const AddressFormController = <TFieldValues extends AddressableFormValues>({
                       disabled={isFieldDisabled}
                       error={!!fieldError}
                       helperText={fieldError?.message}
+                      placeholder={placeholder}
                     />
                   )
                 }
@@ -304,6 +316,7 @@ const AddressFormController = <TFieldValues extends AddressableFormValues>({
                       disabled={isFieldDisabled}
                       error={!!fieldError}
                       helperText={fieldError?.message}
+                      placeholder={placeholder}
                     />
                   )
                 }
@@ -320,6 +333,7 @@ const AddressFormController = <TFieldValues extends AddressableFormValues>({
                       error={!!fieldError}
                       helperText={fieldError?.message}
                       options={options}
+                      placeholder={placeholder}
                     />
                   )
                 }
@@ -337,6 +351,7 @@ const AddressFormController = <TFieldValues extends AddressableFormValues>({
                       helperText={fieldError?.message}
                       options={options}
                       sortOptions={sortOptions}
+                      placeholder={placeholder}
                     />
                   )
                 }
@@ -352,6 +367,7 @@ const AddressFormController = <TFieldValues extends AddressableFormValues>({
                     disabled={isFieldDisabled}
                     error={!!fieldError}
                     helperText={fieldError?.message}
+                    placeholder={placeholder}
                   />
                 )
               }}

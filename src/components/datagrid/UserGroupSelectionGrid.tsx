@@ -242,7 +242,7 @@ const UserGroupSelectionGrid = ({
         columnVisibilityModel,
         onColumnVisibilityChange: setColumnVisibilityModel,
         hideIncludeDeleted: true,
-        hideExport: true,
+        hideExport: false,
         onClearSelection: handleClearSelection,
         selectionCount: selectedGroupIds.length,
       }) as GridToolbarProps,

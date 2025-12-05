@@ -14,7 +14,8 @@ export interface PromoData extends PromoResponseModel {}
 
 /**
  * Promo Actions Cell Component
- * Renders View, Edit, Activate, Deactivate links based on user permissions
+ * Renders View, Activate, Deactivate links based on user permissions
+ * Note: Promos cannot be edited after creation
  */
 const PromoActionsCell = ({
   promoId,
@@ -28,7 +29,6 @@ const PromoActionsCell = ({
   const { hasPermission } = usePermissions()
 
   const canView = hasPermission(PERMISSIONS.VIEW_PROMOS)
-  const canEdit = hasPermission(PERMISSIONS.UPDATE_PROMOS)
   const canToggle = hasPermission(PERMISSIONS.DELETE_PROMOS)
 
   if (isDeleted) {
@@ -63,11 +63,6 @@ const PromoActionsCell = ({
       {canView && (
         <Link href={`${APP_ROUTES.DASHBOARD.ADD_PROMO}?promoId=${promoId}&isView`} sx={{ cursor: 'pointer' }}>
           View
-        </Link>
-      )}
-      {canEdit && (
-        <Link href={`${APP_ROUTES.DASHBOARD.ADD_PROMO}?promoId=${promoId}`} sx={{ cursor: 'pointer' }}>
-          Edit
         </Link>
       )}
       {canToggle && (
@@ -163,12 +158,32 @@ export const getPromoGridColumns = (onTogglePromo: (promoId: number) => void): G
     ),
   },
   {
-    field: 'promoType',
-    headerName: 'Type',
-    flex: 0.8,
-    minWidth: 100,
+    field: 'createdUser',
+    headerName: 'Created By',
+    flex: 1.2,
+    minWidth: 180,
     headerAlign: 'left',
-    valueGetter: (_value, row: PromoData) => (row.isPercent ? 'Percentage' : 'Fixed'),
+    valueGetter: (_value, row: PromoData) => row.createdUser ?? '—',
+    renderCell: (params: GridRenderCellParams<PromoData>) => (
+      <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+        <RenderLongCellItem value={params.value as string} />
+      </Box>
+    ),
+  },
+  {
+    field: 'startDate',
+    headerName: 'Start Date',
+    flex: 1,
+    minWidth: 120,
+    headerAlign: 'left',
+    valueGetter: (_value, row: PromoData) => {
+      if (!row.startDate) return '—'
+      return new Date(row.startDate).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      })
+    },
     renderCell: (params: GridRenderCellParams) => (
       <Box
         sx={{
@@ -182,29 +197,19 @@ export const getPromoGridColumns = (onTogglePromo: (promoId: number) => void): G
     ),
   },
   {
-    field: 'notes',
-    headerName: 'Notes',
-    flex: 2,
-    minWidth: 200,
-    headerAlign: 'left',
-    renderCell: (params: GridRenderCellParams) => (
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          height: '100%',
-        }}
-      >
-        <RenderLongCellItem value={(params.value as string) || '—'} />
-      </Box>
-    ),
-  },
-  {
-    field: 'createdUser',
-    headerName: 'Created By',
+    field: 'expiryDate',
+    headerName: 'Expiry Date',
     flex: 1,
-    minWidth: 150,
+    minWidth: 120,
     headerAlign: 'left',
+    valueGetter: (_value, row: PromoData) => {
+      if (!row.expiryDate) return '—'
+      return new Date(row.expiryDate).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      })
+    },
     renderCell: (params: GridRenderCellParams) => (
       <Box
         sx={{
@@ -213,7 +218,7 @@ export const getPromoGridColumns = (onTogglePromo: (promoId: number) => void): G
           height: '100%',
         }}
       >
-        <RenderLongCellItem value={(params.value as string) || '—'} />
+        {params.value}
       </Box>
     ),
   },

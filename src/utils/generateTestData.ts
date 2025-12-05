@@ -1,6 +1,6 @@
 import type { UserGroupRequestModel } from '../api/userGroupApi'
 import { USER_ROLES } from '../constants/appConstants'
-import type { LeadRequestModel, UserRequestModel } from '../models/api-models'
+import type { LeadRequestModel, PromoRequestModel, UserRequestModel } from '../models/api-models'
 
 // ============================================================================
 // User Test Data Generation
@@ -398,4 +398,153 @@ export const generateLeadImportTest = (numberOfRecords: number): LeadRequestMode
   }
 
   return leads
+}
+
+// ============================================================================
+// Promo Test Data Generation
+// ============================================================================
+
+/**
+ * Promo template for test data generation
+ */
+interface PromoTemplate {
+  codePrefix: string
+  description: string
+  discountValue: number
+  isPercent: boolean
+  notes: string
+}
+
+/**
+ * Pre-defined promo templates for variety in test data
+ */
+const PROMO_TEMPLATES: PromoTemplate[] = [
+  {
+    codePrefix: 'SUMMER',
+    description: 'Summer sale discount - valid for all products',
+    discountValue: 20,
+    isPercent: true,
+    notes: 'Limited time summer promotion',
+  },
+  {
+    codePrefix: 'FLAT',
+    description: 'Flat discount on orders above ₹1000',
+    discountValue: 100,
+    isPercent: false,
+    notes: 'Applicable on minimum order of ₹1000',
+  },
+  {
+    codePrefix: 'WELCOME',
+    description: 'Welcome discount for new customers',
+    discountValue: 15,
+    isPercent: true,
+    notes: 'First order only',
+  },
+  {
+    codePrefix: 'FESTIVE',
+    description: 'Festive season special discount',
+    discountValue: 25,
+    isPercent: true,
+    notes: 'Valid during festive season',
+  },
+  {
+    codePrefix: 'LOYALTY',
+    description: 'Loyalty reward for returning customers',
+    discountValue: 200,
+    isPercent: false,
+    notes: 'For customers with 5+ orders',
+  },
+  {
+    codePrefix: 'FLASH',
+    description: 'Flash sale - limited time offer',
+    discountValue: 30,
+    isPercent: true,
+    notes: 'Valid for 24 hours only',
+  },
+  {
+    codePrefix: 'BULK',
+    description: 'Bulk order discount',
+    discountValue: 500,
+    isPercent: false,
+    notes: 'Minimum 10 items required',
+  },
+  {
+    codePrefix: 'VIP',
+    description: 'VIP customer exclusive discount',
+    discountValue: 35,
+    isPercent: true,
+    notes: 'VIP members only',
+  },
+]
+
+/**
+ * Generate test data for a single promo form
+ * Returns realistic promo data with unique code
+ *
+ * @param preservePromoCode - Optional existing promo code to preserve (for edit mode)
+ * @returns PromoRequestModel for form population
+ */
+export const generatePromoFormTest = (preservePromoCode?: string): PromoRequestModel => {
+  const template = PROMO_TEMPLATES[Math.floor(Math.random() * PROMO_TEMPLATES.length)]
+  const timestamp = Date.now()
+
+  // Generate start date (today + 5 days minimum for safety)
+  const startDate = new Date()
+  startDate.setHours(0, 0, 0, 0) // Reset to midnight to avoid timezone issues
+  startDate.setDate(startDate.getDate() + 5) // Always 5 days from today
+
+  // Generate expiry date (1 day to 1 year from start date)
+  const expiryDaysToAdd = 1 + Math.floor(Math.random() * 365) // Random between 1 and 365 days
+  const expiryDate = new Date(startDate)
+  expiryDate.setDate(expiryDate.getDate() + expiryDaysToAdd)
+
+  return {
+    promoCode: preservePromoCode ?? `${template.codePrefix}_${timestamp % 100000}`,
+    description: template.description,
+    discountValue: template.discountValue,
+    isPercent: template.isPercent,
+    notes: template.notes,
+    startDate: startDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
+    expiryDate: expiryDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
+  }
+}
+
+/**
+ * Generate test data for promo bulk import
+ * Creates an array of promo objects with varied test data
+ *
+ * @param numberOfRecords - Number of test promo records to generate
+ * @returns Array of PromoRequestModel objects for import
+ */
+export const generatePromoImportTest = (numberOfRecords: number): PromoRequestModel[] => {
+  const promos: PromoRequestModel[] = []
+  const baseTimestamp = Date.now()
+
+  for (let i = 0; i < numberOfRecords; i++) {
+    const template = PROMO_TEMPLATES[i % PROMO_TEMPLATES.length]
+    const timestamp = baseTimestamp + i
+
+    // Generate start date (today + 5 days minimum for safety, with some variation)
+    const startDaysToAdd = 5 + Math.floor(Math.random() * 30) // Random between 5 and 34 days from today
+    const startDate = new Date()
+    startDate.setHours(0, 0, 0, 0) // Reset to midnight to avoid timezone issues
+    startDate.setDate(startDate.getDate() + startDaysToAdd)
+
+    // Generate expiry date (1 day to 1 year from start date)
+    const expiryDaysToAdd = 1 + Math.floor(Math.random() * 365) // Random between 1 and 365 days
+    const expiryDate = new Date(startDate)
+    expiryDate.setDate(expiryDate.getDate() + expiryDaysToAdd)
+
+    promos.push({
+      promoCode: `${template.codePrefix}_${timestamp % 100000}`,
+      description: template.description,
+      discountValue: template.discountValue + Math.floor(Math.random() * 10),
+      isPercent: template.isPercent,
+      startDate: startDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
+      expiryDate: expiryDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
+      notes: template.notes,
+    })
+  }
+
+  return promos
 }

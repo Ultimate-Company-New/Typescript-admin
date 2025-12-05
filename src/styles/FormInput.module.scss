@@ -68,6 +68,15 @@
   }
 }
 
+// Select placeholder styles
+.select-placeholder {
+  color: rgba(0, 0, 0, 0.38);
+}
+
+.select-placeholder-item {
+  color: rgba(0, 0, 0, 0.38);
+}
+
 // Dark mode support
 @media (prefers-color-scheme: dark) {
   .filled-input {
@@ -119,6 +128,14 @@
         background-color: rgba(144, 202, 249, 0.24);
       }
     }
+  }
+
+  .select-placeholder {
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .select-placeholder-item {
+    color: rgba(255, 255, 255, 0.5);
   }
 }
 
