@@ -1,7 +1,7 @@
 import { Box, Link } from '@mui/material'
 import { type GridColDef, type GridRenderCellParams } from '@mui/x-data-grid'
 
-import { RenderLongCellItem } from '../../components/datagrid/index.ts'
+import { RenderLongCellItem } from '../../components/datagrid'
 import { APP_ROUTES } from '../../constants/routes'
 
 /**

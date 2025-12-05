@@ -96,18 +96,10 @@ const PickupLocationsModal = ({ open, onClose, locations, productTitle }: Pickup
           }}
         >
           <LocationOnIcon color="primary" />
-          <Typography
-            variant="h6"
-            component="h2"
-            id="pickup-locations-modal-title"
-          >
+          <Typography variant="h6" component="h2" id="pickup-locations-modal-title">
             Pickup Locations
           </Typography>
-          <Chip
-            label={locations.length}
-            size="small"
-            color="primary"
-          />
+          <Chip label={locations.length} size="small" color="primary" />
         </Box>
         <IconButton onClick={onClose} size="small">
           <CloseIcon />

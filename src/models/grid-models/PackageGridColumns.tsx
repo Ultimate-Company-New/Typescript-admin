@@ -34,9 +34,7 @@ export interface PackageData {
 /**
  * Get package grid columns with action handlers
  */
-export const getPackageGridColumns = (
-  onTogglePackage: (packageId: number) => void,
-): GridColDef[] => [
+export const getPackageGridColumns = (onTogglePackage: (packageId: number) => void): GridColDef[] => [
   {
     field: 'packageId',
     headerName: 'Package ID',
@@ -128,9 +126,9 @@ export const getPackageGridColumns = (
 
       return (
         <Box sx={{ display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100%' }}>
+alignItems: 'center',
+justifyContent: 'center',
+height: '100%' }}>
           <Chip label={packageType} color={color} size="small" />
         </Box>
       )
@@ -158,9 +156,9 @@ export const getPackageGridColumns = (
                 }
               }}
               sx={{ cursor: 'pointer',
-                color: 'success.main' }}
+color: 'success.main' }}
             >
-                Activate
+              Activate
             </Link>
           </div>
         )
@@ -168,18 +166,12 @@ export const getPackageGridColumns = (
 
       return (
         <div style={{ display: 'flex',
-          gap: '12px' }}>
-          <Link
-            href={`${APP_ROUTES.DASHBOARD.ADD_PACKAGE}?packageId=${packageId}&isView`}
-            sx={{ cursor: 'pointer' }}
-          >
-              View
+gap: '12px' }}>
+          <Link href={`${APP_ROUTES.DASHBOARD.ADD_PACKAGE}?packageId=${packageId}&isView`} sx={{ cursor: 'pointer' }}>
+            View
           </Link>
-          <Link
-            href={`${APP_ROUTES.DASHBOARD.ADD_PACKAGE}?packageId=${packageId}`}
-            sx={{ cursor: 'pointer' }}
-          >
-              Edit
+          <Link href={`${APP_ROUTES.DASHBOARD.ADD_PACKAGE}?packageId=${packageId}`} sx={{ cursor: 'pointer' }}>
+            Edit
           </Link>
           <Link
             href="#"
@@ -190,9 +182,9 @@ export const getPackageGridColumns = (
               }
             }}
             sx={{ cursor: 'pointer',
-              color: 'error.main' }}
+color: 'error.main' }}
           >
-              Deactivate
+            Deactivate
           </Link>
         </div>
       )

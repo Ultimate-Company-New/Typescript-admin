@@ -1,7 +1,124 @@
 import { Chip, Link, Tooltip } from '@mui/material'
 import { type GridColDef, type GridRenderCellParams } from '@mui/x-data-grid'
 
+import { PERMISSIONS } from '../../constants/appConstants'
 import { APP_ROUTES } from '../../constants/routes'
+import { usePermissions } from '../../hooks/usePermissions'
+
+/**
+ * User Group Actions Component - handles permission-based action visibility
+ */
+const UserGroupActionsCell = ({
+  groupId,
+  isDeleted,
+  onToggleGroup,
+}: {
+  groupId: number
+  isDeleted: boolean
+  onToggleGroup?: (groupId: number) => void
+}): JSX.Element => {
+  const { hasPermission } = usePermissions()
+
+  // Check permissions using PERMISSIONS constants
+  const canViewGroup = hasPermission(PERMISSIONS.VIEW_GROUPS)
+  const canUpdateGroup = hasPermission(PERMISSIONS.UPDATE_GROUPS)
+  const canDeleteGroup = hasPermission(PERMISSIONS.DELETE_GROUPS)
+
+  if (isDeleted) {
+    // Only show Activate if user has delete permission
+    if (!canDeleteGroup) {
+      return <span>—</span>
+    }
+
+    return (
+      <div>
+        <Link
+          href="#"
+          onClick={e => {
+            e.preventDefault()
+            if (onToggleGroup) {
+              onToggleGroup(groupId)
+            }
+          }}
+          sx={{
+            cursor: 'pointer',
+            color: 'success.main',
+          }}
+        >
+          Activate
+        </Link>
+      </div>
+    )
+  }
+
+  // Build actions based on permissions
+  const actions: JSX.Element[] = []
+
+  if (canViewGroup) {
+    actions.push(
+      <Link
+        key="view"
+        href={`${APP_ROUTES.DASHBOARD.ADD_GROUPS}?userGroupId=${groupId}&isView=true`}
+        sx={{
+          cursor: 'pointer',
+        }}
+      >
+        View
+      </Link>,
+    )
+  }
+
+  if (canUpdateGroup) {
+    actions.push(
+      <Link
+        key="edit"
+        href={`${APP_ROUTES.DASHBOARD.ADD_GROUPS}?userGroupId=${groupId}`}
+        sx={{
+          cursor: 'pointer',
+        }}
+      >
+        Edit
+      </Link>,
+    )
+  }
+
+  if (canDeleteGroup) {
+    actions.push(
+      <Link
+        key="deactivate"
+        href="#"
+        onClick={e => {
+          e.preventDefault()
+          if (onToggleGroup) {
+            onToggleGroup(groupId)
+          }
+        }}
+        sx={{
+          cursor: 'pointer',
+          color: 'error.main',
+        }}
+      >
+        Deactivate
+      </Link>,
+    )
+  }
+
+  // If no permissions, show empty cell
+  if (actions.length === 0) {
+    return <span>—</span>
+  }
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        gap: '12px',
+      }}
+    >
+      {actions}
+    </div>
+  )
+}
 
 /**
  * User Group data structure matching API response
@@ -29,13 +146,17 @@ export interface UserGroupData {
  * Get user group grid columns with action handlers
  */
 export const getUserGroupGridColumns = (onToggleGroup: (userGroupId: number) => void): GridColDef[] => [
+  // Hidden ID column - for internal use only
   {
     field: 'id',
     headerName: 'ID',
-    width: 70,
+    width: 0,
+    minWidth: 0,
     align: 'center',
     headerAlign: 'center',
     type: 'number',
+    hideable: false,
+    filterable: false,
     valueGetter: (_value, row) => {
       const data = row as UserGroupData
       return data.groupId ?? data.userGroupId
@@ -96,64 +217,12 @@ export const getUserGroupGridColumns = (onToggleGroup: (userGroupId: number) => 
       // Handle both groupId and userGroupId
       const id = rowData.groupId ?? rowData.userGroupId ?? 0
 
-      if (isDeleted) {
-        return (
-          <div>
-            <Link
-              href="#"
-              onClick={e => {
-                e.preventDefault()
-                onToggleGroup(id)
-              }}
-              sx={{
-                cursor: 'pointer',
-                color: 'success.main',
-              }}
-            >
-              Activate
-            </Link>
-          </div>
-        )
-      }
-
-      return (
-        <div
-          style={{
-            display: 'flex',
-            gap: '12px',
-          }}
-        >
-          <Link
-            href={`${APP_ROUTES.DASHBOARD.ADD_GROUPS}?userGroupId=${id}&isView`}
-            sx={{
-              cursor: 'pointer',
-            }}
-          >
-            View
-          </Link>
-          <Link
-            href={`${APP_ROUTES.DASHBOARD.ADD_GROUPS}?userGroupId=${id}`}
-            sx={{
-              cursor: 'pointer',
-            }}
-          >
-            Edit
-          </Link>
-          <Link
-            href="#"
-            onClick={e => {
-              e.preventDefault()
-              onToggleGroup(id)
-            }}
-            sx={{
-              cursor: 'pointer',
-              color: 'error.main',
-            }}
-          >
-            Deactivate
-          </Link>
-        </div>
-      )
+      return <UserGroupActionsCell groupId={id} isDeleted={isDeleted} onToggleGroup={onToggleGroup} />
     },
   },
 ]
+
+/**
+ * Export the UserGroupActionsCell for potential reuse
+ */
+export { UserGroupActionsCell }

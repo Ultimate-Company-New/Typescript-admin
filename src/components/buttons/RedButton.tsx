@@ -16,7 +16,17 @@ export interface RedButtonProps extends Omit<ButtonProps, 'color' | 'variant'> {
  */
 const RedButton = forwardRef<HTMLButtonElement, RedButtonProps>(
   (
-    { label, href, color = 'error', variant = 'contained', size = 'large', fullWidth = false, onClick, children, ...props },
+    {
+      label,
+      href,
+      color = 'error',
+      variant = 'contained',
+      size = 'large',
+      fullWidth = false,
+      onClick,
+      children,
+      ...props
+    },
     ref,
   ) => (
     <Button

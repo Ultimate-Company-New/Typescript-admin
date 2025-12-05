@@ -119,14 +119,16 @@ export const getMessageGridColumns = (onToggleMessage?: (messageId: number) => v
 
       return (
         <Tooltip title={plainText}>
-          <Box sx={{
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            display: 'flex',
-            alignItems: 'center',
-            height: '100%',
-          }}>
+          <Box
+            sx={{
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              display: 'flex',
+              alignItems: 'center',
+              height: '100%',
+            }}
+          >
             {preview || '—'}
           </Box>
         </Tooltip>
@@ -149,11 +151,13 @@ export const getMessageGridColumns = (onToggleMessage?: (messageId: number) => v
       }
     },
     renderCell: (params: GridRenderCellParams) => (
-      <Box sx={{
-        display: 'flex',
-        alignItems: 'center',
-        height: '100%',
-      }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          height: '100%',
+        }}
+      >
         {params.formattedValue || '—'}
       </Box>
     ),
@@ -172,13 +176,7 @@ export const getMessageGridColumns = (onToggleMessage?: (messageId: number) => v
       const value = params.value ? 'Yes' : 'No'
       const color = params.value ? 'success' : 'default'
 
-      return (
-        <Chip
-          label={value}
-          color={color}
-          size="small"
-        />
-      )
+      return <Chip label={value} color={color} size="small" />
     },
   },
 
@@ -195,12 +193,14 @@ export const getMessageGridColumns = (onToggleMessage?: (messageId: number) => v
       // Calculate from userIds array length
       row.userIds?.length ?? 0,
     renderCell: (params: GridRenderCellParams) => (
-      <Box sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100%',
-      }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100%',
+        }}
+      >
         {params.value || 0}
       </Box>
     ),
@@ -219,12 +219,14 @@ export const getMessageGridColumns = (onToggleMessage?: (messageId: number) => v
       // Calculate from userGroupIds array length
       row.userGroupIds?.length ?? 0,
     renderCell: (params: GridRenderCellParams) => (
-      <Box sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100%',
-      }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100%',
+        }}
+      >
         {params.value || 0}
       </Box>
     ),
@@ -249,11 +251,13 @@ export const getMessageGridColumns = (onToggleMessage?: (messageId: number) => v
       const user = rowData.createdByUser
       if (!user) {
         return (
-          <Box sx={{
-            display: 'flex',
-            alignItems: 'center',
-            height: '100%',
-          }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              height: '100%',
+            }}
+          >
             —
           </Box>
         )
@@ -267,32 +271,38 @@ export const getMessageGridColumns = (onToggleMessage?: (messageId: number) => v
         <Tooltip
           title={
             <Box sx={{ whiteSpace: 'pre-line' }}>
-              <div><strong>Name:</strong> {name || 'N/A'}</div>
-              <div><strong>Email:</strong> {email || 'N/A'}</div>
+              <div>
+                <strong>Name:</strong> {name || 'N/A'}
+              </div>
+              <div>
+                <strong>Email:</strong> {email || 'N/A'}
+              </div>
             </Box>
           }
           arrow
         >
-          <Box sx={{
-            display: 'flex',
-            alignItems: 'center',
-            height: '100%',
-            width: '100%',
-            overflow: 'hidden',
-          }}>
-            <Box sx={{
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              height: '100%',
               width: '100%',
-            }}>
+              overflow: 'hidden',
+            }}
+          >
+            <Box
+              sx={{
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                width: '100%',
+              }}
+            >
               <span style={{ fontWeight: 500 }}>{displayText}</span>
               {name && email && (
                 <span style={{ fontSize: '0.85rem',
-                  color: '#666',
-                  marginLeft: '4px' }}>
-                  ({email})
-                </span>
+color: '#666',
+marginLeft: '4px' }}>({email})</span>
               )}
             </Box>
           </Box>
@@ -315,17 +325,21 @@ export const getMessageGridColumns = (onToggleMessage?: (messageId: number) => v
         const month = date.toLocaleString('default', { month: 'long' })
         const year = date.getFullYear()
         const time = date.toLocaleString('default', { hour: 'numeric',
-          minute: '2-digit',
-          hour12: true })
+minute: '2-digit',
+hour12: true })
 
         // Add ordinal suffix
         const suffix = (day: number): string => {
           if (day > 3 && day < 21) return 'th'
           switch (day % 10) {
-            case 1: return 'st'
-            case 2: return 'nd'
-            case 3: return 'rd'
-            default: return 'th'
+            case 1:
+              return 'st'
+            case 2:
+              return 'nd'
+            case 3:
+              return 'rd'
+            default:
+              return 'th'
           }
         }
 
@@ -335,11 +349,13 @@ export const getMessageGridColumns = (onToggleMessage?: (messageId: number) => v
       }
     },
     renderCell: (params: GridRenderCellParams<MessageData>) => (
-      <Box sx={{
-        display: 'flex',
-        alignItems: 'center',
-        height: '100%',
-      }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          height: '100%',
+        }}
+      >
         {params.formattedValue || '—'}
       </Box>
     ),
@@ -369,7 +385,7 @@ export const getMessageGridColumns = (onToggleMessage?: (messageId: number) => v
                 }
               }}
               sx={{ cursor: 'pointer',
-                color: 'success.main' }}
+color: 'success.main' }}
             >
               Activate
             </Link>
@@ -379,7 +395,7 @@ export const getMessageGridColumns = (onToggleMessage?: (messageId: number) => v
 
       return (
         <div style={{ display: 'flex',
-          gap: '12px' }}>
+gap: '12px' }}>
           <Link
             href={`${APP_ROUTES.DASHBOARD.ADD_MESSAGE}?messageId=${rowData.messageId}&isView`}
             sx={{ cursor: 'pointer' }}
@@ -403,7 +419,7 @@ export const getMessageGridColumns = (onToggleMessage?: (messageId: number) => v
               }
             }}
             sx={{ cursor: 'pointer',
-              color: 'error.main' }}
+color: 'error.main' }}
           >
             Delete
           </Link>

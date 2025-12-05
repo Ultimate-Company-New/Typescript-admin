@@ -26,7 +26,7 @@ import {
   handleSortModelChange,
   type FilterGroup,
   type GridDensityType,
-} from '../../components/datagrid/index.ts'
+} from '../../components/datagrid'
 import { getPromoGridColumns } from '../../models/grid-models/PromoGridColumns'
 import { type PaginatedGridInterface } from '../../types/grid.types'
 
@@ -89,22 +89,17 @@ const Promos = (): React.JSX.Element => {
   const columns = useMemo(
     () =>
       getPromoGridColumns(async (promoId: number) => {
-        await createToggleFunction(
-          promoApi.togglePromo,
-          promoId,
-          async () => {
-            await createFetchFunction(
-              promoApi.getPromosInBatches,
-              setLoading,
-              setRows,
-              setTotalCount,
-              paginationModel,
-              includeDeleted,
-              activeFilterGroup,
-
-            )
-          },
-        )
+        await createToggleFunction(promoApi.togglePromo, promoId, async () => {
+          await createFetchFunction(
+            promoApi.getPromosInBatches,
+            setLoading,
+            setRows,
+            setTotalCount,
+            paginationModel,
+            includeDeleted,
+            activeFilterGroup,
+          )
+        })
       }),
     [paginationModel, includeDeleted, activeFilterGroup],
   )
@@ -127,7 +122,6 @@ const Promos = (): React.JSX.Element => {
       paginationModel,
       includeDeleted,
       activeFilterGroup,
-
     )
   }, [paginationModel, includeDeleted, activeFilterGroup])
 

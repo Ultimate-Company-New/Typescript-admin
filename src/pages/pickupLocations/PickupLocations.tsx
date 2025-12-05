@@ -26,7 +26,7 @@ import {
   handleSortModelChange,
   type FilterGroup,
   type GridDensityType,
-} from '../../components/datagrid/index.ts'
+} from '../../components/datagrid'
 import { getPickupLocationGridColumns } from '../../models/grid-models/PickupLocationGridColumns'
 import { type PaginatedGridInterface } from '../../types/grid.types'
 
@@ -85,22 +85,17 @@ const PickupLocations = (): React.JSX.Element => {
   const columns = useMemo(
     () =>
       getPickupLocationGridColumns(async (pickupLocationId: number) => {
-        await createToggleFunction(
-          pickupLocationApi.togglePickupLocation,
-          pickupLocationId,
-          async () => {
-            await createFetchFunction(
-              pickupLocationApi.getPickupLocationsInBatches,
-              setLoading,
-              setRows,
-              setTotalCount,
-              paginationModel,
-              includeDeleted,
-              activeFilterGroup,
-
-            )
-          },
-        )
+        await createToggleFunction(pickupLocationApi.togglePickupLocation, pickupLocationId, async () => {
+          await createFetchFunction(
+            pickupLocationApi.getPickupLocationsInBatches,
+            setLoading,
+            setRows,
+            setTotalCount,
+            paginationModel,
+            includeDeleted,
+            activeFilterGroup,
+          )
+        })
       }),
     [paginationModel, includeDeleted, activeFilterGroup],
   )
@@ -123,7 +118,6 @@ const PickupLocations = (): React.JSX.Element => {
       paginationModel,
       includeDeleted,
       activeFilterGroup,
-
     )
   }, [paginationModel, includeDeleted, activeFilterGroup])
 

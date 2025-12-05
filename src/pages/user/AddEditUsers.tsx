@@ -33,7 +33,7 @@ import {
   handleSortModelChange,
   type FilterGroup,
   type GridDensityType,
-} from '../../components/datagrid/index.ts'
+} from '../../components/datagrid'
 import { Subheader } from '../../components/fonts'
 import { AddressDetailsView } from '../../components/form'
 import { FieldType } from '../../components/form/FormFieldRenderer'

@@ -198,7 +198,7 @@ export const UserActionsCell = ({
       <Link
         key="view"
         data-test-id="user-action-view"
-        href={`${APP_ROUTES.DASHBOARD.ADD_USERS}?userId=${userId}&isView`}
+        href={`${APP_ROUTES.DASHBOARD.ADD_USERS}?userId=${userId}&isView=true`}
         className={styles['user-grid__action-link']}
       >
         View

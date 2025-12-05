@@ -8,8 +8,18 @@ const API_BASE_URL = '/UserGroup'
  * User Group Request Model
  */
 export interface UserGroupRequestModel {
-  userGroupId?: number
-  name: string
+  groupId?: number
+  groupName: string
+  description: string
+  notes?: string
+  userIds: number[]
+}
+
+/**
+ * User Group Bulk Create Item
+ */
+export interface UserGroupBulkCreateItem {
+  groupName: string
   description: string
   notes?: string
   userIds: number[]
@@ -19,13 +29,15 @@ export interface UserGroupRequestModel {
  * User Group Response Model
  */
 export interface UserGroupResponseModel {
-  userGroupId: number
-  name: string
+  groupId: number
+  clientId: number
+  groupName: string
   description: string
   notes?: string
-  userCount: number
   userIds: number[]
   isDeleted: boolean
+  createdUser: string
+  modifiedUser: string
   createdAt: string
   updatedAt: string
 }
@@ -49,7 +61,7 @@ export interface UserGroupPaginationRequest {
 export interface BulkUserGroupImportRequest {
   maxRecords: number
   userGroups: Array<{
-    name: string
+    groupName: string
     description: string
     notes?: string
     userIds: number[]
@@ -120,6 +132,15 @@ export const userGroupApi = {
     const response = await axiosInstance.get<unknown[]>(`/User/all`)
     return response.data
   },
+}
+
+/**
+ * Bulk create user groups
+ * @param userGroups Array of user group data to create
+ * @returns Promise<void> - resolves when job is queued
+ */
+export const bulkCreateUserGroups = async (userGroups: UserGroupBulkCreateItem[]): Promise<void> => {
+  await axiosInstance.put(`${API_BASE_URL}/bulkCreateUserGroup`, userGroups)
 }
 
 export default userGroupApi

@@ -8,15 +8,7 @@ import { toast } from 'react-toastify'
 
 import { Container, Box, Stack, Divider } from '@mui/material'
 
-import {
-  Header,
-  Subheader,
-  BodyText,
-  TextFieldInput,
-  PasswordInput,
-  BlueButton,
-  LinkButton,
-} from '../components'
+import { Header, Subheader, BodyText, TextFieldInput, PasswordInput, BlueButton, LinkButton } from '../components'
 import { APP_ROUTES } from '../constants/routes'
 import { registrationSchema, type RegistrationFormData } from '../utils/validationSchemas'
 

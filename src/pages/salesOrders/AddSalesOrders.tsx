@@ -5,10 +5,10 @@ import { Box, Typography } from '@mui/material'
 const AddSalesOrders = (): React.JSX.Element => (
   <Box sx={{ p: 3 }}>
     <Typography variant="h4" gutterBottom>
-        Add/Edit Sales Order
+      Add/Edit Sales Order
     </Typography>
     <Typography variant="body1" color="text.secondary">
-        Sales order form will be implemented here.
+      Sales order form will be implemented here.
     </Typography>
   </Box>
 )

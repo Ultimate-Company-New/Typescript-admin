@@ -26,7 +26,7 @@ import {
   handleSortModelChange,
   type FilterGroup,
   type GridDensityType,
-} from '../../components/datagrid/index.ts'
+} from '../../components/datagrid'
 import { getLeadGridColumns, type LeadData } from '../../models/grid-models/LeadGridColumns'
 import { type PaginatedGridInterface } from '../../types/grid.types'
 

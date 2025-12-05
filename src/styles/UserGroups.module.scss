@@ -11,7 +11,7 @@
   min-width: 0; // Allow shrinking
   padding: 0;
   box-sizing: border-box;
-  
+
   &__container {
     padding-top: 32px;
     padding-bottom: 32px;
@@ -27,7 +27,7 @@
     border-radius: 4px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     overflow: hidden; // Ensure content doesn't overflow rounded corners
-    
+
     // Ensure DataGrid is responsive
     .MuiDataGrid-root {
       width: 100%;
@@ -103,6 +103,41 @@
 
   &__action-button {
     text-transform: none;
+  }
+
+  &__divider-spacer {
+    margin-bottom: 24px;
+  }
+
+  &__data-grid {
+    border: none;
+  }
+
+  &__selection-info-text {
+    font-weight: 500;
+  }
+}
+
+// ============================================================================
+// User Group Details View Styles (Read-only view)
+// ============================================================================
+
+.user-group-details-view {
+  &__field {
+    margin-bottom: 24px;
+  }
+
+  &__label {
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.6);
+    margin-bottom: 8px;
+    font-size: 0.875rem;
+  }
+
+  &__value {
+    font-size: 1rem;
+    color: rgba(0, 0, 0, 0.87);
+    line-height: 1.5;
   }
 }
 
@@ -234,6 +269,37 @@
 }
 
 // ============================================================================
+// Fill Test Data Button Styles
+// ============================================================================
+
+.fill-test-data-button {
+  &__fab {
+    position: fixed !important;
+    bottom: 24px;
+    right: 96px; // Position to the left of DevLogger FAB (56px width + 16px gap + 24px from right)
+    z-index: 1200;
+    background-color: #1976d2 !important; // Primary blue color matching theme
+    color: #fff !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    transition: all 0.3s ease-in-out !important;
+
+    &:hover {
+      background-color: #1565c0 !important; // Darker blue on hover
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    &.Mui-disabled {
+      background-color: rgba(0, 0, 0, 0.12) !important;
+      color: rgba(0, 0, 0, 0.26) !important;
+    }
+  }
+}
+
+// ============================================================================
 // Dark Mode Support
 // ============================================================================
 
@@ -268,4 +334,3 @@
     }
   }
 }
-

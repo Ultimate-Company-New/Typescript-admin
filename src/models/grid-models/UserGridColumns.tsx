@@ -1,9 +1,9 @@
 import { Box, Chip, Tooltip } from '@mui/material'
 import { type GridColDef, type GridRenderCellParams } from '@mui/x-data-grid'
 
-import { AddressCell, formatDate, formatPhone, formatUTCTimestamp } from '../../components/datagrid/index.ts'
+import { AddressCell, formatDate, formatPhone, formatUTCTimestamp } from '../../components/datagrid'
 import { USER_ROLES } from '../../constants/appConstants'
-import { PermissionsButton, UserActionsCell, UserAvatar, UserGroupsButton } from '../../pages/users/components'
+import { PermissionsButton, UserActionsCell, UserAvatar, UserGroupsButton } from '../../pages/user/components'
 import styles from '../../styles/Users.module.scss'
 import { type UserResponseModel } from '../api-models'
 
@@ -144,7 +144,7 @@ export const getUserGridColumns = (onToggleUser?: (userId: number) => void): Gri
     minWidth: 250,
     flex: 2,
     renderCell: (params: GridRenderCellParams) => {
-      const email = params.value as string
+      const email = (params.value as string) || '—'
       return (
         <Tooltip title={email}>
           <span>{email}</span>

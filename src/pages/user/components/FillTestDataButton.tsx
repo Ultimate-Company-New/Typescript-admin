@@ -50,7 +50,7 @@ const FillTestDataButton = ({
         firstName: testUser.firstName ?? '',
         lastName: testUser.lastName ?? '',
         // Preserve loginName in edit mode, use generated one in add mode
-        loginName: isEdit ? currentLoginName : testUser.loginName ?? '',
+        loginName: isEdit ? currentLoginName : (testUser.loginName ?? ''),
         phone: testUser.phone ?? '',
         role: testUser.role ?? '',
         dob: new Date(testUser.dob ?? '1990-01-15'),

@@ -25,7 +25,7 @@ import {
 } from '@mui/material'
 import type { GridColDef, GridColumnVisibilityModel, GridSlotsComponent, GridToolbarProps } from '@mui/x-data-grid'
 
-import { bulkCreateUsers, getAllPermissions, type BulkUserInsertResponseModel } from '../../api/userApi'
+import { bulkCreateUsers, getAllPermissions } from '../../api/userApi'
 import { userGroupApi } from '../../api/userGroupApi'
 import { ImportInstructions } from '../../components'
 import { BlueButton, LinkButton, RedButton } from '../../components/buttons'
@@ -39,7 +39,7 @@ import {
   type ColumnGroup,
   type FilterGroup,
   type GridDensityType,
-} from '../../components/datagrid/index.ts'
+} from '../../components/datagrid'
 import { BodyText, Subheader } from '../../components/fonts'
 import { FileDropZone, SelectInput } from '../../components/form-input'
 import { APP_ROUTES } from '../../constants/routes'
@@ -523,23 +523,16 @@ const ImportUsers = (): React.JSX.Element => {
         }),
       )
 
-      // Call bulk create API
-      const response: BulkUserInsertResponseModel = await bulkCreateUsers(usersPayload)
+      // Call bulk create API - triggers async processing
+      await bulkCreateUsers(usersPayload)
 
-      // Show results and navigate on success
-      if (response.failureCount === 0) {
-        toast.success(`Successfully imported ${response.successCount} users!`)
-        // Navigate to users page on full success
-        navigate(APP_ROUTES.DASHBOARD.USERS)
-      } else if (response.successCount === 0) {
-        toast.error(`Failed to import all ${response.failureCount} users. Check the results.`)
-      } else {
-        toast.warning(
-          `Partial success: ${response.successCount} imported, ${response.failureCount} failed. Check your messages for details.`,
-        )
-        // Navigate to users page even on partial success
-        navigate(APP_ROUTES.DASHBOARD.USERS)
-      }
+      // Show success message - results will be sent via notification
+      toast.success(
+        `Bulk import started for ${importData.length} users! You will receive a message with the results when processing completes.`,
+      )
+
+      // Navigate to users page immediately
+      navigate(APP_ROUTES.DASHBOARD.USERS)
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to import users'
       toast.error(errorMessage)

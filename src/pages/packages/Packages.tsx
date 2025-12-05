@@ -26,7 +26,7 @@ import {
   handleSortModelChange,
   type FilterGroup,
   type GridDensityType,
-} from '../../components/datagrid/index.ts'
+} from '../../components/datagrid'
 import { getPackageGridColumns } from '../../models/grid-models/PackageGridColumns'
 import { type PaginatedGridInterface } from '../../types/grid.types'
 
@@ -85,22 +85,17 @@ const Packages = (): React.JSX.Element => {
   const columns = useMemo(
     () =>
       getPackageGridColumns(async (packageId: number) => {
-        await createToggleFunction(
-          packageApi.togglePackage,
-          packageId,
-          async () => {
-            await createFetchFunction(
-              packageApi.getPackagesInBatches,
-              setLoading,
-              setRows,
-              setTotalCount,
-              paginationModel,
-              includeDeleted,
-              activeFilterGroup,
-
-            )
-          },
-        )
+        await createToggleFunction(packageApi.togglePackage, packageId, async () => {
+          await createFetchFunction(
+            packageApi.getPackagesInBatches,
+            setLoading,
+            setRows,
+            setTotalCount,
+            paginationModel,
+            includeDeleted,
+            activeFilterGroup,
+          )
+        })
       }),
     [paginationModel, includeDeleted, activeFilterGroup],
   )
@@ -123,7 +118,6 @@ const Packages = (): React.JSX.Element => {
       paginationModel,
       includeDeleted,
       activeFilterGroup,
-
     )
   }, [paginationModel, includeDeleted, activeFilterGroup])
 

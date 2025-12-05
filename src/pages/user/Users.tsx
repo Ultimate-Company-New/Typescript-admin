@@ -1,7 +1,5 @@
 import type React from 'react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
-
-import { toast } from 'react-toastify'
+import { useEffect, useMemo, useState } from 'react'
 
 import { Box } from '@mui/material'
 import {
@@ -13,29 +11,32 @@ import {
   type GridToolbarProps,
 } from '@mui/x-data-grid'
 
-import { userGroupApi } from '../../api/userGroupApi'
+import { userApi } from '../../api/userApi'
 import {
-  CustomNoRowsOverlay,
-  GridDensity,
-  LogicOperator,
-  SimpleToolbar,
-  StyledDataGrid,
+  createFetchFunction,
   createToggleFunction,
+  CustomNoRowsOverlay,
   getRowClassName,
+  GridDensity,
   handleFilterModelChange,
   handleIncludeDeletedChange,
   handlePaginationModelChange,
   handleSortModelChange,
+  LogicOperator,
+  SimpleToolbar,
+  StyledDataGrid,
+  type FilterCondition,
   type FilterGroup,
   type GridDensityType,
-} from '../../components/datagrid/index.ts'
-import { getUserGroupGridColumns, type UserGroupData } from '../../models/grid-models/UserGroupGridColumns'
+  type LogicOperatorType,
+} from '../../components/datagrid'
+import { type UserResponseModel } from '../../models/api-models'
+import { getUserGridColumns } from '../../models/grid-models/UserGridColumns'
+import styles from '../../styles/Users.module.scss'
 import { type PaginatedGridInterface } from '../../types/grid.types'
 
-import styles from './UserGroups.module.scss'
-
 /**
- * User Groups Management Page with DataGrid
+ * Users Management Page with DataGrid
  * Features:
  * - Server-side pagination
  * - Custom multi-column filtering
@@ -44,8 +45,8 @@ import styles from './UserGroups.module.scss'
  * - Responsive design
  */
 
-const UserGroups = (): React.JSX.Element => {
-  const [rows, setRows] = useState<UserGroupData[]>([])
+const Users = (): React.JSX.Element => {
+  const [rows, setRows] = useState<UserResponseModel[]>([])
   const [loading, setLoading] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
   const [includeDeleted, setIncludeDeleted] = useState(false)
@@ -56,9 +57,7 @@ const UserGroups = (): React.JSX.Element => {
   })
   const [columnVisibilityModel, setColumnVisibilityModel] = useState<GridColumnVisibilityModel>({
     isDeleted: false,
-    createdAt: false,
-    updatedAt: false,
-    notes: false,
+    userId: false,
   })
   const [visibleColumnFields, setVisibleColumnFields] = useState<string[]>([])
 
@@ -72,60 +71,87 @@ const UserGroups = (): React.JSX.Element => {
     totalPaginationBlockCount: 0,
   })
 
-  // Fetch function with data mapping
-  const fetchUserGroups = useCallback(async () => {
-    setLoading(true)
-    try {
-      const response = await userGroupApi.getUserGroups({
-        start: paginationModel.start,
-        end: paginationModel.end,
-        pageSize: paginationModel.pageSize,
-        includeDeleted,
-        logicOperator: activeFilterGroup.logicOperator,
-        filters: activeFilterGroup.filters,
-      })
-
-      // API response already matches grid structure
-      setRows(response.data as UserGroupData[])
-      setTotalCount(response.totalDataCount)
-    } catch {
-      toast.error('Failed to fetch user groups')
-      setRows([])
-      setTotalCount(0)
-    } finally {
-      setLoading(false)
-    }
-  }, [paginationModel, includeDeleted, activeFilterGroup])
-
   // Get grid columns with action handlers
   const columns = useMemo(
     () =>
-      getUserGroupGridColumns(async (userGroupId: number) => {
-        await createToggleFunction(userGroupApi.toggleUserGroup, userGroupId, fetchUserGroups)
+      getUserGridColumns(async (userId: number) => {
+        await createToggleFunction(userApi.toggleUser, userId, async () => {
+          await createFetchFunction(
+            async (params: {
+              start: number
+              end: number
+              includeDeleted: boolean
+              logicOperator: LogicOperatorType
+              filters: FilterCondition[]
+            }) => {
+              const result = await userApi.fetchUsersInCarrierInBatches({
+                ...params,
+                filters: params.filters as never,
+              })
+              return {
+                data: result.data,
+                totalDataCount: result.totalDataCount,
+              }
+            },
+            setLoading,
+            setRows,
+            setTotalCount,
+            paginationModel,
+            includeDeleted,
+            activeFilterGroup,
+          )
+        })
       }),
-    [fetchUserGroups],
+    [paginationModel, includeDeleted, activeFilterGroup],
   )
 
   useEffect(() => {
     setVisibleColumnFields(
       columns
-        .filter(col => columnVisibilityModel[col.field] && !['isDeleted', 'createdAt', 'updatedAt', 'notes'].includes(col.field))
+        .filter(col => {
+          const isExcluded = ['isDeleted', 'userId'].includes(col.field)
+          const isVisible = columnVisibilityModel[col.field]
+          return !isExcluded && isVisible
+        })
         .map(col => col.field),
     )
   }, [columnVisibilityModel, columns])
 
-  // Fetch user groups on mount and when pagination model changes
+  // Fetch users on mount and when pagination model changes
   useEffect(() => {
-    void fetchUserGroups()
-  }, [fetchUserGroups])
+    void createFetchFunction(
+      async (params: {
+        start: number
+        end: number
+        includeDeleted: boolean
+        logicOperator: LogicOperatorType
+        filters: FilterCondition[]
+      }) => {
+        const result = await userApi.fetchUsersInCarrierInBatches({
+          ...params,
+          filters: params.filters as never,
+        })
+        return {
+          data: result.data,
+          totalDataCount: result.totalDataCount,
+        }
+      },
+      setLoading,
+      setRows,
+      setTotalCount,
+      paginationModel,
+      includeDeleted,
+      activeFilterGroup,
+    )
+  }, [paginationModel, includeDeleted, activeFilterGroup])
 
   return (
-    <Box className={styles['user-groups-page']}>
-      <Box className={styles['user-groups-page__container']}>
-        <Box className={styles['user-groups-page__card']} data-test-id="user-groups-grid-card">
+    <Box className={styles['users-page']}>
+      <Box className={styles['users-page__container']}>
+        <Box className={styles['users-page__card']} data-test-id="users-grid-card">
           {/* DataGrid with custom toolbar and integrated pagination */}
           <StyledDataGrid
-            dataTestId="user-groups-data-grid"
+            dataTestId="users-data-grid"
             rows={rows}
             columns={columns}
             loading={loading}
@@ -133,6 +159,7 @@ const UserGroups = (): React.JSX.Element => {
             totalCount={totalCount}
             paginationModelState={paginationModel}
             setPaginationModel={setPaginationModel}
+            paginationTestId="users-pagination"
             density={density}
             columnVisibilityModel={columnVisibilityModel}
             onColumnVisibilityModelChange={model => {
@@ -151,11 +178,8 @@ const UserGroups = (): React.JSX.Element => {
             onSortModelChange={(model: GridSortModel) => {
               handleSortModelChange(model, setPaginationModel)
             }}
-            getRowId={row => {
-              const data = row as UserGroupData
-              return data.groupId ?? data.userGroupId ?? 0
-            }}
-            getRowClassName={params => getRowClassName<UserGroupData>(params)}
+            getRowId={row => (row as UserResponseModel).userId}
+            getRowClassName={params => getRowClassName<UserResponseModel>(params)}
             slots={{
               toolbar: SimpleToolbar as GridSlotsComponent['toolbar'],
               noRowsOverlay: CustomNoRowsOverlay,
@@ -187,4 +211,4 @@ const UserGroups = (): React.JSX.Element => {
   )
 }
 
-export default UserGroups
+export default Users

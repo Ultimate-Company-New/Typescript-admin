@@ -14,7 +14,17 @@ export interface LinkButtonProps extends Omit<ButtonProps, 'variant'> {
  */
 const LinkButton = forwardRef<HTMLButtonElement, LinkButtonProps>(
   (
-    { label, href, variant = 'outlined', color = 'primary', size = 'large', fullWidth = false, onClick, children, ...props },
+    {
+      label,
+      href,
+      variant = 'outlined',
+      color = 'primary',
+      size = 'large',
+      fullWidth = false,
+      onClick,
+      children,
+      ...props
+    },
     ref,
   ) => (
     <Button

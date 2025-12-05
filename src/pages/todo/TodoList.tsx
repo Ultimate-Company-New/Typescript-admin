@@ -105,17 +105,8 @@ const TodoList: React.FC = () => {
           My Tasks
         </Typography>
         <Box className={styles['todo-page__stats']}>
-          <Chip
-            label={`${pendingTodos.length} Pending`}
-            color="warning"
-            size="small"
-            sx={{ mr: 1 }}
-          />
-          <Chip
-            label={`${completedTodos.length} Completed`}
-            color="success"
-            size="small"
-          />
+          <Chip label={`${pendingTodos.length} Pending`} color="warning" size="small" sx={{ mr: 1 }} />
+          <Chip label={`${completedTodos.length} Completed`} color="success" size="small" />
         </Box>
       </Box>
 
@@ -148,7 +139,7 @@ const TodoList: React.FC = () => {
             disabled={!newTask.trim()}
             startIcon={<AddIcon />}
             sx={{ minWidth: '140px',
-              height: '56px' }}
+height: '56px' }}
           >
             Add Task
           </Button>
@@ -257,8 +248,8 @@ const TodoList: React.FC = () => {
       {todos.length === 0 && !loading && (
         <Paper className={styles['todo-page__empty']}>
           <CheckCircleIcon sx={{ fontSize: 80,
-            color: 'text.disabled',
-            mb: 2 }} />
+color: 'text.disabled',
+mb: 2 }} />
           <Typography variant="h6" color="text.secondary">
             No tasks yet
           </Typography>

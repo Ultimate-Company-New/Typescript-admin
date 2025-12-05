@@ -5,10 +5,10 @@ import { Box, Typography } from '@mui/material'
 const WebTemplates = (): React.JSX.Element => (
   <Box sx={{ p: 3 }}>
     <Typography variant="h4" gutterBottom>
-        Web Templates
+      Web Templates
     </Typography>
     <Typography variant="body1" color="text.secondary">
-        Web templates grid will be implemented here.
+      Web templates grid will be implemented here.
     </Typography>
   </Box>
 )

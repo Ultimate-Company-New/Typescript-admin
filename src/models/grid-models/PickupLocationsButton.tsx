@@ -48,12 +48,7 @@ const PickupLocationsButton = ({ locations, productTitle }: PickupLocationsButto
           <LocationIcon />
         </Badge>
       </IconButton>
-      <PickupLocationsModal
-        open={open}
-        onClose={handleClose}
-        locations={locations}
-        productTitle={productTitle}
-      />
+      <PickupLocationsModal open={open} onClose={handleClose} locations={locations} productTitle={productTitle} />
     </>
   )
 }

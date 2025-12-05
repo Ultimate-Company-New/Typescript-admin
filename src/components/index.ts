@@ -2,7 +2,7 @@ export { default as DevLogger } from './DevLogger'
 export type { ApiLog } from './DevLogger'
 
 export * from './buttons'
-export * from './datagrid/index.ts'
+export * from './datagrid'
 export * from './fonts'
 export * from './form'
 export * from './form-input'

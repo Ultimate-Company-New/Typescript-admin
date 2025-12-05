@@ -48,9 +48,6 @@ export interface UserLogPaginationResponse {
  * Fetch user logs in batches
  */
 export const getUserLogsInBatches = async (request: UserLogRequestModel): Promise<UserLogPaginationResponse> => {
-  const response = await axiosInstance.post<UserLogPaginationResponse>(
-    '/UserLog/getUserLogsInBatchesByUserId',
-    request,
-  )
+  const response = await axiosInstance.post<UserLogPaginationResponse>('/UserLog/getUserLogsInBatchesByUserId', request)
   return response.data
 }

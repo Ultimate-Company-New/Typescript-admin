@@ -27,7 +27,7 @@ import {
   handleSortModelChange,
   type FilterGroup,
   type GridDensityType,
-} from '../../components/datagrid/index.ts'
+} from '../../components/datagrid'
 import { type MessageResponseModel } from '../../models/api-models'
 import { getMessageGridColumns } from '../../models/grid-models/MessageGridColumns'
 import { type PaginatedGridInterface } from '../../types/grid.types'
@@ -72,22 +72,17 @@ const Messages = (): React.JSX.Element => {
   const columns = useMemo(
     () =>
       getMessageGridColumns(async (messageId: number) => {
-        await createToggleFunction(
-          messageApi.toggleMessage,
-          messageId,
-          async () => {
-            await createFetchFunction(
-              messageApi.getMessagesInBatches,
-              setLoading,
-              setRows,
-              setTotalCount,
-              paginationModel,
-              includeDeleted,
-              activeFilterGroup,
-
-            )
-          },
-        )
+        await createToggleFunction(messageApi.toggleMessage, messageId, async () => {
+          await createFetchFunction(
+            messageApi.getMessagesInBatches,
+            setLoading,
+            setRows,
+            setTotalCount,
+            paginationModel,
+            includeDeleted,
+            activeFilterGroup,
+          )
+        })
       }),
     [paginationModel, includeDeleted, activeFilterGroup],
   )
@@ -110,7 +105,6 @@ const Messages = (): React.JSX.Element => {
       paginationModel,
       includeDeleted,
       activeFilterGroup,
-
     )
   }, [paginationModel, includeDeleted, activeFilterGroup])
 

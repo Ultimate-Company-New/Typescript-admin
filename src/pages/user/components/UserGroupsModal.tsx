@@ -69,7 +69,11 @@ const UserGroupsModal = ({ open, onClose, userGroups, userName }: UserGroupsModa
                 </Box>
 
                 {group.description && (
-                  <Typography variant="body2" color="text.secondary" className={styles['user-groups-modal__group-description']}>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    className={styles['user-groups-modal__group-description']}
+                  >
                     {group.description}
                   </Typography>
                 )}

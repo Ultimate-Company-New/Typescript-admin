@@ -15,7 +15,17 @@ export interface BlueButtonProps extends Omit<ButtonProps, 'color' | 'variant'> 
  */
 const BlueButton = forwardRef<HTMLButtonElement, BlueButtonProps>(
   (
-    { label, href, color = 'primary', variant = 'contained', size = 'large', fullWidth = false, onClick, children, ...props },
+    {
+      label,
+      href,
+      color = 'primary',
+      variant = 'contained',
+      size = 'large',
+      fullWidth = false,
+      onClick,
+      children,
+      ...props
+    },
     ref,
   ) => {
     const button = (

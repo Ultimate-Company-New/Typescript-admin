@@ -14,7 +14,7 @@ const API_ROUTES = {
   GET_USERS_IN_CARRIER_IN_BATCHES: '/User/getUsersInCarrierInBatches',
   CONFIRM_EMAIL: '/User/confirmEmail',
   GET_ALL_PERMISSIONS: '/User/getAllPermissions',
-  BULK_CREATE_USER: '/User/bulkCreateUsers',
+  BULK_CREATE_USER: '/User/bulkCreateUser',
 }
 
 export interface UserApi {
@@ -28,7 +28,7 @@ export interface UserApi {
   ) => Promise<PaginationBaseResponseModel<UserResponseModel>>
   confirmEmail: (userId: number, token: string) => Promise<void>
   getAllPermissions: () => Promise<Permission[]>
-  bulkCreateUsers: (users: UserRequestModel[]) => Promise<BulkUserInsertResponseModel>
+  bulkCreateUsers: (users: UserRequestModel[]) => Promise<void>
 }
 
 /**
@@ -131,16 +131,17 @@ export const getAllPermissions = async (): Promise<Permission[]> => {
 }
 
 /**
- * Bulk creates multiple users
- * Supports partial success - some users may succeed while others fail
- * Does NOT send email confirmations (unlike createUser)
+ * Bulk creates multiple users ASYNCHRONOUSLY
+ * - Triggers background processing and returns immediately (200 OK)
+ * - Supports partial success - some users may succeed while others fail
+ * - Does NOT send email confirmations (unlike createUser)
+ * - Results are sent to the user via message notification after processing completes
  *
  * @param users Array of user data to create
- * @returns BulkUserInsertResponseModel with success/failure counts and detailed results
+ * @returns Promise<void> - resolves when job is queued
  */
-export const bulkCreateUsers = async (users: UserRequestModel[]): Promise<BulkUserInsertResponseModel> => {
-  const response = await axiosInstance.put<BulkUserInsertResponseModel>(API_ROUTES.BULK_CREATE_USER, users)
-  return response.data
+export const bulkCreateUsers = async (users: UserRequestModel[]): Promise<void> => {
+  await axiosInstance.put(API_ROUTES.BULK_CREATE_USER, users)
 }
 
 export const userApi: UserApi = {

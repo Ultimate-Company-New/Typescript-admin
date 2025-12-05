@@ -70,7 +70,12 @@
       }
     }
 
-    h1, h2, h3, h4, h5, h6 {
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
       margin-top: 24px;
       margin-bottom: 12px;
       font-weight: 600;
@@ -81,7 +86,8 @@
       }
     }
 
-    ul, ol {
+    ul,
+    ol {
       margin-bottom: 16px;
       padding-left: 24px;
     }
@@ -140,7 +146,8 @@
       border-collapse: collapse;
       margin: 16px 0;
 
-      th, td {
+      th,
+      td {
         border: 1px solid #e2e8f0;
         padding: 8px 12px;
         text-align: left;
@@ -175,4 +182,3 @@
     }
   }
 }
-

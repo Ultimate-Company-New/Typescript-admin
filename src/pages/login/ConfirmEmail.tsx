@@ -71,7 +71,9 @@ const ConfirmEmail = (): JSX.Element => {
           <Box className={styles['confirm-email__status-container']}>
             {status === 'loading' && <CircularProgress />}
             {status === 'success' && (
-              <Box className={`${styles['confirm-email__status-icon']} ${styles['confirm-email__status-icon--success']}`}>
+              <Box
+                className={`${styles['confirm-email__status-icon']} ${styles['confirm-email__status-icon--success']}`}
+              >
                 ✓
               </Box>
             )}

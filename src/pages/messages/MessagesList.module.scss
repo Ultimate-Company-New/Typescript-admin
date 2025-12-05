@@ -138,7 +138,7 @@
     display: flex;
     justify-content: flex-end;
     padding: 0 8px;
-    
+
     strong {
       color: #1976d2;
       font-weight: 600;
@@ -147,18 +147,18 @@
 
   &__load-more {
     width: 100%;
-    
+
     .MuiButton-root {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
       transition: all 0.3s ease;
-      
+
       &:hover {
         background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
         box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
         transform: translateY(-2px);
       }
-      
+
       &:disabled {
         background: #e0e0e0;
         box-shadow: none;
@@ -198,4 +198,3 @@
     }
   }
 }
-

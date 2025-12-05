@@ -6,7 +6,7 @@ import { Link, Button, Box, Tooltip } from '@mui/material'
 import { type GridColDef, type GridRenderCellParams } from '@mui/x-data-grid'
 
 import { purchaseOrderApi } from '../../api/purchaseOrderApi'
-import { RenderLongCellItem } from '../../components/datagrid/index.ts'
+import { RenderLongCellItem } from '../../components/datagrid'
 import { APP_ROUTES } from '../../constants/routes'
 
 /**
@@ -108,27 +108,19 @@ export const getPurchaseOrderGridColumns = (
       const postalCode = addr.postalCode ?? ''
       const country = addr.country ?? ''
 
-      const fullAddress = [
-        streetAddress,
-        streetAddress2,
-        streetAddress3,
-        city,
-        state,
-        postalCode,
-        country,
-      ]
+      const fullAddress = [streetAddress, streetAddress2, streetAddress3, city, state, postalCode, country]
         .filter(Boolean)
         .join('\n')
 
       return (
         <Box sx={{ display: 'flex',
-          alignItems: 'center',
-          height: '100%',
-          gap: 1 }}>
+alignItems: 'center',
+height: '100%',
+gap: 1 }}>
           <Tooltip title={<div style={{ whiteSpace: 'pre-line' }}>{fullAddress || 'No address'}</div>} arrow>
             <Box sx={{ display: 'flex',
-              alignItems: 'center',
-              gap: 0.5 }}>
+alignItems: 'center',
+gap: 0.5 }}>
               <LocationOn fontSize="small" />
               {params.value}
             </Box>
@@ -160,10 +152,8 @@ export const getPurchaseOrderGridColumns = (
     },
     renderCell: (params: GridRenderCellParams) => (
       <Box sx={{ display: 'flex',
-        alignItems: 'center',
-        height: '100%' }}>
-        {params.value}
-      </Box>
+alignItems: 'center',
+height: '100%' }}>{params.value}</Box>
     ),
   },
   {
@@ -179,11 +169,9 @@ export const getPurchaseOrderGridColumns = (
     },
     renderCell: (params: GridRenderCellParams) => (
       <Box sx={{ display: 'flex',
-        alignItems: 'center',
-        height: '100%' }}>
-        <RenderLongCellItem
-          value={String(params.value || '—')}
-        />
+alignItems: 'center',
+height: '100%' }}>
+        <RenderLongCellItem value={String(params.value || '—')} />
       </Box>
     ),
   },
@@ -206,11 +194,9 @@ export const getPurchaseOrderGridColumns = (
     },
     renderCell: (params: GridRenderCellParams) => (
       <Box sx={{ display: 'flex',
-        alignItems: 'center',
-        height: '100%' }}>
-        <RenderLongCellItem
-          value={String(params.value || '—')}
-        />
+alignItems: 'center',
+height: '100%' }}>
+        <RenderLongCellItem value={String(params.value || '—')} />
       </Box>
     ),
   },
@@ -233,23 +219,19 @@ export const getPurchaseOrderGridColumns = (
       const userId = user?.userId
 
       if (!user || !userId) {
-        return (
-          <Box sx={{ display: 'flex',
-            alignItems: 'center',
-            height: '100%' }}>
-              —
-          </Box>
-        )
+        return <Box sx={{ display: 'flex',
+alignItems: 'center',
+height: '100%' }}>—</Box>
       }
 
       return (
         <Box sx={{ display: 'flex',
-          alignItems: 'center',
-          height: '100%' }}>
+alignItems: 'center',
+height: '100%' }}>
           <Link
             href={`${APP_ROUTES.DASHBOARD.ADD_EDIT_USER}?userId=${userId}&isView`}
             sx={{ cursor: 'pointer',
-              textDecoration: 'none' }}
+textDecoration: 'none' }}
           >
             {params.value}
           </Link>
@@ -276,10 +258,8 @@ export const getPurchaseOrderGridColumns = (
     },
     renderCell: (params: GridRenderCellParams) => (
       <Box sx={{ display: 'flex',
-        alignItems: 'center',
-        height: '100%' }}>
-        {params.value}
-      </Box>
+alignItems: 'center',
+height: '100%' }}>{params.value}</Box>
     ),
   },
   {
@@ -301,23 +281,19 @@ export const getPurchaseOrderGridColumns = (
       const userId = user?.userId
 
       if (!user || !userId) {
-        return (
-          <Box sx={{ display: 'flex',
-            alignItems: 'center',
-            height: '100%' }}>
-              —
-          </Box>
-        )
+        return <Box sx={{ display: 'flex',
+alignItems: 'center',
+height: '100%' }}>—</Box>
       }
 
       return (
         <Box sx={{ display: 'flex',
-          alignItems: 'center',
-          height: '100%' }}>
+alignItems: 'center',
+height: '100%' }}>
           <Link
             href={`${APP_ROUTES.DASHBOARD.ADD_EDIT_USER}?userId=${userId}&isView`}
             sx={{ cursor: 'pointer',
-              textDecoration: 'none' }}
+textDecoration: 'none' }}
           >
             {params.value}
           </Link>
@@ -344,10 +320,8 @@ export const getPurchaseOrderGridColumns = (
     },
     renderCell: (params: GridRenderCellParams) => (
       <Box sx={{ display: 'flex',
-        alignItems: 'center',
-        height: '100%' }}>
-        {params.value}
-      </Box>
+alignItems: 'center',
+height: '100%' }}>{params.value}</Box>
     ),
   },
   {
@@ -369,23 +343,19 @@ export const getPurchaseOrderGridColumns = (
       const leadId = lead?.leadId
 
       if (!lead || !leadId) {
-        return (
-          <Box sx={{ display: 'flex',
-            alignItems: 'center',
-            height: '100%' }}>
-              —
-          </Box>
-        )
+        return <Box sx={{ display: 'flex',
+alignItems: 'center',
+height: '100%' }}>—</Box>
       }
 
       return (
         <Box sx={{ display: 'flex',
-          alignItems: 'center',
-          height: '100%' }}>
+alignItems: 'center',
+height: '100%' }}>
           <Link
             href={`${APP_ROUTES.DASHBOARD.ADD_LEAD}?leadId=${leadId}&isView`}
             sx={{ cursor: 'pointer',
-              textDecoration: 'none' }}
+textDecoration: 'none' }}
           >
             {params.value}
           </Link>
@@ -413,12 +383,16 @@ export const getPurchaseOrderGridColumns = (
       }
 
       return (
-        <Box sx={{ display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          height: '100%',
-          width: '100%',
-          px: 1 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            height: '100%',
+            width: '100%',
+            px: 1,
+          }}
+        >
           <Button
             variant="contained"
             size="small"
@@ -434,7 +408,7 @@ export const getPurchaseOrderGridColumns = (
               fontWeight: 500,
             }}
           >
-              Approve
+            Approve
           </Button>
           <Button
             variant="outlined"
@@ -451,7 +425,7 @@ export const getPurchaseOrderGridColumns = (
               fontWeight: 500,
             }}
           >
-              Reject
+            Reject
           </Button>
         </Box>
       )
@@ -500,12 +474,7 @@ export const getPurchaseOrderGridColumns = (
       }
 
       return (
-        <Button
-          variant="outlined"
-          size="small"
-          onClick={handleDownload}
-          sx={{ whiteSpace: 'nowrap' }}
-        >
+        <Button variant="outlined" size="small" onClick={handleDownload} sx={{ whiteSpace: 'nowrap' }}>
           Download PDF
         </Button>
       )
@@ -534,7 +503,7 @@ export const getPurchaseOrderGridColumns = (
                 }
               }}
               sx={{ cursor: 'pointer',
-                color: 'success.main' }}
+color: 'success.main' }}
             >
               Activate
             </Link>
@@ -544,7 +513,7 @@ export const getPurchaseOrderGridColumns = (
 
       return (
         <div style={{ display: 'flex',
-          gap: '12px' }}>
+gap: '12px' }}>
           <Link
             href={`${APP_ROUTES.DASHBOARD.ADD_PURCHASE_ORDER}?purchaseOrderId=${purchaseOrderId}&isView`}
             sx={{ cursor: 'pointer' }}
@@ -566,7 +535,7 @@ export const getPurchaseOrderGridColumns = (
               }
             }}
             sx={{ cursor: 'pointer',
-              color: 'error.main' }}
+color: 'error.main' }}
           >
             Deactivate
           </Link>

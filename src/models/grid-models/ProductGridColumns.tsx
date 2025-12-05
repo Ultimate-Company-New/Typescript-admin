@@ -4,7 +4,7 @@ import { Avatar, Box, Chip, Link, Switch } from '@mui/material'
 import { type GridColDef, type GridRenderCellParams } from '@mui/x-data-grid'
 
 import { productApi } from '../../api/productApi'
-import { RenderLongCellItem } from '../../components/datagrid/index.ts'
+import { RenderLongCellItem } from '../../components/datagrid'
 import { APP_ROUTES } from '../../constants/routes'
 
 import PickupLocationsButton from './PickupLocationsButton'

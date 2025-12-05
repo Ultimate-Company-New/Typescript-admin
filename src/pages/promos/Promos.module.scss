@@ -59,10 +59,9 @@
   // Deleted row styling
   :global(.MuiDataGrid-row.deleted) {
     background-color: rgba(0, 0, 0, 0.04) !important;
-    
+
     &:hover {
       background-color: rgba(0, 0, 0, 0.08) !important;
     }
   }
 }
-
