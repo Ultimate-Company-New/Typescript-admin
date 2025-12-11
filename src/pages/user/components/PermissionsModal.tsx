@@ -1,6 +1,7 @@
 import { Close as CloseIcon } from '@mui/icons-material'
-import { Box, Chip, Dialog, DialogContent, DialogTitle, Divider, IconButton, Paper, Typography } from '@mui/material'
+import { Box, Chip, Dialog, DialogContent, DialogTitle, Divider, IconButton, Paper } from '@mui/material'
 
+import { BodyText, Subheader } from '../../../components/fonts'
 import { type UserPermissionInfo } from '../../../models/api-models'
 import styles from '../../../styles/DataGrid.module.scss'
 
@@ -43,9 +44,7 @@ const PermissionsModal = ({ open, onClose, permissions, userName }: PermissionsM
       }}
     >
       <DialogTitle className={styles['permissions-modal__header']}>
-        <Typography variant="h6" component="div">
-          Permissions for {userName}
-        </Typography>
+        <Subheader label={`Permissions for ${userName}`} />
         <IconButton
           aria-label="close"
           onClick={onClose}
@@ -59,9 +58,9 @@ const PermissionsModal = ({ open, onClose, permissions, userName }: PermissionsM
       <DialogContent className={styles['permissions-modal__content']}>
         {permissions.length === 0 ? (
           <Box className={styles['permissions-modal__empty-state']}>
-            <Typography variant="body1" color="text.secondary">
+            <BodyText className={styles['permissions-modal__empty-text']}>
               No permissions assigned to this user.
-            </Typography>
+            </BodyText>
           </Box>
         ) : (
           <Box className={styles['permissions-modal__content-box']}>
@@ -72,13 +71,10 @@ const PermissionsModal = ({ open, onClose, permissions, userName }: PermissionsM
                 className={styles['permissions-modal__category-paper']}
                 data-test-id={`permissions-modal-category-${normalizeTestId(category)}`}
               >
-                <Typography
-                  variant="h6"
+                <Subheader
+                  label={category}
                   className={styles['permissions-modal__category-title']}
-                  sx={{ color: 'primary.main' }}
-                >
-                  {category}
-                </Typography>
+                />
 
                 <Divider className={styles['permissions-modal__divider']} />
 
@@ -104,19 +100,18 @@ const PermissionsModal = ({ open, onClose, permissions, userName }: PermissionsM
                             fontFamily: 'monospace',
                           }}
                         />
-                        <Typography variant="subtitle1" className={styles['permissions-modal__permission-name']}>
+                        <BodyText className={styles['permissions-modal__permission-name']}>
                           {permission.permissionName}
-                        </Typography>
+                        </BodyText>
                       </Box>
 
                       {permission.description && (
-                        <Typography
+                        <BodyText
                           variant="body2"
-                          color="text.secondary"
                           className={styles['permissions-modal__permission-description']}
                         >
                           {permission.description}
-                        </Typography>
+                        </BodyText>
                       )}
 
                       {permIndex < groupedPermissions[category].length - 1 && (

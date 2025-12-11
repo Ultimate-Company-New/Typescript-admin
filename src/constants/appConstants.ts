@@ -758,6 +758,44 @@ export const getConditionLabel = (conditionValue: string): string => {
 }
 
 /**
+ * Package type options matching database constraint
+ * CHECK (packageType IN ('STANDARD', 'FRAGILE', 'OVERSIZED', 'ENVELOPE', 'BOX', 'TUBE', 'CUSTOM'))
+ * Used in package forms and grids for package type selection
+ * Each type has a meaningful color for visual distinction in the UI
+ */
+export const PACKAGE_TYPE_OPTIONS = [
+  { value: 'STANDARD', label: 'Standard', color: 'default' as const },
+  { value: 'FRAGILE', label: 'Fragile', color: 'error' as const },
+  { value: 'OVERSIZED', label: 'Oversized', color: 'warning' as const },
+  { value: 'ENVELOPE', label: 'Envelope', color: 'info' as const },
+  { value: 'BOX', label: 'Box', color: 'primary' as const },
+  { value: 'TUBE', label: 'Tube', color: 'secondary' as const },
+  { value: 'CUSTOM', label: 'Custom', color: 'success' as const },
+] as const
+
+export type PackageType = (typeof PACKAGE_TYPE_OPTIONS)[number]['value']
+
+/**
+ * Get package type label by value
+ * Returns the display label for a given package type value
+ */
+export const getPackageTypeLabel = (packageTypeValue: string): string => {
+  const packageType = PACKAGE_TYPE_OPTIONS.find(opt => opt.value === packageTypeValue)
+  return packageType?.label ?? packageTypeValue
+}
+
+/**
+ * Get package type color by value
+ * Returns the MUI chip color for a given package type value
+ */
+export const getPackageTypeColor = (
+  packageTypeValue: string,
+): 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info' => {
+  const packageType = PACKAGE_TYPE_OPTIONS.find(opt => opt.value === packageTypeValue)
+  return packageType?.color ?? 'default'
+}
+
+/**
  * Countries list - All countries in the world
  * Used in product forms and other places requiring country selection
  */

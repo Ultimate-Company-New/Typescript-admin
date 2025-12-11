@@ -15,7 +15,7 @@ import { DeveloperDocs } from './pages/developerDocs'
 import { AddEditLead, ImportLeads, Leads } from './pages/leads'
 import { AddMessages, ImportMessages, Messages, MessagesList, ViewMessage } from './pages/messages'
 import { AddEditPackage, ImportPackages, Packages } from './pages/packages'
-import { AddPickupLocations, ImportPickupLocations, PickupLocations } from './pages/pickupLocations'
+import { AddEditPickupLocation, ImportPickupLocations, PickupLocations } from './pages/pickupLocations'
 import { AddEditProduct, ImportProducts, Products } from './pages/products'
 import { AddEditPromo, ImportPromos, Promos } from './pages/promos'
 import { AddPurchaseOrders, ImportPurchaseOrders, PurchaseOrders } from './pages/purchaseOrders'
@@ -154,7 +154,7 @@ export const routes: RouteObject[] = [
       },
       {
         path: 'pickup-locations/add',
-        element: <AddPickupLocations />,
+        element: <AddEditPickupLocation />,
       },
       {
         path: 'pickup-locations/import',

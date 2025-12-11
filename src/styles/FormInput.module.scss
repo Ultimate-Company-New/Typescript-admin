@@ -259,6 +259,25 @@
     gap: 4px;
   }
 
+  &__file-name {
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__file-size {
+    color: rgba(0, 0, 0, 0.6);
+  }
+
+  &__upload-text {
+    font-weight: 500;
+  }
+
+  &__upload-hint {
+    color: rgba(0, 0, 0, 0.6);
+  }
+
   &__upload-empty {
     display: flex;
     flex-direction: column;
@@ -451,5 +470,19 @@
     opacity: 0.6;
     pointer-events: none;
     background-color: rgba(0, 0, 0, 0.02);
+  }
+}
+
+// ==================== LazyAutocomplete Styles ====================
+
+.lazy-autocomplete {
+  &__loading-text {
+    color: rgba(0, 0, 0, 0.6);
+    margin-left: 8px;
+  }
+
+  &__hint-text {
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 0.75rem;
   }
 }

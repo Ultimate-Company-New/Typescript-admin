@@ -1,9 +1,30 @@
 import type React from 'react'
+import { useEffect, useState } from 'react'
 
-import { Box, Chip, Divider, Paper } from '@mui/material'
+import { Box, Chip, Divider, Grid, Paper } from '@mui/material'
 
+import { pickupLocationApi } from '../../../api/pickupLocationApi'
 import { BodyText, FieldLabel, SecondaryFont, Subheader } from '../../../components/fonts'
+import { type PackagePickupLocationMappingResponseModel } from '../../../models/api-models'
+import PickupLocationCard, { type PickupLocationCardData } from '../../products/components/PickupLocationCard'
 import styles from '../../../styles/Packages.module.scss'
+
+interface PickupLocationApiData {
+  pickupLocationId?: number
+  addressNickName?: string
+  address?: {
+    nameOnAddress?: string
+    streetAddress?: string
+    streetAddress2?: string
+    streetAddress3?: string
+    city?: string
+    state?: string
+    postalCode?: string
+    country?: string
+    phoneOnAddress?: string
+    emailOnAddress?: string
+  }
+}
 
 interface PackageDetailsViewProps {
   packageName: string
@@ -14,6 +35,7 @@ interface PackageDetailsViewProps {
   standardCapacity: number
   pricePerUnit: number
   packageType: string
+  pickupLocationQuantities?: Record<string, PackagePickupLocationMappingResponseModel>
   notes?: string
 }
 
@@ -30,8 +52,87 @@ const PackageDetailsView = ({
   standardCapacity,
   pricePerUnit,
   packageType,
+  pickupLocationQuantities,
   notes,
 }: PackageDetailsViewProps): React.JSX.Element => {
+  // State for pickup locations
+  const [pickupLocations, setPickupLocations] = useState<PickupLocationCardData[]>([])
+
+  // Fetch pickup location data
+  useEffect(() => {
+    const fetchLocationData = async (): Promise<void> => {
+      const quantities = pickupLocationQuantities || {}
+      const locationIds = Object.keys(quantities).map(Number)
+      if (locationIds.length === 0) {
+        setPickupLocations([])
+        return
+      }
+
+      try {
+        const response = await pickupLocationApi.getPickupLocationsInBatches({
+          start: 0,
+          end: 100,
+          pageSize: 100,
+        })
+
+        const allLocations = (response.data || []) as PickupLocationApiData[]
+
+        // Create location cards with full inventory data for packages
+        const locationCards: PickupLocationCardData[] = locationIds.map(id => {
+          const locationData = allLocations.find(loc => loc.pickupLocationId === id)
+          const inventoryData = quantities[id]
+          const availableStock = inventoryData?.quantity ?? 0
+
+          if (locationData) {
+            return {
+              pickupLocation: {
+                pickupLocationId: id,
+                addressNickName: locationData.addressNickName,
+                address: locationData.address,
+              },
+              availableStock,
+              // Package-specific inventory fields
+              reorderLevel: inventoryData?.reorderLevel,
+              maxStockLevel: inventoryData?.maxStockLevel,
+              lastRestockDate: inventoryData?.lastRestockDate,
+            }
+          }
+          // Fallback if location not found
+          return {
+            pickupLocation: {
+              pickupLocationId: id,
+              addressNickName: `Location ${id}`,
+            },
+            availableStock,
+            reorderLevel: inventoryData?.reorderLevel,
+            maxStockLevel: inventoryData?.maxStockLevel,
+            lastRestockDate: inventoryData?.lastRestockDate,
+          }
+        })
+
+        setPickupLocations(locationCards)
+      } catch {
+        // Fallback to basic location data if fetch fails
+        const fallbackCards: PickupLocationCardData[] = locationIds.map(id => {
+          const inventoryData = quantities[id]
+          return {
+            pickupLocation: {
+              pickupLocationId: id,
+              addressNickName: `Location ${id}`,
+            },
+            availableStock: inventoryData?.quantity ?? 0,
+            reorderLevel: inventoryData?.reorderLevel,
+            maxStockLevel: inventoryData?.maxStockLevel,
+            lastRestockDate: inventoryData?.lastRestockDate,
+          }
+        })
+        setPickupLocations(fallbackCards)
+      }
+    }
+
+    void fetchLocationData()
+  }, [pickupLocationQuantities])
+
   const getPackageTypeColor = (type: string): 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' => {
     switch (type) {
       case 'FRAGILE':
@@ -124,6 +225,23 @@ const PackageDetailsView = ({
           </Box>
         </Box>
       </Paper>
+
+      {/* Stock & Pickup Locations Section */}
+      {pickupLocations.length > 0 && (
+        <Paper className={styles['add-packages-page__section']}>
+          <Subheader label="Stock & Pickup Locations" className={styles['add-packages-page__section-title']} />
+          <Divider className={styles['add-packages-page__divider']} />
+          <Box className={styles['add-packages-page__divider-spacer']} />
+
+          <Grid container spacing={2}>
+            {pickupLocations.map((location, index) => (
+              <Grid item xs={12} sm={6} key={location.pickupLocation?.pickupLocationId ?? index}>
+                <PickupLocationCard location={location} index={index} />
+              </Grid>
+            ))}
+          </Grid>
+        </Paper>
+      )}
 
       {/* Notes Section */}
       {notes && (

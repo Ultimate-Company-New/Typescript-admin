@@ -243,6 +243,18 @@
     color: #1976d2;
   }
 
+  &__loading-subtext {
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 0.875rem;
+  }
+
+  &__error-warning-caption {
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 0.75rem;
+    display: block;
+    margin-top: 4px;
+  }
+
   &__view-toggle-container {
     display: flex;
     justify-content: flex-end;

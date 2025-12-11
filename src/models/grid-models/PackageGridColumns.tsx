@@ -1,10 +1,13 @@
-import { Link, Chip, Box } from '@mui/material'
+import { Box, Chip, Link } from '@mui/material'
 import { type GridColDef, type GridRenderCellParams } from '@mui/x-data-grid'
 
-import { PERMISSIONS } from '../../constants/appConstants'
+import { getPackageTypeColor, getPackageTypeLabel, PERMISSIONS } from '../../constants/appConstants'
 import { APP_ROUTES } from '../../constants/routes'
 import { usePermissions } from '../../hooks/usePermissions'
 import styles from '../../styles/Packages.module.scss'
+import type { PackagePickupLocationMappingResponseModel } from '../api-models/PackageModels'
+
+import PackageLocationsButton from './PackageLocationsButton'
 
 /**
  * Package data structure matching API response
@@ -19,8 +22,9 @@ export interface PackageData {
     breadth?: number
     width?: number
     height?: number
-    weight?: number
+    maxWeight?: number
     pricePerUnit?: number
+    pickupLocationQuantities?: Record<number, PackagePickupLocationMappingResponseModel>
   }
   packageName?: string
   packageType?: string
@@ -28,10 +32,11 @@ export interface PackageData {
   breadth?: number
   width?: number
   height?: number
-  weight?: number
+  maxWeight?: number
   pricePerUnit?: number
   isDeleted?: boolean
   deleted?: boolean
+  pickupLocationQuantities?: Record<number, PackagePickupLocationMappingResponseModel>
 }
 
 /**
@@ -69,7 +74,10 @@ const PackageActionsCell = ({
               onTogglePackage(packageId)
             }
           }}
-          className={styles['package-grid__action-link--activate']}
+          sx={{
+            cursor: 'pointer',
+            color: 'success.main',
+          }}
         >
           Activate
         </Link>
@@ -85,7 +93,7 @@ const PackageActionsCell = ({
       <Link
         key="view"
         href={`${APP_ROUTES.DASHBOARD.ADD_PACKAGE}?packageId=${packageId}&isView`}
-        className={styles['package-grid__action-link']}
+        sx={{ cursor: 'pointer' }}
       >
         View
       </Link>,
@@ -97,7 +105,7 @@ const PackageActionsCell = ({
       <Link
         key="edit"
         href={`${APP_ROUTES.DASHBOARD.ADD_PACKAGE}?packageId=${packageId}`}
-        className={styles['package-grid__action-link']}
+        sx={{ cursor: 'pointer' }}
       >
         Edit
       </Link>,
@@ -115,7 +123,10 @@ const PackageActionsCell = ({
             onTogglePackage(packageId)
           }
         }}
-        className={styles['package-grid__action-link--deactivate']}
+        sx={{
+          cursor: 'pointer',
+          color: 'error.main',
+        }}
       >
         Deactivate
       </Link>,
@@ -127,7 +138,16 @@ const PackageActionsCell = ({
     return <span>—</span>
   }
 
-  return <div className={styles['package-grid__actions-container']}>{actions}</div>
+  return (
+    <div
+      style={{
+        display: 'flex',
+        gap: '12px',
+      }}
+    >
+      {actions}
+    </div>
+  )
 }
 
 /**
@@ -158,15 +178,15 @@ export const getPackageGridColumns = (onTogglePackage: (packageId: number) => vo
     },
   },
   {
-    field: 'weight',
-    headerName: 'Weight',
+    field: 'maxWeight',
+    headerName: 'Max Weight',
     width: 120,
     align: 'left',
     headerAlign: 'left',
     valueGetter: (_value, row: PackageData) => {
       const rowData = row
-      const weight = rowData.weight ?? rowData._package?.weight ?? 0
-      return `${weight} kg`
+      const maxWeight = rowData.maxWeight ?? rowData._package?.maxWeight ?? 0
+      return `${maxWeight} kg`
     },
   },
   {
@@ -207,31 +227,57 @@ export const getPackageGridColumns = (onTogglePackage: (packageId: number) => vo
       const packageType = params.value as string
       if (!packageType) return '—'
 
-      // Color mapping for different package types
-      let color: 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info' = 'default'
+      return (
+        <Box className={styles['package-grid__type-cell']}>
+          <Chip
+            label={getPackageTypeLabel(packageType)}
+            color={getPackageTypeColor(packageType)}
+            size="small"
+          />
+        </Box>
+      )
+    },
+  },
+  {
+    field: 'pickupLocationQuantities',
+    headerName: 'Locations',
+    minWidth: 120,
+    flex: 0.8,
+    align: 'center',
+    headerAlign: 'center',
+    sortable: false,
+    filterable: false,
+    renderCell: (params: GridRenderCellParams<PackageData>) => {
+      const rowData = params.row
+      const pickupLocationQuantities =
+        rowData.pickupLocationQuantities ?? rowData._package?.pickupLocationQuantities ?? {}
+      const packageName = rowData.packageName ?? rowData._package?.packageName
 
-      const typeUpper = packageType.toUpperCase()
-      if (typeUpper.includes('BOX') || typeUpper.includes('CARTON')) {
-        color = 'primary'
-      } else if (typeUpper.includes('ENVELOPE') || typeUpper.includes('MAILER')) {
-        color = 'info'
-      } else if (typeUpper.includes('PALLET')) {
-        color = 'warning'
-      } else if (typeUpper.includes('CRATE')) {
-        color = 'secondary'
-      } else if (typeUpper.includes('CUSTOM')) {
-        color = 'success'
-      } else if (typeUpper.includes('FRAGILE')) {
-        color = 'error'
-      } else if (typeUpper.includes('OVERSIZED')) {
-        color = 'warning'
-      } else if (typeUpper.includes('TUBE')) {
-        color = 'secondary'
+      if (Object.keys(pickupLocationQuantities).length === 0) {
+        return (
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '100%',
+            }}
+          >
+            —
+          </Box>
+        )
       }
 
       return (
-        <Box className={styles['package-grid__type-cell']}>
-          <Chip label={packageType} color={color} size="small" />
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+          }}
+        >
+          <PackageLocationsButton pickupLocationQuantities={pickupLocationQuantities} packageName={packageName} />
         </Box>
       )
     },

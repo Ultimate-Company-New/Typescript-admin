@@ -21,7 +21,6 @@ import {
   Paper,
   ToggleButton,
   ToggleButtonGroup,
-  Typography,
 } from "@mui/material";
 import type {
   GridColDef,
@@ -45,7 +44,7 @@ import {
   type FilterGroup,
   type GridDensityType,
 } from "../../components/datagrid";
-import { BodyText, Subheader } from "../../components/fonts";
+import { BodyText, SecondaryFont, Subheader } from "../../components/fonts";
 import { FileDropZone, SelectInput } from "../../components/form-input";
 import {
   DEFAULT_MAX_RECORDS,
@@ -837,15 +836,13 @@ const ImportUsers = (): React.JSX.Element => {
             <Paper className={styles["import-users-page__loading-paper"]}>
               <Box className={styles["import-users-page__loading-container"]}>
                 <CircularProgress size={48} />
-                <Typography
-                  variant="h6"
+                <Subheader
+                  label="Processing file..."
                   className={styles["import-users-page__loading-text"]}
-                >
-                  Processing file...
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
+                />
+                <SecondaryFont className={styles["import-users-page__loading-subtext"]}>
                   Parsing and validating data
-                </Typography>
+                </SecondaryFont>
               </Box>
             </Paper>
           )}
@@ -944,20 +941,18 @@ const ImportUsers = (): React.JSX.Element => {
                     className={styles["import-users-page__error-warning-icon"]}
                   />
                   <Box>
-                    <Typography
+                    <BodyText
                       variant="body2"
-                      className={
-                        styles["import-users-page__error-warning-text"]
-                      }
+                      className={styles["import-users-page__error-warning-text"]}
                     >
                       <strong>Cannot import data:</strong> {errorCount}{" "}
                       {errorCount === 1 ? "row has" : "rows have"} validation
                       errors.
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    </BodyText>
+                    <SecondaryFont className={styles["import-users-page__error-warning-caption"]}>
                       Please fix all errors before importing. Click on the red
                       error chips to view details.
-                    </Typography>
+                    </SecondaryFont>
                   </Box>
                 </Box>
               )}

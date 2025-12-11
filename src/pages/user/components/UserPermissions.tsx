@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 
-import { Box, Checkbox, Divider, FormControlLabel, Grid, Paper, Typography } from '@mui/material'
+import { Box, Checkbox, Divider, FormControlLabel, Grid, Paper } from '@mui/material'
 
+import { BodyText, Subheader } from '../../../components/fonts'
 import styles from '../../../styles/Users.module.scss'
 
 export interface Permission {
@@ -192,9 +193,10 @@ const UserPermissions = ({
         {categories.map(category => (
           <Grid item xs={12} sm={6} md={4} key={category}>
             <Paper elevation={1} className={stylesTyped['user-permissions__category-paper']}>
-              <Typography variant="subtitle1" className={stylesTyped['user-permissions__category-title']} gutterBottom>
-                {category.charAt(0) + category.slice(1).toLowerCase().replace(/_/g, ' ')} Permissions
-              </Typography>
+              <Subheader
+                label={`${category.charAt(0) + category.slice(1).toLowerCase().replace(/_/g, ' ')} Permissions`}
+                className={stylesTyped['user-permissions__category-title']}
+              />
               <Divider className={stylesTyped['user-permissions__divider']} />
               <Box className={stylesTyped['user-permissions__permissions-list']}>
                 {groupedPermissions[category].map(permission => (
@@ -211,9 +213,9 @@ const UserPermissions = ({
                       />
                     }
                     label={
-                      <Typography variant="body2" title={permission.description}>
+                      <BodyText variant="body2" title={permission.description}>
                         {permission.permissionName}
-                      </Typography>
+                      </BodyText>
                     }
                   />
                 ))}

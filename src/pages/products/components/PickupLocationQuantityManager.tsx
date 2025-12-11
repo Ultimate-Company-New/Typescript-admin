@@ -34,11 +34,33 @@ interface PickupLocationQuantity {
   locationId: number;
   locationName: string;
   quantity: number;
+  reorderLevel?: number;
+  maxStockLevel?: number;
 }
 
+/**
+ * Extended data structure for package pickup location mappings
+ * Includes reorderLevel, maxStockLevel, and lastRestockDate for inventory management
+ * Maps to PackagePickupLocationMapping table columns
+ */
+export interface PackageLocationData {
+  quantity: number;
+  reorderLevel: number;
+  maxStockLevel: number;
+  lastRestockDate?: string;
+}
+
+/**
+ * Props for the PickupLocationQuantityManager component
+ * @param variant - "product" for simple quantity only, "package" for extended fields
+ * @param value - For "product": Record<locationId, quantity>. For "package": Record<locationId, PackageLocationData>
+ * @param onChange - Callback when values change
+ */
 interface PickupLocationQuantityManagerProps {
-  value: Record<number, number>;
-  onChange: (value: Record<number, number>) => void;
+  /** "product" shows only quantity, "package" shows quantity + reorder level + max stock */
+  variant?: "product" | "package";
+  value: Record<number, number> | Record<number, PackageLocationData>;
+  onChange: (value: Record<number, number> | Record<number, PackageLocationData>) => void;
   disabled?: boolean;
 }
 
@@ -49,15 +71,27 @@ interface PickupLocationData {
 }
 
 /**
+ * Helper to check if a value is PackageLocationData
+ */
+const isPackageLocationData = (val: number | PackageLocationData): val is PackageLocationData => {
+  return typeof val === "object" && "quantity" in val;
+};
+
+/**
  * Pickup Location Quantity Manager with Lazy Loading
  * Allows managing stock quantities for multiple pickup locations
  * Uses autocomplete with server-side search and pagination
+ *
+ * @param variant - "product" (default) shows only quantity column
+ *                  "package" shows quantity, reorder level, and max stock level columns
  */
 const PickupLocationQuantityManager = ({
+  variant = "product",
   value,
   onChange,
   disabled = false,
 }: PickupLocationQuantityManagerProps): JSX.Element => {
+  const isPackageVariant = variant === "package";
   const [locations, setLocations] = useState<PickupLocationQuantity[]>([]);
   const [options, setOptions] = useState<PickupLocationOption[][]>([]);
   const [loading, setLoading] = useState<boolean[]>([]);
@@ -104,11 +138,27 @@ const PickupLocationQuantityManager = ({
 
     // Full initialization - location IDs have changed or first load
     const initialLocations = valueEntries.map(
-      ([locationId, quantity]) => ({
-        locationId: Number(locationId),
-        locationName: `Loading...`, // Temporary name while loading
-        quantity: Number(quantity),
-      })
+      ([locationId, val]) => {
+        // Handle both product (number) and package (object) data structures
+        if (isPackageLocationData(val as number | PackageLocationData)) {
+          const packageData = val as PackageLocationData;
+          return {
+            locationId: Number(locationId),
+            locationName: `Loading...`, // Temporary name while loading
+            quantity: packageData.quantity,
+            reorderLevel: packageData.reorderLevel,
+            maxStockLevel: packageData.maxStockLevel,
+          };
+        }
+        // Simple product variant - just quantity
+        return {
+          locationId: Number(locationId),
+          locationName: `Loading...`, // Temporary name while loading
+          quantity: Number(val),
+          reorderLevel: 10, // Default
+          maxStockLevel: 1000, // Default
+        };
+      }
     );
 
     // Create initial options for each location to prevent Autocomplete warnings
@@ -202,6 +252,24 @@ const PickupLocationQuantityManager = ({
       return;
     }
 
+    // Build value based on variant
+    if (isPackageVariant) {
+      const newValue: Record<number, PackageLocationData> = {};
+      locations.forEach((loc) => {
+        if (loc.locationId > 0) {
+          newValue[loc.locationId] = {
+            quantity: loc.quantity >= 0 ? loc.quantity : 0,
+            reorderLevel: loc.reorderLevel ?? 10,
+            maxStockLevel: loc.maxStockLevel ?? 1000,
+          };
+        }
+      });
+      isInternalUpdate.current = true;
+      onChangeRef.current(newValue);
+      return;
+    }
+
+    // Product variant - simple quantity
     const newValue: Record<number, number> = {};
     locations.forEach((loc) => {
       // Include all locations with valid IDs, even if quantity is 0
@@ -289,7 +357,14 @@ const PickupLocationQuantityManager = ({
   );
 
   const handleAddLocation = (): void => {
-    setLocations([...locations, { locationId: 0, locationName: "", quantity: 0 }]);
+    const newLocation: PickupLocationQuantity = {
+      locationId: 0,
+      locationName: "",
+      quantity: 0,
+      reorderLevel: 10, // Default from SQL schema
+      maxStockLevel: 1000, // Default from SQL schema
+    };
+    setLocations([...locations, newLocation]);
     setOptions([...options, []]);
     setLoading([...loading, false]);
     setInputValues([...inputValues, ""]);
@@ -329,6 +404,18 @@ const PickupLocationQuantityManager = ({
     setLocations(newLocations);
   };
 
+  const handleReorderLevelChange = (index: number, reorderLevel: number): void => {
+    const newLocations = [...locations];
+    newLocations[index].reorderLevel = reorderLevel;
+    setLocations(newLocations);
+  };
+
+  const handleMaxStockLevelChange = (index: number, maxStockLevel: number): void => {
+    const newLocations = [...locations];
+    newLocations[index].maxStockLevel = maxStockLevel;
+    setLocations(newLocations);
+  };
+
   const handleInputChange = (index: number, newInputValue: string): void => {
     setInputValues((prev) => {
       const updated = [...prev];
@@ -354,20 +441,36 @@ const PickupLocationQuantityManager = ({
             <TableHead>
               <TableRow>
                 <TableCell
-                  width="50%"
+                  width={isPackageVariant ? "30%" : "50%"}
                   className={styles["pickup-location-manager__table-cell"]}
                 >
                   Pickup Location
                 </TableCell>
                 <TableCell
-                  width="30%"
+                  width={isPackageVariant ? "15%" : "30%"}
                   className={styles["pickup-location-manager__table-cell"]}
                 >
                   Available Quantity
                 </TableCell>
+                {isPackageVariant && (
+                  <>
+                    <TableCell
+                      width="15%"
+                      className={styles["pickup-location-manager__table-cell"]}
+                    >
+                      Reorder Level
+                    </TableCell>
+                    <TableCell
+                      width="15%"
+                      className={styles["pickup-location-manager__table-cell"]}
+                    >
+                      Max Stock Level
+                    </TableCell>
+                  </>
+                )}
                 <TableCell
                   align="center"
-                  width="20%"
+                  width={isPackageVariant ? "10%" : "20%"}
                   className={styles["pickup-location-manager__table-cell"]}
                 >
                   Actions
@@ -447,6 +550,42 @@ const PickupLocationQuantityManager = ({
                         className={styles["pickup-location-manager__quantity-input"]}
                       />
                     </TableCell>
+                    {isPackageVariant && (
+                      <>
+                        <TableCell className={styles["pickup-location-manager__table-cell"]}>
+                          <TextFieldInput
+                            type="number"
+                            value={location.reorderLevel === 0 ? "" : (location.reorderLevel ?? 10)}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              const reorderLevel = val === "" ? 0 : parseInt(val, 10);
+                              handleReorderLevelChange(index, isNaN(reorderLevel) ? 0 : reorderLevel);
+                            }}
+                            disabled={disabled}
+                            margin="none"
+                            placeholder="10"
+                            inputProps={{ min: 0 }}
+                            className={styles["pickup-location-manager__quantity-input"]}
+                          />
+                        </TableCell>
+                        <TableCell className={styles["pickup-location-manager__table-cell"]}>
+                          <TextFieldInput
+                            type="number"
+                            value={location.maxStockLevel === 0 ? "" : (location.maxStockLevel ?? 1000)}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              const maxStockLevel = val === "" ? 0 : parseInt(val, 10);
+                              handleMaxStockLevelChange(index, isNaN(maxStockLevel) ? 1 : Math.max(1, maxStockLevel));
+                            }}
+                            disabled={disabled}
+                            margin="none"
+                            placeholder="1000"
+                            inputProps={{ min: 1 }}
+                            className={styles["pickup-location-manager__quantity-input"]}
+                          />
+                        </TableCell>
+                      </>
+                    )}
                     <TableCell
                       align="center"
                       className={styles["pickup-location-manager__table-cell"]}

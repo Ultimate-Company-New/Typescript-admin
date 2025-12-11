@@ -182,7 +182,7 @@ const ProductDetailsView = ({
 
         <Grid container spacing={2}>
           {/* Main Image */}
-          <Grid item xs={12} sm={4}>
+          <Grid item xs={12} sm={6} md={4}>
             <Box className={styles["product-details-view__image-container"]}>
               <FieldLabel>Main Image</FieldLabel>
               <Avatar
@@ -206,7 +206,7 @@ const ProductDetailsView = ({
             { label: "Left", image: watchedValues.leftImage },
             { label: "Details", image: watchedValues.detailsImage },
           ].map(({ label, image }) => (
-            <Grid item xs={12} sm={4} key={label}>
+            <Grid item xs={12} sm={6} md={4} key={label}>
               <Box className={styles["product-details-view__image-container"]}>
                 <FieldLabel>{label}</FieldLabel>
                 <Avatar
@@ -223,7 +223,7 @@ const ProductDetailsView = ({
 
           {/* Optional Images */}
           {watchedValues.defectImage && (
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={6} md={4}>
               <Box className={styles["product-details-view__image-container"]}>
                 <FieldLabel color="error.main">Defect</FieldLabel>
                 <Avatar
@@ -238,7 +238,7 @@ const ProductDetailsView = ({
             </Grid>
           )}
           {watchedValues.additionalImage1 && (
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={6} md={4}>
               <Box className={styles["product-details-view__image-container"]}>
                 <FieldLabel>Additional 1</FieldLabel>
                 <Avatar
@@ -253,7 +253,7 @@ const ProductDetailsView = ({
             </Grid>
           )}
           {watchedValues.additionalImage2 && (
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={6} md={4}>
               <Box className={styles["product-details-view__image-container"]}>
                 <FieldLabel>Additional 2</FieldLabel>
                 <Avatar
@@ -268,7 +268,7 @@ const ProductDetailsView = ({
             </Grid>
           )}
           {watchedValues.additionalImage3 && (
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={6} md={4}>
               <Box className={styles["product-details-view__image-container"]}>
                 <FieldLabel>Additional 3</FieldLabel>
                 <Avatar

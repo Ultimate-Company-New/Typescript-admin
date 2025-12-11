@@ -21,13 +21,13 @@ import {
   TextField,
   ToggleButton,
   ToggleButtonGroup,
-  Typography,
 } from '@mui/material'
 import { type GridColDef } from '@mui/x-data-grid'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 
+import { BodyText, Subheader } from '../fonts'
 import styles from '../../styles/DataGrid.module.scss'
 import { LogicOperator, type LogicOperatorType } from '../../utils/gridUtil'
 
@@ -461,9 +461,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     >
       {/* Dialog Header */}
       <DialogTitle className={styles['filter-panel__header']}>
-        <Typography variant="h6" component="div" fontWeight="bold">
-          Filter Data
-        </Typography>
+        <Subheader label="Filter Data" className={styles['filter-panel__title']} />
         <IconButton
           onClick={onClose}
           size="small"
@@ -482,9 +480,9 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           {/* Global Logic Operator - Show only if there are multiple filters */}
           {filters.length > 1 && (
             <Box className={styles['filter-panel__logic-operator-box']}>
-              <Typography variant="body2" fontWeight="medium" color="text.secondary">
+              <BodyText variant="body2" className={styles['filter-panel__match-label']}>
                 Match:
-              </Typography>
+              </BodyText>
               <ToggleButtonGroup
                 value={logicOperator}
                 exclusive
@@ -503,9 +501,9 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   Any (OR)
                 </ToggleButton>
               </ToggleButtonGroup>
-              <Typography variant="body2" color="text.secondary">
+              <BodyText variant="body2" className={styles['filter-panel__conditions-label']}>
                 of the following conditions:
-              </Typography>
+              </BodyText>
             </Box>
           )}
 

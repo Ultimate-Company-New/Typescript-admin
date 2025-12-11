@@ -1,8 +1,9 @@
 import { format } from 'date-fns'
 
 import { Close as CloseIcon, Group as GroupIcon } from '@mui/icons-material'
-import { Dialog, DialogTitle, DialogContent, IconButton, Typography, Box, Chip, Paper, Grid } from '@mui/material'
+import { Box, Chip, Dialog, DialogContent, DialogTitle, Grid, IconButton, Paper } from '@mui/material'
 
+import { BodyText, Subheader } from '../../../components/fonts'
 import { type UserGroupResponseModel } from '../../../models/api-models'
 import styles from '../../../styles/DataGrid.module.scss'
 
@@ -29,9 +30,7 @@ const UserGroupsModal = ({ open, onClose, userGroups, userName }: UserGroupsModa
     }}
   >
     <DialogTitle className={styles['user-groups-modal__header']}>
-      <Typography variant="h6" component="div">
-        Groups for {userName}
-      </Typography>
+      <Subheader label={`Groups for ${userName}`} />
       <IconButton
         aria-label="close"
         onClick={onClose}
@@ -45,9 +44,9 @@ const UserGroupsModal = ({ open, onClose, userGroups, userName }: UserGroupsModa
     <DialogContent className={styles['user-groups-modal__content']}>
       {userGroups.length === 0 ? (
         <Box className={styles['user-groups-modal__empty-state']}>
-          <Typography variant="body1" color="text.secondary">
+          <BodyText className={styles['user-groups-modal__empty-text']}>
             This user is not a member of any groups.
-          </Typography>
+          </BodyText>
         </Box>
       ) : (
         <Grid container spacing={2}>
@@ -63,19 +62,16 @@ const UserGroupsModal = ({ open, onClose, userGroups, userName }: UserGroupsModa
               >
                 <Box className={styles['user-groups-modal__group-card-header']}>
                   <GroupIcon className={styles['user-groups-modal__group-icon']} sx={{ color: 'primary.main' }} />
-                  <Typography variant="h6" className={styles['user-groups-modal__group-name']}>
-                    {group.groupName}
-                  </Typography>
+                  <Subheader label={group.groupName} className={styles['user-groups-modal__group-name']} />
                 </Box>
 
                 {group.description && (
-                  <Typography
+                  <BodyText
                     variant="body2"
-                    color="text.secondary"
                     className={styles['user-groups-modal__group-description']}
                   >
                     {group.description}
-                  </Typography>
+                  </BodyText>
                 )}
 
                 <Box className={styles['user-groups-modal__group-metadata']}>

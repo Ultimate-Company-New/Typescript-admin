@@ -499,20 +499,8 @@ export type BulkProductImportData = z.infer<typeof bulkProductImportSchema>
 // Package Validation Schemas
 // ============================================================================
 
-/**
- * Package type options (matches database constraint)
- */
-export const PACKAGE_TYPE_OPTIONS = [
-  { value: 'STANDARD', label: 'Standard' },
-  { value: 'FRAGILE', label: 'Fragile' },
-  { value: 'OVERSIZED', label: 'Oversized' },
-  { value: 'ENVELOPE', label: 'Envelope' },
-  { value: 'BOX', label: 'Box' },
-  { value: 'TUBE', label: 'Tube' },
-  { value: 'CUSTOM', label: 'Custom' },
-] as const
-
-export type PackageType = (typeof PACKAGE_TYPE_OPTIONS)[number]['value']
+// Package type options are defined in appConstants.ts
+// Import from there: import { PACKAGE_TYPE_OPTIONS, type PackageType } from '../constants/appConstants'
 
 // Package form validation schema - matches PackageRequestModel from backend
 export const packageFormSchema = z.object({
@@ -547,7 +535,51 @@ export const packageFormSchema = z.object({
     required_error: 'Package type is required',
     invalid_type_error: 'Invalid package type',
   }),
+  // Pickup locations - managed by PickupLocationQuantityManager component (package variant)
+  // Each location has quantity, reorderLevel, and maxStockLevel
+  // Pickup locations - managed by PickupLocationQuantityManager component (package variant)
+  // Each location has quantity, reorderLevel, maxStockLevel, and lastRestockDate
+  pickupLocationQuantities: z.record(
+    z.string(),
+    z.object({
+      quantity: z.number().min(0, 'Quantity cannot be negative'),
+      reorderLevel: z.number().min(0, 'Reorder level cannot be negative'),
+      maxStockLevel: z.number().min(1, 'Max stock level must be at least 1'),
+      lastRestockDate: z.string().optional(), // ISO date string, nullable
+    })
+  ).default({}),
   notes: z.string().optional().or(z.literal('')),
 })
 
 export type PackageFormData = z.infer<typeof packageFormSchema>
+
+// ============================================================================
+// Pickup Location Validation
+// ============================================================================
+
+/**
+ * Pickup Location form validation schema
+ * Used for add/edit pickup location forms
+ */
+export const pickupLocationFormSchema = z.object({
+  // Location Information
+  addressNickName: z.string().min(1, 'Location name is required').max(100, 'Location name must be less than 100 characters'),
+  shipRocketPickupLocationId: z.string().optional().or(z.literal('')),
+  // Address fields (using AddressFormData structure)
+  address: z.object({
+    streetAddress: z.string().min(1, 'Street address is required'),
+    streetAddress2: z.string().optional().or(z.literal('')),
+    streetAddress3: z.string().optional().or(z.literal('')),
+    city: z.string().min(1, 'City is required'),
+    state: z.string().min(1, 'State is required'),
+    postalCode: z.string().min(6, 'Postal code must be at least 6 characters').max(10, 'Postal code is too long'),
+    country: z.string().min(1, 'Country is required'),
+    addressType: z.string().min(1, 'Address type is required'),
+    nameOnAddress: z.string().optional().or(z.literal('')),
+    emailOnAddress: z.string().email('Invalid email format').optional().or(z.literal('')),
+    phoneOnAddress: z.string().optional().or(z.literal('')),
+  }),
+  notes: z.string().optional().or(z.literal('')),
+})
+
+export type PickupLocationFormData = z.infer<typeof pickupLocationFormSchema>

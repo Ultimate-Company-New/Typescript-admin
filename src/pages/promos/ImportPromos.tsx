@@ -21,7 +21,6 @@ import {
   Paper,
   ToggleButton,
   ToggleButtonGroup,
-  Typography,
 } from '@mui/material'
 import type { GridColDef } from '@mui/x-data-grid'
 
@@ -29,7 +28,7 @@ import { promoApi } from '../../api/promoApi'
 import { ImportInstructions } from '../../components'
 import { BlueButton, LinkButton, RedButton } from '../../components/buttons'
 import { ErrorDetailsModal, StyledDataGrid, TableAsJson, type ColumnGroup } from '../../components/datagrid'
-import { BodyText, Subheader } from '../../components/fonts'
+import { BodyText, SecondaryFont, Subheader } from '../../components/fonts'
 import { FileDropZone, SelectInput } from '../../components/form-input'
 import { DEFAULT_MAX_RECORDS, MAX_RECORDS_OPTIONS } from '../../constants/appConstants'
 import { APP_ROUTES } from '../../constants/routes'
@@ -399,12 +398,10 @@ const ImportPromos = (): React.JSX.Element => {
             <Paper className={styles['import-promos-page__loading-paper']}>
               <Box className={styles['import-promos-page__loading-container']}>
                 <CircularProgress size={48} />
-                <Typography variant="h6" className={styles['import-promos-page__loading-text']}>
-                  Processing file...
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Subheader label="Processing file..." className={styles['import-promos-page__loading-text']} />
+                <SecondaryFont className={styles['import-promos-page__loading-subtext']}>
                   Parsing and validating data
-                </Typography>
+                </SecondaryFont>
               </Box>
             </Paper>
           )}
@@ -493,13 +490,13 @@ const ImportPromos = (): React.JSX.Element => {
                 <Box className={styles['import-promos-page__error-warning']}>
                   <ErrorIcon className={styles['import-promos-page__error-warning-icon']} />
                   <Box>
-                    <Typography variant="body2" className={styles['import-promos-page__error-warning-text']}>
+                    <BodyText variant="body2" className={styles['import-promos-page__error-warning-text']}>
                       <strong>Cannot import data:</strong> {errorCount} {errorCount === 1 ? 'row has' : 'rows have'}{' '}
                       validation errors.
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    </BodyText>
+                    <SecondaryFont className={styles['import-promos-page__error-warning-caption']}>
                       Please fix all errors before importing. Click on the red error chips to view details.
-                    </Typography>
+                    </SecondaryFont>
                   </Box>
                 </Box>
               )}

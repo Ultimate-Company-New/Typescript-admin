@@ -66,6 +66,19 @@
     }
   }
 
+  &__title {
+    font-weight: 700;
+  }
+
+  &__match-label {
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.6);
+  }
+
+  &__conditions-label {
+    color: rgba(0, 0, 0, 0.6);
+  }
+
   &__content {
     padding-top: 24px;
     padding-bottom: 24px;
@@ -275,6 +288,10 @@
     text-align: center;
   }
 
+  &__empty-text {
+    color: rgba(0, 0, 0, 0.6);
+  }
+
   &__content-box {
     display: flex;
     flex-direction: column;
@@ -295,6 +312,7 @@
     font-weight: 600;
     margin-bottom: 8px;
     font-size: 1.25rem;
+    color: #1976d2;
   }
 
   &__divider {
@@ -376,6 +394,10 @@
     align-items: center;
     padding: 48px 16px;
     text-align: center;
+  }
+
+  &__empty-text {
+    color: rgba(0, 0, 0, 0.6);
   }
 
   &__group-card {

@@ -1,13 +1,17 @@
 import EmailIcon from '@mui/icons-material/Email'
+import InventoryIcon from '@mui/icons-material/Inventory'
 import LocationOnIcon from '@mui/icons-material/LocationOn'
 import PhoneIcon from '@mui/icons-material/Phone'
-import { Box, Card, CardContent, Chip } from '@mui/material'
+import RefreshIcon from '@mui/icons-material/Refresh'
+import WarningAmberIcon from '@mui/icons-material/WarningAmber'
+import { Box, Card, CardContent, Chip, Divider, Tooltip } from '@mui/material'
 
 import { BodyText, SecondaryFont } from '../../../components/fonts'
 import styles from '../../../styles/Products.module.scss'
 
 /**
  * Pickup location data structure supporting multiple API response formats
+ * Extended to support package inventory fields (reorderLevel, maxStockLevel, lastRestockDate)
  */
 export interface PickupLocationCardData {
   // API structure: ProductPickupLocationItem
@@ -28,6 +32,15 @@ export interface PickupLocationCardData {
     }
   }
   availableStock?: number
+
+  // Package-specific inventory fields (from PackagePickupLocationMapping)
+  /** When to reorder packages - alert threshold (only for packages) */
+  reorderLevel?: number
+  /** Maximum stock level to maintain (only for packages) */
+  maxStockLevel?: number
+  /** When packages were last restocked (only for packages) */
+  lastRestockDate?: string
+
   // Legacy flat structure support
   pickupLocationId?: number
   locationName?: string
@@ -64,13 +77,34 @@ interface PickupLocationCardProps {
 }
 
 /**
+ * Formats a date string to a readable format
+ */
+const formatRestockDate = (dateStr: string | undefined): string | null => {
+  if (!dateStr) return null
+  try {
+    const date = new Date(dateStr)
+    if (isNaN(date.getTime())) return null
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return null
+  }
+}
+
+/**
  * Reusable card component to display pickup location details
  * Used in PickupLocationsModal and ProductDetailsView
+ * Supports package-specific inventory fields (reorderLevel, maxStockLevel, lastRestockDate)
  */
 const PickupLocationCard = ({ location: item, index = 0 }: PickupLocationCardProps): JSX.Element => {
   // Extract data from ProductPickupLocationItem structure
   const location = item.pickupLocation ?? item
-  const { availableStock } = item
+  const { availableStock, reorderLevel, maxStockLevel, lastRestockDate } = item
   const locationId = location.pickupLocationId ?? item.pickupLocationId
   const locationName =
     location.addressNickName ?? item.addressNickName ?? item.locationName ?? `Location ${index + 1}`
@@ -99,6 +133,16 @@ const PickupLocationCard = ({ location: item, index = 0 }: PickupLocationCardPro
     postalCode != null ||
     country != null
 
+  // Package-specific inventory fields - only show if they exist (not for products)
+  const hasPackageInventoryFields = reorderLevel != null || maxStockLevel != null || lastRestockDate != null
+  const formattedRestockDate = formatRestockDate(lastRestockDate)
+
+  // Check if stock is below reorder level (warning state)
+  const isLowStock = availableStock != null && reorderLevel != null && availableStock <= reorderLevel
+  const stockPercentage = availableStock != null && maxStockLevel != null && maxStockLevel > 0
+    ? Math.round((availableStock / maxStockLevel) * 100)
+    : null
+
   return (
     <Card
       variant="outlined"
@@ -120,10 +164,80 @@ const PickupLocationCard = ({ location: item, index = 0 }: PickupLocationCardPro
             <Chip
               label={`Available Stock: ${availableStock}`}
               size="small"
-              color={availableStock > 0 ? 'success' : 'error'}
+              color={availableStock > 0 ? (isLowStock ? 'warning' : 'success') : 'error'}
               className={styles['pickup-location-card__stock-chip']}
             />
+            {isLowStock && availableStock > 0 && (
+              <Tooltip title="Stock is at or below reorder level">
+                <WarningAmberIcon
+                  color="warning"
+                  fontSize="small"
+                  className={styles['pickup-location-card__warning-icon']}
+                />
+              </Tooltip>
+            )}
           </Box>
+        )}
+
+        {/* Package Inventory Details - Only shown if fields exist (packages only) */}
+        {hasPackageInventoryFields && (
+          <>
+            <Divider className={styles['pickup-location-card__divider']} />
+            <Box className={styles['pickup-location-card__inventory']}>
+              <SecondaryFont className={styles['pickup-location-card__inventory-title']}>
+                <InventoryIcon fontSize="small" className={styles['pickup-location-card__inventory-icon']} />
+                Inventory Settings
+              </SecondaryFont>
+
+              <Box className={styles['pickup-location-card__inventory-grid']}>
+                {reorderLevel != null && (
+                  <Box className={styles['pickup-location-card__inventory-item']}>
+                    <SecondaryFont className={styles['pickup-location-card__inventory-label']}>
+                      Reorder Level
+                    </SecondaryFont>
+                    <BodyText className={styles['pickup-location-card__inventory-value']}>
+                      {reorderLevel}
+                    </BodyText>
+                  </Box>
+                )}
+
+                {maxStockLevel != null && (
+                  <Box className={styles['pickup-location-card__inventory-item']}>
+                    <SecondaryFont className={styles['pickup-location-card__inventory-label']}>
+                      Max Stock
+                    </SecondaryFont>
+                    <BodyText className={styles['pickup-location-card__inventory-value']}>
+                      {maxStockLevel}
+                    </BodyText>
+                  </Box>
+                )}
+
+                {stockPercentage != null && (
+                  <Box className={styles['pickup-location-card__inventory-item']}>
+                    <SecondaryFont className={styles['pickup-location-card__inventory-label']}>
+                      Stock Level
+                    </SecondaryFont>
+                    <Chip
+                      label={`${stockPercentage}%`}
+                      size="small"
+                      color={stockPercentage > 50 ? 'success' : stockPercentage > 20 ? 'warning' : 'error'}
+                      variant="outlined"
+                      className={styles['pickup-location-card__inventory-chip']}
+                    />
+                  </Box>
+                )}
+              </Box>
+
+              {formattedRestockDate && (
+                <Box className={styles['pickup-location-card__restock']}>
+                  <RefreshIcon fontSize="small" className={styles['pickup-location-card__restock-icon']} />
+                  <SecondaryFont className={styles['pickup-location-card__restock-text']}>
+                    Last restocked: {formattedRestockDate}
+                  </SecondaryFont>
+                </Box>
+              )}
+            </Box>
+          </>
         )}
 
         {/* Address */}

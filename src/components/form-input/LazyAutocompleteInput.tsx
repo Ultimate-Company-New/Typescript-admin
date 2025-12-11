@@ -5,11 +5,11 @@ import {
   Box,
   CircularProgress,
   TextField,
-  Typography,
   type AutocompleteProps,
   type AutocompleteRenderInputParams,
 } from '@mui/material'
 
+import { BodyText, SecondaryFont } from '../fonts'
 import styles from '../../styles/FormInput.module.scss'
 
 /**
@@ -363,9 +363,9 @@ const LazyAutocompleteInput = forwardRef<HTMLDivElement, LazyAutocompleteInputPr
                 }}
               >
                 <CircularProgress size={16} color="primary" />
-                <Typography variant="body2" color="text.secondary">
+                <BodyText variant="body2" className={styles['lazy-autocomplete__loading-text']}>
                   Loading more...
-                </Typography>
+                </BodyText>
               </Box>
             )}
             {/* Show "Scroll for more" hint when there are more results */}
@@ -382,9 +382,9 @@ const LazyAutocompleteInput = forwardRef<HTMLDivElement, LazyAutocompleteInputPr
                   bgcolor: 'action.hover',
                 }}
               >
-                <Typography variant="caption" color="text.secondary">
+                <SecondaryFont className={styles['lazy-autocomplete__hint-text']}>
                   Scroll for more results...
-                </Typography>
+                </SecondaryFont>
               </Box>
             )}
           </Box>

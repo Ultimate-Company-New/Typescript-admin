@@ -17,6 +17,7 @@ export enum ColumnType {
   PHONE = 'phone',
   EMAIL = 'email',
   URL = 'url',
+  CURRENCY = 'currency',
 }
 
 /**
@@ -175,6 +176,10 @@ export const formatValueByType = (value: unknown, type?: ColumnType): string => 
       return formatDateTime(value as string)
     case ColumnType.BOOLEAN:
       return String(value).toLowerCase() === 'true' ? 'Yes' : 'No'
+    case ColumnType.CURRENCY:
+      return `₹${Number(value).toFixed(2)}`
+    case ColumnType.NUMBER:
+      return String(Number(value))
     default:
       return String(value)
   }

@@ -35,6 +35,16 @@ export type {
   MessageResponseModel,
 } from "./MessageModels";
 
+// Package Models
+export type {
+  PackageData,
+  PackagePickupLocationMappingRequestModel,
+  PackagePickupLocationMappingResponseModel,
+  PackageRequestModel,
+  PackageResponseModel,
+  PackageType,
+} from "./PackageModels";
+
 // Product Models
 export type {
   BulkProductInsertResponseModel,

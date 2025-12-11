@@ -2,60 +2,29 @@ import type React from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
 import { Cancel as CancelIcon, Save as SaveIcon } from '@mui/icons-material'
-import { Box, Container, Paper } from '@mui/material'
+import { Box, Container, Divider, Paper } from '@mui/material'
 
 import { packageApi } from '../../api/packageApi'
 import { BlueButton, RedButton } from '../../components/buttons'
+import { Subheader } from '../../components/fonts'
 import { FieldType, FormFieldRenderer, type SectionConfig } from '../../components/form'
-import { PERMISSIONS } from '../../constants/appConstants'
+import { PACKAGE_TYPE_OPTIONS, PERMISSIONS } from '../../constants/appConstants'
 import { APP_ROUTES } from '../../constants/routes'
 import { usePermissions } from '../../hooks/usePermissions'
+import type { PackageRequestModel, PackageResponseModel } from '../../models/api-models'
 import styles from '../../styles/Packages.module.scss'
 import {
-  PACKAGE_TYPE_OPTIONS,
   packageFormSchema,
   type PackageFormData,
 } from '../../utils/validationSchemas'
+import PickupLocationQuantityManager from '../products/components/PickupLocationQuantityManager'
 
 import { FillTestDataButton, PackageDetailsView } from './components'
-
-/**
- * Package response model from API
- */
-interface PackageResponseModel {
-  packageId: number
-  packageName: string
-  length: number
-  breadth: number
-  height: number
-  maxWeight: number
-  standardCapacity: number
-  pricePerUnit: number
-  packageType: string
-  notes?: string
-  isDeleted?: boolean
-}
-
-/**
- * Package request model for API
- */
-interface PackageRequestModel {
-  packageId?: number
-  packageName: string
-  length: number
-  breadth: number
-  height: number
-  maxWeight: number
-  standardCapacity: number
-  pricePerUnit: number
-  packageType: string
-  notes?: string
-}
 
 /**
  * Add/Edit Package Page
@@ -119,6 +88,7 @@ const AddEditPackage = (): React.JSX.Element => {
       standardCapacity: 5,
       pricePerUnit: 0,
       packageType: 'STANDARD',
+      pickupLocationQuantities: {},
       notes: '',
     },
   })
@@ -140,6 +110,27 @@ const AddEditPackage = (): React.JSX.Element => {
     try {
       const response = (await packageApi.getPackageById(parseInt(packageId, 10))) as PackageResponseModel
 
+      // Convert pickupLocationQuantities from number keys to string keys for form
+      const pickupLocationQuantities: Record<string, { quantity: number; reorderLevel: number; maxStockLevel: number }> = {}
+      if (response.pickupLocationQuantities) {
+        Object.entries(response.pickupLocationQuantities).forEach(([key, value]) => {
+          // Handle both old format (number) and new format (object)
+          if (typeof value === 'number') {
+            pickupLocationQuantities[String(key)] = {
+              quantity: value,
+              reorderLevel: 10,
+              maxStockLevel: 1000,
+            }
+          } else {
+            pickupLocationQuantities[String(key)] = {
+              quantity: value.quantity ?? 0,
+              reorderLevel: value.reorderLevel ?? 10,
+              maxStockLevel: value.maxStockLevel ?? 1000,
+            }
+          }
+        })
+      }
+
       // Populate form with existing data
       reset({
         packageName: response.packageName,
@@ -150,6 +141,7 @@ const AddEditPackage = (): React.JSX.Element => {
         standardCapacity: response.standardCapacity,
         pricePerUnit: response.pricePerUnit,
         packageType: response.packageType as PackageFormData['packageType'],
+        pickupLocationQuantities,
         notes: response.notes ?? '',
       })
     } catch {
@@ -173,6 +165,19 @@ const AddEditPackage = (): React.JSX.Element => {
       setLoading(true)
 
       try {
+        // Convert pickupLocationQuantities from string keys to number keys for API
+        // Each value is an object with quantity, reorderLevel, and maxStockLevel
+        const pickupLocationQuantities: Record<number, { quantity: number; reorderLevel: number; maxStockLevel: number }> = {}
+        if (data.pickupLocationQuantities) {
+          Object.entries(data.pickupLocationQuantities).forEach(([key, value]) => {
+            pickupLocationQuantities[Number(key)] = {
+              quantity: value.quantity,
+              reorderLevel: value.reorderLevel,
+              maxStockLevel: value.maxStockLevel,
+            }
+          })
+        }
+
         const requestModel: PackageRequestModel = {
           packageId: isEdit && packageId ? parseInt(packageId, 10) : undefined,
           packageName: data.packageName.trim(),
@@ -183,6 +188,7 @@ const AddEditPackage = (): React.JSX.Element => {
           standardCapacity: data.standardCapacity,
           pricePerUnit: data.pricePerUnit,
           packageType: data.packageType,
+          pickupLocationQuantities,
           notes: data.notes?.trim() || undefined,
         }
 
@@ -258,7 +264,7 @@ const AddEditPackage = (): React.JSX.Element => {
         ],
       },
       {
-        title: 'Dimensions',
+        title: 'Dimensions & Pricing',
         fields: [
           {
             name: 'length',
@@ -300,7 +306,7 @@ const AddEditPackage = (): React.JSX.Element => {
             required: true,
             gridSize: {
               xs: 12,
-              sm: 6,
+              sm: 4,
             },
             placeholder: 'Maximum weight capacity',
           },
@@ -311,15 +317,10 @@ const AddEditPackage = (): React.JSX.Element => {
             required: true,
             gridSize: {
               xs: 12,
-              sm: 6,
+              sm: 4,
             },
             placeholder: 'Number of items this package holds',
           },
-        ],
-      },
-      {
-        title: 'Pricing',
-        fields: [
           {
             name: 'pricePerUnit',
             label: 'Price Per Unit (₹)',
@@ -327,7 +328,7 @@ const AddEditPackage = (): React.JSX.Element => {
             required: true,
             gridSize: {
               xs: 12,
-              sm: 6,
+              sm: 4,
             },
             placeholder: 'Cost per package unit',
           },
@@ -367,12 +368,7 @@ const AddEditPackage = (): React.JSX.Element => {
       disableGutters
       className={styles['packages-page']}
     >
-      {/* Fill Test Data Button - Only show in development/non-view mode */}
-      {!isView && (
-        <FillTestDataButton setValue={setValue} reset={reset} isEdit={isEdit} />
-      )}
-
-      <form onSubmit={handleFormSubmit(onSubmit)}>
+        <form onSubmit={handleFormSubmit(onSubmit)}>
         <Box className={styles['add-packages-page__container']}>
           {isView ? (
             // View mode - display package details
@@ -385,6 +381,7 @@ const AddEditPackage = (): React.JSX.Element => {
               standardCapacity={watchedValues.standardCapacity}
               pricePerUnit={watchedValues.pricePerUnit}
               packageType={watchedValues.packageType}
+              pickupLocationQuantities={watchedValues.pickupLocationQuantities}
               notes={watchedValues.notes}
             />
           ) : (
@@ -401,6 +398,29 @@ const AddEditPackage = (): React.JSX.Element => {
                 sectionTitleClassName={styles['add-packages-page__section-title']}
                 dividerClassName={styles['add-packages-page__divider']}
               />
+
+              {/* Stock & Pickup Locations Section */}
+              <Paper className={styles['add-packages-page__section']}>
+                <Subheader
+                  label="Stock & Pickup Locations"
+                  className={styles['add-packages-page__section-title']}
+                />
+                <Divider className={styles['add-packages-page__divider']} />
+                <Box className={styles['add-packages-page__pickup-locations']}>
+                  <Controller
+                    name="pickupLocationQuantities"
+                    control={control}
+                    render={({ field }) => (
+                      <PickupLocationQuantityManager
+                        variant="package"
+                        value={field.value}
+                        onChange={field.onChange}
+                        disabled={loading}
+                      />
+                    )}
+                  />
+                </Box>
+              </Paper>
 
               {/* Notes Section */}
               <FormFieldRenderer
@@ -456,6 +476,11 @@ const AddEditPackage = (): React.JSX.Element => {
           )}
         </Box>
       </form>
+
+      {/* Fill Test Data Button - Only show in add/edit mode */}
+      {!isView && (
+        <FillTestDataButton setValue={setValue} reset={reset} isEdit={isEdit} />
+      )}
     </Container>
   )
 }

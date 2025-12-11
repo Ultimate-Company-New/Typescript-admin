@@ -3,8 +3,9 @@ import { useCallback, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
 
 import { CloudUpload as CloudUploadIcon, Delete as DeleteIcon, InsertDriveFile as FileIcon } from '@mui/icons-material'
-import { Box, IconButton, Tooltip, Typography } from '@mui/material'
+import { Box, IconButton, Tooltip } from '@mui/material'
 
+import { BodyText, SecondaryFont } from '../fonts'
 import styles from '../../styles/FormInput.module.scss'
 
 export interface FileDropZoneProps {
@@ -204,12 +205,12 @@ const FileDropZone = ({
         <Box className={styles['file-drop-zone__file-info']}>
           <FileIcon className={styles['file-drop-zone__file-icon']} />
           <Box className={styles['file-drop-zone__file-details']}>
-            <Typography variant="body1" fontWeight={500}>
+            <BodyText className={styles['file-drop-zone__file-name']}>
               {currentFile.name}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
+            </BodyText>
+            <SecondaryFont className={styles['file-drop-zone__file-size']}>
               {formatFileSize(currentFile.size)}
-            </Typography>
+            </SecondaryFont>
           </Box>
           {onFileClear && (
             <Tooltip title="Remove file">
@@ -226,12 +227,12 @@ const FileDropZone = ({
             className={`${styles['file-drop-zone__upload-icon']} ${isDragOver ? styles['file-drop-zone__upload-icon--drag-over'] : ''}`}
           />
           <Box>
-            <Typography variant="body1" fontWeight={500}>
+            <BodyText className={styles['file-drop-zone__upload-text']}>
               {isDragOver ? 'Drop file here' : 'Click to upload or drag & drop'}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
+            </BodyText>
+            <SecondaryFont className={styles['file-drop-zone__upload-hint']}>
               {accept.replace(/\./g, '').toUpperCase()} (max {maxSizeMB}MB)
-            </Typography>
+            </SecondaryFont>
           </Box>
         </Box>
       )}

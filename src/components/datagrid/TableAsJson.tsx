@@ -3,9 +3,11 @@ import { useMemo } from 'react'
 import { toast } from 'react-toastify'
 
 import { ContentCopy as CopyIcon } from '@mui/icons-material'
-import { alpha, Box, IconButton, Paper, styled, Tooltip, Typography } from '@mui/material'
+import { alpha, Box, IconButton, Paper, styled, Tooltip } from '@mui/material'
 import { RichTreeView } from '@mui/x-tree-view/RichTreeView'
 import { TreeItem, treeItemClasses } from '@mui/x-tree-view/TreeItem'
+
+import { BodyText } from '../fonts'
 
 export interface TableAsJsonProps {
   /** JSON data to display in tree view */
@@ -189,9 +191,9 @@ export const TableAsJson = ({ data, title, showCopyButton = true }: TableAsJsonP
     <Box>
       {/* Optional title above the card */}
       {hasTitle && (
-        <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+        <BodyText variant="body2" sx={{ mb: 1, fontWeight: 600 }}>
           {title}
-        </Typography>
+        </BodyText>
       )}
 
       {/* Tree View Card with Copy Button inside */}

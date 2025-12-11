@@ -6,199 +6,82 @@ import { toast } from 'react-toastify'
 import type { ZodType } from 'zod'
 
 import {
-  Cancel as CancelIcon,
-  Download as DownloadIcon,
-  Error as ErrorIcon,
-  GridOn as GridIcon,
-  Code as JsonIcon,
-  Send as SendIcon,
+    Cancel as CancelIcon,
+    Download as DownloadIcon,
+    Error as ErrorIcon,
+    GridOn as GridIcon,
+    Code as JsonIcon,
+    Send as SendIcon,
 } from '@mui/icons-material'
 import {
-  Box,
-  CircularProgress,
-  Container,
-  Divider,
-  Paper,
-  ToggleButton,
-  ToggleButtonGroup,
+    Box,
+    CircularProgress,
+    Container,
+    Divider,
+    Paper,
+    ToggleButton,
+    ToggleButtonGroup,
 } from '@mui/material'
 import type { GridColDef, GridColumnVisibilityModel, GridSlotsComponent, GridToolbarProps } from '@mui/x-data-grid'
 
 import { packageApi } from '../../api/packageApi'
+import { pickupLocationApi } from '../../api/pickupLocationApi'
 import { ImportInstructions } from '../../components'
 import { BlueButton, LinkButton, RedButton } from '../../components/buttons'
 import {
-  ErrorDetailsModal,
-  GridDensity,
-  SimpleToolbar,
-  StyledDataGrid,
-  TableAsJson,
-  type ColumnGroup,
-  type GridDensityType,
+    ErrorDetailsModal,
+    GridDensity,
+    LogicOperator,
+    SimpleToolbar,
+    StyledDataGrid,
+    TableAsJson,
+    type ColumnGroup,
+    type FilterGroup,
+    type GridDensityType,
 } from '../../components/datagrid'
 import { BodyText, SecondaryFont, Subheader } from '../../components/fonts'
 import { FileDropZone, SelectInput } from '../../components/form-input'
-import { DEFAULT_MAX_RECORDS, MAX_RECORDS_OPTIONS } from '../../constants/appConstants'
+import { DEFAULT_MAX_RECORDS, MAX_RECORDS_OPTIONS, PACKAGE_TYPE_OPTIONS } from '../../constants/appConstants'
 import { APP_ROUTES } from '../../constants/routes'
 import type { PackageRequestModel } from '../../models/api-models'
-import styles from '../../styles/Packages.module.scss'
-import { downloadImportTemplate, parseImportFile } from '../../utils/gridUtil'
 import {
-  PACKAGE_TYPE_OPTIONS,
-  packageFormSchema,
-  type PackageFormData,
+    getPackageImportPreviewColumns,
+    packageImportHeaderNames,
+    packageImportTemplateStructure,
+    parsePickupLocationQuantities,
+    type ImportPackageData,
+} from '../../models/bulk-import-models/ImportPackageGridModel'
+import { getPickupLocationGridColumns, type PickupLocationData } from '../../models/grid-models/PickupLocationGridColumns'
+import styles from '../../styles/Packages.module.scss'
+import { type PaginatedGridInterface } from '../../types/grid.types'
+import { applyLocalFilters, downloadImportTemplate, parseImportFile } from '../../utils/gridUtil'
+import {
+    packageFormSchema,
+    type PackageFormData,
 } from '../../utils/validationSchemas'
+import { PickupLocationsModal } from '../products/components'
+import type { PickupLocationCardData } from '../products/components/PickupLocationCard'
+import { FillImportTestDataButton } from './components'
 
 /**
- * Template structure for Package import Excel file
- * Defines the columns and their groupings
+ * Package Type data for reference grid
  */
-const packageImportTemplateStructure = [
-  {
-    category: 'Package Information',
-    fields: ['packageName', 'packageType', 'length', 'breadth', 'height', 'maxWeight', 'standardCapacity', 'pricePerUnit'],
-  },
-  {
-    category: 'Additional',
-    fields: ['notes'],
-  },
-]
-
-/**
- * Header name mappings for Excel columns
- */
-const packageImportHeaderNames: Record<string, string> = {
-  packageName: 'Package Name',
-  packageType: 'Package Type',
-  length: 'Length (cm)',
-  breadth: 'Breadth (cm)',
-  height: 'Height (cm)',
-  maxWeight: 'Max Weight (kg)',
-  standardCapacity: 'Standard Capacity',
-  pricePerUnit: 'Price Per Unit',
-  notes: 'Notes',
-}
-
-/**
- * Interface for parsed package data from Excel/CSV
- */
-interface ImportPackageData {
-  rowNumber: number
-  packageName: string
-  packageType: string
-  length: number
-  breadth: number
-  height: number
-  maxWeight: number
-  standardCapacity: number
-  pricePerUnit: number
-  notes?: string
-  errors?: string[]
+interface PackageTypeData {
+  id: number
+  value: string
+  label: string
 }
 
 // Cast the schema for use with parseImportFile
 const bulkPackageImportValidator = packageFormSchema as unknown as ZodType<PackageFormData>
 
 /**
- * Get preview columns for the import grid
+ * Get columns for package type reference grid
  */
-const getPackageImportPreviewColumns = (
-  onErrorClick: (errors: string[], rowNumber: number) => void,
-): GridColDef[] => [
+const getPackageTypeGridColumns = (): GridColDef[] => [
   {
-    field: 'rowNumber',
-    headerName: 'Row',
-    width: 70,
-    align: 'center',
-    headerAlign: 'center',
-  },
-  {
-    field: 'errors',
-    headerName: 'Status',
-    width: 100,
-    align: 'center',
-    headerAlign: 'center',
-    renderCell: params => {
-      const errors = params.value as string[] | undefined
-      if (errors && errors.length > 0) {
-        return (
-          <Box
-            onClick={() => onErrorClick(errors, params.row.rowNumber as number)}
-            className={styles['import-packages-page__error-chip']}
-          >
-            <ErrorIcon fontSize="small" />
-            <span>{errors.length}</span>
-          </Box>
-        )
-      }
-      return <span className={styles['import-packages-page__success-text']}>✓</span>
-    },
-  },
-  {
-    field: 'packageName',
-    headerName: 'Package Name',
-    flex: 1.5,
-    minWidth: 180,
-  },
-  {
-    field: 'packageType',
+    field: 'value',
     headerName: 'Package Type',
-    width: 130,
-    align: 'center',
-    headerAlign: 'center',
-  },
-  {
-    field: 'length',
-    headerName: 'Length (cm)',
-    width: 110,
-    align: 'right',
-    headerAlign: 'right',
-    type: 'number',
-  },
-  {
-    field: 'breadth',
-    headerName: 'Breadth (cm)',
-    width: 120,
-    align: 'right',
-    headerAlign: 'right',
-    type: 'number',
-  },
-  {
-    field: 'height',
-    headerName: 'Height (cm)',
-    width: 110,
-    align: 'right',
-    headerAlign: 'right',
-    type: 'number',
-  },
-  {
-    field: 'maxWeight',
-    headerName: 'Max Weight (kg)',
-    width: 130,
-    align: 'right',
-    headerAlign: 'right',
-    type: 'number',
-  },
-  {
-    field: 'standardCapacity',
-    headerName: 'Capacity',
-    width: 100,
-    align: 'right',
-    headerAlign: 'right',
-    type: 'number',
-  },
-  {
-    field: 'pricePerUnit',
-    headerName: 'Price/Unit',
-    width: 110,
-    align: 'right',
-    headerAlign: 'right',
-    type: 'number',
-    valueFormatter: (value: number) => `₹${value?.toFixed(2) ?? '0.00'}`,
-  },
-  {
-    field: 'notes',
-    headerName: 'Notes',
     flex: 1,
     minWidth: 150,
   },
@@ -216,6 +99,7 @@ const mapToApiPayload = (pkg: ImportPackageData): PackageRequestModel => ({
   maxWeight: pkg.maxWeight,
   standardCapacity: pkg.standardCapacity,
   pricePerUnit: pkg.pricePerUnit,
+  pickupLocationQuantities: pkg.pickupLocationQuantities,
   notes: pkg.notes,
 })
 
@@ -230,6 +114,51 @@ const mapToApiPayload = (pkg: ImportPackageData): PackageRequestModel => ({
  */
 const ImportPackages = (): React.JSX.Element => {
   const navigate = useNavigate()
+
+  // ============================================================================
+  // Package Types Grid State (Local Pagination)
+  // ============================================================================
+  const [packageTypesRaw] = useState<PackageTypeData[]>(() =>
+    PACKAGE_TYPE_OPTIONS.map((option, index) => ({
+      id: index + 1,
+      value: option.value,
+      label: option.label,
+    })),
+  )
+  const [packageTypes, setPackageTypes] = useState<PackageTypeData[]>(packageTypesRaw)
+  const [packageTypesDensity, setPackageTypesDensity] = useState<GridDensityType>(GridDensity.STANDARD)
+  const [packageTypesColumnVisibility, setPackageTypesColumnVisibility] = useState<GridColumnVisibilityModel>({})
+  const [packageTypesActiveFilterGroup, setPackageTypesActiveFilterGroup] = useState<FilterGroup>({
+    logicOperator: LogicOperator.AND,
+    filters: [],
+  })
+
+  // ============================================================================
+  // Pickup Locations Grid State (Server-Side Pagination)
+  // ============================================================================
+  const [pickupLocations, setPickupLocations] = useState<PickupLocationData[]>([])
+  const [pickupLocationsLoading, setPickupLocationsLoading] = useState(false)
+  const [pickupLocationsTotalCount, setPickupLocationsTotalCount] = useState(0)
+  const [pickupLocationsPaginationModel, setPickupLocationsPaginationModel] = useState<PaginatedGridInterface>({
+    start: 0,
+    end: 10,
+    pageSize: 10,
+    includeDeleted: false,
+    actualDataCount: 0,
+    totalPaginationBlockCount: 0,
+  })
+  const [pickupLocationsActiveFilterGroup, setPickupLocationsActiveFilterGroup] = useState<FilterGroup>({
+    logicOperator: LogicOperator.AND,
+    filters: [],
+  })
+  const [pickupLocationsDensity, setPickupLocationsDensity] = useState<GridDensityType>(GridDensity.STANDARD)
+  const [pickupLocationsColumnVisibility, setPickupLocationsColumnVisibility] = useState<GridColumnVisibilityModel>({
+    pickupLocationId: true, // Show ID for reference
+  })
+
+  // ============================================================================
+  // Import State
+  // ============================================================================
   const [file, setFile] = useState<File | null>(null)
   const [importData, setImportData] = useState<ImportPackageData[]>([])
   const [viewMode, setViewMode] = useState<'grid' | 'json'>('grid')
@@ -242,9 +171,55 @@ const ImportPackages = (): React.JSX.Element => {
   const [selectedRowErrors, setSelectedRowErrors] = useState<string[]>([])
   const [selectedRowNumber, setSelectedRowNumber] = useState<number | null>(null)
 
+  // Stock modal state
+  const [stockModalOpen, setStockModalOpen] = useState(false)
+  const [stockModalLoading, setStockModalLoading] = useState(false)
+  const [stockModalLocations, setStockModalLocations] = useState<PickupLocationCardData[]>([])
+  const [stockModalPackageTitle, setStockModalPackageTitle] = useState<string>('')
+
   // Preview grid state
   const [previewDensity, setPreviewDensity] = useState<GridDensityType>(GridDensity.STANDARD)
   const [previewColumnVisibility, setPreviewColumnVisibility] = useState<GridColumnVisibilityModel>({})
+
+  // ============================================================================
+  // Apply local filters for Package Types
+  // ============================================================================
+  useEffect(() => {
+    if (packageTypesRaw.length > 0) {
+      const filteredData = applyLocalFilters(packageTypesRaw, packageTypesActiveFilterGroup)
+      setPackageTypes(filteredData)
+    }
+  }, [packageTypesRaw, packageTypesActiveFilterGroup])
+
+  // ============================================================================
+  // Fetch Pickup Locations (Server-Side)
+  // ============================================================================
+  const fetchPickupLocations = useCallback(async (): Promise<void> => {
+    setPickupLocationsLoading(true)
+    try {
+      const response = await pickupLocationApi.getPickupLocationsInBatches({
+        start: pickupLocationsPaginationModel.start,
+        end: pickupLocationsPaginationModel.end,
+        pageSize: pickupLocationsPaginationModel.pageSize,
+        includeDeleted: pickupLocationsPaginationModel.includeDeleted,
+        logicOperator: pickupLocationsActiveFilterGroup.logicOperator,
+        filters: pickupLocationsActiveFilterGroup.filters,
+      })
+
+      setPickupLocations(response.data as PickupLocationData[])
+      setPickupLocationsTotalCount(response.totalDataCount)
+    } catch {
+      setPickupLocations([])
+      setPickupLocationsTotalCount(0)
+    } finally {
+      setPickupLocationsLoading(false)
+    }
+  }, [pickupLocationsPaginationModel, pickupLocationsActiveFilterGroup])
+
+  // Fetch pickup locations on mount and when pagination/filters change
+  useEffect(() => {
+    void fetchPickupLocations()
+  }, [fetchPickupLocations])
 
   /**
    * Download Excel template with merged category headers
@@ -284,6 +259,7 @@ const ImportPackages = (): React.JSX.Element => {
           const maxWeightRaw = getRequiredValue('maxWeight')
           const standardCapacityRaw = getRequiredValue('standardCapacity')
           const pricePerUnitRaw = getRequiredValue('pricePerUnit')
+          const pickupLocationQuantitiesStr = getOptionalValue('pickupLocationQuantities')
           const notes = getOptionalValue('notes')
 
           // Parse numeric values
@@ -293,6 +269,10 @@ const ImportPackages = (): React.JSX.Element => {
           const maxWeight = parseFloat(String(maxWeightRaw)) || 0
           const standardCapacity = parseInt(String(standardCapacityRaw), 10) || 0
           const pricePerUnit = parseFloat(String(pricePerUnitRaw)) || 0
+
+          // Parse pickup location quantities from string format
+          const pickupLocationQuantitiesRaw = pickupLocationQuantitiesStr ? String(pickupLocationQuantitiesStr) : undefined
+          const pickupLocationQuantities = parsePickupLocationQuantities(pickupLocationQuantitiesRaw)
 
           // Create validation payload
           const validationPayload: PackageFormData = {
@@ -304,6 +284,7 @@ const ImportPackages = (): React.JSX.Element => {
             maxWeight,
             standardCapacity,
             pricePerUnit,
+            pickupLocationQuantities,
             notes: notes ? String(notes) : '',
           }
 
@@ -317,6 +298,8 @@ const ImportPackages = (): React.JSX.Element => {
             maxWeight,
             standardCapacity,
             pricePerUnit,
+            pickupLocationQuantities,
+            pickupLocationQuantitiesStr: pickupLocationQuantitiesRaw,
             notes: notes ? String(notes) : undefined,
           }
 
@@ -442,9 +425,85 @@ const ImportPackages = (): React.JSX.Element => {
     setErrorModalOpen(true)
   }, [])
 
+  const handlePreviewStockClick = useCallback(async (_rowNumber: number, stockString: string, packageTitle: string): Promise<void> => {
+    setStockModalPackageTitle(packageTitle)
+    setStockModalOpen(true)
+    setStockModalLoading(true)
+    setStockModalLocations([])
+
+    try {
+      // Parse the stock string to get location IDs and quantities
+      // Format: locationId|qty|reorderLevel|maxStock;...
+      const stockMap = parsePickupLocationQuantities(stockString)
+      const locationIds = Object.keys(stockMap).map(id => parseInt(id, 10))
+
+      // Fetch details for each location
+      const locationPromises = locationIds.map(async (locationId) => {
+        try {
+          const locationData = await pickupLocationApi.getPickupLocationById(locationId) as {
+            pickupLocationId: number
+            addressNickName?: string
+            address?: {
+              streetAddress?: string
+              streetAddress2?: string
+              city?: string
+              state?: string
+              postalCode?: string
+              phoneOnAddress?: string
+              emailOnAddress?: string
+            }
+          }
+          const inventoryData = stockMap[locationId.toString()]
+          return {
+            pickupLocation: {
+              pickupLocationId: locationData.pickupLocationId,
+              addressNickName: locationData.addressNickName,
+              address: locationData.address,
+            },
+            availableStock: inventoryData?.quantity ?? 0,
+            reorderLevel: inventoryData?.reorderLevel,
+            maxStockLevel: inventoryData?.maxStockLevel,
+          }
+        } catch {
+          // Return minimal data if fetch fails
+          const inventoryData = stockMap[locationId.toString()]
+          return {
+            pickupLocation: {
+              pickupLocationId: locationId,
+              addressNickName: `Location ID: ${locationId}`,
+            },
+            availableStock: inventoryData?.quantity ?? 0,
+            reorderLevel: inventoryData?.reorderLevel,
+            maxStockLevel: inventoryData?.maxStockLevel,
+          }
+        }
+      })
+
+      const locations = await Promise.all(locationPromises)
+      setStockModalLocations(locations)
+    } catch {
+      setStockModalLocations([])
+    } finally {
+      setStockModalLoading(false)
+    }
+  }, [])
+
+  // ============================================================================
+  // Grid Column Definitions
+  // ============================================================================
+  const packageTypesColumns = useMemo<GridColDef[]>(() => getPackageTypeGridColumns(), [])
+
+  const pickupLocationsColumns = useMemo<GridColDef[]>(() => {
+    const noOpToggle = (): void => {
+      // Read-only grid, no toggle support required
+    }
+    // Get all columns except actions
+    return getPickupLocationGridColumns(noOpToggle).filter(col => col.field !== 'actions')
+  }, [])
+
   const previewColumns = useMemo<GridColDef[]>(
-    () => getPackageImportPreviewColumns(handlePreviewErrorClick),
-    [handlePreviewErrorClick],
+    () => getPackageImportPreviewColumns(handlePreviewErrorClick, handlePreviewStockClick),
+    [handlePreviewErrorClick, handlePreviewStockClick],
   )
 
   // Column grouping for preview grid
@@ -487,10 +546,120 @@ const ImportPackages = (): React.JSX.Element => {
               `Valid package types: ${packageTypeLabels}`,
               'All dimensions should be in centimeters (cm)',
               'Weight should be in kilograms (kg)',
+              'Pickup Locations format: locationId|quantity|reorderLevel|maxStock (use semicolon to separate multiple locations)',
+              'Example: 1|50|10|200;2|30|5|100 (Location 1: qty=50, reorder at 10, max 200)',
               'Upload the file and preview the data',
               'Review and submit the import',
             ]}
           />
+
+          {/* Reference Data - Package Types */}
+          <Paper className={styles['import-packages-page__reference-card']}>
+            <Subheader label="Reference Data" className={styles['import-packages-page__section-title']} />
+            <Divider className={styles['import-packages-page__divider']} />
+
+            <Box className={styles['import-packages-page__reference-content']}>
+              <Subheader label="Package Types" className={styles['import-packages-page__subsection-title']} />
+              <Box className={styles['import-packages-page__grid-wrapper']}>
+                <StyledDataGrid
+                  dataTestId="package-types-reference-grid"
+                  rows={packageTypes}
+                  columns={packageTypesColumns}
+                  getRowId={row => (row as PackageTypeData).id}
+                  loading={false}
+                  paginationMode="client"
+                  filterMode="client"
+                  sortingMode="client"
+                  pageSizeOptions={[5, 10]}
+                  initialState={{
+                    pagination: {
+                      paginationModel: {
+                        pageSize: 10,
+                      },
+                    },
+                  }}
+                  disableRowSelectionOnClick
+                  autoHeight
+                  density={packageTypesDensity}
+                  columnVisibilityModel={packageTypesColumnVisibility}
+                  onColumnVisibilityModelChange={setPackageTypesColumnVisibility}
+                  slots={{
+                    toolbar: SimpleToolbar as GridSlotsComponent['toolbar'],
+                  }}
+                  slotProps={{
+                    toolbar: {
+                      density: packageTypesDensity,
+                      onDensityChange: setPackageTypesDensity,
+                      columns: packageTypesColumns,
+                      rows: packageTypes,
+                      hideIncludeDeleted: true,
+                      hideExport: false,
+                      hideFilter: false,
+                      hideColumns: false,
+                      columnVisibilityModel: packageTypesColumnVisibility,
+                      onColumnVisibilityChange: setPackageTypesColumnVisibility,
+                      activeFilterGroup: packageTypesActiveFilterGroup,
+                      onFiltersChange: setPackageTypesActiveFilterGroup,
+                    } as GridToolbarProps,
+                  }}
+                  showToolbar
+                  disableColumnMenu={false}
+                />
+              </Box>
+            </Box>
+          </Paper>
+
+          {/* Pickup Locations Grid (Server-Side Pagination) */}
+          <Paper className={styles['import-packages-page__reference-card']}>
+            <Subheader label="Available Pickup Locations" className={styles['import-packages-page__section-title']} />
+            <Divider className={styles['import-packages-page__divider']} />
+            <Box className={`${styles['import-packages-page__reference-content']} ${styles['import-packages-page__grid-wrapper']}`}>
+              <StyledDataGrid
+                dataTestId="pickup-locations-reference-grid"
+                rows={pickupLocations}
+                columns={pickupLocationsColumns}
+                getRowId={row => {
+                  const data = row as PickupLocationData
+                  return data.pickupLocationId ?? data.pickupLocation?.pickupLocationId ?? 0
+                }}
+                loading={pickupLocationsLoading}
+                rowCount={pickupLocationsTotalCount}
+                totalCount={pickupLocationsTotalCount}
+                paginationModelState={pickupLocationsPaginationModel}
+                setPaginationModel={setPickupLocationsPaginationModel}
+                paginationMode="server"
+                filterMode="server"
+                sortingMode="server"
+                pageSizeOptions={[10, 25, 50]}
+                disableRowSelectionOnClick
+                autoHeight
+                density={pickupLocationsDensity}
+                columnVisibilityModel={pickupLocationsColumnVisibility}
+                onColumnVisibilityModelChange={setPickupLocationsColumnVisibility}
+                slots={{
+                  toolbar: SimpleToolbar as GridSlotsComponent['toolbar'],
+                }}
+                slotProps={{
+                  toolbar: {
+                    density: pickupLocationsDensity,
+                    onDensityChange: setPickupLocationsDensity,
+                    columns: pickupLocationsColumns,
+                    rows: pickupLocations,
+                    hideIncludeDeleted: true,
+                    hideExport: false,
+                    hideFilter: false,
+                    hideColumns: false,
+                    columnVisibilityModel: pickupLocationsColumnVisibility,
+                    onColumnVisibilityChange: setPickupLocationsColumnVisibility,
+                    activeFilterGroup: pickupLocationsActiveFilterGroup,
+                    onFiltersChange: setPickupLocationsActiveFilterGroup,
+                  } as GridToolbarProps,
+                }}
+                showToolbar
+                disableColumnMenu={false}
+              />
+            </Box>
+          </Paper>
 
           {/* Import Settings Card with File Upload */}
           <Paper className={styles['import-packages-page__settings-card']}>
@@ -690,6 +859,22 @@ const ImportPackages = (): React.JSX.Element => {
         errors={selectedRowErrors}
         rowIdentifier={selectedRowNumber !== null ? `Row ${selectedRowNumber}` : undefined}
       />
+
+      {/* Stock/Pickup Locations Modal */}
+      <PickupLocationsModal
+        open={stockModalOpen}
+        onClose={() => {
+          setStockModalOpen(false)
+          setStockModalLocations([])
+          setStockModalPackageTitle('')
+        }}
+        locations={stockModalLocations}
+        productTitle={stockModalPackageTitle}
+        loading={stockModalLoading}
+      />
+
+      {/* Development Test Data Button */}
+      {import.meta.env.DEV && <FillImportTestDataButton />}
     </>
   )
 }

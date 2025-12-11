@@ -1,0 +1,159 @@
+.pickup-locations-page {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: 0;
+  box-sizing: border-box;
+
+  &__container {
+    padding-top: 32px;
+    padding-bottom: 32px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow-x: auto;
+  }
+
+  &__card {
+    background-color: #ffffff;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+
+    .MuiDataGrid-root {
+      width: 100%;
+      max-width: 100%;
+      min-width: 1200px;
+      box-sizing: border-box;
+      border: none;
+      border-radius: 0;
+    }
+  }
+
+  &__pagination {
+    padding: 16px;
+    border-top: 1px solid rgba(224, 224, 224, 1);
+    background-color: #fff;
+  }
+
+  // Deleted row styling
+  :global(.MuiDataGrid-row.deleted) {
+    background-color: rgba(0, 0, 0, 0.04) !important;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.08) !important;
+    }
+  }
+}
+
+// ============================================================================
+// Add/Edit Pickup Location Page
+// ============================================================================
+
+.add-pickup-location-page {
+  &__container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding-top: 24px;
+    padding-bottom: 24px;
+  }
+
+  &__section {
+    padding: 24px;
+  }
+
+  &__section-title {
+    margin-bottom: 8px;
+  }
+
+  &__divider {
+    margin-bottom: 16px;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+  }
+
+  &__action-button {
+    min-width: 140px;
+  }
+}
+
+// ============================================================================
+// Pickup Location Details View
+// ============================================================================
+
+.pickup-location-details-view {
+  &__section {
+    padding: 24px;
+    margin-bottom: 16px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  &__section-title {
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  }
+
+  &__label {
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+
+  &__value {
+    color: rgba(0, 0, 0, 0.87);
+    font-size: 1rem;
+    font-weight: 400;
+  }
+
+  &__notes {
+    background-color: rgba(0, 0, 0, 0.02);
+    border-radius: 4px;
+    padding: 16px;
+    white-space: pre-wrap;
+  }
+}
+
+// ============================================================================
+// Fill Test Data Button
+// ============================================================================
+
+.fill-test-data-button {
+  &__fab {
+    position: fixed !important;
+    bottom: 24px;
+    right: 96px; // Position to the left of DevLogger FAB (56px width + 16px gap + 24px from right)
+    z-index: 1200;
+    background-color: #1976d2 !important; // Primary blue color matching theme
+    color: #fff !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    transition: all 0.3s ease-in-out !important;
+
+    &:hover {
+      background-color: #1565c0 !important; // Darker blue on hover
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    &.Mui-disabled {
+      background-color: rgba(0, 0, 0, 0.12) !important;
+      color: rgba(0, 0, 0, 0.26) !important;
+    }
+  }
+}
+

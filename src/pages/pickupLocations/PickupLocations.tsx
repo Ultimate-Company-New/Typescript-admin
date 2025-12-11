@@ -30,7 +30,7 @@ import {
 import { getPickupLocationGridColumns } from '../../models/grid-models/PickupLocationGridColumns'
 import { type PaginatedGridInterface } from '../../types/grid.types'
 
-import styles from './PickupLocations.module.scss'
+import styles from '../../styles/PickupLocations.module.scss'
 
 /**
  * Pickup Location data structure matching API response

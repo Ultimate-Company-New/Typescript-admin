@@ -3,7 +3,9 @@ import { Box, Link, Tooltip } from '@mui/material'
 import { type GridColDef, type GridRenderCellParams } from '@mui/x-data-grid'
 
 import { RenderLongCellItem } from '../../components/datagrid'
+import { PERMISSIONS } from '../../constants/appConstants'
 import { APP_ROUTES } from '../../constants/routes'
+import { usePermissions } from '../../hooks/usePermissions'
 
 /**
  * Pickup Location data structure matching API response
@@ -42,6 +44,102 @@ export interface PickupLocationData {
 const formatPhone = (phone: string): string => {
   if (!phone || phone.length < 10) return phone
   return `(${phone.slice(0, 3)}) ${phone.slice(3, 6)}-${phone.slice(6)}`
+}
+
+/**
+ * Pickup Location Actions Component - handles permission-based action visibility
+ */
+const PickupLocationActionsCell = ({
+  pickupLocationId,
+  isDeleted,
+  onTogglePickupLocation,
+}: {
+  pickupLocationId: number
+  isDeleted: boolean
+  onTogglePickupLocation?: (pickupLocationId: number) => void
+}): JSX.Element => {
+  const { hasPermission } = usePermissions()
+
+  // Check permissions using PERMISSIONS constants
+  const canViewPickupLocation = hasPermission(PERMISSIONS.VIEW_PICKUP_LOCATIONS)
+  const canUpdatePickupLocation = hasPermission(PERMISSIONS.UPDATE_PICKUP_LOCATIONS)
+  const canDeletePickupLocation = hasPermission(PERMISSIONS.DELETE_PICKUP_LOCATIONS)
+
+  if (isDeleted) {
+    // Only show Activate if user has delete permission
+    if (!canDeletePickupLocation) {
+      return <span>—</span>
+    }
+
+    return (
+      <div>
+        <Link
+          href="#"
+          onClick={e => {
+            e.preventDefault()
+            if (onTogglePickupLocation) {
+              onTogglePickupLocation(pickupLocationId)
+            }
+          }}
+          sx={{ cursor: 'pointer', color: 'success.main' }}
+        >
+          Activate
+        </Link>
+      </div>
+    )
+  }
+
+  // Build actions based on permissions
+  const actions: JSX.Element[] = []
+
+  if (canViewPickupLocation) {
+    actions.push(
+      <Link
+        key="view"
+        href={`${APP_ROUTES.DASHBOARD.ADD_PICKUP_LOCATION}?pickupLocationId=${pickupLocationId}&isView`}
+        sx={{ cursor: 'pointer' }}
+      >
+        View
+      </Link>,
+    )
+  }
+
+  if (canUpdatePickupLocation) {
+    actions.push(
+      <Link
+        key="edit"
+        href={`${APP_ROUTES.DASHBOARD.ADD_PICKUP_LOCATION}?pickupLocationId=${pickupLocationId}`}
+        sx={{ cursor: 'pointer' }}
+      >
+        Edit
+      </Link>,
+    )
+  }
+
+  if (canDeletePickupLocation) {
+    actions.push(
+      <Link
+        key="deactivate"
+        href="#"
+        onClick={e => {
+          e.preventDefault()
+          if (onTogglePickupLocation) {
+            onTogglePickupLocation(pickupLocationId)
+          }
+        }}
+        sx={{ cursor: 'pointer', color: 'error.main' }}
+      >
+        Deactivate
+      </Link>,
+    )
+  }
+
+  // If no actions available, show dash
+  if (actions.length === 0) {
+    return <span>—</span>
+  }
+
+  return <div style={{ display: 'flex', gap: '12px' }}>{actions}</div>
 }
 
 /**
@@ -237,56 +335,18 @@ height: '100%' }}>{params.value}</Box>
     renderCell: (params: GridRenderCellParams<PickupLocationData>) => {
       const rowData = params.row
       const pickupLocationId = rowData.pickupLocationId ?? rowData.pickupLocation?.pickupLocationId
+      const isDeleted = rowData.isDeleted ?? rowData.deleted ?? rowData.pickupLocation?.deleted ?? false
 
-      if (rowData.isDeleted ?? rowData.deleted ?? rowData.pickupLocation?.deleted) {
-        return (
-          <div>
-            <Link
-              href="#"
-              onClick={e => {
-                e.preventDefault()
-                if (pickupLocationId != null) {
-                  onTogglePickupLocation(pickupLocationId)
-                }
-              }}
-              sx={{ cursor: 'pointer',
-color: 'success.main' }}
-            >
-              Activate
-            </Link>
-          </div>
-        )
+      if (pickupLocationId == null) {
+        return <span>—</span>
       }
 
       return (
-        <div style={{ display: 'flex',
-gap: '12px' }}>
-          <Link
-            href={`${APP_ROUTES.DASHBOARD.ADD_PICKUP_LOCATION}?pickupLocationId=${pickupLocationId}&isView`}
-            sx={{ cursor: 'pointer' }}
-          >
-            View
-          </Link>
-          <Link
-            href={`${APP_ROUTES.DASHBOARD.ADD_PICKUP_LOCATION}?pickupLocationId=${pickupLocationId}`}
-            sx={{ cursor: 'pointer' }}
-          >
-            Edit
-          </Link>
-          <Link
-            href="#"
-            onClick={e => {
-              e.preventDefault()
-              if (pickupLocationId != null) {
-                onTogglePickupLocation(pickupLocationId)
-              }
-            }}
-            sx={{ cursor: 'pointer',
-color: 'error.main' }}
-          >
-            Deactivate
-          </Link>
-        </div>
+        <PickupLocationActionsCell
+          pickupLocationId={pickupLocationId}
+          isDeleted={isDeleted}
+          onTogglePickupLocation={onTogglePickupLocation}
+        />
       )
     },
   },

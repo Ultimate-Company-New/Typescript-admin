@@ -10,9 +10,9 @@ import {
   List,
   ListItem,
   ListItemText,
-  Typography,
 } from '@mui/material'
 
+import { BodyText, Subheader } from '../fonts'
 import styles from '../../styles/DataGrid.module.scss'
 
 /**
@@ -79,18 +79,16 @@ const ErrorDetailsModal: FC<ErrorDetailsModalProps> = ({
       <Box className={styles['error-modal__title-content']}>
         <Box className={styles['error-modal__title-icon-wrapper']}>
           <ErrorIcon className={styles['error-modal__title-icon']} />
-          <Typography variant="h6" component="span">
-            {title}
-          </Typography>
+          <Subheader label={title} />
         </Box>
         <IconButton aria-label="close" onClick={onClose} className={styles['error-modal__close-button']}>
           <CloseIcon />
         </IconButton>
       </Box>
       {rowIdentifier && (
-        <Typography variant="body2" className={styles['error-modal__subtitle']}>
+        <BodyText variant="body2" className={styles['error-modal__subtitle']}>
           {rowIdentifier}
-        </Typography>
+        </BodyText>
       )}
     </DialogTitle>
     <DialogContent className={styles['error-modal__content']}>

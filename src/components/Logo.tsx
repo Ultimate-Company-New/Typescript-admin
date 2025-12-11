@@ -1,4 +1,6 @@
-import { Box, Typography } from '@mui/material'
+import { Box } from '@mui/material'
+
+import { Header, SecondaryFont } from './fonts'
 
 interface LogoProps {
   size?: number
@@ -53,25 +55,23 @@ const Logo = ({ size = 120, variant = 'default' }: LogoProps): JSX.Element => {
       }}
     >
       {/* Replace this with actual logo image */}
-      <Typography
+      <Header
+        label="ADMIN"
         variant="h4"
         sx={{
           color: getTextColor(),
           fontWeight: 700,
           letterSpacing: 2,
         }}
-      >
-        ADMIN
-      </Typography>
-      <Typography
-        variant="caption"
+      />
+      <SecondaryFont
         sx={{
           color: getTextColor(),
           opacity: 0.8,
         }}
       >
         PORTAL
-      </Typography>
+      </SecondaryFont>
     </Box>
   )
 }

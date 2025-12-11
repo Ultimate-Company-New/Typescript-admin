@@ -1093,30 +1093,21 @@ const PACKAGE_NOTES = [
   'Includes packing slip pouch',
 ]
 
-/**
- * Package request model for API calls
- */
-export interface PackageRequestModel {
-  packageId?: number
-  packageName: string
-  length: number
-  breadth: number
-  height: number
-  maxWeight: number
-  standardCapacity: number
-  pricePerUnit: number
-  packageType: string
-  notes?: string
-}
+// Re-export from api-models for convenience in test data generation
+export type {
+  PackagePickupLocationMappingRequestModel,
+  PackageRequestModel,
+} from '../models/api-models/PackageModels'
 
 /**
  * Generate test data for a single package form
  * Creates a package with randomly generated test data
+ * Fetches real pickup location IDs from the database
  *
  * @param preserveName - Optional existing name to preserve (for edit mode)
- * @returns PackageRequestModel for form population
+ * @returns Promise<PackageRequestModel> for form population
  */
-export const generatePackageFormTest = (preserveName?: string): PackageRequestModel => {
+export const generatePackageFormTest = async (preserveName?: string): Promise<PackageRequestModel> => {
   const template = PACKAGE_NAME_TEMPLATES[Math.floor(Math.random() * PACKAGE_NAME_TEMPLATES.length)]
   const timestamp = Date.now()
 
@@ -1138,6 +1129,47 @@ export const generatePackageFormTest = (preserveName?: string): PackageRequestMo
   // Random notes
   const notes = PACKAGE_NOTES[Math.floor(Math.random() * PACKAGE_NOTES.length)]
 
+  // Fetch real pickup locations from database and randomly select 3-5
+  const pickupLocationQuantities: Record<string, PackagePickupLocationMappingRequestModel> = {}
+  try {
+    const response = await pickupLocationApi.getPickupLocationsInBatches({
+      start: 0,
+      end: 50,
+      pageSize: 50,
+    })
+
+    // Extract pickup location data from response
+    const locations = (response.data || []) as Array<{ pickupLocationId: number }>
+
+    if (locations.length > 0) {
+      // Randomly select 3-5 locations (or fewer if less available)
+      const numLocations = Math.min(3 + Math.floor(Math.random() * 3), locations.length) // 3-5 locations
+      const shuffled = [...locations].sort(() => Math.random() - 0.5)
+      const selectedLocations = shuffled.slice(0, numLocations)
+
+      // Build pickupLocationQuantities with selected locations and random inventory data
+      selectedLocations.forEach((location) => {
+        const quantity = 10 + Math.floor(Math.random() * 100) // Random quantity 10-110
+        const reorderLevel = Math.floor(quantity * 0.2) // 20% of quantity
+        const maxStockLevel = quantity * 2 // Double the current quantity
+        // Randomly add last restock date (50% chance)
+        const lastRestockDate = Math.random() > 0.5
+          ? new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000).toISOString()
+          : undefined
+
+        pickupLocationQuantities[location.pickupLocationId.toString()] = {
+          quantity,
+          reorderLevel,
+          maxStockLevel,
+          lastRestockDate,
+        }
+      })
+    }
+  } catch (error) {
+    console.warn('Failed to fetch pickup locations for package test data:', error)
+    // If API fails, leave pickup locations empty
+  }
+
   return {
     packageName: preserveName ?? `${template.prefix} ${template.suffix} - ${timestamp % 100000}`,
     length,
@@ -1148,6 +1180,7 @@ export const generatePackageFormTest = (preserveName?: string): PackageRequestMo
     pricePerUnit,
     packageType,
     notes,
+    pickupLocationQuantities,
   }
 }
 
@@ -1196,4 +1229,178 @@ export const generatePackageImportTest = (numberOfRecords: number): PackageReque
   }
 
   return packages
+}
+
+// ============================================================================
+// Pickup Location Test Data Generation
+// ============================================================================
+
+/**
+ * Pickup location name templates for variety in test data
+ */
+const PICKUP_LOCATION_TEMPLATES = [
+  { name: 'Main Warehouse', type: 'WAREHOUSE' },
+  { name: 'Downtown Store', type: 'STORE' },
+  { name: 'Airport Hub', type: 'WAREHOUSE' },
+  { name: 'City Center Outlet', type: 'STORE' },
+  { name: 'Industrial Zone Depot', type: 'WAREHOUSE' },
+  { name: 'Mall Kiosk', type: 'STORE' },
+  { name: 'Distribution Center', type: 'WAREHOUSE' },
+  { name: 'Express Pickup Point', type: 'STORE' },
+  { name: 'Regional Hub', type: 'WAREHOUSE' },
+  { name: 'Premium Showroom', type: 'STORE' },
+  { name: 'Fulfillment Center', type: 'WAREHOUSE' },
+  { name: 'Neighborhood Store', type: 'STORE' },
+] as const
+
+/**
+ * Indian states for test data
+ */
+const INDIAN_STATES = [
+  'Maharashtra',
+  'Karnataka',
+  'Tamil Nadu',
+  'Delhi',
+  'Gujarat',
+  'Rajasthan',
+  'West Bengal',
+  'Uttar Pradesh',
+  'Telangana',
+  'Kerala',
+] as const
+
+/**
+ * Cities by state for test data
+ */
+const CITIES_BY_STATE: Record<string, string[]> = {
+  Maharashtra: ['Mumbai', 'Pune', 'Nagpur', 'Nashik', 'Thane'],
+  Karnataka: ['Bangalore', 'Mysore', 'Mangalore', 'Hubli', 'Belgaum'],
+  'Tamil Nadu': ['Chennai', 'Coimbatore', 'Madurai', 'Salem', 'Tiruchirappalli'],
+  Delhi: ['New Delhi', 'South Delhi', 'North Delhi', 'East Delhi', 'West Delhi'],
+  Gujarat: ['Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Gandhinagar'],
+  Rajasthan: ['Jaipur', 'Jodhpur', 'Udaipur', 'Kota', 'Ajmer'],
+  'West Bengal': ['Kolkata', 'Howrah', 'Durgapur', 'Asansol', 'Siliguri'],
+  'Uttar Pradesh': ['Lucknow', 'Noida', 'Ghaziabad', 'Kanpur', 'Varanasi'],
+  Telangana: ['Hyderabad', 'Warangal', 'Nizamabad', 'Karimnagar', 'Khammam'],
+  Kerala: ['Thiruvananthapuram', 'Kochi', 'Kozhikode', 'Thrissur', 'Kollam'],
+}
+
+/**
+ * Street name templates for test data
+ */
+const STREET_TEMPLATES = [
+  'MG Road',
+  'Station Road',
+  'Ring Road',
+  'Industrial Area',
+  'Commercial Complex',
+  'IT Park',
+  'Business District',
+  'Trade Center',
+  'Market Street',
+  'Highway Service Road',
+]
+
+/**
+ * Pickup location notes templates
+ */
+const PICKUP_LOCATION_NOTES = [
+  'Main pickup location with extended operating hours',
+  'Convenient location near public transport',
+  'Large parking area available for customers',
+  'Climate-controlled storage facility',
+  'Express pickup service available',
+  'Wheelchair accessible entrance',
+  'Security monitored 24/7',
+  'Self-service pickup kiosk available',
+  'Staff assistance during business hours',
+  'Adjacent to major shopping center',
+]
+
+/**
+ * Pickup location request model for test data
+ */
+export interface PickupLocationTestData {
+  addressNickName: string
+  shipRocketPickupLocationId?: string
+  address: {
+    streetAddress: string
+    streetAddress2?: string
+    streetAddress3?: string
+    city: string
+    state: string
+    postalCode: string
+    country: string
+    addressType: string
+    nameOnAddress?: string
+    emailOnAddress?: string
+    phoneOnAddress?: string
+  }
+  notes?: string
+}
+
+/**
+ * Generate test data for a single pickup location form
+ * Creates a pickup location with randomly generated test data
+ *
+ * @param preserveName - Optional existing name to preserve (for edit mode)
+ * @returns PickupLocationTestData for form population
+ */
+export const generatePickupLocationFormTest = (preserveName?: string): PickupLocationTestData => {
+  const template = PICKUP_LOCATION_TEMPLATES[Math.floor(Math.random() * PICKUP_LOCATION_TEMPLATES.length)]
+  const timestamp = Date.now()
+
+  // Random state and city
+  const state = INDIAN_STATES[Math.floor(Math.random() * INDIAN_STATES.length)]
+  const stateCities = CITIES_BY_STATE[state] || ['Unknown City']
+  const city = stateCities[Math.floor(Math.random() * stateCities.length)]
+
+  // Random street
+  const street = STREET_TEMPLATES[Math.floor(Math.random() * STREET_TEMPLATES.length)]
+  const buildingNumber = 1 + Math.floor(Math.random() * 500)
+
+  // Generate postal code (Indian format: 6 digits)
+  const postalCode = `${400000 + Math.floor(Math.random() * 200000)}`
+
+  // Random phone (10 digits starting with 9 or 8)
+  const phonePrefix = Math.random() > 0.5 ? '98' : '88'
+  const phoneRemaining = Math.floor(10000000 + Math.random() * 90000000)
+  const phone = `${phonePrefix}${phoneRemaining}`
+
+  // Random email
+  const emailDomain = ['gmail.com', 'yahoo.com', 'outlook.com', 'company.com'][Math.floor(Math.random() * 4)]
+  const emailPrefix = `pickup_${timestamp % 100000}`
+
+  // Random notes
+  const notes = PICKUP_LOCATION_NOTES[Math.floor(Math.random() * PICKUP_LOCATION_NOTES.length)]
+
+  // Address type (mostly OFFICE or WAREHOUSE for pickup locations)
+  const addressTypes = ['OFFICE', 'WAREHOUSE', 'STORE', 'OTHER']
+  const addressType = addressTypes[Math.floor(Math.random() * addressTypes.length)]
+
+  // Optional ShipRocket ID (50% chance)
+  const shipRocketPickupLocationId = Math.random() > 0.5 ? `SR${timestamp % 100000}` : undefined
+
+  // Optional floor/building info (70% chance)
+  const hasFloor = Math.random() > 0.3
+  const hasBuilding = Math.random() > 0.3
+
+  return {
+    addressNickName: preserveName ?? `${template.name} - ${city} ${timestamp % 10000}`,
+    shipRocketPickupLocationId,
+    address: {
+      streetAddress: `${buildingNumber}, ${street}`,
+      streetAddress2: hasFloor ? `Floor ${1 + Math.floor(Math.random() * 10)}` : '',
+      streetAddress3: hasBuilding ? `Building ${String.fromCharCode(65 + Math.floor(Math.random() * 10))}` : '',
+      city,
+      state,
+      postalCode,
+      country: 'India',
+      addressType,
+      nameOnAddress: `${template.name} Manager`,
+      emailOnAddress: `${emailPrefix}@${emailDomain}`,
+      phoneOnAddress: phone,
+    },
+    notes,
+  }
 }
