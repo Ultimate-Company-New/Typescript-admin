@@ -560,11 +560,11 @@ export type PackageFormData = z.infer<typeof packageFormSchema>
 /**
  * Pickup Location form validation schema
  * Used for add/edit pickup location forms
+ * Note: shipRocketPickupLocationId is assigned by the backend PickupLocationService
  */
 export const pickupLocationFormSchema = z.object({
   // Location Information
-  addressNickName: z.string().min(1, 'Location name is required').max(100, 'Location name must be less than 100 characters'),
-  shipRocketPickupLocationId: z.string().optional().or(z.literal('')),
+  addressNickName: z.string().min(1, 'Location name is required').max(36, 'Location name must be 36 characters or less (Shiprocket limit)'),
   // Address fields (using AddressFormData structure)
   address: z.object({
     streetAddress: z.string().min(1, 'Street address is required'),

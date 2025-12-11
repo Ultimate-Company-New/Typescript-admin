@@ -13,8 +13,6 @@ import type { PickupLocationFormData } from '../../../utils/validationSchemas'
 interface FillTestDataButtonProps {
   setValue: UseFormSetValue<PickupLocationFormData>
   reset: UseFormReset<PickupLocationFormData>
-  isEdit: boolean
-  currentName?: string
 }
 
 /**
@@ -24,46 +22,52 @@ interface FillTestDataButtonProps {
 const FillTestDataButton = ({
   setValue,
   reset,
-  isEdit,
-  currentName,
 }: FillTestDataButtonProps): JSX.Element => {
   const [filling, setFilling] = useState(false)
 
-  const handleFillTestData = async (): Promise<void> => {
+  const handleFillTestData = (): void => {
     setFilling(true)
 
     try {
-      // Generate test data (preserve name in edit mode)
-      const testData = generatePickupLocationFormTest(isEdit ? currentName : undefined)
+      // Generate test data (always generate new name)
+      const testData = generatePickupLocationFormTest()
 
-      // Reset form with new values for clean state
-      reset(testData as PickupLocationFormData, {
-        keepDirty: false,
-        keepErrors: false,
-      })
+      // Create initial data with empty city (to allow state to populate city dropdown)
+      const initialData: PickupLocationFormData = {
+        addressNickName: testData.addressNickName,
+        address: {
+          streetAddress: testData.address.streetAddress,
+          streetAddress2: testData.address.streetAddress2 ?? '',
+          streetAddress3: testData.address.streetAddress3 ?? '',
+          city: '', // Set empty initially
+          state: testData.address.state,
+          postalCode: testData.address.postalCode,
+          country: testData.address.country,
+          addressType: testData.address.addressType,
+          nameOnAddress: testData.address.nameOnAddress ?? '',
+          emailOnAddress: testData.address.emailOnAddress ?? '',
+          phoneOnAddress: testData.address.phoneOnAddress ?? '',
+        },
+        notes: testData.notes ?? '',
+      }
 
-      // Also set individual values to trigger validation
-      setValue('addressNickName', testData.addressNickName, { shouldValidate: true })
-      setValue('shipRocketPickupLocationId', testData.shipRocketPickupLocationId ?? '', { shouldValidate: true })
-      setValue('address.streetAddress', testData.address.streetAddress, { shouldValidate: true })
-      setValue('address.streetAddress2', testData.address.streetAddress2 ?? '', { shouldValidate: true })
-      setValue('address.streetAddress3', testData.address.streetAddress3 ?? '', { shouldValidate: true })
-      setValue('address.city', testData.address.city, { shouldValidate: true })
-      setValue('address.state', testData.address.state, { shouldValidate: true })
-      setValue('address.postalCode', testData.address.postalCode, { shouldValidate: true })
-      setValue('address.country', testData.address.country, { shouldValidate: true })
-      setValue('address.addressType', testData.address.addressType, { shouldValidate: true })
-      setValue('address.nameOnAddress', testData.address.nameOnAddress ?? '', { shouldValidate: true })
-      setValue('address.emailOnAddress', testData.address.emailOnAddress ?? '', { shouldValidate: true })
-      setValue('address.phoneOnAddress', testData.address.phoneOnAddress ?? '', { shouldValidate: true })
-      setValue('notes', testData.notes ?? '', { shouldValidate: true })
+      // Reset form with test data (state first, city empty)
+      reset(initialData)
+
+      // Defer setting the city to allow state change to populate cities
+      setTimeout(() => {
+        setValue('address.city', testData.address.city ?? 'Mumbai', { shouldValidate: true })
+      }, 150)
 
       toast.success('Test data filled successfully!')
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to generate test data'
       toast.error(message)
     } finally {
-      setFilling(false)
+      // Brief visual feedback
+      setTimeout(() => {
+        setFilling(false)
+      }, 500)
     }
   }
 

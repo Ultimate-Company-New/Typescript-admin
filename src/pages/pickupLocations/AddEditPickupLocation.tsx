@@ -17,21 +17,21 @@ import { PERMISSIONS } from '../../constants/appConstants'
 import { APP_ROUTES } from '../../constants/routes'
 import { usePermissions } from '../../hooks/usePermissions'
 import styles from '../../styles/PickupLocations.module.scss'
-import { getCitiesByState, getAllStates } from '../../utils/stateCityMapper'
+import { getAllStates, getCitiesByState } from '../../utils/stateCityMapper'
 import {
-  pickupLocationFormSchema,
-  type PickupLocationFormData,
+    pickupLocationFormSchema,
+    type PickupLocationFormData,
 } from '../../utils/validationSchemas'
 
 import { FillTestDataButton, PickupLocationDetailsView } from './components'
 
 /**
  * Pickup Location Request Model for API
+ * Note: shipRocketPickupLocationId is assigned by the backend PickupLocationService
  */
 interface PickupLocationRequestModel {
   pickupLocationId?: number
   addressNickName: string
-  shipRocketPickupLocationId?: string
   address: {
     streetAddress: string
     streetAddress2?: string
@@ -91,6 +91,7 @@ const AddEditPickupLocation = (): React.JSX.Element => {
 
   const [loading, setLoading] = useState(false)
   const [selectedState, setSelectedState] = useState<string>('')
+  const [shipRocketId, setShipRocketId] = useState<number | null>(null)
 
   // Get user permissions for authorization
   const { hasPermission } = usePermissions()
@@ -129,7 +130,6 @@ const AddEditPickupLocation = (): React.JSX.Element => {
     resolver: zodResolver(pickupLocationFormSchema),
     defaultValues: {
       addressNickName: '',
-      shipRocketPickupLocationId: '',
       address: {
         streetAddress: '',
         streetAddress2: '',
@@ -180,10 +180,14 @@ const AddEditPickupLocation = (): React.JSX.Element => {
         setSelectedState(response.address.state)
       }
 
+      // Store Shiprocket ID for view mode
+      if (response.shipRocketPickupLocationId) {
+        setShipRocketId(Number(response.shipRocketPickupLocationId))
+      }
+
       // Populate form with existing data
       reset({
         addressNickName: response.addressNickName,
-        shipRocketPickupLocationId: response.shipRocketPickupLocationId ?? '',
         address: {
           streetAddress: response.address?.streetAddress ?? '',
           streetAddress2: response.address?.streetAddress2 ?? '',
@@ -223,7 +227,6 @@ const AddEditPickupLocation = (): React.JSX.Element => {
         const requestModel: PickupLocationRequestModel = {
           pickupLocationId: isEdit && pickupLocationId ? parseInt(pickupLocationId, 10) : undefined,
           addressNickName: data.addressNickName.trim(),
-          shipRocketPickupLocationId: data.shipRocketPickupLocationId?.trim() || undefined,
           address: {
             streetAddress: data.address.streetAddress.trim(),
             streetAddress2: data.address.streetAddress2?.trim() || undefined,
@@ -283,20 +286,9 @@ const AddEditPickupLocation = (): React.JSX.Element => {
             required: true,
             gridSize: {
               xs: 12,
-              sm: 6,
+              sm: 12,
             },
             placeholder: 'e.g., Main Warehouse, Downtown Store',
-          },
-          {
-            name: 'shipRocketPickupLocationId',
-            label: 'ShipRocket Pickup Location ID',
-            type: FieldType.Text,
-            required: false,
-            gridSize: {
-              xs: 12,
-              sm: 6,
-            },
-            placeholder: 'External integration ID (optional)',
           },
         ],
       },
@@ -340,7 +332,7 @@ const AddEditPickupLocation = (): React.JSX.Element => {
             // View mode - display pickup location details
             <PickupLocationDetailsView
               addressNickName={watchedValues.addressNickName}
-              shipRocketPickupLocationId={watchedValues.shipRocketPickupLocationId}
+              shipRocketPickupLocationId={shipRocketId}
               address={watchedValues.address}
               notes={watchedValues.notes}
             />
@@ -418,19 +410,6 @@ const AddEditPickupLocation = (): React.JSX.Element => {
             </Paper>
           )}
 
-          {/* View mode - Back button */}
-          {isView && (
-            <Paper className={styles['add-pickup-location-page__section']}>
-              <Box className={styles['add-pickup-location-page__actions']}>
-                <BlueButton
-                  variant="contained"
-                  onClick={handleCancel}
-                  className={styles['add-pickup-location-page__action-button']}
-                  label="Back to Pickup Locations"
-                />
-              </Box>
-            </Paper>
-          )}
         </Box>
       </form>
 
@@ -439,8 +418,6 @@ const AddEditPickupLocation = (): React.JSX.Element => {
         <FillTestDataButton
           setValue={setValue}
           reset={reset}
-          isEdit={isEdit}
-          currentName={watchedValues.addressNickName}
         />
       )}
     </Container>

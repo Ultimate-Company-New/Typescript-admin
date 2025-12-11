@@ -88,41 +88,36 @@
 // ============================================================================
 
 .pickup-location-details-view {
-  &__section {
-    padding: 24px;
-    margin-bottom: 16px;
-
-    &:last-child {
-      margin-bottom: 0;
-    }
+  &__divider-spacer {
+    height: 16px;
   }
 
-  &__section-title {
-    margin-bottom: 16px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 0;
   }
 
   &__label {
-    color: rgba(0, 0, 0, 0.6);
     font-size: 0.75rem;
-    font-weight: 500;
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.6);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    margin-bottom: 4px;
   }
 
   &__value {
-    color: rgba(0, 0, 0, 0.87);
     font-size: 1rem;
-    font-weight: 400;
+    color: rgba(0, 0, 0, 0.87);
+    word-break: break-word;
   }
 
   &__notes {
-    background-color: rgba(0, 0, 0, 0.02);
-    border-radius: 4px;
-    padding: 16px;
+    font-size: 1rem;
+    color: rgba(0, 0, 0, 0.87);
     white-space: pre-wrap;
+    line-height: 1.6;
   }
 }
 
@@ -153,6 +148,263 @@
     &.Mui-disabled {
       background-color: rgba(0, 0, 0, 0.12) !important;
       color: rgba(0, 0, 0, 0.26) !important;
+    }
+  }
+}
+
+// ============================================================================
+// Import Pickup Locations Page
+// ============================================================================
+
+.import-pickup-locations-page {
+  &__page-wrapper {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  &__container {
+    padding: 24px;
+    padding-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  &__reference-card {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 24px;
+  }
+
+  &__settings-card {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 24px;
+  }
+
+  &__section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.87);
+    margin-bottom: 8px;
+  }
+
+  &__divider {
+    margin-bottom: 16px;
+  }
+
+  &__divider--large {
+    margin-bottom: 24px;
+  }
+
+  &__reference-content {
+    margin-top: 16px;
+  }
+
+  &__grid-wrapper {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  &__settings-actions {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+
+    @media (max-width: 768px) {
+      justify-content: center;
+    }
+  }
+
+  &__template-button {
+    text-transform: none !important;
+    padding: 8px 16px !important;
+  }
+
+  &__max-records-select {
+    min-width: 180px !important;
+    margin-top: 8px !important;
+    margin-right: 8px !important;
+  }
+
+  &__actions-card {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 24px;
+  }
+
+  &__loading-paper {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 48px;
+  }
+
+  &__loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  &__loading-text {
+    color: rgba(0, 0, 0, 0.87);
+  }
+
+  &__preview-paper {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 24px;
+  }
+
+  &__view-toggle-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 16px;
+  }
+
+  &__toggle-button-text {
+    margin-left: 8px;
+  }
+
+  &__grid-container {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  &__json-container {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 24px;
+  }
+
+  &__error-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    background-color: rgba(211, 47, 47, 0.08);
+    border-radius: 8px;
+    margin-bottom: 16px;
+    border: 1px solid rgba(211, 47, 47, 0.2);
+  }
+
+  &__error-warning-icon {
+    color: #d32f2f;
+    font-size: 24px;
+    margin-top: 2px;
+  }
+
+  &__error-warning-text {
+    color: rgba(0, 0, 0, 0.87);
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+  }
+
+  &__action-button {
+    min-width: 120px;
+  }
+
+  &__error-row {
+    background-color: rgba(211, 47, 47, 0.04) !important;
+
+    &:hover {
+      background-color: rgba(211, 47, 47, 0.08) !important;
+    }
+  }
+}
+
+// ============================================================================
+// Import Reference Grid Cells
+// ============================================================================
+
+.import-reference-grid {
+  &__cell {
+    display: flex;
+    align-items: center;
+    height: 100%;
+  }
+
+  &__cell--center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+  }
+
+  &__cell--bold {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    font-weight: 500;
+  }
+}
+
+// Dark mode support for import pickup locations page
+@media (prefers-color-scheme: dark) {
+  .import-pickup-locations-page {
+    &__reference-card,
+    &__settings-card,
+    &__loading-paper,
+    &__preview-paper,
+    &__actions-card {
+      background-color: #1e1e1e;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    &__section-title,
+    &__loading-text {
+      color: rgba(255, 255, 255, 0.87);
+    }
+
+    &__error-warning {
+      background-color: rgba(211, 47, 47, 0.12);
+      border-color: rgba(211, 47, 47, 0.3);
+    }
+
+    &__error-warning-icon {
+      color: #f44336;
+    }
+
+    &__error-warning-text {
+      color: rgba(255, 255, 255, 0.87);
+    }
+
+    &__error-row {
+      background-color: rgba(211, 47, 47, 0.08) !important;
+
+      &:hover {
+        background-color: rgba(211, 47, 47, 0.12) !important;
+      }
     }
   }
 }

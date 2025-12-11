@@ -58,6 +58,13 @@ export const pickupLocationApi = {
     const response = await axiosInstance.delete<unknown>(`${API_BASE_URL}/togglePickupLocation/${pickupLocationId}`)
     return response.data
   },
+
+  /**
+   * Bulk create pickup locations (async - returns immediately, results via message)
+   */
+  bulkCreatePickupLocations: async (pickupLocations: unknown[]): Promise<void> => {
+    await axiosInstance.put<void>(`${API_BASE_URL}/bulkCreatePickupLocations`, pickupLocations)
+  },
 }
 
 export default pickupLocationApi

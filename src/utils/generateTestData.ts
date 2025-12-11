@@ -2,10 +2,10 @@ import { pickupLocationApi } from '../api/pickupLocationApi'
 import { productCategoryApi, type ProductCategoryWithPath } from '../api/productCategoryApi'
 import type { UserGroupRequestModel } from '../api/userGroupApi'
 import {
-  COUNTRIES,
-  PRODUCT_COLOR_OPTIONS,
-  PRODUCT_CONDITION_OPTIONS,
-  USER_ROLES,
+    COUNTRIES,
+    PRODUCT_COLOR_OPTIONS,
+    PRODUCT_CONDITION_OPTIONS,
+    USER_ROLES,
 } from '../constants/appConstants'
 import type { LeadRequestModel, ProductRequestModel, PromoRequestModel, UserRequestModel } from '../models/api-models'
 
@@ -1095,8 +1095,8 @@ const PACKAGE_NOTES = [
 
 // Re-export from api-models for convenience in test data generation
 export type {
-  PackagePickupLocationMappingRequestModel,
-  PackageRequestModel,
+    PackagePickupLocationMappingRequestModel,
+    PackageRequestModel
 } from '../models/api-models/PackageModels'
 
 /**
@@ -1319,10 +1319,10 @@ const PICKUP_LOCATION_NOTES = [
 
 /**
  * Pickup location request model for test data
+ * Note: shipRocketPickupLocationId is assigned by the backend PickupLocationService
  */
 export interface PickupLocationTestData {
   addressNickName: string
-  shipRocketPickupLocationId?: string
   address: {
     streetAddress: string
     streetAddress2?: string
@@ -1374,20 +1374,25 @@ export const generatePickupLocationFormTest = (preserveName?: string): PickupLoc
   // Random notes
   const notes = PICKUP_LOCATION_NOTES[Math.floor(Math.random() * PICKUP_LOCATION_NOTES.length)]
 
-  // Address type (mostly OFFICE or WAREHOUSE for pickup locations)
-  const addressTypes = ['OFFICE', 'WAREHOUSE', 'STORE', 'OTHER']
-  const addressType = addressTypes[Math.floor(Math.random() * addressTypes.length)]
-
-  // Optional ShipRocket ID (50% chance)
-  const shipRocketPickupLocationId = Math.random() > 0.5 ? `SR${timestamp % 100000}` : undefined
+  // Address type (HOME or WORK to match form validation)
+  const addressType = Math.random() < 0.5 ? 'HOME' : 'WORK'
 
   // Optional floor/building info (70% chance)
   const hasFloor = Math.random() > 0.3
   const hasBuilding = Math.random() > 0.3
 
+  // Shiprocket API limits pickup_location to 36 characters max
+  // Generate a short unique name that fits within the limit
+  // Use timestamp + random to ensure uniqueness on rapid clicks
+  const uniqueId = `${timestamp % 10000}${Math.floor(Math.random() * 1000)}`
+  let generatedName = `${template.name} ${uniqueId}`
+  // Truncate to 36 characters if needed
+  if (generatedName.length > 36) {
+    generatedName = `${template.name.substring(0, 20)} ${uniqueId}`
+  }
+
   return {
-    addressNickName: preserveName ?? `${template.name} - ${city} ${timestamp % 10000}`,
-    shipRocketPickupLocationId,
+    addressNickName: preserveName ?? generatedName,
     address: {
       streetAddress: `${buildingNumber}, ${street}`,
       streetAddress2: hasFloor ? `Floor ${1 + Math.floor(Math.random() * 10)}` : '',
