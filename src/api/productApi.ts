@@ -1,3 +1,4 @@
+import type { ProductRequestModel } from '../models/api-models'
 import { type PaginationBaseRequestModel, type PaginationBaseResponseModel } from '../types/grid.types'
 
 import axiosInstance from './axiosConfig'
@@ -32,15 +33,16 @@ export const productApi = {
    * Create a new product
    */
   createProduct: async (request: unknown): Promise<unknown> => {
-    const response = await axiosInstance.put<unknown>(`${API_BASE_URL}/createProduct`, request)
+    const response = await axiosInstance.put<unknown>(`${API_BASE_URL}/addProduct`, request)
     return response.data
   },
 
   /**
    * Update an existing product
    */
-  updateProduct: async (productId: number, request: unknown): Promise<unknown> => {
-    const response = await axiosInstance.post<unknown>(`${API_BASE_URL}/updateProduct/${productId}`, request)
+  updateProduct: async (_productId: number, request: unknown): Promise<unknown> => {
+    // Note: productId is in the request body, not the URL path
+    const response = await axiosInstance.post<unknown>(`${API_BASE_URL}/editProduct`, request)
     return response.data
   },
 
@@ -58,6 +60,14 @@ export const productApi = {
   toggleProductReturns: async (productId: number): Promise<unknown> => {
     const response = await axiosInstance.delete<unknown>(`${API_BASE_URL}/toggleReturnProduct/${productId}`)
     return response.data
+  },
+
+  /**
+   * Bulk create products
+   * Triggers async processing - results sent via notification
+   */
+  bulkCreateProducts: async (products: ProductRequestModel[]): Promise<void> => {
+    await axiosInstance.put<void>(`${API_BASE_URL}/bulkAddProduct`, products)
   },
 
   /**

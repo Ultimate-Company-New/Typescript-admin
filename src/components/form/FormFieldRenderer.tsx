@@ -16,6 +16,7 @@ import { FieldType } from '../../constants/appConstants'
 import { Subheader } from '../fonts'
 import {
   AutocompleteInput,
+  DateTimePickerInput,
   EmailInput,
   ImageUploadInput,
   LazyAutocompleteInput,
@@ -23,6 +24,7 @@ import {
   PhoneInput,
   SelectInput,
   TextFieldInput,
+  type DateTimeValue,
   type LazyFetchFunction,
   type LazyOption,
 } from '../form-input'
@@ -46,7 +48,7 @@ export interface FieldOption {
  */
 export interface FieldConfig<TFieldValues extends FieldValues = FieldValues> {
   name: Path<TFieldValues>
-  label: string
+  label?: string
   type?: FieldType
   required?: boolean
   disabled?: boolean
@@ -78,9 +80,16 @@ export interface FieldConfig<TFieldValues extends FieldValues = FieldValues> {
   // For switch fields
   switchLabel?: string
   switchLabelPlacement?: 'start' | 'end' | 'top' | 'bottom'
+  // For datetime fields
+  dateTimeLabel?: string
+  timezoneLabel?: string
+  minDateTime?: Date
+  maxDateTime?: Date
   modifyFieldProps?: (
     field: ControllerRenderProps<TFieldValues, Path<TFieldValues>>,
   ) => ControllerRenderProps<TFieldValues, Path<TFieldValues>>
+  // For custom content (renders instead of standard field)
+  customContent?: () => ReactNode
 }
 
 /**
@@ -147,7 +156,7 @@ export const FormFieldRenderer = <TFieldValues extends FieldValues = FieldValues
   const renderField = (fieldConfig: FieldConfig<TFieldValues>): JSX.Element => {
     const {
       name,
-      label,
+      label = '',
       type = FieldType.Text,
       required = false,
       disabled: fieldDisabled = false,
@@ -173,10 +182,24 @@ export const FormFieldRenderer = <TFieldValues extends FieldValues = FieldValues
       setValue,
       switchLabel,
       switchLabelPlacement = 'end',
+      dateTimeLabel,
+      timezoneLabel,
+      minDateTime,
+      maxDateTime,
       modifyFieldProps,
+      customContent,
     } = fieldConfig
 
     const isFieldDisabled = disabled || fieldDisabled || isView
+
+    // If customContent is provided, render it directly
+    if (customContent) {
+      return (
+        <Grid item xs={gridSize.xs} sm={gridSize.sm} key={name as string}>
+          {customContent()}
+        </Grid>
+      )
+    }
 
     // Address field - render full address form (returns multiple Grid items directly)
     if (type === FieldType.Address) {
@@ -327,6 +350,27 @@ export const FormFieldRenderer = <TFieldValues extends FieldValues = FieldValues
               )
             }
 
+            // DateTime field with timezone
+            if (type === FieldType.DateTime) {
+              const currentValue = fieldProps.value as DateTimeValue | null
+              return (
+                <DateTimePickerInput
+                  value={currentValue}
+                  onChange={(newValue: DateTimeValue) => {
+                    fieldProps.onChange(newValue)
+                  }}
+                  dateTimeLabel={dateTimeLabel ?? label}
+                  timezoneLabel={timezoneLabel ?? 'Timezone'}
+                  minDateTime={minDateTime}
+                  maxDateTime={maxDateTime}
+                  required={required}
+                  disabled={isFieldDisabled}
+                  error={!!fieldError}
+                  helperText={fieldError?.message}
+                />
+              )
+            }
+
             // Image Upload field
             if (type === FieldType.Image) {
               return (
@@ -408,9 +452,27 @@ export const FormFieldRenderer = <TFieldValues extends FieldValues = FieldValues
             }
 
             // Default: Text, Number fields
+            // Ensure value is never undefined to prevent uncontrolled->controlled warning
+            const isNumberField = type === FieldType.Number
+            // For number fields, show empty string when value is 0, undefined, or null
+            // This allows users to clear and replace the value instead of appending to 0
+            const displayValue = isNumberField
+              ? (fieldProps.value === 0 || fieldProps.value == null ? '' : fieldProps.value)
+              : (fieldProps.value ?? '')
             return (
               <TextFieldInput
                 {...fieldProps}
+                value={displayValue}
+                onChange={e => {
+                  const val = e.target.value
+                  if (isNumberField) {
+                    // Convert to number for number fields, or 0 if empty
+                    const numVal = val === '' ? 0 : Number(val)
+                    fieldProps.onChange(isNaN(numVal) ? 0 : numVal)
+                  } else {
+                    fieldProps.onChange(val)
+                  }
+                }}
                 type={type}
                 label={label}
                 required={required}

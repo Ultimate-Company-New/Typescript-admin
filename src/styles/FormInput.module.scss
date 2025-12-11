@@ -328,3 +328,128 @@
     }
   }
 }
+
+// Rich Text Editor Styles
+.rich-text-editor-wrapper {
+  margin-top: 16px;
+  margin-bottom: 8px;
+}
+
+.rich-text-editor {
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.23);
+  background-color: rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    border-color: rgba(0, 0, 0, 0.4);
+    background-color: rgba(0, 0, 0, 0.06);
+  }
+
+  :global {
+    .quill {
+      background-color: transparent;
+    }
+
+    .ql-toolbar {
+      border: none;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+      border-radius: 8px 8px 0 0;
+      background-color: rgba(0, 0, 0, 0.02);
+      padding: 8px;
+    }
+
+    .ql-container {
+      border: none;
+      font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+      font-size: 1rem;
+      min-height: 200px;
+
+      .ql-editor {
+        min-height: 200px;
+        padding: 12px 14px;
+
+        &.ql-blank::before {
+          color: rgba(0, 0, 0, 0.4);
+          font-style: normal;
+        }
+
+        p {
+          margin-bottom: 0.5em;
+        }
+
+        h1 {
+          font-size: 2em;
+          margin-bottom: 0.5em;
+        }
+
+        h2 {
+          font-size: 1.5em;
+          margin-bottom: 0.5em;
+        }
+
+        h3 {
+          font-size: 1.25em;
+          margin-bottom: 0.5em;
+        }
+
+        ul,
+        ol {
+          padding-left: 1.5em;
+          margin-bottom: 0.5em;
+        }
+
+        a {
+          color: #1976d2;
+          text-decoration: none;
+
+          &:hover {
+            text-decoration: underline;
+          }
+        }
+      }
+    }
+
+    .ql-snow .ql-stroke {
+      stroke: rgba(0, 0, 0, 0.6);
+    }
+
+    .ql-snow .ql-fill {
+      fill: rgba(0, 0, 0, 0.6);
+    }
+
+    .ql-snow .ql-picker-label {
+      color: rgba(0, 0, 0, 0.6);
+    }
+
+    .ql-toolbar button:hover,
+    .ql-toolbar button:focus,
+    .ql-toolbar button.ql-active,
+    .ql-toolbar .ql-picker-label:hover,
+    .ql-toolbar .ql-picker-label.ql-active {
+      .ql-stroke {
+        stroke: #1976d2;
+      }
+
+      .ql-fill {
+        fill: #1976d2;
+      }
+
+      color: #1976d2;
+    }
+  }
+
+  &--error {
+    border-color: #d32f2f;
+
+    &:hover {
+      border-color: #d32f2f;
+    }
+  }
+
+  &--disabled {
+    opacity: 0.6;
+    pointer-events: none;
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+}

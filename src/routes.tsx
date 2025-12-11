@@ -3,14 +3,20 @@ import { createBrowserRouter, Navigate, type RouteObject } from 'react-router-do
 import { APP_ROUTES } from './constants/routes'
 import DashboardLayout from './layouts/DashboardLayout'
 import { MainLayout } from './layouts/MainLayout'
-import { ClientLanding, ForgotPassword, Login, NotFound, Register } from './pages'
+
+// Public / Auth Pages
+import { ClientLanding, ForgotPassword, Login } from './pages'
+import { default as ConfirmEmail } from './pages/login/ConfirmEmail'
+import { default as NotFound } from './pages/NotFound'
+import { default as Register } from './pages/Register'
+
+// Feature Pages
 import { DeveloperDocs } from './pages/developerDocs'
 import { AddEditLead, ImportLeads, Leads } from './pages/leads'
-import ConfirmEmail from './pages/login/ConfirmEmail'
 import { AddMessages, ImportMessages, Messages, MessagesList, ViewMessage } from './pages/messages'
-import { AddPackages, ImportPackages, Packages } from './pages/packages'
+import { AddEditPackage, ImportPackages, Packages } from './pages/packages'
 import { AddPickupLocations, ImportPickupLocations, PickupLocations } from './pages/pickupLocations'
-import { AddProducts, ImportProducts, Products } from './pages/products'
+import { AddEditProduct, ImportProducts, Products } from './pages/products'
 import { AddEditPromo, ImportPromos, Promos } from './pages/promos'
 import { AddPurchaseOrders, ImportPurchaseOrders, PurchaseOrders } from './pages/purchaseOrders'
 import { QADashboard } from './pages/qaDashboard'
@@ -22,10 +28,6 @@ import { AddEditUser, ImportUsers, Users } from './pages/user'
 import { AddEditUserGroup, ImportUserGroups, UserGroups } from './pages/user-group'
 import { AddWebTemplates, ImportWebTemplates, WebTemplates } from './pages/webTemplates'
 
-/**
- * Application routes configuration
- * Uses React Router v6 createBrowserRouter for modern routing
- */
 export const routes: RouteObject[] = [
   {
     path: '/',
@@ -128,7 +130,7 @@ export const routes: RouteObject[] = [
       },
       {
         path: 'products/add',
-        element: <AddProducts />,
+        element: <AddEditProduct />,
       },
       {
         path: 'products/import',
@@ -140,7 +142,7 @@ export const routes: RouteObject[] = [
       },
       {
         path: 'packages/add',
-        element: <AddPackages />,
+        element: <AddEditPackage />,
       },
       {
         path: 'packages/import',
@@ -244,5 +246,4 @@ export const routes: RouteObject[] = [
 ]
 
 const router = createBrowserRouter(routes)
-
 export default router

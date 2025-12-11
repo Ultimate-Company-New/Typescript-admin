@@ -1,6 +1,7 @@
 import * as React from 'react'
 
 import { format } from 'date-fns'
+import { toast } from 'react-toastify'
 import * as XLSX from 'xlsx'
 import type { ZodType } from 'zod'
 
@@ -358,6 +359,7 @@ export const createFetchFunction = async <T>(
  * @param toggleApiCall - The API function to call for toggling (e.g., toggleUser, toggleProduct)
  * @param entityId - The ID of the entity to toggle
  * @param refetchFunction - Function to refetch data after successful toggle
+ * @param successMessage - Optional custom success message (defaults to "Updated successfully")
  * @returns Promise that resolves when toggle is complete
  */
 export const createToggleFunction = async (
@@ -365,10 +367,17 @@ export const createToggleFunction = async (
   toggleApiCall: (id: number) => Promise<any>,
   entityId: number,
   refetchFunction: () => Promise<void>,
+  successMessage = 'Updated successfully',
 ): Promise<void> => {
+  try {
   await toggleApiCall(entityId)
   // Refetch data to show updated status
   await refetchFunction()
+    toast.success(successMessage)
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to update'
+    toast.error(errorMessage)
+  }
 }
 
 // ============================================================================

@@ -1,3 +1,3 @@
-export { default as Products } from './Products'
-export { default as AddProducts } from './AddProducts'
-export { default as ImportProducts } from './ImportProducts'
+export { default as AddEditProduct } from "./AddEditProduct";
+export { default as ImportProducts } from "./ImportProducts";
+export { default as Products } from "./Products";

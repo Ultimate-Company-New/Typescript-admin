@@ -24,6 +24,7 @@ const TextFieldInput = forwardRef<HTMLDivElement, TextFieldInputProps>(
       InputLabelProps,
       InputProps,
       inputProps,
+      className,
       ...props
     },
     ref,
@@ -33,7 +34,7 @@ const TextFieldInput = forwardRef<HTMLDivElement, TextFieldInputProps>(
       variant={variant}
       margin={margin}
       fullWidth={fullWidth}
-      className={styles['filled-input']}
+      className={`${styles['filled-input']} ${className || ''}`}
       InputLabelProps={{
         shrink: true,
         ...InputLabelProps,

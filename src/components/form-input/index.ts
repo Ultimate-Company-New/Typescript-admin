@@ -1,5 +1,7 @@
 export { default as AutocompleteInput } from './AutocompleteInput'
 export type { AutocompleteInputProps } from './AutocompleteInput'
+export { default as DateTimePickerInput, TIMEZONE_OPTIONS } from './DateTimePickerInput'
+export type { DateTimePickerInputProps, DateTimeValue, TimezoneValue } from './DateTimePickerInput'
 export { default as EmailInput } from './EmailInput'
 export type { EmailInputProps } from './EmailInput'
 export { default as FileDropZone } from './FileDropZone'

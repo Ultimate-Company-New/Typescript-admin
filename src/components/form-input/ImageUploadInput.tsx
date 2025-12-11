@@ -2,7 +2,7 @@ import { useState } from 'react'
 
 import { toast } from 'react-toastify'
 
-import { Delete as DeleteIcon, CloudUpload as UploadIcon } from '@mui/icons-material'
+import { Delete as DeleteIcon, CloudUpload as UploadIcon, Image as ImageIcon } from '@mui/icons-material'
 import { Avatar, Box } from '@mui/material'
 
 import styles from '../../styles/FormInput.module.scss'
@@ -84,6 +84,7 @@ const ImageUploadInput = ({
     <Box className={styles['image-upload']}>
       <Box className={styles['image-upload__preview']}>
         <Avatar
+          variant="square"
           src={getImageSrc()}
           sx={{
             width: size,
@@ -92,7 +93,9 @@ const ImageUploadInput = ({
           }}
           className={`${styles['image-upload__avatar']} ${disabled ? styles['image-upload__avatar--disabled'] : styles['image-upload__avatar--active']}`}
           onClick={() => !disabled && document.getElementById(uploadInputId)?.click()}
-        />
+        >
+          <ImageIcon sx={{ fontSize: `${size * 0.5}px`, opacity: 0.5 }} />
+        </Avatar>
       </Box>
 
       {!disabled && (

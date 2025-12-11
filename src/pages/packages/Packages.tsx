@@ -30,7 +30,7 @@ import {
 import { getPackageGridColumns } from '../../models/grid-models/PackageGridColumns'
 import { type PaginatedGridInterface } from '../../types/grid.types'
 
-import styles from './Packages.module.scss'
+import styles from '../../styles/Packages.module.scss'
 
 /**
  * Package data structure matching API response

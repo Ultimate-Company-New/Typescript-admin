@@ -27,7 +27,7 @@ export const pickupLocationApi = {
    */
   getPickupLocationById: async (pickupLocationId: number): Promise<unknown> => {
     const response = await axiosInstance.get<unknown>(
-      `${API_BASE_URL}/getPickupLocationDetailsById/${pickupLocationId}`,
+      `${API_BASE_URL}/getPickupLocationById/${pickupLocationId}`,
     )
     return response.data
   },

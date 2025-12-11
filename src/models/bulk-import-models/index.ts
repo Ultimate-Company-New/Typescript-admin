@@ -41,3 +41,14 @@ export {
   getPromoImportPreviewColumns,
   type ImportPromoData,
 } from './ImportPromoGridModel'
+
+// Product Import
+export {
+  productImportTemplateStructure,
+  productImportHeaderNames,
+  productImportHiddenFields,
+  productImportFieldDisplayConfig,
+  getProductImportPreviewColumns,
+  parsePickupLocationQuantities,
+  type ImportProductData,
+} from './ImportProductGridModel'

@@ -1,3 +1,3 @@
 export { default as Packages } from './Packages'
-export { default as AddPackages } from './AddPackages'
+export { default as AddEditPackage } from './AddEditPackage'
 export { default as ImportPackages } from './ImportPackages'

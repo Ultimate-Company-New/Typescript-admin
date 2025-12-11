@@ -315,11 +315,7 @@ export type PromoFormData = z.infer<typeof promoFormSchema>
 // Bulk Promo Import validation schema
 export const bulkPromoImportSchema = z
   .object({
-    promoCode: z
-      .string()
-      .min(1, 'Promo code is required')
-      .max(100, 'Promo code is too long')
-      .trim(),
+    promoCode: z.string().min(1, 'Promo code is required').max(100, 'Promo code is too long').trim(),
     description: z.string().min(1, 'Description is required').trim(),
     discountValue: z.coerce.number().positive('Discount value must be greater than 0'),
     isPercent: z.boolean(),
@@ -376,3 +372,182 @@ export const bulkPromoImportSchema = z
   )
 
 export type BulkPromoImportData = z.infer<typeof bulkPromoImportSchema>
+
+// ============================================================================
+// Product Form Validation
+// ============================================================================
+
+/**
+ * Product form validation schema
+ * Validates product creation and editing
+ */
+export const productFormSchema = z.object({
+  productId: z.number().optional(),
+  title: z.string().min(1, 'Title is required').max(500, 'Title is too long'),
+  descriptionHtml: z.string().min(1, 'Description is required'),
+  brand: z.string().min(1, 'Brand is required').max(255, 'Brand is too long'),
+  color: z.string().min(1, 'Color is required'),
+  colorLabel: z.string().min(1, 'Color label is required'),
+  condition: z.string().min(1, 'Condition is required'),
+  countryOfManufacture: z.string().min(1, 'Country of manufacture is required').max(100, 'Country is too long'),
+  model: z.string().max(255, 'Model is too long').default(''),
+  upc: z.string().max(50, 'UPC is too long').default(''),
+  modificationHtml: z.string().default(''),
+  itemModified: z.boolean(),
+  price: z.number().min(0, 'Price must be 0 or greater'),
+  discount: z.number().min(0, 'Discount must be 0 or greater'),
+  isDiscountPercent: z.boolean(),
+  returnsAllowed: z.boolean(),
+  length: z.number().positive('Length must be positive').optional().nullable(),
+  breadth: z.number().positive('Breadth must be positive').optional().nullable(),
+  height: z.number().positive('Height must be positive').optional().nullable(),
+  weightKgs: z.number().positive('Weight must be positive').optional().nullable(),
+  categoryId: z.number().min(1, 'Category is required'),
+  categoryFullPath: z.string().optional(),  // Display-only field for category path (e.g., "Electronics > Computers > Laptops")
+  // Images - required
+  mainImage: z.string().min(1, 'Main image is required'),
+  topImage: z.string().min(1, 'Top image is required'),
+  bottomImage: z.string().min(1, 'Bottom image is required'),
+  frontImage: z.string().min(1, 'Front image is required'),
+  backImage: z.string().min(1, 'Back image is required'),
+  rightImage: z.string().min(1, 'Right image is required'),
+  leftImage: z.string().min(1, 'Left image is required'),
+  detailsImage: z.string().min(1, 'Details image is required'),
+  // Images - optional
+  defectImage: z.string().default(''),
+  additionalImage1: z.string().default(''),
+  additionalImage2: z.string().default(''),
+  additionalImage3: z.string().default(''),
+  // Pickup locations - will be managed separately
+  pickupLocationQuantities: z.record(z.string(), z.number()).default({}),
+  notes: z.string().default(''),
+  // Item availability with timezone
+  itemAvailableFrom: z
+    .object({
+      dateTime: z.date().nullable(),
+      timezone: z.string().min(1, 'Timezone is required'),
+    })
+    .refine(data => data.dateTime !== null, {
+      message: 'Available from date is required',
+    }),
+})
+
+export type ProductFormData = z.infer<typeof productFormSchema>
+
+// ============================================================================
+// Bulk Product Import Validation
+// ============================================================================
+
+/**
+ * Bulk product import validation schema
+ * Used for validating product data from Excel/CSV files
+ */
+export const bulkProductImportSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(500, 'Title is too long'),
+  brand: z.string().min(1, 'Brand is required').max(255, 'Brand is too long'),
+  model: z.string().max(255, 'Model is too long').optional().or(z.literal('')),
+  condition: z.string().min(1, 'Condition is required'),
+  color: z.string().min(1, 'Color is required'),
+  colorLabel: z.string().min(1, 'Color label is required'),
+  countryOfManufacture: z.string().min(1, 'Country is required').max(100, 'Country is too long'),
+  categoryId: z.coerce.number().min(1, 'Category ID is required'),
+  upc: z.string().max(50, 'UPC is too long').optional().or(z.literal('')),
+  price: z.coerce.number().min(0, 'Price must be 0 or greater'),
+  discount: z.coerce.number().min(0, 'Discount must be 0 or greater'),
+  isDiscountPercent: z.boolean(),
+  returnsAllowed: z.boolean(),
+  length: z.preprocess(
+    (val) => (val === '' || val === null || val === undefined ? null : Number(val)),
+    z.number().positive('Length must be positive').nullable().optional()
+  ),
+  breadth: z.preprocess(
+    (val) => (val === '' || val === null || val === undefined ? null : Number(val)),
+    z.number().positive('Breadth must be positive').nullable().optional()
+  ),
+  height: z.preprocess(
+    (val) => (val === '' || val === null || val === undefined ? null : Number(val)),
+    z.number().positive('Height must be positive').nullable().optional()
+  ),
+  weightKgs: z.preprocess(
+    (val) => (val === '' || val === null || val === undefined ? null : Number(val)),
+    z.number().positive('Weight must be positive').nullable().optional()
+  ),
+  itemAvailableFrom: z.string().min(1, 'Available from date is required'),
+  itemAvailableFromTimezone: z.string().min(1, 'Timezone is required'),
+  pickupLocationQuantities: z.string().min(1, 'At least one pickup location with stock is required'),
+  mainImage: z.string().url('Main image must be a valid URL').min(1, 'Main image is required'),
+  topImage: z.string().url('Top image must be a valid URL').min(1, 'Top image is required'),
+  bottomImage: z.string().url('Bottom image must be a valid URL').min(1, 'Bottom image is required'),
+  frontImage: z.string().url('Front image must be a valid URL').min(1, 'Front image is required'),
+  backImage: z.string().url('Back image must be a valid URL').min(1, 'Back image is required'),
+  rightImage: z.string().url('Right image must be a valid URL').min(1, 'Right image is required'),
+  leftImage: z.string().url('Left image must be a valid URL').min(1, 'Left image is required'),
+  detailsImage: z.string().url('Details image must be a valid URL').min(1, 'Details image is required'),
+  defectImage: z.string().url('Defect image must be a valid URL').optional().or(z.literal('')),
+  additionalImage1: z.string().url('Additional image 1 must be a valid URL').optional().or(z.literal('')),
+  additionalImage2: z.string().url('Additional image 2 must be a valid URL').optional().or(z.literal('')),
+  additionalImage3: z.string().url('Additional image 3 must be a valid URL').optional().or(z.literal('')),
+  descriptionHtml: z.string().min(1, 'Description is required'),
+  itemModified: z.boolean(),
+  modificationHtml: z.string().optional().or(z.literal('')),
+  notes: z.string().optional().or(z.literal('')),
+})
+
+export type BulkProductImportData = z.infer<typeof bulkProductImportSchema>
+
+// ============================================================================
+// Package Validation Schemas
+// ============================================================================
+
+/**
+ * Package type options (matches database constraint)
+ */
+export const PACKAGE_TYPE_OPTIONS = [
+  { value: 'STANDARD', label: 'Standard' },
+  { value: 'FRAGILE', label: 'Fragile' },
+  { value: 'OVERSIZED', label: 'Oversized' },
+  { value: 'ENVELOPE', label: 'Envelope' },
+  { value: 'BOX', label: 'Box' },
+  { value: 'TUBE', label: 'Tube' },
+  { value: 'CUSTOM', label: 'Custom' },
+] as const
+
+export type PackageType = (typeof PACKAGE_TYPE_OPTIONS)[number]['value']
+
+// Package form validation schema - matches PackageRequestModel from backend
+export const packageFormSchema = z.object({
+  packageName: z
+    .string()
+    .min(1, 'Package name is required')
+    .max(255, 'Package name is too long')
+    .trim(),
+  length: z.coerce
+    .number()
+    .int('Length must be a whole number')
+    .positive('Length must be greater than 0'),
+  breadth: z.coerce
+    .number()
+    .int('Breadth must be a whole number')
+    .positive('Breadth must be greater than 0'),
+  height: z.coerce
+    .number()
+    .int('Height must be a whole number')
+    .positive('Height must be greater than 0'),
+  maxWeight: z.coerce
+    .number()
+    .min(0, 'Max weight cannot be negative'),
+  standardCapacity: z.coerce
+    .number()
+    .int('Standard capacity must be a whole number')
+    .positive('Standard capacity must be greater than 0'),
+  pricePerUnit: z.coerce
+    .number()
+    .min(0, 'Price per unit cannot be negative'),
+  packageType: z.enum(['STANDARD', 'FRAGILE', 'OVERSIZED', 'ENVELOPE', 'BOX', 'TUBE', 'CUSTOM'], {
+    required_error: 'Package type is required',
+    invalid_type_error: 'Invalid package type',
+  }),
+  notes: z.string().optional().or(z.literal('')),
+})
+
+export type PackageFormData = z.infer<typeof packageFormSchema>

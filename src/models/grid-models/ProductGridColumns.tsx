@@ -1,82 +1,259 @@
-import { format } from 'date-fns'
+import { useState } from "react";
 
-import { Avatar, Box, Chip, Link, Switch } from '@mui/material'
-import { type GridColDef, type GridRenderCellParams } from '@mui/x-data-grid'
+import { format } from "date-fns";
 
-import { productApi } from '../../api/productApi'
-import { RenderLongCellItem } from '../../components/datagrid'
-import { APP_ROUTES } from '../../constants/routes'
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import { Avatar, Box, Chip, IconButton, Switch, Tooltip } from "@mui/material";
+import { type GridColDef, type GridRenderCellParams } from "@mui/x-data-grid";
 
-import PickupLocationsButton from './PickupLocationsButton'
+import { RenderLongCellItem } from "../../components/datagrid";
+import { getConditionColor, getConditionLabel } from "../../constants/appConstants";
+import { ProductActionsCell } from "../../pages/products/components";
+
+import PickupLocationsButton from "./PickupLocationsButton";
+
+/**
+ * Product Image Carousel - Simple, clean carousel for product images
+ */
+interface ProductImageCarouselProps {
+  images: Array<{ url: string; label: string }>;
+  fallbackLetter?: string;
+}
+
+const ProductImageCarousel = ({ images, fallbackLetter = "P" }: ProductImageCarouselProps): JSX.Element => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+
+  // Filter out empty/undefined images
+  const validImages = images.filter(img => img.url);
+
+  if (validImages.length === 0) {
+    return (
+      <Avatar variant="square" sx={{ width: 150, height: 150 }}>
+        {fallbackLetter}
+      </Avatar>
+    );
+  }
+
+  const handlePrev = (e: React.MouseEvent): void => {
+    e.stopPropagation();
+    setCurrentIndex(prev => (prev === 0 ? validImages.length - 1 : prev - 1));
+  };
+
+  const handleNext = (e: React.MouseEvent): void => {
+    e.stopPropagation();
+    setCurrentIndex(prev => (prev === validImages.length - 1 ? 0 : prev + 1));
+  };
+
+  const handleDotClick = (index: number, e: React.MouseEvent): void => {
+    e.stopPropagation();
+    setCurrentIndex(index);
+  };
+
+  return (
+    <Box
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      sx={{
+        position: "relative",
+        width: 150,
+        height: 150,
+        borderRadius: 1,
+        overflow: "hidden",
+      }}
+    >
+      {/* Main Image */}
+      <Tooltip title={validImages[currentIndex]?.label || ""} placement="top">
+        <Avatar
+          variant="square"
+          src={validImages[currentIndex]?.url}
+          sx={{
+            width: 150,
+            height: 150,
+            transition: "opacity 0.2s ease",
+          }}
+        >
+          {fallbackLetter}
+        </Avatar>
+      </Tooltip>
+
+      {/* Navigation Arrows - Only show if multiple images and hovered */}
+      {validImages.length > 1 && isHovered && (
+        <>
+          <IconButton
+            onClick={handlePrev}
+            size="small"
+            sx={{
+              position: "absolute",
+              left: 2,
+              top: "50%",
+              transform: "translateY(-50%)",
+              backgroundColor: "rgba(0,0,0,0.5)",
+              color: "white",
+              padding: "2px",
+              "&:hover": { backgroundColor: "rgba(0,0,0,0.7)" },
+            }}
+          >
+            <ChevronLeftIcon fontSize="small" />
+          </IconButton>
+          <IconButton
+            onClick={handleNext}
+            size="small"
+            sx={{
+              position: "absolute",
+              right: 2,
+              top: "50%",
+              transform: "translateY(-50%)",
+              backgroundColor: "rgba(0,0,0,0.5)",
+              color: "white",
+              padding: "2px",
+              "&:hover": { backgroundColor: "rgba(0,0,0,0.7)" },
+            }}
+          >
+            <ChevronRightIcon fontSize="small" />
+          </IconButton>
+        </>
+      )}
+
+      {/* Dots Indicator - Only show if multiple images */}
+      {validImages.length > 1 && (
+        <Box
+          sx={{
+            position: "absolute",
+            bottom: 4,
+            left: "50%",
+            transform: "translateX(-50%)",
+            display: "flex",
+            gap: 0.5,
+          }}
+        >
+          {validImages.map((_, index) => (
+            <Box
+              key={index}
+              onClick={(e) => handleDotClick(index, e)}
+              sx={{
+                width: 6,
+                height: 6,
+                borderRadius: "50%",
+                backgroundColor: index === currentIndex ? "white" : "rgba(255,255,255,0.5)",
+                cursor: "pointer",
+                transition: "background-color 0.2s ease",
+                boxShadow: "0 1px 2px rgba(0,0,0,0.3)",
+                "&:hover": { backgroundColor: "white" },
+              }}
+            />
+          ))}
+        </Box>
+      )}
+
+    </Box>
+  );
+};
 
 /**
  * Pickup location data structure
  */
 interface PickupLocation {
-  pickupLocationId: number
-  addressNickName?: string
-  [key: string]: unknown
+  pickupLocationId: number;
+  addressNickName?: string;
+  [key: string]: unknown;
+}
+
+/**
+ * Created by user info structure
+ */
+interface CreatedByUserInfo {
+  userId?: number;
+  firstName?: string;
+  lastName?: string;
+  loginName?: string;
+  fullName?: string;
+}
+
+/**
+ * Product image URLs structure
+ */
+interface ProductImageUrls {
+  mainImageUrl?: string;
+  topImageUrl?: string;
+  bottomImageUrl?: string;
+  frontImageUrl?: string;
+  backImageUrl?: string;
+  rightImageUrl?: string;
+  leftImageUrl?: string;
+  detailsImageUrl?: string;
+  defectImageUrl?: string;
+  additionalImage1Url?: string;
+  additionalImage2Url?: string;
+  additionalImage3Url?: string;
 }
 
 /**
  * Product data structure matching API response
  */
-export interface ProductData {
-  productId?: number
+export interface ProductData extends ProductImageUrls {
+  productId?: number;
   product?: {
-    productId: number
-    title?: string
-    upc?: string
-    length?: number
-    breadth?: number
-    width?: number
-    height?: number
-    price?: number
-    discount?: number
-    discountPercent?: boolean
-    availableStock?: number
-    itemAvailableFrom?: string
-    brand?: string
-    condition?: string
-    countryOfManufacture?: string
-    model?: string
-    itemModified?: boolean
-    weightKgs?: number
-    returnsAllowed?: boolean
-    deleted?: boolean
+    productId: number;
+    title?: string;
+    upc?: string;
+    length?: number;
+    breadth?: number;
+    width?: number;
+    height?: number;
+    price?: number;
+    discount?: number;
+    discountPercent?: boolean;
+    availableStock?: number;
+    itemAvailableFrom?: string;
+    itemAvailableFromTimezone?: string;
+    brand?: string;
+    condition?: string;
+    countryOfManufacture?: string;
+    model?: string;
+    itemModified?: boolean;
+    weightKgs?: number;
+    returnsAllowed?: boolean;
+    deleted?: boolean;
+    createdByUserInfo?: CreatedByUserInfo;
     category?:
       | {
-          name?: string
+          name?: string;
+          fullPath?: string;
         }
-      | string
-    pickupLocations?: PickupLocation[]
-  }
-  title?: string
-  upc?: string
-  length?: number
-  breadth?: number
-  width?: number
-  height?: number
-  price?: number
-  discount?: number
-  discountPercent?: boolean
-  availableStock?: number
-  itemAvailableFrom?: string
-  brand?: string
-  condition?: string
-  countryOfManufacture?: string
-  model?: string
-  itemModified?: boolean
-  weightKgs?: number
-  returnsAllowed?: boolean
-  isDeleted?: boolean
-  deleted?: boolean
+      | string;
+    pickupLocations?: PickupLocation[];
+  } & ProductImageUrls;
+  title?: string;
+  upc?: string;
+  length?: number;
+  breadth?: number;
+  width?: number;
+  height?: number;
+  price?: number;
+  discount?: number;
+  discountPercent?: boolean;
+  availableStock?: number;
+  itemAvailableFrom?: string;
+  itemAvailableFromTimezone?: string;
+  brand?: string;
+  condition?: string;
+  countryOfManufacture?: string;
+  model?: string;
+  itemModified?: boolean;
+  weightKgs?: number;
+  returnsAllowed?: boolean;
+  isDeleted?: boolean;
+  deleted?: boolean;
+  createdByUserInfo?: CreatedByUserInfo;
   category?:
     | {
-        name?: string
+        name?: string;
+        fullPath?: string;
       }
-    | string
-  pickupLocations?: PickupLocation[]
+    | string;
+  pickupLocations?: PickupLocation[];
 }
 
 /**
@@ -84,476 +261,544 @@ export interface ProductData {
  */
 export const getProductGridColumns = (
   onToggleProduct: (productId: number) => void,
-  onToggleReturns: (productId: number) => void,
+  onToggleReturns: (productId: number) => void
 ): GridColDef[] => [
   {
-    field: 'productId',
-    headerName: 'Product ID',
+    field: "productId",
+    headerName: "Product ID",
     hideable: false,
     filterable: false,
     width: 0,
     minWidth: 0,
   },
   {
-    field: 'mainImage',
-    headerName: 'Image',
+    field: "mainImageUrl",
+    headerName: "Images",
     minWidth: 180,
     flex: 1,
     sortable: false,
     filterable: false,
-    align: 'center',
-    headerAlign: 'center',
+    align: "center",
+    headerAlign: "center",
     renderCell: (params: GridRenderCellParams<ProductData>) => {
-      const rowData = params.row
-      const productId = rowData.productId ?? rowData.product?.productId
-      const imageUrl = productApi.getProductImageUrl(productId ?? 0, 'Main')
+      const rowData = params.row;
+      const product = rowData.product;
+
+      // Collect all available images with labels
+      const images: Array<{ url: string; label: string }> = [
+        { url: rowData.mainImageUrl ?? product?.mainImageUrl ?? "", label: "Main" },
+        { url: rowData.topImageUrl ?? product?.topImageUrl ?? "", label: "Top" },
+        { url: rowData.bottomImageUrl ?? product?.bottomImageUrl ?? "", label: "Bottom" },
+        { url: rowData.frontImageUrl ?? product?.frontImageUrl ?? "", label: "Front" },
+        { url: rowData.backImageUrl ?? product?.backImageUrl ?? "", label: "Back" },
+        { url: rowData.rightImageUrl ?? product?.rightImageUrl ?? "", label: "Right" },
+        { url: rowData.leftImageUrl ?? product?.leftImageUrl ?? "", label: "Left" },
+        { url: rowData.detailsImageUrl ?? product?.detailsImageUrl ?? "", label: "Details" },
+        { url: rowData.defectImageUrl ?? product?.defectImageUrl ?? "", label: "Defect" },
+        { url: rowData.additionalImage1Url ?? product?.additionalImage1Url ?? "", label: "Additional 1" },
+        { url: rowData.additionalImage2Url ?? product?.additionalImage2Url ?? "", label: "Additional 2" },
+        { url: rowData.additionalImage3Url ?? product?.additionalImage3Url ?? "", label: "Additional 3" },
+      ];
 
       return (
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: '100%',
-            width: '100%',
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "100%",
+            width: "100%",
           }}
         >
-          <Avatar variant="square" src={imageUrl} sx={{ width: 150,
-height: 150 }}>
-            {rowData.title?.[0] ?? 'P'}
-          </Avatar>
-        </div>
-      )
+          <ProductImageCarousel
+            images={images}
+            fallbackLetter={rowData.title?.[0] ?? "P"}
+          />
+        </Box>
+      );
     },
   },
   {
-    field: 'title',
-    headerName: 'Title',
+    field: "title",
+    headerName: "Title",
     flex: 2,
     minWidth: 250,
-    headerAlign: 'left',
+    headerAlign: "left",
     valueGetter: (_value, row: ProductData) => {
-      const rowData = row
-      const title = rowData.title ?? rowData.product?.title
-      if (!title) return '—'
-      return typeof title === 'string' ? title : String(title)
+      const rowData = row;
+      const title = rowData.title ?? rowData.product?.title;
+      if (!title) return "—";
+      return typeof title === "string" ? title : String(title);
     },
     renderCell: (params: GridRenderCellParams) => (
-      <Box sx={{ display: 'flex',
-alignItems: 'center',
-height: '100%' }}>
-        <RenderLongCellItem value={String(params.value || '')} />
+      <Box sx={{ display: "flex", alignItems: "center", height: "100%" }}>
+        <RenderLongCellItem value={String(params.value || "")} />
       </Box>
     ),
   },
   {
-    field: 'category',
-    headerName: 'Category',
-    flex: 1.5,
-    minWidth: 180,
-    headerAlign: 'left',
+    field: "category",
+    headerName: "Category",
+    flex: 2,
+    minWidth: 250,
+    headerAlign: "left",
     valueGetter: (_value, row: ProductData) => {
-      const rowData = row
-      // The API returns category as ProductCategoryResponseModel object
-      if (rowData.category && typeof rowData.category === 'object' && 'name' in rowData.category) {
-        return rowData.category.name ?? '—'
+      const rowData = row;
+      // The API returns category as ProductCategoryResponseModel object with fullPath
+      if (
+        rowData.category &&
+        typeof rowData.category === "object"
+      ) {
+        // Prefer fullPath over name for complete category hierarchy
+        return rowData.category.fullPath ?? rowData.category.name ?? "—";
       }
       // Fallback for nested product object
       if (
         rowData.product?.category &&
-        typeof rowData.product.category === 'object' &&
-        'name' in rowData.product.category
+        typeof rowData.product.category === "object"
       ) {
-        return rowData.product.category.name ?? '—'
+        return rowData.product.category.fullPath ?? rowData.product.category.name ?? "—";
       }
       // If it's already a string
-      if (typeof rowData.category === 'string') {
-        return rowData.category
+      if (typeof rowData.category === "string") {
+        return rowData.category;
       }
-      return '—'
+      return "—";
     },
     renderCell: (params: GridRenderCellParams) => (
-      <Box sx={{ display: 'flex',
-alignItems: 'center',
-height: '100%' }}>
-        <RenderLongCellItem value={String(params.value || '—')} />
+      <Box sx={{ display: "flex", alignItems: "center", height: "100%" }}>
+        <RenderLongCellItem value={String(params.value || "—")} />
       </Box>
     ),
   },
   {
-    field: 'upc',
-    headerName: 'UPC',
+    field: "upc",
+    headerName: "UPC",
     minWidth: 150,
     flex: 1,
-    headerAlign: 'left',
+    headerAlign: "left",
     valueGetter: (_value, row: ProductData) => {
-      const rowData = row
-      const upc = rowData.upc ?? rowData.product?.upc
-      if (!upc) return '—'
-      return typeof upc === 'string' ? upc : String(upc)
+      const rowData = row;
+      const upc = rowData.upc ?? rowData.product?.upc;
+      if (!upc) return "—";
+      return typeof upc === "string" ? upc : String(upc);
     },
     renderCell: (params: GridRenderCellParams) => (
-      <Box sx={{ display: 'flex',
-alignItems: 'center',
-height: '100%' }}>
-        <RenderLongCellItem value={String(params.value || '')} />
+      <Box sx={{ display: "flex", alignItems: "center", height: "100%" }}>
+        <RenderLongCellItem value={String(params.value || "")} />
       </Box>
     ),
   },
   {
-    field: 'dimensions',
-    headerName: 'Dimensions (L x W x H)',
+    field: "dimensions",
+    headerName: "Dimensions (L x W x H)",
     minWidth: 180,
     flex: 1.2,
-    headerAlign: 'left',
+    headerAlign: "left",
     valueGetter: (_value, row: ProductData) => {
-      const rowData = row
-      const length = rowData.length ?? rowData.product?.length
-      const breadth = rowData.breadth ?? rowData.width ?? rowData.product?.breadth
-      const height = rowData.height ?? rowData.product?.height
-      if (!length && !breadth && !height) return '—'
-      return `${length ?? 0} x ${breadth ?? 0} x ${height ?? 0}`
+      const rowData = row;
+      const length = rowData.length ?? rowData.product?.length;
+      const breadth =
+        rowData.breadth ?? rowData.width ?? rowData.product?.breadth;
+      const height = rowData.height ?? rowData.product?.height;
+      if (!length && !breadth && !height) return "—";
+      return `${length ?? 0} x ${breadth ?? 0} x ${height ?? 0}`;
     },
     renderCell: (params: GridRenderCellParams) => (
-      <Box sx={{ display: 'flex',
-alignItems: 'center',
-height: '100%' }}>{params.value}</Box>
+      <Box sx={{ display: "flex", alignItems: "center", height: "100%" }}>
+        {params.value}
+      </Box>
     ),
   },
   {
-    field: 'price',
-    headerName: 'Price',
+    field: "price",
+    headerName: "Price",
     minWidth: 120,
     flex: 0.8,
-    headerAlign: 'left',
+    headerAlign: "left",
     valueGetter: (_value, row: ProductData) => {
-      const rowData = row
-      const price = rowData.price ?? rowData.product?.price
-      if (price == null) return '—'
-      return `₹ ${price}`
+      const rowData = row;
+      const price = rowData.price ?? rowData.product?.price;
+      if (price == null) return "—";
+      return `₹ ${price}`;
     },
     renderCell: (params: GridRenderCellParams) => (
-      <Box sx={{ display: 'flex',
-alignItems: 'center',
-height: '100%' }}>{params.value}</Box>
+      <Box sx={{ display: "flex", alignItems: "center", height: "100%" }}>
+        {params.value}
+      </Box>
     ),
   },
   {
-    field: 'discount',
-    headerName: 'Discount',
+    field: "discount",
+    headerName: "Discount",
     minWidth: 120,
     flex: 0.8,
-    headerAlign: 'left',
+    headerAlign: "left",
     valueGetter: (_value, row: ProductData) => {
-      const rowData = row
-      const discount = rowData.discount ?? rowData.product?.discount
-      if (discount == null) return '—'
-      const isPercent = rowData.discountPercent ?? rowData.product?.discountPercent ?? false
-      return isPercent ? `${discount}%` : `₹ ${discount}`
+      const rowData = row;
+      const discount = rowData.discount ?? rowData.product?.discount;
+      if (discount == null) return "—";
+      const isPercent =
+        rowData.discountPercent ?? rowData.product?.discountPercent ?? false;
+      return isPercent ? `${discount}%` : `₹ ${discount}`;
     },
     renderCell: (params: GridRenderCellParams) => (
-      <Box sx={{ display: 'flex',
-alignItems: 'center',
-height: '100%' }}>{params.value}</Box>
+      <Box sx={{ display: "flex", alignItems: "center", height: "100%" }}>
+        {params.value}
+      </Box>
     ),
   },
   {
-    field: 'availableStock',
-    headerName: 'Stock',
-    minWidth: 100,
-    flex: 0.6,
-    headerAlign: 'left',
+    field: "itemAvailableFrom",
+    headerName: "Available From",
+    minWidth: 220,
+    flex: 1.2,
+    headerAlign: "left",
     valueGetter: (_value, row: ProductData) => {
-      const rowData = row
-      const stock = rowData.availableStock ?? rowData.product?.availableStock
-      if (stock == null) return '—'
-      return stock
-    },
-    renderCell: (params: GridRenderCellParams) => (
-      <Box sx={{ display: 'flex',
-alignItems: 'center',
-height: '100%' }}>{params.value}</Box>
-    ),
-  },
-  {
-    field: 'itemAvailableFrom',
-    headerName: 'Available From',
-    minWidth: 150,
-    flex: 1,
-    headerAlign: 'left',
-    valueGetter: (_value, row: ProductData) => {
-      const rowData = row
-      const date = rowData.itemAvailableFrom ?? rowData.product?.itemAvailableFrom
-      if (!date) return '—'
+      const rowData = row;
+      const date =
+        rowData.itemAvailableFrom ?? rowData.product?.itemAvailableFrom;
+      if (!date) return "—";
       try {
-        return format(new Date(date), 'do MMM yyyy')
+        return format(new Date(date), "do MMM yyyy, HH:mm");
       } catch {
-        return '—'
+        return "—";
       }
     },
-    renderCell: (params: GridRenderCellParams) => (
-      <Box sx={{ display: 'flex',
-alignItems: 'center',
-height: '100%' }}>
-        <RenderLongCellItem value={String(params.value || '')} />
-      </Box>
-    ),
+    renderCell: (params: GridRenderCellParams<ProductData>) => {
+      const rowData = params.row;
+      const date =
+        rowData.itemAvailableFrom ?? rowData.product?.itemAvailableFrom;
+      const timezone =
+        rowData.itemAvailableFromTimezone ??
+        rowData.product?.itemAvailableFromTimezone;
+
+      if (!date) {
+        return <span>—</span>;
+      }
+
+      let formattedDate = "—";
+      try {
+        formattedDate = format(new Date(date), "do MMM yyyy, HH:mm");
+      } catch {
+        return <span>—</span>;
+      }
+
+      // Get short timezone name (e.g., "IST" from "Asia/Kolkata")
+      const getShortTimezone = (tz: string): string => {
+        const timezoneMap: Record<string, string> = {
+          "Asia/Kolkata": "IST",
+          UTC: "UTC",
+          "America/New_York": "EST",
+          "America/Chicago": "CST",
+          "America/Denver": "MST",
+          "America/Los_Angeles": "PST",
+          "Europe/London": "GMT",
+          "Europe/Paris": "CET",
+          "Europe/Berlin": "CET",
+          "Asia/Tokyo": "JST",
+          "Asia/Shanghai": "CST",
+          "Asia/Singapore": "SGT",
+          "Asia/Dubai": "GST",
+          "Australia/Sydney": "AEST",
+          "Pacific/Auckland": "NZST",
+        };
+        return timezoneMap[tz] ?? tz;
+      };
+
+      const displayText = timezone
+        ? `${formattedDate} (${getShortTimezone(timezone)})`
+        : formattedDate;
+
+      const tooltipText = timezone
+        ? `${formattedDate} • ${timezone}`
+        : formattedDate;
+
+      return (
+        <Tooltip title={tooltipText}>
+          <span>{displayText}</span>
+        </Tooltip>
+      );
+    },
   },
   {
-    field: 'brand',
-    headerName: 'Brand',
+    field: "brand",
+    headerName: "Brand",
     minWidth: 150,
     flex: 1,
-    headerAlign: 'left',
+    headerAlign: "left",
     valueGetter: (_value, row: ProductData) => {
-      const rowData = row
-      const brand = rowData.brand ?? rowData.product?.brand
-      if (!brand) return '—'
-      return brand
+      const rowData = row;
+      const brand = rowData.brand ?? rowData.product?.brand;
+      if (!brand) return "—";
+      return brand;
     },
     renderCell: (params: GridRenderCellParams) => (
-      <Box sx={{ display: 'flex',
-alignItems: 'center',
-height: '100%' }}>
-        <RenderLongCellItem value={String(params.value || '—')} />
+      <Box sx={{ display: "flex", alignItems: "center", height: "100%" }}>
+        <RenderLongCellItem value={String(params.value || "—")} />
       </Box>
     ),
   },
   {
-    field: 'condition',
-    headerName: 'Condition',
-    minWidth: 140,
-    flex: 0.9,
-    headerAlign: 'left',
+    field: "condition",
+    headerName: "Condition",
+    minWidth: 180,
+    flex: 1,
+    headerAlign: "left",
     valueGetter: (_value, row: ProductData) => {
-      const rowData = row
-      const condition = rowData.condition ?? rowData.product?.condition
-      if (!condition) return '—'
-      return condition
+      const rowData = row;
+      const condition = rowData.condition ?? rowData.product?.condition;
+      if (!condition) return "—";
+      return condition;
     },
     renderCell: (params: GridRenderCellParams) => {
-      if (params.value === '—') {
-        return <Box sx={{ display: 'flex',
-alignItems: 'center',
-height: '100%' }}>{params.value}</Box>
+      const conditionValue = params.value as string;
+
+      if (!conditionValue || conditionValue === "—") {
+        return <span>—</span>;
       }
 
-      // Map condition to color
-      const getConditionColor = (
-        condition: string,
-      ): 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info' => {
-        const conditionLower = condition.toLowerCase()
-        if (conditionLower.includes('new')) return 'success'
-        if (conditionLower.includes('refurbished') || conditionLower.includes('renewed')) return 'info'
-        if (conditionLower.includes('used') || conditionLower.includes('pre-owned')) return 'warning'
-        if (conditionLower.includes('damaged') || conditionLower.includes('defective')) return 'error'
-        return 'default'
-      }
+      // Get label and color from appConstants
+      const label = getConditionLabel(conditionValue);
+      const color = getConditionColor(conditionValue);
 
       return (
-        <Box sx={{ display: 'flex',
-alignItems: 'center',
-height: '100%' }}>
-          <Chip label={params.value as string} color={getConditionColor(String(params.value))} size="small" />
-        </Box>
-      )
+          <Chip
+          label={label}
+          color={color}
+            size="small"
+          />
+      );
     },
   },
   {
-    field: 'countryOfManufacture',
-    headerName: 'Country of Manufacture',
+    field: "countryOfManufacture",
+    headerName: "Country of Manufacture",
     minWidth: 180,
     flex: 1.2,
-    headerAlign: 'left',
+    headerAlign: "left",
     valueGetter: (_value, row: ProductData) => {
-      const rowData = row
-      const country = rowData.countryOfManufacture ?? rowData.product?.countryOfManufacture
-      if (!country) return '—'
-      return country
+      const rowData = row;
+      const country =
+        rowData.countryOfManufacture ?? rowData.product?.countryOfManufacture;
+      if (!country) return "—";
+      return country;
     },
     renderCell: (params: GridRenderCellParams) => (
-      <Box sx={{ display: 'flex',
-alignItems: 'center',
-height: '100%' }}>
-        <RenderLongCellItem value={String(params.value || '—')} />
+      <Box sx={{ display: "flex", alignItems: "center", height: "100%" }}>
+        <RenderLongCellItem value={String(params.value || "—")} />
       </Box>
     ),
   },
   {
-    field: 'model',
-    headerName: 'Model',
+    field: "model",
+    headerName: "Model",
     minWidth: 150,
     flex: 1,
-    headerAlign: 'left',
+    headerAlign: "left",
     valueGetter: (_value, row: ProductData) => {
-      const rowData = row
-      const model = rowData.model ?? rowData.product?.model
-      if (!model) return '—'
-      return model
+      const rowData = row;
+      const model = rowData.model ?? rowData.product?.model;
+      if (!model) return "—";
+      return model;
     },
     renderCell: (params: GridRenderCellParams) => (
-      <Box sx={{ display: 'flex',
-alignItems: 'center',
-height: '100%' }}>
-        <RenderLongCellItem value={String(params.value || '—')} />
+      <Box sx={{ display: "flex", alignItems: "center", height: "100%" }}>
+        <RenderLongCellItem value={String(params.value || "—")} />
       </Box>
     ),
   },
   {
-    field: 'itemModified',
-    headerName: 'Item Modified',
+    field: "itemModified",
+    headerName: "Item Modified",
     minWidth: 130,
     flex: 0.8,
-    headerAlign: 'left',
+    headerAlign: "left",
     valueGetter: (_value, row: ProductData) => {
-      const rowData = row
-      const modified = rowData.itemModified ?? rowData.product?.itemModified
-      if (modified == null) return '—'
-      return modified ? 'Yes' : 'No'
+      const rowData = row;
+      const modified = rowData.itemModified ?? rowData.product?.itemModified;
+      if (modified == null) return "—";
+      return modified ? "Yes" : "No";
     },
     renderCell: (params: GridRenderCellParams) => (
-      <Box sx={{ display: 'flex',
-alignItems: 'center',
-height: '100%' }}>{params.value}</Box>
+      <Box sx={{ display: "flex", alignItems: "center", height: "100%" }}>
+        {params.value}
+      </Box>
     ),
   },
   {
-    field: 'weightKgs',
-    headerName: 'Weight (kg)',
+    field: "weightKgs",
+    headerName: "Weight (kg)",
     minWidth: 120,
     flex: 0.8,
-    headerAlign: 'left',
+    headerAlign: "left",
     valueGetter: (_value, row: ProductData) => {
-      const rowData = row
-      const weight = rowData.weightKgs ?? rowData.product?.weightKgs
-      if (weight == null) return '—'
-      return `${weight} kg`
+      const rowData = row;
+      const weight = rowData.weightKgs ?? rowData.product?.weightKgs;
+      if (weight == null) return "—";
+      return `${weight} kg`;
     },
     renderCell: (params: GridRenderCellParams) => (
-      <Box sx={{ display: 'flex',
-alignItems: 'center',
-height: '100%' }}>{params.value}</Box>
+      <Box sx={{ display: "flex", alignItems: "center", height: "100%" }}>
+        {params.value}
+      </Box>
     ),
   },
   {
-    field: 'pickupLocations',
-    headerName: 'Pickup Locations',
+    field: "pickupLocations",
+    headerName: "Pickup Locations",
     minWidth: 150,
     flex: 1,
-    align: 'center',
-    headerAlign: 'center',
+    align: "center",
+    headerAlign: "center",
     sortable: false,
     filterable: false,
     renderCell: (params: GridRenderCellParams<ProductData>) => {
-      const rowData = params.row
-      const locations = rowData.pickupLocations ?? rowData.product?.pickupLocations ?? []
-      const productTitle = rowData.title ?? rowData.product?.title
+      const rowData = params.row;
+      const locations =
+        rowData.pickupLocations ?? rowData.product?.pickupLocations ?? [];
+      const productTitle = rowData.title ?? rowData.product?.title;
 
       if (locations.length === 0) {
-        return <Box sx={{ display: 'flex',
-alignItems: 'center',
-justifyContent: 'center',
-height: '100%' }}>—</Box>
+        return (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
+            }}
+          >
+            —
+          </Box>
+        );
       }
 
       return (
-        <Box sx={{ display: 'flex',
-alignItems: 'center',
-justifyContent: 'center',
-height: '100%' }}>
-          <PickupLocationsButton locations={locations as never} productTitle={productTitle} />
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "100%",
+          }}
+        >
+          <PickupLocationsButton
+            locations={locations as never}
+            productTitle={productTitle}
+          />
         </Box>
-      )
+      );
     },
   },
   {
-    field: 'returnsAllowed',
-    headerName: 'Returns Allowed',
+    field: "returnsAllowed",
+    headerName: "Returns Allowed",
     minWidth: 150,
     flex: 1,
-    align: 'center',
-    headerAlign: 'center',
+    align: "center",
+    headerAlign: "center",
     sortable: false,
     filterable: false,
     renderCell: (params: GridRenderCellParams<ProductData>) => {
-      const rowData = params.row
-      const productId = rowData.productId ?? rowData.product?.productId
-      const returnsAllowed = rowData.returnsAllowed ?? rowData.product?.returnsAllowed ?? false
+      const rowData = params.row;
+      const productId = rowData.productId ?? rowData.product?.productId;
+      const returnsAllowed =
+        rowData.returnsAllowed ?? rowData.product?.returnsAllowed ?? false;
 
       return (
-        <Box sx={{ display: 'flex',
-alignItems: 'center',
-justifyContent: 'center',
-height: '100%' }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "100%",
+          }}
+        >
           <Switch
             checked={returnsAllowed}
             onChange={() => {
               if (productId != null) {
-                onToggleReturns(productId)
+                onToggleReturns(productId);
               }
             }}
             color="primary"
             size="small"
           />
         </Box>
-      )
+      );
     },
   },
   {
-    field: 'actions',
-    headerName: 'Actions',
+    field: "createdByUserInfo",
+    headerName: "Created By",
+    minWidth: 220,
+    flex: 1.2,
+    valueGetter: (_value, row: ProductData) => {
+      const rowData = row;
+      const createdByUserInfo =
+        rowData.createdByUserInfo ?? rowData.product?.createdByUserInfo;
+      if (!createdByUserInfo) return "—";
+      // Return full name for sorting/filtering
+      const fullName =
+        createdByUserInfo.fullName ??
+        `${createdByUserInfo.firstName ?? ""} ${createdByUserInfo.lastName ?? ""}`.trim();
+      return fullName || createdByUserInfo.loginName || "—";
+    },
+    renderCell: (params: GridRenderCellParams<ProductData>) => {
+      const rowData = params.row;
+      const createdByUserInfo =
+        rowData.createdByUserInfo ?? rowData.product?.createdByUserInfo;
+
+      if (!createdByUserInfo) {
+        return <span>—</span>;
+      }
+
+      const firstName = createdByUserInfo.firstName ?? "";
+      const lastName = createdByUserInfo.lastName ?? "";
+      const loginName = createdByUserInfo.loginName ?? "";
+      const fullName =
+        createdByUserInfo.fullName ??
+        (`${firstName} ${lastName}`.trim() || loginName || "Unknown");
+
+      // Display: "First Last (loginName)"
+      const displayText = loginName
+        ? `${fullName} (${loginName})`
+        : fullName;
+
+      // Tooltip shows full details
+      const tooltipText = `${fullName}${loginName ? ` • ${loginName}` : ""}`;
+
+      return (
+        <Tooltip title={tooltipText}>
+          <span>{displayText}</span>
+        </Tooltip>
+      );
+    },
+  },
+  {
+    field: "actions",
+    headerName: "Actions",
     minWidth: 200,
     flex: 1.2,
     sortable: false,
     filterable: false,
     renderCell: (params: GridRenderCellParams<ProductData>) => {
-      const rowData = params.row
-      const productId = rowData.productId ?? rowData.product?.productId
-
-      if (rowData.isDeleted ?? rowData.deleted ?? rowData.product?.deleted) {
-        return (
-          <div>
-            <Link
-              href="#"
-              onClick={e => {
-                e.preventDefault()
-                if (productId != null) {
-                  onToggleProduct(productId)
-                }
-              }}
-              sx={{ cursor: 'pointer',
-color: 'success.main' }}
-            >
-              Activate
-            </Link>
-          </div>
-        )
-      }
+      const rowData = params.row;
+      const productId = rowData.productId ?? rowData.product?.productId ?? 0;
+      const isDeleted =
+        rowData.isDeleted ??
+        rowData.deleted ??
+        rowData.product?.deleted ??
+        false;
 
       return (
-        <div style={{ display: 'flex',
-gap: '12px' }}>
-          <Link href={`${APP_ROUTES.DASHBOARD.ADD_PRODUCT}?productId=${productId}&isView`} sx={{ cursor: 'pointer' }}>
-            View
-          </Link>
-          <Link href={`${APP_ROUTES.DASHBOARD.ADD_PRODUCT}?productId=${productId}`} sx={{ cursor: 'pointer' }}>
-            Edit
-          </Link>
-          <Link
-            href="#"
-            onClick={e => {
-              e.preventDefault()
-              if (productId != null) {
-                onToggleProduct(productId)
-              }
-            }}
-            sx={{ cursor: 'pointer',
-color: 'error.main' }}
-          >
-            Deactivate
-          </Link>
-        </div>
-      )
+        <ProductActionsCell
+          productId={productId}
+          isDeleted={isDeleted}
+          onToggleProduct={onToggleProduct}
+        />
+      );
     },
   },
-]
+];

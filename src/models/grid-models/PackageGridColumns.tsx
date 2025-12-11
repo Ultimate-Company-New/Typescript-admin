@@ -1,7 +1,10 @@
 import { Link, Chip, Box } from '@mui/material'
 import { type GridColDef, type GridRenderCellParams } from '@mui/x-data-grid'
 
+import { PERMISSIONS } from '../../constants/appConstants'
 import { APP_ROUTES } from '../../constants/routes'
+import { usePermissions } from '../../hooks/usePermissions'
+import styles from '../../styles/Packages.module.scss'
 
 /**
  * Package data structure matching API response
@@ -29,6 +32,102 @@ export interface PackageData {
   pricePerUnit?: number
   isDeleted?: boolean
   deleted?: boolean
+}
+
+/**
+ * Package Actions Component - handles permission-based action visibility
+ */
+const PackageActionsCell = ({
+  packageId,
+  isDeleted,
+  onTogglePackage,
+}: {
+  packageId: number
+  isDeleted: boolean
+  onTogglePackage?: (packageId: number) => void
+}): JSX.Element => {
+  const { hasPermission } = usePermissions()
+
+  // Check permissions using PERMISSIONS constants
+  const canViewPackage = hasPermission(PERMISSIONS.VIEW_PACKAGES)
+  const canUpdatePackage = hasPermission(PERMISSIONS.UPDATE_PACKAGES)
+  const canTogglePackage = hasPermission(PERMISSIONS.TOGGLE_PACKAGES)
+
+  if (isDeleted) {
+    // Only show Activate if user has toggle permission
+    if (!canTogglePackage) {
+      return <span>—</span>
+    }
+
+    return (
+      <div>
+        <Link
+          href="#"
+          onClick={e => {
+            e.preventDefault()
+            if (onTogglePackage) {
+              onTogglePackage(packageId)
+            }
+          }}
+          className={styles['package-grid__action-link--activate']}
+        >
+          Activate
+        </Link>
+      </div>
+    )
+  }
+
+  // Build actions based on permissions
+  const actions: JSX.Element[] = []
+
+  if (canViewPackage) {
+    actions.push(
+      <Link
+        key="view"
+        href={`${APP_ROUTES.DASHBOARD.ADD_PACKAGE}?packageId=${packageId}&isView`}
+        className={styles['package-grid__action-link']}
+      >
+        View
+      </Link>,
+    )
+  }
+
+  if (canUpdatePackage) {
+    actions.push(
+      <Link
+        key="edit"
+        href={`${APP_ROUTES.DASHBOARD.ADD_PACKAGE}?packageId=${packageId}`}
+        className={styles['package-grid__action-link']}
+      >
+        Edit
+      </Link>,
+    )
+  }
+
+  if (canTogglePackage) {
+    actions.push(
+      <Link
+        key="deactivate"
+        href="#"
+        onClick={e => {
+          e.preventDefault()
+          if (onTogglePackage) {
+            onTogglePackage(packageId)
+          }
+        }}
+        className={styles['package-grid__action-link--deactivate']}
+      >
+        Deactivate
+      </Link>,
+    )
+  }
+
+  // If no permissions, show empty cell
+  if (actions.length === 0) {
+    return <span>—</span>
+  }
+
+  return <div className={styles['package-grid__actions-container']}>{actions}</div>
 }
 
 /**
@@ -122,13 +221,16 @@ export const getPackageGridColumns = (onTogglePackage: (packageId: number) => vo
         color = 'secondary'
       } else if (typeUpper.includes('CUSTOM')) {
         color = 'success'
+      } else if (typeUpper.includes('FRAGILE')) {
+        color = 'error'
+      } else if (typeUpper.includes('OVERSIZED')) {
+        color = 'warning'
+      } else if (typeUpper.includes('TUBE')) {
+        color = 'secondary'
       }
 
       return (
-        <Box sx={{ display: 'flex',
-alignItems: 'center',
-justifyContent: 'center',
-height: '100%' }}>
+        <Box className={styles['package-grid__type-cell']}>
           <Chip label={packageType} color={color} size="small" />
         </Box>
       )
@@ -143,51 +245,18 @@ height: '100%' }}>
     renderCell: (params: GridRenderCellParams<PackageData>) => {
       const rowData = params.row
       const packageId = rowData.packageId ?? rowData._package?.packageId
+      const isDeleted = rowData.isDeleted ?? rowData.deleted ?? false
 
-      if (rowData.isDeleted ?? rowData.deleted) {
-        return (
-          <div>
-            <Link
-              href="#"
-              onClick={e => {
-                e.preventDefault()
-                if (packageId != null) {
-                  onTogglePackage(packageId)
-                }
-              }}
-              sx={{ cursor: 'pointer',
-color: 'success.main' }}
-            >
-              Activate
-            </Link>
-          </div>
-        )
+      if (packageId == null) {
+        return <span>—</span>
       }
 
-      return (
-        <div style={{ display: 'flex',
-gap: '12px' }}>
-          <Link href={`${APP_ROUTES.DASHBOARD.ADD_PACKAGE}?packageId=${packageId}&isView`} sx={{ cursor: 'pointer' }}>
-            View
-          </Link>
-          <Link href={`${APP_ROUTES.DASHBOARD.ADD_PACKAGE}?packageId=${packageId}`} sx={{ cursor: 'pointer' }}>
-            Edit
-          </Link>
-          <Link
-            href="#"
-            onClick={e => {
-              e.preventDefault()
-              if (packageId != null) {
-                onTogglePackage(packageId)
-              }
-            }}
-            sx={{ cursor: 'pointer',
-color: 'error.main' }}
-          >
-            Deactivate
-          </Link>
-        </div>
-      )
+      return <PackageActionsCell packageId={packageId} isDeleted={isDeleted} onTogglePackage={onTogglePackage} />
     },
   },
 ]
+
+/**
+ * Export the PackageActionsCell for potential reuse
+ */
+export { PackageActionsCell }

@@ -5,7 +5,10 @@
  */
 
 // Address Models
-export type { AddressRequestModel, AddressResponseModel } from './AddressModels'
+export type {
+  AddressRequestModel,
+  AddressResponseModel,
+} from "./AddressModels";
 
 // Lead Models
 export type {
@@ -15,13 +18,32 @@ export type {
   LeadRequestModel,
   LeadResponseModel,
   LeadUserInfo,
-} from './LeadModels'
+} from "./LeadModels";
 
 // Login Models
-export type { ClientResponseModel, ErrorResponseModel, LoginRequestModel, TokenResponseModel } from './LoginModels'
+export type {
+  ClientResponseModel,
+  ErrorResponseModel,
+  LoginRequestModel,
+  TokenResponseModel,
+} from "./LoginModels";
 
 // Message Models
-export type { MessageReadStatus, MessageRequestModel, MessageResponseModel } from './MessageModels'
+export type {
+  MessageReadStatus,
+  MessageRequestModel,
+  MessageResponseModel,
+} from "./MessageModels";
+
+// Product Models
+export type {
+  BulkProductInsertResponseModel,
+  BulkProductResult,
+  ProductCategoryResponseModel,
+  ProductDetailsResponseModel,
+  ProductRequestModel,
+  ProductResponseModel,
+} from "./ProductModels";
 
 // Promo Models
 export type {
@@ -30,10 +52,10 @@ export type {
   PromoDetailsResponseModel,
   PromoRequestModel,
   PromoResponseModel,
-} from './PromoModels'
+} from "./PromoModels";
 
 // Todo Models
-export type { TodoRequestModel, TodoResponseModel } from './TodoModels'
+export type { TodoRequestModel, TodoResponseModel } from "./TodoModels";
 
 // User Models
 export type {
@@ -43,4 +65,4 @@ export type {
   UserPermissionInfo,
   UserRequestModel,
   UserResponseModel,
-} from './UserModels'
+} from "./UserModels";

@@ -1,0 +1,378 @@
+.packages-page {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: 0;
+  box-sizing: border-box;
+
+  &__container {
+    padding-top: 32px;
+    padding-bottom: 32px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow-x: auto;
+  }
+
+  &__card {
+    background-color: #ffffff;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+
+    .MuiDataGrid-root {
+      width: 100%;
+      max-width: 100%;
+      min-width: 800px;
+      box-sizing: border-box;
+      border: none;
+      border-radius: 0;
+    }
+  }
+
+  &__pagination {
+    padding: 16px;
+    border-top: 1px solid rgba(224, 224, 224, 1);
+    background-color: #fff;
+  }
+
+  // Deleted row styling
+  :global(.MuiDataGrid-row.deleted) {
+    background-color: rgba(0, 0, 0, 0.04) !important;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.08) !important;
+    }
+  }
+}
+
+// Add/Edit Package Page Styles
+.add-packages-page {
+  &__container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding-top: 24px;
+    padding-bottom: 24px;
+  }
+
+  &__section {
+    padding: 24px;
+  }
+
+  &__section-title {
+    margin-bottom: 8px;
+  }
+
+  &__divider {
+    margin-bottom: 16px;
+  }
+
+  &__divider-spacer {
+    height: 8px;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  &__action-button {
+    min-width: 140px;
+  }
+
+  &__grid-container {
+    width: 100%;
+    min-height: 400px;
+  }
+
+  &__data-grid {
+    border: none;
+  }
+}
+
+// Package Details View (View Mode)
+.package-details-view {
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__label {
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.6);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  &__value {
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.87);
+  }
+
+  &__notes {
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  &__dimensions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    &-value {
+      font-weight: 500;
+    }
+
+    &-unit {
+      color: rgba(0, 0, 0, 0.6);
+      font-size: 12px;
+    }
+  }
+}
+
+// Fill Test Data Button
+.fill-test-data-button {
+  &__fab {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 1000;
+    background-color: #9c27b0;
+    color: #fff;
+
+    &:hover {
+      background-color: #7b1fa2;
+    }
+
+    &:disabled {
+      background-color: rgba(0, 0, 0, 0.12);
+      color: rgba(0, 0, 0, 0.26);
+    }
+  }
+}
+
+// ============================================================================
+// Package Grid
+// ============================================================================
+
+.package-grid {
+  &__type-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+  }
+
+  &__actions-container {
+    display: flex;
+    gap: 12px;
+  }
+
+  &__action-link {
+    cursor: pointer;
+    text-decoration: none;
+    color: #1976d2;
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    &--activate {
+      cursor: pointer;
+      text-decoration: none;
+      color: #4caf50;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    &--deactivate {
+      cursor: pointer;
+      text-decoration: none;
+      color: #d32f2f;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+}
+
+// ============================================================================
+// Import Packages Page
+// ============================================================================
+
+.import-packages-page {
+  &__page-wrapper {
+    width: 100%;
+    min-height: 100vh;
+    background-color: #f5f5f5;
+    padding: 0;
+  }
+
+  &__container {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  &__settings-card {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 24px;
+  }
+
+  &__section-title {
+    margin-bottom: 16px;
+  }
+
+  &__divider {
+    margin-bottom: 16px;
+  }
+
+  &__divider--large {
+    margin-bottom: 24px;
+  }
+
+  &__settings-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  &__template-button {
+    text-transform: none;
+  }
+
+  &__max-records-select {
+    min-width: 120px;
+  }
+
+  &__loading-paper {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 48px;
+  }
+
+  &__loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+  }
+
+  &__loading-text {
+    color: rgba(0, 0, 0, 0.87);
+  }
+
+  &__preview-paper {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 24px;
+  }
+
+  &__view-toggle-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 16px;
+  }
+
+  &__toggle-button-text {
+    margin-left: 8px;
+  }
+
+  &__grid-container {
+    width: 100%;
+  }
+
+  &__json-container {
+    width: 100%;
+    max-height: 600px;
+    overflow: auto;
+  }
+
+  &__error-row {
+    background-color: rgba(211, 47, 47, 0.08) !important;
+
+    &:hover {
+      background-color: rgba(211, 47, 47, 0.12) !important;
+    }
+  }
+
+  &__error-chip {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #d32f2f;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background-color: rgba(211, 47, 47, 0.1);
+
+    &:hover {
+      background-color: rgba(211, 47, 47, 0.2);
+    }
+  }
+
+  &__success-text {
+    color: #4caf50;
+    font-weight: 600;
+  }
+
+  &__actions-card {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 24px;
+  }
+
+  &__error-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    background-color: rgba(211, 47, 47, 0.08);
+    border-radius: 4px;
+    margin-bottom: 16px;
+  }
+
+  &__error-warning-icon {
+    color: #d32f2f;
+    margin-top: 2px;
+  }
+
+  &__error-warning-text {
+    color: #d32f2f;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+  }
+
+  &__action-button {
+    min-width: 140px;
+  }
+}
+

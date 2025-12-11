@@ -1,9 +1,9 @@
-import type React from 'react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import type React from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { useNavigate } from 'react-router-dom'
-import { toast } from 'react-toastify'
-import type { ZodType } from 'zod'
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import type { ZodType } from "zod";
 
 import {
   Cancel as CancelIcon,
@@ -12,7 +12,7 @@ import {
   GridOn as GridIcon,
   Code as JsonIcon,
   Send as SendIcon,
-} from '@mui/icons-material'
+} from "@mui/icons-material";
 import {
   Box,
   CircularProgress,
@@ -22,13 +22,18 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Typography,
-} from '@mui/material'
-import type { GridColDef, GridColumnVisibilityModel, GridSlotsComponent, GridToolbarProps } from '@mui/x-data-grid'
+} from "@mui/material";
+import type {
+  GridColDef,
+  GridColumnVisibilityModel,
+  GridSlotsComponent,
+  GridToolbarProps,
+} from "@mui/x-data-grid";
 
-import { bulkCreateUsers, getAllPermissions } from '../../api/userApi'
-import { userGroupApi } from '../../api/userGroupApi'
-import { ImportInstructions } from '../../components'
-import { BlueButton, LinkButton, RedButton } from '../../components/buttons'
+import { bulkCreateUsers, getAllPermissions } from "../../api/userApi";
+import { userGroupApi } from "../../api/userGroupApi";
+import { ImportInstructions } from "../../components";
+import { BlueButton, LinkButton, RedButton } from "../../components/buttons";
 import {
   ErrorDetailsModal,
   GridDensity,
@@ -39,67 +44,78 @@ import {
   type ColumnGroup,
   type FilterGroup,
   type GridDensityType,
-} from '../../components/datagrid'
-import { BodyText, Subheader } from '../../components/fonts'
-import { FileDropZone, SelectInput } from '../../components/form-input'
-import { DEFAULT_MAX_RECORDS, MAX_RECORDS_OPTIONS } from '../../constants/appConstants'
-import { APP_ROUTES } from '../../constants/routes'
+} from "../../components/datagrid";
+import { BodyText, Subheader } from "../../components/fonts";
+import { FileDropZone, SelectInput } from "../../components/form-input";
+import {
+  DEFAULT_MAX_RECORDS,
+  MAX_RECORDS_OPTIONS,
+} from "../../constants/appConstants";
+import { APP_ROUTES } from "../../constants/routes";
 import {
   getPermissionGridColumns,
   getUserGroupGridColumns,
   type PermissionData,
   type UserGroupData,
   type UserRequestModel,
-} from '../../models'
+} from "../../models";
 import {
   getUserImportPreviewColumns,
   userImportHeaderNames,
   userImportTemplateStructure,
-} from '../../models/bulk-import-models/ImportUserGridModel'
-import type { TemplateStructure } from '../../models/ImportTemplateStructure'
-import styles from '../../styles/Users.module.scss'
-import { type PaginatedGridInterface } from '../../types/grid.types'
-import { applyLocalFilters, downloadImportTemplate, parseImportFile } from '../../utils/gridUtil'
-import { convertImageUrlToBase64 } from '../../utils/imageUtils'
-import { bulkUserImportSchema as rawBulkUserImportSchema, type BulkUserImportData } from '../../utils/validationSchemas'
+} from "../../models/bulk-import-models/ImportUserGridModel";
+import type { TemplateStructure } from "../../models/ImportTemplateStructure";
+import styles from "../../styles/Users.module.scss";
+import { type PaginatedGridInterface } from "../../types/grid.types";
+import {
+  applyLocalFilters,
+  downloadImportTemplate,
+  parseImportFile,
+} from "../../utils/gridUtil";
+import { convertImageUrlToBase64 } from "../../utils/imageUtils";
+import {
+  bulkUserImportSchema as rawBulkUserImportSchema,
+  type BulkUserImportData,
+} from "../../utils/validationSchemas";
 
-import { FillImportTestDataButton } from './components'
+import { FillImportTestDataButton } from "./components";
 
-const templateStructure: TemplateStructure = userImportTemplateStructure
-const bulkUserImportValidator = rawBulkUserImportSchema as unknown as ZodType<BulkUserImportData>
+const templateStructure: TemplateStructure = userImportTemplateStructure;
+const bulkUserImportValidator =
+  rawBulkUserImportSchema as unknown as ZodType<BulkUserImportData>;
 
 /**
  * Interface for parsed user data from Excel/CSV
  * Matches UserRequestModel structure from Spring API
  */
 interface ImportUserData {
-  rowNumber: number
+  rowNumber: number;
   // User Info
-  loginName: string
-  firstName: string
-  lastName: string
-  phone: string
-  role: string
-  dob: string
-  apiKey?: string
-  imageUrl?: string
+  loginName: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  role: string;
+  dob: string;
+  apiKey?: string;
+  imageUrl?: string;
   // Address Info
-  streetAddress: string
-  streetAddress2?: string
-  streetAddress3?: string
-  city: string
-  state: string
-  zipCode: string
-  country?: string
-  addressType: string
-  nameOnAddress?: string
-  emailOnAddress?: string
-  phoneOnAddress?: string
+  streetAddress: string;
+  streetAddress2?: string;
+  streetAddress3?: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country?: string;
+  addressType: string;
+  nameOnAddress?: string;
+  emailOnAddress?: string;
+  phoneOnAddress?: string;
   // Other
-  permissionIds: number[]
-  selectedGroupIds: number[]
-  notes?: string
-  errors?: string[]
+  permissionIds: number[];
+  selectedGroupIds: number[];
+  notes?: string;
+  errors?: string[];
 }
 
 /**
@@ -107,33 +123,33 @@ interface ImportUserData {
  * Matches UserRequestModel from Spring API
  */
 interface BulkUserImportRequest {
-  maxRecords: number
+  maxRecords: number;
   users: Array<{
-    loginName: string
-    firstName: string
-    lastName: string
-    phone: string
-    role: string
-    dob: string
-    imageUrl?: string
+    loginName: string;
+    firstName: string;
+    lastName: string;
+    phone: string;
+    role: string;
+    dob: string;
+    imageUrl?: string;
     address: {
-      streetAddress: string
-      streetAddress2?: string
-      streetAddress3?: string
-      city: string
-      state: string
-      zipCode?: string
-      postalCode?: string
-      country?: string
-      addressType: string
-      nameOnAddress?: string
-      emailOnAddress?: string
-      phoneOnAddress?: string
-    }
-    permissionIds: number[]
-    selectedGroupIds: number[]
-    notes?: string
-  }>
+      streetAddress: string;
+      streetAddress2?: string;
+      streetAddress3?: string;
+      city: string;
+      state: string;
+      zipCode?: string;
+      postalCode?: string;
+      country?: string;
+      addressType: string;
+      nameOnAddress?: string;
+      emailOnAddress?: string;
+      phoneOnAddress?: string;
+    };
+    permissionIds: number[];
+    selectedGroupIds: number[];
+    notes?: string;
+  }>;
 }
 
 /**
@@ -146,48 +162,59 @@ interface BulkUserImportRequest {
  * - Validate and submit bulk import
  */
 const ImportUsers = (): React.JSX.Element => {
-  const navigate = useNavigate()
-  const [file, setFile] = useState<File | null>(null)
-  const [importData, setImportData] = useState<ImportUserData[]>([])
-  const [viewMode, setViewMode] = useState<'grid' | 'json'>('grid')
-  const [maxRecords, setMaxRecords] = useState<number>(DEFAULT_MAX_RECORDS)
-  const [isLoading, setIsLoading] = useState(false)
-  const [jsonPreview, setJsonPreview] = useState<string>('')
+  const navigate = useNavigate();
+  const [file, setFile] = useState<File | null>(null);
+  const [importData, setImportData] = useState<ImportUserData[]>([]);
+  const [viewMode, setViewMode] = useState<"grid" | "json">("grid");
+  const [maxRecords, setMaxRecords] = useState<number>(DEFAULT_MAX_RECORDS);
+  const [isLoading, setIsLoading] = useState(false);
+  const [jsonPreview, setJsonPreview] = useState<string>("");
 
   // Error modal state
-  const [errorModalOpen, setErrorModalOpen] = useState(false)
-  const [selectedRowErrors, setSelectedRowErrors] = useState<string[]>([])
-  const [selectedRowNumber, setSelectedRowNumber] = useState<number | null>(null)
+  const [errorModalOpen, setErrorModalOpen] = useState(false);
+  const [selectedRowErrors, setSelectedRowErrors] = useState<string[]>([]);
+  const [selectedRowNumber, setSelectedRowNumber] = useState<number | null>(
+    null
+  );
 
   // Permissions state (local pagination)
-  const [permissions, setPermissions] = useState<PermissionData[]>([])
-  const [permissionsRaw, setPermissionsRaw] = useState<PermissionData[]>([]) // Store unfiltered data
-  const [permissionsLoading, setPermissionsLoading] = useState(false)
-  const [permissionsDensity, setPermissionsDensity] = useState<GridDensityType>(GridDensity.STANDARD)
-  const [permissionsColumnVisibility, setPermissionsColumnVisibility] = useState<GridColumnVisibilityModel>({})
-  const [permissionsActiveFilterGroup, setPermissionsActiveFilterGroup] = useState<FilterGroup>({
-    logicOperator: LogicOperator.AND,
-    filters: [],
-  })
+  const [permissions, setPermissions] = useState<PermissionData[]>([]);
+  const [permissionsRaw, setPermissionsRaw] = useState<PermissionData[]>([]); // Store unfiltered data
+  const [permissionsLoading, setPermissionsLoading] = useState(false);
+  const [permissionsDensity, setPermissionsDensity] = useState<GridDensityType>(
+    GridDensity.STANDARD
+  );
+  const [permissionsColumnVisibility, setPermissionsColumnVisibility] =
+    useState<GridColumnVisibilityModel>({});
+  const [permissionsActiveFilterGroup, setPermissionsActiveFilterGroup] =
+    useState<FilterGroup>({
+      logicOperator: LogicOperator.AND,
+      filters: [],
+    });
 
   // User Groups state (server-side pagination)
-  const [userGroups, setUserGroups] = useState<UserGroupData[]>([])
-  const [userGroupsLoading, setUserGroupsLoading] = useState(false)
-  const [userGroupsTotalCount, setUserGroupsTotalCount] = useState(0)
-  const [userGroupsPaginationModel, setUserGroupsPaginationModel] = useState<PaginatedGridInterface>({
-    start: 0,
-    end: 10,
-    pageSize: 10,
-    includeDeleted: false,
-    actualDataCount: 0,
-    totalPaginationBlockCount: 0,
-  })
-  const [userGroupsActiveFilterGroup, setUserGroupsActiveFilterGroup] = useState<FilterGroup>({
-    logicOperator: LogicOperator.AND,
-    filters: [],
-  })
-  const [userGroupsDensity, setUserGroupsDensity] = useState<GridDensityType>(GridDensity.STANDARD)
-  const [userGroupsColumnVisibility, setUserGroupsColumnVisibility] = useState<GridColumnVisibilityModel>({})
+  const [userGroups, setUserGroups] = useState<UserGroupData[]>([]);
+  const [userGroupsLoading, setUserGroupsLoading] = useState(false);
+  const [userGroupsTotalCount, setUserGroupsTotalCount] = useState(0);
+  const [userGroupsPaginationModel, setUserGroupsPaginationModel] =
+    useState<PaginatedGridInterface>({
+      start: 0,
+      end: 10,
+      pageSize: 10,
+      includeDeleted: false,
+      actualDataCount: 0,
+      totalPaginationBlockCount: 0,
+    });
+  const [userGroupsActiveFilterGroup, setUserGroupsActiveFilterGroup] =
+    useState<FilterGroup>({
+      logicOperator: LogicOperator.AND,
+      filters: [],
+    });
+  const [userGroupsDensity, setUserGroupsDensity] = useState<GridDensityType>(
+    GridDensity.STANDARD
+  );
+  const [userGroupsColumnVisibility, setUserGroupsColumnVisibility] =
+    useState<GridColumnVisibilityModel>({});
 
   /**
    * Download Excel template with merged category headers
@@ -197,14 +224,15 @@ const ImportUsers = (): React.JSX.Element => {
     try {
       downloadImportTemplate({
         templateStructure,
-        fileName: 'user_import_template.xlsx',
-        sheetName: 'Users',
-      })
+        fileName: "user_import_template.xlsx",
+        sheetName: "Users",
+      });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to download template'
-      toast.error(message)
+      const message =
+        error instanceof Error ? error.message : "Failed to download template";
+      toast.error(message);
     }
-  }
+  };
 
   /**
    * Parse Excel/CSV file
@@ -213,7 +241,7 @@ const ImportUsers = (): React.JSX.Element => {
    */
   const parseFile = useCallback(
     (file: File): void => {
-      setIsLoading(true)
+      setIsLoading(true);
 
       void parseImportFile<ImportUserData, BulkUserImportData>({
         file,
@@ -221,28 +249,33 @@ const ImportUsers = (): React.JSX.Element => {
         headerNames: userImportHeaderNames,
         maxRecords,
         validator: bulkUserImportValidator,
-        createRowData: ({ rowNumber, rowParser, getOptionalValue, getRequiredValue }) => {
-          const loginNameValue = getRequiredValue('loginName')
-          const firstNameValue = getRequiredValue('firstName')
-          const lastNameValue = getRequiredValue('lastName')
-          const phoneValue = getRequiredValue('phone')
-          const roleValue = getRequiredValue('role')
-          const dobValue = getRequiredValue('dob')
-          const imageUrlValue = getOptionalValue('imageUrl')
-          const streetAddressValue = getRequiredValue('streetAddress')
-          const streetAddress2Value = getOptionalValue('streetAddress2')
-          const streetAddress3Value = getOptionalValue('streetAddress3')
-          const cityValue = getRequiredValue('city')
-          const stateValue = getRequiredValue('state')
-          const postalCodeValue = getRequiredValue('zipCode')
-          const countryValue = getRequiredValue('country')
-          const addressTypeValue = getRequiredValue('addressType')
-          const nameOnAddressValue = getOptionalValue('nameOnAddress')
-          const emailOnAddressValue = getOptionalValue('emailOnAddress')
-          const phoneOnAddressValue = getOptionalValue('phoneOnAddress')
-          const notesValue = getOptionalValue('notes')
-          const permissionIdsRaw = rowParser.getString('permissionIds')
-          const selectedGroupIdsRaw = rowParser.getString('selectedGroupIds')
+        createRowData: ({
+          rowNumber,
+          rowParser,
+          getOptionalValue,
+          getRequiredValue,
+        }) => {
+          const loginNameValue = getRequiredValue("loginName");
+          const firstNameValue = getRequiredValue("firstName");
+          const lastNameValue = getRequiredValue("lastName");
+          const phoneValue = getRequiredValue("phone");
+          const roleValue = getRequiredValue("role");
+          const dobValue = getRequiredValue("dob");
+          const imageUrlValue = getOptionalValue("imageUrl");
+          const streetAddressValue = getRequiredValue("streetAddress");
+          const streetAddress2Value = getOptionalValue("streetAddress2");
+          const streetAddress3Value = getOptionalValue("streetAddress3");
+          const cityValue = getRequiredValue("city");
+          const stateValue = getRequiredValue("state");
+          const postalCodeValue = getRequiredValue("zipCode");
+          const countryValue = getRequiredValue("country");
+          const addressTypeValue = getRequiredValue("addressType");
+          const nameOnAddressValue = getOptionalValue("nameOnAddress");
+          const emailOnAddressValue = getOptionalValue("emailOnAddress");
+          const phoneOnAddressValue = getOptionalValue("phoneOnAddress");
+          const notesValue = getOptionalValue("notes");
+          const permissionIdsRaw = rowParser.getString("permissionIds");
+          const selectedGroupIdsRaw = rowParser.getString("selectedGroupIds");
 
           const validationPayload: BulkUserImportData = {
             loginName: loginNameValue,
@@ -251,22 +284,22 @@ const ImportUsers = (): React.JSX.Element => {
             phone: phoneValue,
             role: roleValue,
             dob: dobValue,
-            imageUrl: imageUrlValue ?? '',
+            imageUrl: imageUrlValue ?? "",
             streetAddress: streetAddressValue,
-            streetAddress2: streetAddress2Value ?? '',
-            streetAddress3: streetAddress3Value ?? '',
+            streetAddress2: streetAddress2Value ?? "",
+            streetAddress3: streetAddress3Value ?? "",
             city: cityValue,
             state: stateValue,
             zipCode: postalCodeValue,
             country: countryValue,
             addressType: addressTypeValue,
-            nameOnAddress: nameOnAddressValue ?? '',
-            emailOnAddress: emailOnAddressValue ?? '',
-            phoneOnAddress: phoneOnAddressValue ?? '',
+            nameOnAddress: nameOnAddressValue ?? "",
+            emailOnAddress: emailOnAddressValue ?? "",
+            phoneOnAddress: phoneOnAddressValue ?? "",
             permissionIds: permissionIdsRaw,
             selectedGroupIds: selectedGroupIdsRaw,
-            notes: notesValue ?? '',
-          }
+            notes: notesValue ?? "",
+          };
 
           const parsedRow: ImportUserData = {
             rowNumber,
@@ -288,86 +321,95 @@ const ImportUsers = (): React.JSX.Element => {
             nameOnAddress: nameOnAddressValue,
             emailOnAddress: emailOnAddressValue,
             phoneOnAddress: phoneOnAddressValue,
-            permissionIds: rowParser.getIdArray('permissionIds'),
-            selectedGroupIds: rowParser.getIdArray('selectedGroupIds'),
+            permissionIds: rowParser.getIdArray("permissionIds"),
+            selectedGroupIds: rowParser.getIdArray("selectedGroupIds"),
             notes: notesValue,
-          }
+          };
 
           return {
             parsedRow,
             validationPayload,
           } satisfies {
-            parsedRow: ImportUserData
-            validationPayload: BulkUserImportData
-          }
+            parsedRow: ImportUserData;
+            validationPayload: BulkUserImportData;
+          };
         },
       })
-        .then(results => {
+        .then((results) => {
           setImportData(
-            results.map(result => ({
+            results.map((result) => ({
               ...result.data,
-              errors: result.errors && result.errors.length > 0 ? result.errors : undefined,
-            })),
-          )
-          toast.success(`Parsed ${results.length} records successfully!`)
+              errors:
+                result.errors && result.errors.length > 0
+                  ? result.errors
+                  : undefined,
+            }))
+          );
+          toast.success(`Parsed ${results.length} records successfully!`);
         })
-        .catch(error => {
-          const message = error instanceof Error ? error.message : 'Failed to parse file. Please check the format.'
-          toast.error(message)
-          if (message.includes('maximum allowed')) {
-            setFile(null)
+        .catch((error) => {
+          const message =
+            error instanceof Error
+              ? error.message
+              : "Failed to parse file. Please check the format.";
+          toast.error(message);
+          if (message.includes("maximum allowed")) {
+            setFile(null);
           }
         })
         .finally(() => {
-          setIsLoading(false)
-        })
+          setIsLoading(false);
+        });
     },
-    [maxRecords],
-  )
+    [maxRecords]
+  );
   /**
    * Handle file selection
    */
   const handleFileSelect = useCallback(
     (selectedFile: File): void => {
-      setFile(selectedFile)
-      parseFile(selectedFile)
+      setFile(selectedFile);
+      parseFile(selectedFile);
     },
-    [parseFile],
-  )
+    [parseFile]
+  );
 
   /**
    * Clear uploaded file and data
    */
   const handleFileClear = useCallback((): void => {
-    setFile(null)
-    setImportData([])
-  }, [])
+    setFile(null);
+    setImportData([]);
+  }, []);
 
   /**
    * Fetch available permissions (local pagination)
    */
   const fetchPermissions = useCallback(async (): Promise<void> => {
-    setPermissionsLoading(true)
+    setPermissionsLoading(true);
     try {
-      const permissionsResponse = (await getAllPermissions()) as PermissionData[]
+      const permissionsResponse =
+        (await getAllPermissions()) as PermissionData[];
       // Sort by permissionId in descending order
-      const sortedPermissions = [...permissionsResponse].sort((a, b) => b.permissionId - a.permissionId)
-      setPermissionsRaw(sortedPermissions) // Store raw unfiltered data
-      setPermissions(sortedPermissions)
+      const sortedPermissions = [...permissionsResponse].sort(
+        (a, b) => b.permissionId - a.permissionId
+      );
+      setPermissionsRaw(sortedPermissions); // Store raw unfiltered data
+      setPermissions(sortedPermissions);
     } catch {
-      toast.error('Failed to fetch permissions')
-      setPermissionsRaw([])
-      setPermissions([])
+      toast.error("Failed to fetch permissions");
+      setPermissionsRaw([]);
+      setPermissions([]);
     } finally {
-      setPermissionsLoading(false)
+      setPermissionsLoading(false);
     }
-  }, [])
+  }, []);
 
   /**
    * Fetch user groups (server-side pagination)
    */
   const fetchUserGroups = useCallback(async (): Promise<void> => {
-    setUserGroupsLoading(true)
+    setUserGroupsLoading(true);
     try {
       const response = await userGroupApi.getUserGroups({
         start: userGroupsPaginationModel.start,
@@ -376,43 +418,46 @@ const ImportUsers = (): React.JSX.Element => {
         includeDeleted: false,
         logicOperator: userGroupsActiveFilterGroup.logicOperator,
         filters: userGroupsActiveFilterGroup.filters,
-      })
+      });
 
       // API response already matches grid structure
-      setUserGroups(response.data as UserGroupData[])
-      setUserGroupsTotalCount(response.totalDataCount)
+      setUserGroups(response.data as UserGroupData[]);
+      setUserGroupsTotalCount(response.totalDataCount);
     } catch {
-      toast.error('Failed to fetch user groups')
-      setUserGroups([])
-      setUserGroupsTotalCount(0)
+      toast.error("Failed to fetch user groups");
+      setUserGroups([]);
+      setUserGroupsTotalCount(0);
     } finally {
-      setUserGroupsLoading(false)
+      setUserGroupsLoading(false);
     }
-  }, [userGroupsPaginationModel, userGroupsActiveFilterGroup])
+  }, [userGroupsPaginationModel, userGroupsActiveFilterGroup]);
 
   // Fetch permissions on mount
   useEffect(() => {
-    void fetchPermissions()
-  }, [fetchPermissions])
+    void fetchPermissions();
+  }, [fetchPermissions]);
 
   // Apply local filters to permissions when filter changes
   useEffect(() => {
     if (permissionsRaw.length > 0) {
-      const filteredData = applyLocalFilters(permissionsRaw, permissionsActiveFilterGroup)
-      setPermissions(filteredData)
+      const filteredData = applyLocalFilters(
+        permissionsRaw,
+        permissionsActiveFilterGroup
+      );
+      setPermissions(filteredData);
     }
-  }, [permissionsRaw, permissionsActiveFilterGroup])
+  }, [permissionsRaw, permissionsActiveFilterGroup]);
 
   // Fetch user groups on mount and when pagination changes
   useEffect(() => {
-    void fetchUserGroups()
-  }, [fetchUserGroups])
+    void fetchUserGroups();
+  }, [fetchUserGroups]);
 
   /**
    * Generate JSON structure for API
    */
   const generateImportJSON = useCallback((): BulkUserImportRequest => {
-    const users = importData.map(user => ({
+    const users = importData.map((user) => ({
       loginName: user.loginName,
       firstName: user.firstName,
       lastName: user.lastName,
@@ -428,7 +473,7 @@ const ImportUsers = (): React.JSX.Element => {
         state: user.state,
         zipCode: user.zipCode,
         postalCode: user.zipCode,
-        country: user.country ?? 'USA',
+        country: user.country ?? "USA",
         addressType: user.addressType,
         nameOnAddress: user.nameOnAddress,
         emailOnAddress: user.emailOnAddress,
@@ -437,62 +482,64 @@ const ImportUsers = (): React.JSX.Element => {
       permissionIds: user.permissionIds,
       selectedGroupIds: user.selectedGroupIds,
       notes: user.notes,
-    }))
+    }));
 
     return {
       maxRecords,
       users,
-    }
-  }, [importData, maxRecords])
+    };
+  }, [importData, maxRecords]);
 
   // Generate JSON preview when switching to JSON view
   useEffect(() => {
-    if (viewMode === 'json' && importData.length > 0) {
-      const json = generateImportJSON()
-      setJsonPreview(JSON.stringify(json, null, 2))
+    if (viewMode === "json" && importData.length > 0) {
+      const json = generateImportJSON();
+      setJsonPreview(JSON.stringify(json, null, 2));
     }
-  }, [viewMode, importData, generateImportJSON])
+  }, [viewMode, importData, generateImportJSON]);
 
   const jsonPreviewData = useMemo<unknown>(() => {
     if (!jsonPreview) {
-      return []
+      return [];
     }
 
     try {
-      const parsed = JSON.parse(jsonPreview) as BulkUserImportRequest
+      const parsed = JSON.parse(jsonPreview) as BulkUserImportRequest;
       // Only show the users array, not the wrapper object with maxRecords
-      return parsed.users
+      return parsed.users;
     } catch {
-      return []
+      return [];
     }
-  }, [jsonPreview])
+  }, [jsonPreview]);
 
   /**
    * Submit bulk import to API
    */
   const handleSubmit = async (): Promise<void> => {
     if (importData.length === 0) {
-      toast.error('No data to import')
-      return
+      toast.error("No data to import");
+      return;
     }
 
     // Check for errors
-    const hasErrors = importData.some(user => user.errors && user.errors.length > 0)
+    const hasErrors = importData.some(
+      (user) => user.errors && user.errors.length > 0
+    );
     if (hasErrors) {
-      toast.error('Please fix validation errors before submitting')
-      return
+      toast.error("Please fix validation errors before submitting");
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
     try {
       // Generate import payload - convert to API format (uses same UserRequestModel as add/edit)
       // Convert image URLs to base64 in parallel
       const usersPayload: UserRequestModel[] = await Promise.all(
-        importData.map(async user => {
+        importData.map(async (user) => {
           // Convert imageUrl to base64 if provided
-          let profilePictureBase64: string | undefined
+          let profilePictureBase64: string | undefined;
           if (user.imageUrl) {
-            profilePictureBase64 = await convertImageUrlToBase64(user.imageUrl)
+            profilePictureBase64 = await convertImageUrlToBase64(user.imageUrl);
           }
 
           return {
@@ -520,110 +567,126 @@ const ImportUsers = (): React.JSX.Element => {
             permissionIds: user.permissionIds,
             selectedGroupIds: user.selectedGroupIds,
             notes: user.notes,
-          }
-        }),
-      )
+          };
+        })
+      );
 
       // Call bulk create API - triggers async processing
-      await bulkCreateUsers(usersPayload)
+      await bulkCreateUsers(usersPayload);
 
       // Show success message - results will be sent via notification
       toast.success(
-        `Bulk import started for ${importData.length} users! You will receive a message with the results when processing completes.`,
-      )
+        `Bulk import started for ${importData.length} users! You will receive a message with the results when processing completes.`
+      );
 
       // Navigate to users page immediately
-      navigate(APP_ROUTES.DASHBOARD.USERS)
+      navigate(APP_ROUTES.DASHBOARD.USERS);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to import users'
-      toast.error(errorMessage)
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to import users";
+      toast.error(errorMessage);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
-  const handlePreviewErrorClick = useCallback((errors: string[], rowNumber: number): void => {
-    setSelectedRowErrors(errors)
-    setSelectedRowNumber(rowNumber)
-    setErrorModalOpen(true)
-  }, [])
+  const handlePreviewErrorClick = useCallback(
+    (errors: string[], rowNumber: number): void => {
+      setSelectedRowErrors(errors);
+      setSelectedRowNumber(rowNumber);
+      setErrorModalOpen(true);
+    },
+    []
+  );
 
   // Grid column configurations
-  const permissionsColumns = useMemo<GridColDef[]>(() => getPermissionGridColumns(), [])
+  const permissionsColumns = useMemo<GridColDef[]>(
+    () => getPermissionGridColumns(),
+    []
+  );
 
   const userGroupsColumns = useMemo<GridColDef[]>(() => {
     const noOpToggle = (): void => {
       // Read-only grid, no toggle support required
-    }
-    return getUserGroupGridColumns(noOpToggle).filter(col => col.field !== 'actions')
-  }, [])
+    };
+    return getUserGroupGridColumns(noOpToggle).filter(
+      (col) => col.field !== "actions"
+    );
+  }, []);
 
   const previewColumns = useMemo<GridColDef[]>(
     () => getUserImportPreviewColumns(handlePreviewErrorClick),
-    [handlePreviewErrorClick],
-  )
+    [handlePreviewErrorClick]
+  );
 
   const columnGroupingModel = useMemo<ColumnGroup[]>(
     () =>
-      templateStructure.map(section => ({
-        groupId: section.category.toLowerCase().replace(/\s+/g, '-'),
+      templateStructure.map((section) => ({
+        groupId: section.category.toLowerCase().replace(/\s+/g, "-"),
         headerName: section.category,
         children: section.fields,
       })),
-    [],
-  )
+    []
+  );
 
   // Validation summary
   const { hasValidationErrors, errorCount } = useMemo(() => {
-    let count = 0
+    let count = 0;
     for (const row of importData) {
       if (row.errors && row.errors.length > 0) {
-        count += 1
+        count += 1;
       }
     }
     return {
       hasValidationErrors: count > 0,
       errorCount: count,
-    }
-  }, [importData])
+    };
+  }, [importData]);
 
   return (
     <>
       {/* Test Data Button - Only show in development */}
       {import.meta.env.DEV && (
         <FillImportTestDataButton
-          permissionIds={permissionsRaw.map(p => p.permissionId)}
+          permissionIds={permissionsRaw.map((p) => p.permissionId)}
           userGroupIds={userGroups
-            .map(g => g.groupId ?? g.userGroupId ?? 0)
-            .filter(id => id !== 0)
+            .map((g) => g.groupId ?? g.userGroupId ?? 0)
+            .filter((id) => id !== 0)
             .slice(0, 5)}
         />
       )}
 
-      <Container maxWidth={false} disableGutters className={styles['import-users-page__page-wrapper']}>
-        <Box className={styles['import-users-page__container']}>
+      <Container
+        maxWidth={false}
+        disableGutters
+        className={styles["import-users-page__page-wrapper"]}
+      >
+        <Box className={styles["import-users-page__container"]}>
           {/* Instructions */}
           <ImportInstructions
             instructions={[
-              'Download the template file to see the required format',
-              'Fill in your user data following the template structure',
-              'Upload the file and preview the data',
-              'Set the maximum number of records to import',
-              'Review and submit the import',
+              "Download the template file to see the required format",
+              "Fill in your user data following the template structure",
+              "Upload the file and preview the data",
+              "Set the maximum number of records to import",
+              "Review and submit the import",
             ]}
           />
 
           {/* Reference Grids - Permissions and User Groups (stacked vertically) */}
           {/* Permissions Grid (Client-Side Pagination) */}
-          <Paper className={styles['import-users-page__reference-card']}>
-            <Subheader label="Available Permissions" className={styles['import-users-page__section-title']} />
-            <Divider className={styles['import-users-page__divider']} />
-            <Box className={styles['import-users-page__grid-wrapper']}>
+          <Paper className={styles["import-users-page__reference-card"]}>
+            <Subheader
+              label="Available Permissions"
+              className={styles["import-users-page__section-title"]}
+            />
+            <Divider className={styles["import-users-page__divider"]} />
+            <Box className={styles["import-users-page__grid-wrapper"]}>
               <StyledDataGrid
                 dataTestId="permissions-reference-grid"
                 rows={permissions}
                 columns={permissionsColumns}
-                getRowId={row => (row as PermissionData).permissionId}
+                getRowId={(row) => (row as PermissionData).permissionId}
                 loading={permissionsLoading}
                 paginationMode="client"
                 filterMode="client"
@@ -642,7 +705,7 @@ const ImportUsers = (): React.JSX.Element => {
                 columnVisibilityModel={permissionsColumnVisibility}
                 onColumnVisibilityModelChange={setPermissionsColumnVisibility}
                 slots={{
-                  toolbar: SimpleToolbar as GridSlotsComponent['toolbar'],
+                  toolbar: SimpleToolbar as GridSlotsComponent["toolbar"],
                 }}
                 slotProps={{
                   toolbar: {
@@ -667,17 +730,20 @@ const ImportUsers = (): React.JSX.Element => {
           </Paper>
 
           {/* User Groups Grid (Server-Side Pagination) */}
-          <Paper className={styles['import-users-page__reference-card']}>
-            <Subheader label="Available User Groups" className={styles['import-users-page__section-title']} />
-            <Divider className={styles['import-users-page__divider']} />
-            <Box className={styles['import-users-page__grid-wrapper']}>
+          <Paper className={styles["import-users-page__reference-card"]}>
+            <Subheader
+              label="Available User Groups"
+              className={styles["import-users-page__section-title"]}
+            />
+            <Divider className={styles["import-users-page__divider"]} />
+            <Box className={styles["import-users-page__grid-wrapper"]}>
               <StyledDataGrid
                 dataTestId="user-groups-reference-grid"
                 rows={userGroups}
                 columns={userGroupsColumns}
-                getRowId={row => {
-                  const data = row as UserGroupData
-                  return data.groupId ?? data.userGroupId ?? 0
+                getRowId={(row) => {
+                  const data = row as UserGroupData;
+                  return data.groupId ?? data.userGroupId ?? 0;
                 }}
                 loading={userGroupsLoading}
                 rowCount={userGroupsTotalCount}
@@ -694,7 +760,7 @@ const ImportUsers = (): React.JSX.Element => {
                 columnVisibilityModel={userGroupsColumnVisibility}
                 onColumnVisibilityModelChange={setUserGroupsColumnVisibility}
                 slots={{
-                  toolbar: SimpleToolbar as GridSlotsComponent['toolbar'],
+                  toolbar: SimpleToolbar as GridSlotsComponent["toolbar"],
                 }}
                 slotProps={{
                   toolbar: {
@@ -717,17 +783,20 @@ const ImportUsers = (): React.JSX.Element => {
           </Paper>
 
           {/* Import Settings Card with File Upload */}
-          <Paper className={styles['import-users-page__settings-card']}>
-            <Subheader label="Import Settings" className={styles['import-users-page__section-title']} />
-            <Divider className={styles['import-users-page__divider--large']} />
+          <Paper className={styles["import-users-page__settings-card"]}>
+            <Subheader
+              label="Import Settings"
+              className={styles["import-users-page__section-title"]}
+            />
+            <Divider className={styles["import-users-page__divider--large"]} />
 
             {/* Top Right - Actions */}
-            <Box className={styles['import-users-page__settings-actions']}>
+            <Box className={styles["import-users-page__settings-actions"]}>
               {/* Download Template */}
               <LinkButton
                 startIcon={<DownloadIcon />}
                 onClick={handleDownloadTemplate}
-                className={styles['import-users-page__template-button']}
+                className={styles["import-users-page__template-button"]}
                 size="small"
                 label="Download Template"
               />
@@ -736,18 +805,18 @@ const ImportUsers = (): React.JSX.Element => {
               <SelectInput
                 label="Max Records"
                 value={maxRecords}
-                onChange={e => {
-                  setMaxRecords(Number(e.target.value))
+                onChange={(e) => {
+                  setMaxRecords(Number(e.target.value));
                 }}
                 disabled={isLoading}
-                options={MAX_RECORDS_OPTIONS.map(value => ({
+                options={MAX_RECORDS_OPTIONS.map((value) => ({
                   value,
                   label: String(value),
                 }))}
                 size="small"
                 margin="none"
                 fullWidth={false}
-                className={styles['import-users-page__max-records-select']}
+                className={styles["import-users-page__max-records-select"]}
               />
             </Box>
 
@@ -765,10 +834,13 @@ const ImportUsers = (): React.JSX.Element => {
 
           {/* Loading State - Processing File */}
           {isLoading && importData.length === 0 && (
-            <Paper className={styles['import-users-page__loading-paper']}>
-              <Box className={styles['import-users-page__loading-container']}>
+            <Paper className={styles["import-users-page__loading-paper"]}>
+              <Box className={styles["import-users-page__loading-container"]}>
                 <CircularProgress size={48} />
-                <Typography variant="h6" className={styles['import-users-page__loading-text']}>
+                <Typography
+                  variant="h6"
+                  className={styles["import-users-page__loading-text"]}
+                >
                   Processing file...
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
@@ -780,46 +852,60 @@ const ImportUsers = (): React.JSX.Element => {
 
           {/* Data Preview */}
           {importData.length > 0 && (
-            <Paper className={styles['import-users-page__preview-paper']}>
+            <Paper className={styles["import-users-page__preview-paper"]}>
               {/* Header with Title */}
               <Subheader
                 label={`Data Preview (${importData.length} records)`}
-                className={styles['import-users-page__section-title']}
+                className={styles["import-users-page__section-title"]}
               />
-              <Divider className={styles['import-users-page__divider']} />
+              <Divider className={styles["import-users-page__divider"]} />
 
               {/* View Toggle - Above the table on top right */}
-              <Box className={styles['import-users-page__view-toggle-container']}>
+              <Box
+                className={styles["import-users-page__view-toggle-container"]}
+              >
                 <ToggleButtonGroup
                   value={viewMode}
                   exclusive
-                  onChange={(_, newMode: 'grid' | 'json' | null) => {
+                  onChange={(_, newMode: "grid" | "json" | null) => {
                     if (newMode) {
-                      setViewMode(newMode)
+                      setViewMode(newMode);
                     }
                   }}
                   size="small"
                 >
                   <ToggleButton value="grid">
                     <GridIcon fontSize="small" />
-                    <BodyText text="Grid" variant="body2" className={styles['import-users-page__toggle-button-text']} />
+                    <BodyText
+                      text="Grid"
+                      variant="body2"
+                      className={
+                        styles["import-users-page__toggle-button-text"]
+                      }
+                    />
                   </ToggleButton>
                   <ToggleButton value="json">
                     <JsonIcon fontSize="small" />
-                    <BodyText text="JSON" variant="body2" className={styles['import-users-page__toggle-button-text']} />
+                    <BodyText
+                      text="JSON"
+                      variant="body2"
+                      className={
+                        styles["import-users-page__toggle-button-text"]
+                      }
+                    />
                   </ToggleButton>
                 </ToggleButtonGroup>
               </Box>
 
               {/* Content Area */}
-              {viewMode === 'grid' ? (
-                <Box className={styles['import-users-page__grid-container']}>
+              {viewMode === "grid" ? (
+                <Box className={styles["import-users-page__grid-container"]}>
                   <StyledDataGrid
                     dataTestId="import-users-preview-grid"
                     rows={importData}
                     columns={previewColumns}
                     columnGroupingModel={columnGroupingModel}
-                    getRowId={row => (row as ImportUserData).rowNumber}
+                    getRowId={(row) => (row as ImportUserData).rowNumber}
                     loading={false}
                     paginationMode="client"
                     filterMode="client"
@@ -830,16 +916,18 @@ const ImportUsers = (): React.JSX.Element => {
                     }}
                     disableRowSelectionOnClick
                     autoHeight
-                    getRowClassName={params => {
-                      const row = params.row as ImportUserData
-                      return row.errors && row.errors.length > 0 ? styles['import-users-page__error-row'] : ''
+                    getRowClassName={(params) => {
+                      const row = params.row as ImportUserData;
+                      return row.errors && row.errors.length > 0
+                        ? styles["import-users-page__error-row"]
+                        : "";
                     }}
                     showToolbar={false}
                     disableColumnMenu={false}
                   />
                 </Box>
               ) : (
-                <Box className={styles['import-users-page__json-container']}>
+                <Box className={styles["import-users-page__json-container"]}>
                   <TableAsJson data={jsonPreviewData} showCopyButton />
                 </Box>
               )}
@@ -848,41 +936,54 @@ const ImportUsers = (): React.JSX.Element => {
 
           {/* Action Buttons */}
           {importData.length > 0 && (
-            <Paper className={styles['import-users-page__actions-card']}>
+            <Paper className={styles["import-users-page__actions-card"]}>
               {/* Validation Error Warning */}
               {hasValidationErrors && (
-                <Box className={styles['import-users-page__error-warning']}>
-                  <ErrorIcon className={styles['import-users-page__error-warning-icon']} />
+                <Box className={styles["import-users-page__error-warning"]}>
+                  <ErrorIcon
+                    className={styles["import-users-page__error-warning-icon"]}
+                  />
                   <Box>
-                    <Typography variant="body2" className={styles['import-users-page__error-warning-text']}>
-                      <strong>Cannot import data:</strong> {errorCount} {errorCount === 1 ? 'row has' : 'rows have'}{' '}
-                      validation errors.
+                    <Typography
+                      variant="body2"
+                      className={
+                        styles["import-users-page__error-warning-text"]
+                      }
+                    >
+                      <strong>Cannot import data:</strong> {errorCount}{" "}
+                      {errorCount === 1 ? "row has" : "rows have"} validation
+                      errors.
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Please fix all errors before importing. Click on the red error chips to view details.
+                      Please fix all errors before importing. Click on the red
+                      error chips to view details.
                     </Typography>
                   </Box>
                 </Box>
               )}
 
-              <Box className={styles['import-users-page__actions']}>
+              <Box className={styles["import-users-page__actions"]}>
                 <RedButton
                   variant="outlined"
                   startIcon={<CancelIcon />}
                   onClick={() => {
-                    navigate(APP_ROUTES.DASHBOARD.USERS)
+                    navigate(APP_ROUTES.DASHBOARD.USERS);
                   }}
                   disabled={isLoading}
                   label="Cancel"
-                  className={styles['import-users-page__action-button']}
+                  className={styles["import-users-page__action-button"]}
                 />
                 <BlueButton
                   variant="contained"
                   startIcon={<SendIcon />}
                   onClick={handleSubmit}
                   disabled={isLoading || hasValidationErrors}
-                  label={isLoading ? 'Importing...' : `Import ${importData.length} Users`}
-                  className={styles['import-users-page__action-button']}
+                  label={
+                    isLoading
+                      ? "Importing..."
+                      : `Import ${importData.length} Users`
+                  }
+                  className={styles["import-users-page__action-button"]}
                 />
               </Box>
             </Paper>
@@ -894,14 +995,16 @@ const ImportUsers = (): React.JSX.Element => {
       <ErrorDetailsModal
         open={errorModalOpen}
         onClose={() => {
-          setErrorModalOpen(false)
+          setErrorModalOpen(false);
         }}
         title="Validation Errors"
         errors={selectedRowErrors}
-        rowIdentifier={selectedRowNumber !== null ? `Row ${selectedRowNumber}` : undefined}
+        rowIdentifier={
+          selectedRowNumber !== null ? `Row ${selectedRowNumber}` : undefined
+        }
       />
     </>
-  )
-}
+  );
+};
 
-export default ImportUsers
+export default ImportUsers;

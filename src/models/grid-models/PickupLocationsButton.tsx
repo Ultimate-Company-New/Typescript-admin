@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { LocationOn as LocationIcon } from '@mui/icons-material'
 import { IconButton, Badge } from '@mui/material'
 
-import PickupLocationsModal from '../../components/products/PickupLocationsModal'
+import { PickupLocationsModal } from '../../pages/products/components'
 
 interface PickupLocation {
   pickupLocationId: number

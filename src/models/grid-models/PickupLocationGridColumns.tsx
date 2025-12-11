@@ -52,11 +52,14 @@ export const getPickupLocationGridColumns = (
 ): GridColDef[] => [
   {
     field: 'pickupLocationId',
-    headerName: 'Location ID',
+    headerName: 'ID',
     hideable: false,
-    filterable: false,
-    width: 0,
-    minWidth: 0,
+    filterable: true,
+    width: 80,
+    minWidth: 80,
+    align: 'center',
+    headerAlign: 'center',
+    type: 'number',
   },
   {
     field: 'locationName',

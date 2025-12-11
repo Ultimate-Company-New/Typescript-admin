@@ -24,7 +24,7 @@ export const packageApi = {
    * Get package details by ID
    */
   getPackageById: async (packageId: number): Promise<unknown> => {
-    const response = await axiosInstance.get<unknown>(`${API_BASE_URL}/getPackageDetailsById/${packageId}`)
+    const response = await axiosInstance.get<unknown>(`${API_BASE_URL}/getPackageById/${packageId}`)
     return response.data
   },
 
@@ -39,8 +39,9 @@ export const packageApi = {
   /**
    * Update an existing package
    */
-  updatePackage: async (packageId: number, request: unknown): Promise<unknown> => {
-    const response = await axiosInstance.post<unknown>(`${API_BASE_URL}/updatePackage/${packageId}`, request)
+  updatePackage: async (_packageId: number, request: unknown): Promise<unknown> => {
+    // Note: packageId is included in the request body, not the URL path
+    const response = await axiosInstance.post<unknown>(`${API_BASE_URL}/updatePackage`, request)
     return response.data
   },
 
@@ -50,6 +51,14 @@ export const packageApi = {
   togglePackage: async (packageId: number): Promise<unknown> => {
     const response = await axiosInstance.delete<unknown>(`${API_BASE_URL}/togglePackage/${packageId}`)
     return response.data
+  },
+
+  /**
+   * Bulk create packages
+   * Triggers async processing - results sent via message notification
+   */
+  bulkCreatePackages: async (packages: unknown[]): Promise<void> => {
+    await axiosInstance.put<void>(`${API_BASE_URL}/bulkCreatePackage`, packages)
   },
 }
 

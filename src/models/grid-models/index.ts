@@ -3,6 +3,12 @@
  * Centralized export point for all grid column configurations
  */
 
+export {
+  getColorGridColumns,
+  getConditionGridColumns,
+  type ColorData,
+  type ConditionData,
+} from './ImportProductReferenceGridColumns'
 export { getLeadGridColumns, type LeadData } from './LeadGridColumns'
 export { getMessageGridColumns } from './MessageGridColumns'
 export { getPackageGridColumns } from './PackageGridColumns'
