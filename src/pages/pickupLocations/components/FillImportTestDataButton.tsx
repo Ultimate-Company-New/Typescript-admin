@@ -6,6 +6,8 @@ import * as XLSX from 'xlsx'
 import { Science as ScienceIcon } from '@mui/icons-material'
 import { CircularProgress, Fab, Tooltip } from '@mui/material'
 
+import { packageApi } from '../../../api/packageApi'
+import { productApi } from '../../../api/productApi'
 import styles from '../../../styles/PickupLocations.module.scss'
 import { generatePickupLocationFormTest } from '../../../utils/generateTestData'
 
@@ -46,7 +48,15 @@ const pickupLocationImportTemplateStructure = [
     category: 'Additional Fields',
     fields: ['notes'],
   },
+  {
+    category: 'Mappings',
+    fields: ['productMappings', 'packageMappings'],
+  },
 ]
+
+// Helper to generate random quantity
+const getRandomQuantity = (min = 10, max = 100): number =>
+  Math.floor(Math.random() * (max - min + 1)) + min
 
 // No props needed - data is generated independently
 type FillImportTestDataButtonProps = Record<string, never>
@@ -65,6 +75,39 @@ const FillImportTestDataButton = (_props: FillImportTestDataButtonProps): JSX.El
     setGenerating(true)
 
     try {
+      // Fetch 40 products and 40 packages to create mappings with real IDs
+      const [productResponse, packageResponse] = await Promise.all([
+        productApi.getProductsInBatches({
+          start: 0,
+          end: 40,
+          pageSize: 40,
+          includeDeleted: false,
+        }),
+        packageApi.getPackagesInBatches({
+          start: 0,
+          end: 40,
+          pageSize: 40,
+          includeDeleted: false,
+        }),
+      ])
+
+      const products = (productResponse.data ?? []) as Array<{ productId?: number }>
+      const packages = (packageResponse.data ?? []) as Array<{ packageId?: number }>
+
+      // Filter out any products/packages without valid IDs
+      const validProducts = products.filter(p => p.productId != null && p.productId > 0)
+      const validPackages = packages.filter(p => p.packageId != null && p.packageId > 0)
+
+      // Validate we have at least 40 products and 40 packages
+      if (validProducts.length < 40 || validPackages.length < 40) {
+        toast.error(
+          `Insufficient test data! Need at least 40 products and 40 packages. ` +
+          `Found: ${validProducts.length} products, ${validPackages.length} packages.`
+        )
+        setGenerating(false)
+        return
+      }
+
       // Generate 10 test pickup locations with varied data using centralized utility
       const testLocations = Array.from({ length: 10 }, () => generatePickupLocationFormTest())
 
@@ -85,6 +128,21 @@ const FillImportTestDataButton = (_props: FillImportTestDataButtonProps): JSX.El
 
       // Map test data to XLSX row format (matches template structure order)
       const dataRows: Array<Array<string | number | boolean>> = testLocations.map((location) => {
+        // Generate product mappings string with ALL 40 products (ID:Quantity,...)
+        const productMappings = validProducts
+          .map(p => `${p.productId}:${getRandomQuantity(50, 150)}`)
+          .join(',')
+
+        // Generate package mappings string with ALL 40 packages (ID:Qty:Reorder:MaxStock,...)
+        const packageMappings = validPackages
+          .map(p => {
+            const qty = getRandomQuantity(80, 120)
+            const reorder = getRandomQuantity(20, 50)
+            const maxStock = getRandomQuantity(150, 250)
+            return `${p.packageId}:${qty}:${reorder}:${maxStock}`
+          })
+          .join(',')
+
         return [
           // Location Information
           location.addressNickName,
@@ -102,6 +160,9 @@ const FillImportTestDataButton = (_props: FillImportTestDataButtonProps): JSX.El
           location.address.phoneOnAddress || '',
           // Additional Fields
           location.notes || '',
+          // Mappings
+          productMappings,
+          packageMappings,
         ]
       })
 
@@ -194,7 +255,7 @@ const FillImportTestDataButton = (_props: FillImportTestDataButtonProps): JSX.El
         bookType: 'xlsx',
       })
 
-      toast.success('Test data file generated successfully! (10 pickup locations)')
+      toast.success(`Test data file generated! (10 locations with ${validProducts.length} products & ${validPackages.length} packages each)`)
 
       // Brief visual feedback
       setTimeout(() => {
@@ -208,7 +269,7 @@ const FillImportTestDataButton = (_props: FillImportTestDataButtonProps): JSX.El
   }
 
   return (
-    <Tooltip title="Generate Test Data (10 pickup locations)" placement="left">
+    <Tooltip title="Generate Test Data (10 locations with 40 products & 40 packages each)" placement="left">
       <span>
         <Fab
           aria-label="generate test data"

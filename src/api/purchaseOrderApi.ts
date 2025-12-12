@@ -40,12 +40,10 @@ export const purchaseOrderApi = {
 
   /**
    * Update an existing purchase order
+   * Note: purchaseOrderId should be included in the request body
    */
-  updatePurchaseOrder: async (purchaseOrderId: number, request: unknown): Promise<unknown> => {
-    const response = await axiosInstance.post<unknown>(
-      `${API_BASE_URL}/updatePurchaseOrder/${purchaseOrderId}`,
-      request,
-    )
+  updatePurchaseOrder: async (request: unknown): Promise<unknown> => {
+    const response = await axiosInstance.post<unknown>(`${API_BASE_URL}/updatePurchaseOrder`, request)
     return response.data
   },
 

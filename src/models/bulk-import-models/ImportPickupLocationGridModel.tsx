@@ -3,7 +3,9 @@
  * Configuration for bulk pickup location import template structure and field display
  */
 
-import { Chip, Tooltip } from '@mui/material'
+import InventoryIcon from '@mui/icons-material/Inventory'
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'
+import { Box, Chip, Tooltip } from '@mui/material'
 import type { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 
 import { ColumnType, formatValueByType, type FieldDisplayConfig, type TemplateStructure } from '../ImportTemplateStructure'
@@ -39,6 +41,10 @@ export const pickupLocationImportTemplateStructure: TemplateStructure = [
     category: 'Additional Fields',
     fields: ['notes'],
   },
+  {
+    category: 'Mappings',
+    fields: ['productMappings', 'packageMappings'],
+  },
 ]
 
 /**
@@ -58,6 +64,8 @@ export const pickupLocationImportHeaderNames: Record<string, string> = {
   emailOnAddress: 'Email on Address',
   phoneOnAddress: 'Phone on Address',
   notes: 'Notes',
+  productMappings: 'Product Mappings (ID:Quantity,...)',
+  packageMappings: 'Package Mappings (ID:Qty:Reorder:MaxStock,...)',
 }
 
 /**
@@ -142,6 +150,16 @@ export const pickupLocationImportFieldDisplayConfig: Record<string, FieldDisplay
     headerName: 'Notes',
     width: 200,
   },
+  productMappings: {
+    field: 'productMappings',
+    headerName: 'Product Mappings',
+    width: 200,
+  },
+  packageMappings: {
+    field: 'packageMappings',
+    headerName: 'Package Mappings',
+    width: 250,
+  },
   errors: {
     field: 'errors',
     headerName: 'Status',
@@ -152,6 +170,24 @@ export const pickupLocationImportFieldDisplayConfig: Record<string, FieldDisplay
 /**
  * Interface for parsed pickup location data from Excel/CSV
  */
+/**
+ * Product mapping for import
+ */
+export interface ImportProductMapping {
+  productId: number
+  quantity: number
+}
+
+/**
+ * Package mapping for import
+ */
+export interface ImportPackageMapping {
+  packageId: number
+  quantity: number
+  reorderLevel: number
+  maxStockLevel: number
+}
+
 export interface ImportPickupLocationData {
   rowNumber: number
   addressNickName: string
@@ -167,7 +203,23 @@ export interface ImportPickupLocationData {
   emailOnAddress?: string
   phoneOnAddress?: string
   notes?: string
+  /** Product mappings as string for display (ID:Quantity,...) or parsed array */
+  productMappings?: string
+  /** Package mappings as string for display (ID:Qty:Reorder:MaxStock,...) or parsed array */
+  packageMappings?: string
+  /** Parsed product mappings */
+  parsedProductMappings?: ImportProductMapping[]
+  /** Parsed package mappings */
+  parsedPackageMappings?: ImportPackageMapping[]
   errors?: string[]
+}
+
+/**
+ * Options for mapping column click handlers
+ */
+export interface MappingClickHandlers {
+  onProductMappingsClick?: (mappingsString: string, locationName: string) => void
+  onPackageMappingsClick?: (mappingsString: string, locationName: string) => void
 }
 
 /**
@@ -176,10 +228,12 @@ export interface ImportPickupLocationData {
  * Shows ALL fields for complete data preview
  *
  * @param onErrorClick - Callback when error chip is clicked, receives errors array and row number
+ * @param mappingHandlers - Optional handlers for product/package mapping clicks
  * @returns Array of GridColDef for the data grid
  */
 export const getPickupLocationImportPreviewColumns = (
   onErrorClick: (errors: string[], rowNumber: number) => void,
+  mappingHandlers?: MappingClickHandlers,
 ): GridColDef[] => {
   // Define ALL columns to show in preview (matches template structure)
   const previewFields = [
@@ -200,6 +254,9 @@ export const getPickupLocationImportPreviewColumns = (
     'phoneOnAddress',
     // Additional Fields
     'notes',
+    // Mappings
+    'productMappings',
+    'packageMappings',
     // Status
     'errors',
   ]
@@ -255,6 +312,12 @@ export const getPickupLocationImportPreviewColumns = (
     } else if (fieldName === 'notes') {
       flex = 1.3
       minWidth = 200
+    } else if (fieldName === 'productMappings') {
+      flex = 1.3
+      minWidth = 200
+    } else if (fieldName === 'packageMappings') {
+      flex = 1.5
+      minWidth = 250
     } else if (fieldName === 'errors') {
       flex = 0.6
       minWidth = 100
@@ -281,6 +344,90 @@ export const getPickupLocationImportPreviewColumns = (
       return {
         ...baseColumn,
         valueFormatter: (value: string) => formatValueByType(value, ColumnType.PHONE),
+      }
+    }
+
+    // Special rendering for product mappings
+    if (fieldName === 'productMappings') {
+      return {
+        ...baseColumn,
+        align: 'center' as const,
+        headerAlign: 'center' as const,
+        renderCell: (params: GridRenderCellParams<ImportPickupLocationData>) => {
+          const { row } = params
+          const mappingsStr = row.productMappings
+
+          if (!mappingsStr || mappingsStr.trim() === '') {
+            return (
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', width: '100%' }}>
+                <Chip label="None" size="small" variant="outlined" />
+              </Box>
+            )
+          }
+
+          // Count the mappings
+          const count = mappingsStr.split(',').filter(s => s.trim()).length
+
+          return (
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', width: '100%' }}>
+              <Tooltip title="Click to view product mappings">
+                <Chip
+                  icon={<ShoppingCartIcon />}
+                  label={`${count} Product${count !== 1 ? 's' : ''}`}
+                  color="primary"
+                  size="small"
+                  onClick={e => {
+                    e.stopPropagation()
+                    mappingHandlers?.onProductMappingsClick?.(mappingsStr, row.addressNickName)
+                  }}
+                  sx={{ cursor: 'pointer' }}
+                />
+              </Tooltip>
+            </Box>
+          )
+        },
+      }
+    }
+
+    // Special rendering for package mappings
+    if (fieldName === 'packageMappings') {
+      return {
+        ...baseColumn,
+        align: 'center' as const,
+        headerAlign: 'center' as const,
+        renderCell: (params: GridRenderCellParams<ImportPickupLocationData>) => {
+          const { row } = params
+          const mappingsStr = row.packageMappings
+
+          if (!mappingsStr || mappingsStr.trim() === '') {
+            return (
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', width: '100%' }}>
+                <Chip label="None" size="small" variant="outlined" />
+              </Box>
+            )
+          }
+
+          // Count the mappings
+          const count = mappingsStr.split(',').filter(s => s.trim()).length
+
+          return (
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', width: '100%' }}>
+              <Tooltip title="Click to view package mappings">
+                <Chip
+                  icon={<InventoryIcon />}
+                  label={`${count} Package${count !== 1 ? 's' : ''}`}
+                  color="secondary"
+                  size="small"
+                  onClick={e => {
+                    e.stopPropagation()
+                    mappingHandlers?.onPackageMappingsClick?.(mappingsStr, row.addressNickName)
+                  }}
+                  sx={{ cursor: 'pointer' }}
+                />
+              </Tooltip>
+            </Box>
+          )
+        },
       }
     }
 

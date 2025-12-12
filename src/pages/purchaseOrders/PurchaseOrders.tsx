@@ -3,34 +3,34 @@ import { useEffect, useMemo, useState } from 'react'
 
 import { Box } from '@mui/material'
 import {
-  type GridColumnVisibilityModel,
-  type GridFilterModel,
-  type GridPaginationModel,
-  type GridSlotsComponent,
-  type GridSortModel,
-  type GridToolbarProps,
+    type GridColumnVisibilityModel,
+    type GridFilterModel,
+    type GridPaginationModel,
+    type GridSlotsComponent,
+    type GridSortModel,
+    type GridToolbarProps,
 } from '@mui/x-data-grid'
 
 import { purchaseOrderApi } from '../../api/purchaseOrderApi'
 import {
-  CustomNoRowsOverlay,
-  GridDensity,
-  LogicOperator,
-  SimpleToolbar,
-  StyledDataGrid,
-  createFetchFunction,
-  createToggleFunction,
-  handleFilterModelChange,
-  handleIncludeDeletedChange,
-  handlePaginationModelChange,
-  handleSortModelChange,
-  type FilterGroup,
-  type GridDensityType,
+    CustomNoRowsOverlay,
+    GridDensity,
+    LogicOperator,
+    SimpleToolbar,
+    StyledDataGrid,
+    createFetchFunction,
+    createToggleFunction,
+    handleFilterModelChange,
+    handleIncludeDeletedChange,
+    handlePaginationModelChange,
+    handleSortModelChange,
+    type FilterGroup,
+    type GridDensityType,
 } from '../../components/datagrid'
 import { getPurchaseOrderGridColumns } from '../../models/grid-models/PurchaseOrderGridColumns'
 import { type PaginatedGridInterface } from '../../types/grid.types'
 
-import styles from './PurchaseOrders.module.scss'
+import styles from '../../styles/PurchaseOrders.module.scss'
 
 /**
  * Purchase Order data structure matching API response

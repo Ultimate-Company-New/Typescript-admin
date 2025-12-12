@@ -58,12 +58,12 @@ const AddressDetailsView = ({
           </Box>
         </Grid>
 
-        <Grid item xs={12} sm={6}>
-          <Box className={styles['user-details-view__field']}>
-            <BodyText className={styles['user-details-view__label']}>Name on Address</BodyText>
+          <Grid item xs={12} sm={6}>
+            <Box className={styles['user-details-view__field']}>
+              <BodyText className={styles['user-details-view__label']}>Name on Address</BodyText>
             <BodyText className={styles['user-details-view__value']}>{nameOnAddress || '—'}</BodyText>
-          </Box>
-        </Grid>
+            </Box>
+          </Grid>
 
         <Grid item xs={12}>
           <Box className={styles['user-details-view__field']}>
@@ -118,19 +118,19 @@ const AddressDetailsView = ({
           </Box>
         </Grid>
 
-        <Grid item xs={12} sm={6}>
-          <Box className={styles['user-details-view__field']}>
-            <BodyText className={styles['user-details-view__label']}>Email on Address</BodyText>
+          <Grid item xs={12} sm={6}>
+            <Box className={styles['user-details-view__field']}>
+              <BodyText className={styles['user-details-view__label']}>Email on Address</BodyText>
             <BodyText className={styles['user-details-view__value']}>{emailOnAddress || '—'}</BodyText>
-          </Box>
-        </Grid>
+            </Box>
+          </Grid>
 
-        <Grid item xs={12} sm={6}>
-          <Box className={styles['user-details-view__field']}>
-            <BodyText className={styles['user-details-view__label']}>Phone on Address</BodyText>
-            <BodyText className={styles['user-details-view__value']}>{formatPhone(phoneOnAddress)}</BodyText>
-          </Box>
-        </Grid>
+          <Grid item xs={12} sm={6}>
+            <Box className={styles['user-details-view__field']}>
+              <BodyText className={styles['user-details-view__label']}>Phone on Address</BodyText>
+              <BodyText className={styles['user-details-view__value']}>{formatPhone(phoneOnAddress)}</BodyText>
+            </Box>
+          </Grid>
       </Grid>
     </Paper>
   )

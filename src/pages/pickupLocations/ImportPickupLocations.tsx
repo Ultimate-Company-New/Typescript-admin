@@ -23,7 +23,9 @@ import {
 } from '@mui/material'
 import type { GridColDef, GridColumnVisibilityModel, GridSlotsComponent, GridToolbarProps } from '@mui/x-data-grid'
 
+import { packageApi } from '../../api/packageApi'
 import { pickupLocationApi } from '../../api/pickupLocationApi'
+import { productApi } from '../../api/productApi'
 import { ImportInstructions } from '../../components'
 import { BlueButton, LinkButton, RedButton } from '../../components/buttons'
 import {
@@ -33,6 +35,8 @@ import {
   SimpleToolbar,
   StyledDataGrid,
   TableAsJson,
+  handleFilterModelChange,
+  handleSortModelChange,
   type ColumnGroup,
   type FilterGroup,
   type GridDensityType,
@@ -48,9 +52,30 @@ import {
   type ImportPickupLocationData,
 } from '../../models/bulk-import-models'
 import { getAddressTypeGridColumns, type AddressTypeData } from '../../models/grid-models'
+import { getPackageGridColumns, type PackageData } from '../../models/grid-models/PackageGridColumns'
+import { getProductGridColumns, type ProductData } from '../../models/grid-models/ProductGridColumns'
 import styles from '../../styles/PickupLocations.module.scss'
+import { type PaginatedGridInterface } from '../../types/grid.types'
 import { applyLocalFilters, downloadImportTemplate, parseImportFile } from '../../utils/gridUtil'
-import { FillImportTestDataButton } from './components'
+import { FillImportTestDataButton, PackageModal, ProductModal } from './components'
+
+/**
+ * Product mapping for API
+ */
+interface ProductMappingPayload {
+  productId: number
+  quantity: number
+}
+
+/**
+ * Package mapping for API
+ */
+interface PackageMappingPayload {
+  packageId: number
+  quantity: number
+  reorderLevel: number
+  maxStockLevel: number
+}
 
 /**
  * API Payload interface for pickup location bulk create
@@ -71,28 +96,83 @@ interface PickupLocationApiPayload {
     emailOnAddress?: string
     phoneOnAddress?: string
   }
+  productMappings?: ProductMappingPayload[]
+  packageMappings?: PackageMappingPayload[]
+}
+
+/**
+ * Parse product mappings string (ID:Quantity,...)
+ */
+const parseProductMappings = (mappingsStr?: string): ProductMappingPayload[] => {
+  if (!mappingsStr || mappingsStr.trim() === '') return []
+
+  const mappings: ProductMappingPayload[] = []
+  const parts = mappingsStr.split(',')
+
+  for (const part of parts) {
+    const [productIdStr, quantityStr] = part.trim().split(':')
+    const productId = parseInt(productIdStr, 10)
+    const quantity = parseInt(quantityStr, 10)
+
+    if (!isNaN(productId) && !isNaN(quantity) && productId > 0 && quantity > 0) {
+      mappings.push({ productId, quantity })
+    }
+  }
+
+  return mappings
+}
+
+/**
+ * Parse package mappings string (ID:Qty:Reorder:MaxStock,...)
+ */
+const parsePackageMappings = (mappingsStr?: string): PackageMappingPayload[] => {
+  if (!mappingsStr || mappingsStr.trim() === '') return []
+
+  const mappings: PackageMappingPayload[] = []
+  const parts = mappingsStr.split(',')
+
+  for (const part of parts) {
+    const [packageIdStr, quantityStr, reorderStr, maxStockStr] = part.trim().split(':')
+    const packageId = parseInt(packageIdStr, 10)
+    const quantity = parseInt(quantityStr, 10)
+    const reorderLevel = parseInt(reorderStr, 10) || 1
+    const maxStockLevel = parseInt(maxStockStr, 10) || quantity * 2
+
+    if (!isNaN(packageId) && !isNaN(quantity) && packageId > 0 && quantity > 0) {
+      mappings.push({ packageId, quantity, reorderLevel, maxStockLevel })
+    }
+  }
+
+  return mappings
 }
 
 /**
  * Convert ImportPickupLocationData to API payload
  */
-const mapToApiPayload = (data: ImportPickupLocationData): PickupLocationApiPayload => ({
-  addressNickName: data.addressNickName,
-  notes: data.notes,
-  address: {
-    streetAddress: data.streetAddress,
-    streetAddress2: data.streetAddress2,
-    streetAddress3: data.streetAddress3,
-    city: data.city,
-    state: data.state,
-    postalCode: data.postalCode,
-    country: data.country,
-    addressType: data.addressType,
-    nameOnAddress: data.nameOnAddress,
-    emailOnAddress: data.emailOnAddress,
-    phoneOnAddress: data.phoneOnAddress,
-  },
-})
+const mapToApiPayload = (data: ImportPickupLocationData): PickupLocationApiPayload => {
+  const productMappings = parseProductMappings(data.productMappings)
+  const packageMappings = parsePackageMappings(data.packageMappings)
+
+  return {
+    addressNickName: data.addressNickName,
+    notes: data.notes,
+    address: {
+      streetAddress: data.streetAddress,
+      streetAddress2: data.streetAddress2,
+      streetAddress3: data.streetAddress3,
+      city: data.city,
+      state: data.state,
+      postalCode: data.postalCode,
+      country: data.country,
+      addressType: data.addressType,
+      nameOnAddress: data.nameOnAddress,
+      emailOnAddress: data.emailOnAddress,
+      phoneOnAddress: data.phoneOnAddress,
+    },
+    productMappings: productMappings.length > 0 ? productMappings : undefined,
+    packageMappings: packageMappings.length > 0 ? packageMappings : undefined,
+  }
+}
 
 /**
  * Import Pickup Locations Page
@@ -125,6 +205,52 @@ const ImportPickupLocations = (): React.JSX.Element => {
   })
 
   // ============================================================================
+  // Product Reference Grid State
+  // ============================================================================
+  const [productRows, setProductRows] = useState<ProductData[]>([])
+  const [productLoading, setProductLoading] = useState(false)
+  const [productTotalCount, setProductTotalCount] = useState(0)
+  const [productDensity, setProductDensity] = useState<GridDensityType>(GridDensity.STANDARD)
+  const [productColumnVisibility, setProductColumnVisibility] = useState<GridColumnVisibilityModel>({
+    // All columns visible by default (actions column is removed entirely from columns array)
+  })
+  const [productActiveFilterGroup, setProductActiveFilterGroup] = useState<FilterGroup>({
+    logicOperator: LogicOperator.AND,
+    filters: [],
+  })
+  const [productPaginationModel, setProductPaginationModel] = useState<PaginatedGridInterface>({
+    start: 0,
+    end: 10,
+    pageSize: 10,
+    includeDeleted: false,
+    actualDataCount: 0,
+    totalPaginationBlockCount: 0,
+  })
+
+  // ============================================================================
+  // Package Reference Grid State
+  // ============================================================================
+  const [packageRows, setPackageRows] = useState<PackageData[]>([])
+  const [packageLoading, setPackageLoading] = useState(false)
+  const [packageTotalCount, setPackageTotalCount] = useState(0)
+  const [packageDensity, setPackageDensity] = useState<GridDensityType>(GridDensity.STANDARD)
+  const [packageColumnVisibility, setPackageColumnVisibility] = useState<GridColumnVisibilityModel>({
+    // All columns visible by default (actions column is removed entirely from columns array)
+  })
+  const [packageActiveFilterGroup, setPackageActiveFilterGroup] = useState<FilterGroup>({
+    logicOperator: LogicOperator.AND,
+    filters: [],
+  })
+  const [packagePaginationModel, setPackagePaginationModel] = useState<PaginatedGridInterface>({
+    start: 0,
+    end: 10,
+    pageSize: 10,
+    includeDeleted: false,
+    actualDataCount: 0,
+    totalPaginationBlockCount: 0,
+  })
+
+  // ============================================================================
   // Import State
   // ============================================================================
   const [file, setFile] = useState<File | null>(null)
@@ -139,6 +265,15 @@ const ImportPickupLocations = (): React.JSX.Element => {
   const [selectedRowErrors, setSelectedRowErrors] = useState<string[]>([])
   const [selectedRowNumber, setSelectedRowNumber] = useState<number | null>(null)
 
+  // Product mappings modal state
+  const [productMappingsModalOpen, setProductMappingsModalOpen] = useState(false)
+  const [selectedProductMappings, setSelectedProductMappings] = useState('')
+  const [selectedLocationName, setSelectedLocationName] = useState('')
+
+  // Package mappings modal state
+  const [packageMappingsModalOpen, setPackageMappingsModalOpen] = useState(false)
+  const [selectedPackageMappings, setSelectedPackageMappings] = useState('')
+
   // ============================================================================
   // Apply local filters for Address Types
   // ============================================================================
@@ -150,6 +285,60 @@ const ImportPickupLocations = (): React.JSX.Element => {
   }, [addressTypesRaw, addressTypesActiveFilterGroup])
 
   // ============================================================================
+  // Fetch Products for Reference Grid
+  // ============================================================================
+  const fetchProducts = useCallback(async (): Promise<void> => {
+    setProductLoading(true)
+    try {
+      const response = await productApi.getProductsInBatches({
+        start: productPaginationModel.start,
+        end: productPaginationModel.end,
+        pageSize: productPaginationModel.pageSize,
+        filters: productActiveFilterGroup.filters,
+        logicOperator: productActiveFilterGroup.logicOperator,
+        includeDeleted: false,
+      })
+      setProductRows(response.data as ProductData[])
+      setProductTotalCount(response.totalDataCount ?? 0)
+    } catch {
+      toast.error('Failed to fetch products')
+    } finally {
+      setProductLoading(false)
+    }
+  }, [productPaginationModel, productActiveFilterGroup])
+
+  useEffect(() => {
+    void fetchProducts()
+  }, [fetchProducts])
+
+  // ============================================================================
+  // Fetch Packages for Reference Grid
+  // ============================================================================
+  const fetchPackages = useCallback(async (): Promise<void> => {
+    setPackageLoading(true)
+    try {
+      const response = await packageApi.getPackagesInBatches({
+        start: packagePaginationModel.start,
+        end: packagePaginationModel.end,
+        pageSize: packagePaginationModel.pageSize,
+        filters: packageActiveFilterGroup.filters,
+        logicOperator: packageActiveFilterGroup.logicOperator,
+        includeDeleted: false,
+      })
+      setPackageRows(response.data as PackageData[])
+      setPackageTotalCount(response.totalDataCount ?? 0)
+    } catch {
+      toast.error('Failed to fetch packages')
+    } finally {
+      setPackageLoading(false)
+    }
+  }, [packagePaginationModel, packageActiveFilterGroup])
+
+  useEffect(() => {
+    void fetchPackages()
+  }, [fetchPackages])
+
+  // ============================================================================
   // Error Click Handler for Preview Grid
   // ============================================================================
   const handlePreviewErrorClick = useCallback((errors: string[], rowNumber: number): void => {
@@ -159,14 +348,105 @@ const ImportPickupLocations = (): React.JSX.Element => {
   }, [])
 
   // ============================================================================
+  // Mapping Modal Handlers
+  // ============================================================================
+  const handleProductMappingsClick = useCallback((mappingsString: string, locationName: string): void => {
+    setSelectedProductMappings(mappingsString)
+    setSelectedLocationName(locationName)
+    setProductMappingsModalOpen(true)
+  }, [])
+
+  const handlePackageMappingsClick = useCallback((mappingsString: string, locationName: string): void => {
+    setSelectedPackageMappings(mappingsString)
+    setSelectedLocationName(locationName)
+    setPackageMappingsModalOpen(true)
+  }, [])
+
+  // ============================================================================
   // Grid Column Definitions
   // ============================================================================
   const addressTypesColumns = useMemo<GridColDef[]>(() => getAddressTypeGridColumns(), [])
 
+  // Product reference columns with productId as first column, actions and returnsAllowed columns removed entirely
+  const productColumns = useMemo<GridColDef[]>(() => {
+    const baseColumns = getProductGridColumns(
+      () => {}, // No toggle needed for reference grid
+      () => {}, // No toggle returns needed for reference grid
+    )
+    // Remove actions and returnsAllowed columns entirely (not just hide)
+    const filteredColumns = baseColumns.filter(col => col.field !== 'actions' && col.field !== 'returnsAllowed')
+
+    // Find existing productId column and move it to first position
+    const productIdIndex = filteredColumns.findIndex(col => col.field === 'productId')
+    if (productIdIndex > 0) {
+      const [productIdCol] = filteredColumns.splice(productIdIndex, 1)
+      // Update width and enable filtering for reference grid
+      productIdCol.minWidth = 120
+      productIdCol.width = 120
+      productIdCol.filterable = true
+      filteredColumns.unshift(productIdCol)
+    } else if (productIdIndex === -1) {
+      // Add productId column if not present
+      filteredColumns.unshift({
+        field: 'productId',
+        headerName: 'Product ID',
+        minWidth: 120,
+        width: 120,
+        headerAlign: 'center',
+        align: 'center',
+        filterable: true,
+      })
+    } else if (productIdIndex === 0) {
+      // Column already at first position, just update width and enable filtering
+      filteredColumns[0].minWidth = 120
+      filteredColumns[0].width = 120
+      filteredColumns[0].filterable = true
+    }
+    return filteredColumns
+  }, [])
+
+  // Package reference columns with packageId as first column, actions column removed entirely
+  const packageColumns = useMemo<GridColDef[]>(() => {
+    const baseColumns = getPackageGridColumns(() => {}) // No toggle needed for reference grid
+    // Remove actions column entirely (not just hide)
+    const filteredColumns = baseColumns.filter(col => col.field !== 'actions')
+
+    // Find existing packageId column and move it to first position
+    const packageIdIndex = filteredColumns.findIndex(col => col.field === 'packageId')
+    if (packageIdIndex > 0) {
+      const [packageIdCol] = filteredColumns.splice(packageIdIndex, 1)
+      // Update width and enable filtering for reference grid
+      packageIdCol.minWidth = 120
+      packageIdCol.width = 120
+      packageIdCol.filterable = true
+      filteredColumns.unshift(packageIdCol)
+    } else if (packageIdIndex === -1) {
+      // Add packageId column if not present
+      filteredColumns.unshift({
+        field: 'packageId',
+        headerName: 'Package ID',
+        minWidth: 120,
+        width: 120,
+        headerAlign: 'center',
+        align: 'center',
+        filterable: true,
+      })
+    } else if (packageIdIndex === 0) {
+      // Column already at first position, just update width and enable filtering
+      filteredColumns[0].minWidth = 120
+      filteredColumns[0].width = 120
+      filteredColumns[0].filterable = true
+    }
+    return filteredColumns
+  }, [])
+
   // Import preview columns
   const previewColumns = useMemo<GridColDef[]>(
-    () => getPickupLocationImportPreviewColumns(handlePreviewErrorClick),
-    [handlePreviewErrorClick],
+    () => getPickupLocationImportPreviewColumns(handlePreviewErrorClick, {
+      onProductMappingsClick: handleProductMappingsClick,
+      onPackageMappingsClick: handlePackageMappingsClick,
+    }),
+    [handlePreviewErrorClick, handleProductMappingsClick, handlePackageMappingsClick],
   )
 
   // Column grouping for preview grid (parent headers)
@@ -271,6 +551,10 @@ const ImportPickupLocations = (): React.JSX.Element => {
           // Additional Fields
           const notes = getOptionalValue('notes')
 
+          // Mappings
+          const productMappings = getOptionalValue('productMappings')
+          const packageMappings = getOptionalValue('packageMappings')
+
           const parsedRow: ImportPickupLocationData = {
             rowNumber,
             addressNickName: String(addressNickName || ''),
@@ -286,6 +570,8 @@ const ImportPickupLocations = (): React.JSX.Element => {
             emailOnAddress: emailOnAddress ? String(emailOnAddress) : undefined,
             phoneOnAddress: phoneOnAddress ? String(phoneOnAddress) : undefined,
             notes: notes ? String(notes) : undefined,
+            productMappings: productMappings ? String(productMappings) : undefined,
+            packageMappings: packageMappings ? String(packageMappings) : undefined,
           }
 
           // No validation schema for now - just return the parsed row
@@ -389,6 +675,9 @@ const ImportPickupLocations = (): React.JSX.Element => {
               'Location Name (Address Nickname) must be 36 characters or less (Shiprocket API limit)',
               'Required fields: Location Name, Street Address, City, State, Postal Code, Country, Address Type',
               'Optional fields: Street Address 2, Street Address 3, Name on Address, Phone on Address, Email on Address, Notes',
+              'Product Mappings format: ProductID:Quantity (comma-separated for multiple, e.g., "1:50,2:75,3:100")',
+              'Package Mappings format: PackageID:Quantity:ReorderLevel:MaxStockLevel (comma-separated, e.g., "1:80:20:200,2:100:30:250")',
+              'Use the Products and Packages reference grids below to find the correct IDs',
               'Upload the file and preview the data',
               'Review and submit the import',
             ]}
@@ -440,6 +729,121 @@ const ImportPickupLocations = (): React.JSX.Element => {
                       onColumnVisibilityChange: setAddressTypesColumnVisibility,
                       activeFilterGroup: addressTypesActiveFilterGroup,
                       onFiltersChange: setAddressTypesActiveFilterGroup,
+                    } as GridToolbarProps,
+                  }}
+                  showToolbar
+                  disableColumnMenu={false}
+                />
+              </Box>
+            </Box>
+          </Paper>
+
+          {/* Products Reference Grid */}
+          <Paper className={styles['import-pickup-locations-page__reference-card']}>
+            <Subheader label="Products Reference" className={styles['import-pickup-locations-page__section-title']} />
+            <Divider className={styles['import-pickup-locations-page__divider']} />
+
+            <Box className={styles['import-pickup-locations-page__reference-content']}>
+              <Box sx={{ width: '100%' }}>
+                <StyledDataGrid
+                  dataTestId="products-reference-grid"
+                  rows={productRows}
+                  columns={productColumns}
+                  getRowId={row => (row as ProductData).productId ?? 0}
+                  loading={productLoading}
+                  paginationMode="server"
+                  filterMode="server"
+                  sortingMode="server"
+                  totalCount={productTotalCount}
+                  paginationModelState={productPaginationModel}
+                  setPaginationModel={setProductPaginationModel}
+                  pageSizeOptions={[10, 25, 50]}
+                  onFilterModelChange={model =>
+                    handleFilterModelChange(model, productPaginationModel, setProductPaginationModel)
+                  }
+                  onSortModelChange={model =>
+                    handleSortModelChange(model, setProductPaginationModel)
+                  }
+                  disableRowSelectionOnClick
+                  density={productDensity}
+                  columnVisibilityModel={productColumnVisibility}
+                  onColumnVisibilityModelChange={setProductColumnVisibility}
+                  rowHeight={180}
+                  autoHeight
+                  slots={{
+                    toolbar: SimpleToolbar as GridSlotsComponent['toolbar'],
+                  }}
+                  slotProps={{
+                    toolbar: {
+                      density: productDensity,
+                      onDensityChange: setProductDensity,
+                      columns: productColumns,
+                      rows: productRows,
+                      hideIncludeDeleted: true,
+                      hideExport: false,
+                      hideFilter: false,
+                      hideColumns: false,
+                      columnVisibilityModel: productColumnVisibility,
+                      onColumnVisibilityChange: setProductColumnVisibility,
+                      activeFilterGroup: productActiveFilterGroup,
+                      onFiltersChange: setProductActiveFilterGroup,
+                    } as GridToolbarProps,
+                  }}
+                  showToolbar
+                  disableColumnMenu={false}
+                />
+              </Box>
+            </Box>
+          </Paper>
+
+          {/* Packages Reference Grid */}
+          <Paper className={styles['import-pickup-locations-page__reference-card']}>
+            <Subheader label="Packages Reference" className={styles['import-pickup-locations-page__section-title']} />
+            <Divider className={styles['import-pickup-locations-page__divider']} />
+
+            <Box className={styles['import-pickup-locations-page__reference-content']}>
+              <Box sx={{ width: '100%' }}>
+                <StyledDataGrid
+                  dataTestId="packages-reference-grid"
+                  rows={packageRows}
+                  columns={packageColumns}
+                  getRowId={row => (row as PackageData).packageId ?? 0}
+                  loading={packageLoading}
+                  paginationMode="server"
+                  filterMode="server"
+                  sortingMode="server"
+                  totalCount={packageTotalCount}
+                  paginationModelState={packagePaginationModel}
+                  setPaginationModel={setPackagePaginationModel}
+                  pageSizeOptions={[10, 25, 50]}
+                  onFilterModelChange={model =>
+                    handleFilterModelChange(model, packagePaginationModel, setPackagePaginationModel)
+                  }
+                  onSortModelChange={model =>
+                    handleSortModelChange(model, setPackagePaginationModel)
+                  }
+                  disableRowSelectionOnClick
+                  density={packageDensity}
+                  columnVisibilityModel={packageColumnVisibility}
+                  onColumnVisibilityModelChange={setPackageColumnVisibility}
+                  autoHeight
+                  slots={{
+                    toolbar: SimpleToolbar as GridSlotsComponent['toolbar'],
+                  }}
+                  slotProps={{
+                    toolbar: {
+                      density: packageDensity,
+                      onDensityChange: setPackageDensity,
+                      columns: packageColumns,
+                      rows: packageRows,
+                      hideIncludeDeleted: true,
+                      hideExport: false,
+                      hideFilter: false,
+                      hideColumns: false,
+                      columnVisibilityModel: packageColumnVisibility,
+                      onColumnVisibilityChange: setPackageColumnVisibility,
+                      activeFilterGroup: packageActiveFilterGroup,
+                      onFiltersChange: setPackageActiveFilterGroup,
                     } as GridToolbarProps,
                   }}
                   showToolbar
@@ -613,7 +1017,7 @@ const ImportPickupLocations = (): React.JSX.Element => {
                   label={isLoading ? 'Importing...' : `Import ${importData.length} Pickup Locations`}
                   className={styles['import-pickup-locations-page__action-button']}
                 />
-              </Box>
+  </Box>
             </Paper>
           )}
         </Box>
@@ -628,6 +1032,22 @@ const ImportPickupLocations = (): React.JSX.Element => {
         title="Validation Errors"
         errors={selectedRowErrors}
         rowIdentifier={selectedRowNumber !== null ? `Row ${selectedRowNumber}` : undefined}
+      />
+
+      {/* Product Mappings Modal */}
+      <ProductModal
+        open={productMappingsModalOpen}
+        onClose={() => setProductMappingsModalOpen(false)}
+        mappingsString={selectedProductMappings}
+        locationName={selectedLocationName}
+      />
+
+      {/* Package Mappings Modal */}
+      <PackageModal
+        open={packageMappingsModalOpen}
+        onClose={() => setPackageMappingsModalOpen(false)}
+        mappingsString={selectedPackageMappings}
+        locationName={selectedLocationName}
       />
 
       {/* Development Test Data Button */}

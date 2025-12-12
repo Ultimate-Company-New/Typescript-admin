@@ -1,0 +1,219 @@
+.purchase-orders-page {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: 0;
+  box-sizing: border-box;
+
+  &__container {
+    padding-top: 32px;
+    padding-bottom: 32px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow-x: auto;
+  }
+
+  &__card {
+    background-color: #ffffff;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+
+    .MuiDataGrid-root {
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      border: none;
+      border-radius: 0;
+    }
+  }
+
+  &__pagination {
+    padding: 16px;
+    border-top: 1px solid rgba(224, 224, 224, 1);
+    background-color: #fff;
+  }
+
+  // Deleted row styling
+  :global(.MuiDataGrid-row.deleted) {
+    background-color: rgba(0, 0, 0, 0.04) !important;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.08) !important;
+    }
+  }
+}
+
+// ============================================================================
+// Add/Edit Purchase Order Page
+// ============================================================================
+
+.add-purchase-order-page {
+  &__container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding-top: 24px;
+    padding-bottom: 24px;
+  }
+
+  &__section {
+    padding: 24px;
+  }
+
+  &__section-title {
+    margin-bottom: 8px;
+  }
+
+  &__divider {
+    margin-bottom: 16px;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+  }
+
+  &__action-button {
+    min-width: 140px;
+  }
+}
+
+// ============================================================================
+// Purchase Order Details View
+// ============================================================================
+
+.purchase-order-details-view {
+  &__divider-spacer {
+    height: 16px;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 0;
+  }
+
+  &__label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  &__value {
+    font-size: 1rem;
+    color: rgba(0, 0, 0, 0.87);
+    word-break: break-word;
+  }
+
+  &__notes {
+    font-size: 1rem;
+    color: rgba(0, 0, 0, 0.87);
+    white-space: pre-wrap;
+    line-height: 1.6;
+  }
+
+  &__status-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+
+    &--draft {
+      background-color: rgba(158, 158, 158, 0.15);
+      color: #616161;
+    }
+
+    &--pending {
+      background-color: rgba(255, 152, 0, 0.15);
+      color: #e65100;
+    }
+
+    &--approved {
+      background-color: rgba(76, 175, 80, 0.15);
+      color: #2e7d32;
+    }
+
+    &--rejected {
+      background-color: rgba(244, 67, 54, 0.15);
+      color: #c62828;
+    }
+
+    &--completed {
+      background-color: rgba(33, 150, 243, 0.15);
+      color: #1565c0;
+    }
+  }
+
+  &__priority-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+
+    &--low {
+      background-color: rgba(158, 158, 158, 0.15);
+      color: #616161;
+    }
+
+    &--medium {
+      background-color: rgba(255, 152, 0, 0.15);
+      color: #e65100;
+    }
+
+    &--high {
+      background-color: rgba(244, 67, 54, 0.15);
+      color: #c62828;
+    }
+
+    &--urgent {
+      background-color: rgba(156, 39, 176, 0.15);
+      color: #7b1fa2;
+    }
+  }
+}
+
+// ============================================================================
+// Fill Test Data Button Styles
+// ============================================================================
+
+.fill-test-data-button {
+  &__fab {
+    position: fixed !important;
+    bottom: 24px;
+    right: 96px;
+    z-index: 1200;
+    background-color: #1976d2 !important;
+    color: #fff !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    transition: all 0.3s ease-in-out !important;
+
+    &:hover {
+      background-color: #1565c0 !important;
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    &.Mui-disabled {
+      background-color: rgba(0, 0, 0, 0.12) !important;
+      color: rgba(0, 0, 0, 0.26) !important;
+    }
+  }
+}

@@ -1,11 +1,21 @@
 import { LocationOn as LocationIcon } from '@mui/icons-material'
-import { Box, Link, Tooltip } from '@mui/material'
+import InventoryIcon from '@mui/icons-material/Inventory'
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'
+import { Box, Chip, Link, Tooltip } from '@mui/material'
 import { type GridColDef, type GridRenderCellParams } from '@mui/x-data-grid'
 
 import { RenderLongCellItem } from '../../components/datagrid'
 import { PERMISSIONS } from '../../constants/appConstants'
 import { APP_ROUTES } from '../../constants/routes'
 import { usePermissions } from '../../hooks/usePermissions'
+
+/**
+ * Options for product/package column click handlers
+ */
+export interface PickupLocationMappingHandlers {
+  onProductsClick?: (pickupLocationId: number, locationName: string) => void
+  onPackagesClick?: (pickupLocationId: number, locationName: string) => void
+}
 
 /**
  * Pickup Location data structure matching API response
@@ -25,6 +35,10 @@ export interface PickupLocationData {
   emailOnAddress?: string
   isDeleted?: boolean
   deleted?: boolean
+  /** Count of products at this location */
+  productCount?: number
+  /** Count of packages at this location */
+  packageCount?: number
   address?: {
     nameOnAddress?: string
     phoneOnAddress?: string
@@ -147,6 +161,7 @@ const PickupLocationActionsCell = ({
  */
 export const getPickupLocationGridColumns = (
   onTogglePickupLocation: (pickupLocationId: number) => void,
+  mappingHandlers?: PickupLocationMappingHandlers,
 ): GridColDef[] => [
   {
     field: 'pickupLocationId',
@@ -325,6 +340,98 @@ height: '100%' }}>
 alignItems: 'center',
 height: '100%' }}>{params.value}</Box>
     ),
+  },
+  {
+    field: 'products',
+    headerName: 'Products',
+    width: 150,
+    sortable: false,
+    filterable: false,
+    align: 'center',
+    headerAlign: 'center',
+    renderCell: (params: GridRenderCellParams<PickupLocationData>) => {
+      const rowData = params.row
+      const pickupLocationId = rowData.pickupLocationId ?? rowData.pickupLocation?.pickupLocationId
+      const locationName = rowData.addressNickName ?? rowData.pickupLocation?.addressNickName ?? ''
+      const productCount = rowData.productCount ?? 0
+
+      if (pickupLocationId == null) {
+        return <span>—</span>
+      }
+
+      // Show "None" chip if no products
+      if (productCount === 0) {
+        return (
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+            <Chip label="None" size="small" variant="outlined" />
+          </Box>
+        )
+      }
+
+      return (
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+          <Tooltip title="Click to view products at this location">
+            <Chip
+              icon={<ShoppingCartIcon />}
+              label={`${productCount} Product${productCount !== 1 ? 's' : ''}`}
+              color="primary"
+              size="small"
+              onClick={e => {
+                e.stopPropagation()
+                mappingHandlers?.onProductsClick?.(pickupLocationId, locationName)
+              }}
+              sx={{ cursor: 'pointer' }}
+            />
+          </Tooltip>
+        </Box>
+      )
+    },
+  },
+  {
+    field: 'packages',
+    headerName: 'Packages',
+    width: 150,
+    sortable: false,
+    filterable: false,
+    align: 'center',
+    headerAlign: 'center',
+    renderCell: (params: GridRenderCellParams<PickupLocationData>) => {
+      const rowData = params.row
+      const pickupLocationId = rowData.pickupLocationId ?? rowData.pickupLocation?.pickupLocationId
+      const locationName = rowData.addressNickName ?? rowData.pickupLocation?.addressNickName ?? ''
+      const packageCount = rowData.packageCount ?? 0
+
+      if (pickupLocationId == null) {
+        return <span>—</span>
+      }
+
+      // Show "None" chip if no packages
+      if (packageCount === 0) {
+        return (
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+            <Chip label="None" size="small" variant="outlined" />
+          </Box>
+        )
+      }
+
+      return (
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+          <Tooltip title="Click to view packages at this location">
+            <Chip
+              icon={<InventoryIcon />}
+              label={`${packageCount} Package${packageCount !== 1 ? 's' : ''}`}
+              color="secondary"
+              size="small"
+              onClick={e => {
+                e.stopPropagation()
+                mappingHandlers?.onPackagesClick?.(pickupLocationId, locationName)
+              }}
+              sx={{ cursor: 'pointer' }}
+            />
+          </Tooltip>
+        </Box>
+      )
+    },
   },
   {
     field: 'actions',

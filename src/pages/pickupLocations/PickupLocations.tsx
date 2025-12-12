@@ -1,36 +1,37 @@
 import type React from 'react'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { Box } from '@mui/material'
 import {
-  type GridColumnVisibilityModel,
-  type GridFilterModel,
-  type GridPaginationModel,
-  type GridSlotsComponent,
-  type GridSortModel,
-  type GridToolbarProps,
+    type GridColumnVisibilityModel,
+    type GridFilterModel,
+    type GridPaginationModel,
+    type GridSlotsComponent,
+    type GridSortModel,
+    type GridToolbarProps,
 } from '@mui/x-data-grid'
 
 import { pickupLocationApi } from '../../api/pickupLocationApi'
 import {
-  CustomNoRowsOverlay,
-  GridDensity,
-  LogicOperator,
-  SimpleToolbar,
-  StyledDataGrid,
-  createFetchFunction,
-  createToggleFunction,
-  handleFilterModelChange,
-  handleIncludeDeletedChange,
-  handlePaginationModelChange,
-  handleSortModelChange,
-  type FilterGroup,
-  type GridDensityType,
+    CustomNoRowsOverlay,
+    GridDensity,
+    LogicOperator,
+    SimpleToolbar,
+    StyledDataGrid,
+    createFetchFunction,
+    createToggleFunction,
+    handleFilterModelChange,
+    handleIncludeDeletedChange,
+    handlePaginationModelChange,
+    handleSortModelChange,
+    type FilterGroup,
+    type GridDensityType,
 } from '../../components/datagrid'
 import { getPickupLocationGridColumns } from '../../models/grid-models/PickupLocationGridColumns'
 import { type PaginatedGridInterface } from '../../types/grid.types'
 
 import styles from '../../styles/PickupLocations.module.scss'
+import { PackageModal, ProductModal } from './components'
 
 /**
  * Pickup Location data structure matching API response
@@ -81,23 +82,48 @@ const PickupLocations = (): React.JSX.Element => {
     totalPaginationBlockCount: 0,
   })
 
+  // Modal state for Products and Packages
+  const [productModalOpen, setProductModalOpen] = useState(false)
+  const [packageModalOpen, setPackageModalOpen] = useState(false)
+  const [selectedPickupLocationId, setSelectedPickupLocationId] = useState<number | undefined>()
+  const [selectedLocationName, setSelectedLocationName] = useState<string>('')
+
+  // Handlers for product/package modal
+  const handleProductsClick = useCallback((pickupLocationId: number, locationName: string) => {
+    setSelectedPickupLocationId(pickupLocationId)
+    setSelectedLocationName(locationName)
+    setProductModalOpen(true)
+  }, [])
+
+  const handlePackagesClick = useCallback((pickupLocationId: number, locationName: string) => {
+    setSelectedPickupLocationId(pickupLocationId)
+    setSelectedLocationName(locationName)
+    setPackageModalOpen(true)
+  }, [])
+
   // Get grid columns with action handlers
   const columns = useMemo(
     () =>
-      getPickupLocationGridColumns(async (pickupLocationId: number) => {
-        await createToggleFunction(pickupLocationApi.togglePickupLocation, pickupLocationId, async () => {
-          await createFetchFunction(
-            pickupLocationApi.getPickupLocationsInBatches,
-            setLoading,
-            setRows,
-            setTotalCount,
-            paginationModel,
-            includeDeleted,
-            activeFilterGroup,
-          )
-        })
-      }),
-    [paginationModel, includeDeleted, activeFilterGroup],
+      getPickupLocationGridColumns(
+        async (pickupLocationId: number) => {
+          await createToggleFunction(pickupLocationApi.togglePickupLocation, pickupLocationId, async () => {
+            await createFetchFunction(
+              pickupLocationApi.getPickupLocationsInBatches,
+              setLoading,
+              setRows,
+              setTotalCount,
+              paginationModel,
+              includeDeleted,
+              activeFilterGroup,
+            )
+          })
+        },
+        {
+          onProductsClick: handleProductsClick,
+          onPackagesClick: handlePackagesClick,
+        },
+      ),
+    [paginationModel, includeDeleted, activeFilterGroup, handleProductsClick, handlePackagesClick],
   )
 
   useEffect(() => {
@@ -200,6 +226,22 @@ const PickupLocations = (): React.JSX.Element => {
           />
         </Box>
       </Box>
+
+      {/* Product Modal */}
+      <ProductModal
+        open={productModalOpen}
+        onClose={() => setProductModalOpen(false)}
+        pickupLocationId={selectedPickupLocationId}
+        locationName={selectedLocationName}
+      />
+
+      {/* Package Modal */}
+      <PackageModal
+        open={packageModalOpen}
+        onClose={() => setPackageModalOpen(false)}
+        pickupLocationId={selectedPickupLocationId}
+        locationName={selectedLocationName}
+      />
     </Box>
   )
 }

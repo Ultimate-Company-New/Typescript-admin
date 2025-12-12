@@ -1,0 +1,640 @@
+import { useCallback, useEffect, useState } from 'react'
+
+import CloseIcon from '@mui/icons-material/Close'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'
+import {
+    Box,
+    Button,
+    Chip,
+    CircularProgress,
+    IconButton,
+    Modal
+} from '@mui/material'
+
+import { productApi } from '../../../api/productApi'
+import { BodyText, SecondaryFont, Subheader } from '../../../components/fonts'
+import styles from '../../../styles/PickupLocations.module.scss'
+
+import { ProductCard, type ProductImageInfo, type ProductMappingItem } from './ProductCard'
+
+const ITEMS_PER_PAGE = 20
+
+// ============================================================================
+// Product Modal Component
+// ============================================================================
+
+interface ProductModalProps {
+  open: boolean
+  onClose: () => void
+  /** Mappings string in format "productId:quantity,productId:quantity" (for import preview) */
+  mappingsString?: string
+  /** Pickup location ID to fetch products for (alternative to mappingsString) */
+  pickupLocationId?: number
+  locationName?: string
+}
+
+export const ProductModal = ({
+  open,
+  onClose,
+  mappingsString,
+  pickupLocationId,
+  locationName,
+}: ProductModalProps): JSX.Element => {
+  const [mappings, setMappings] = useState<ProductMappingItem[]>([])
+  const [displayedCount, setDisplayedCount] = useState(ITEMS_PER_PAGE)
+  const [loading, setLoading] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [totalCount, setTotalCount] = useState(0)
+
+  // Fetch products by pickupLocationId
+  const fetchByPickupLocation = useCallback(async (): Promise<void> => {
+    if (!pickupLocationId) return
+
+    setLoading(true)
+    try {
+      const response = await productApi.getProductsInBatches({
+        start: 0,
+        end: ITEMS_PER_PAGE,
+        pageSize: ITEMS_PER_PAGE,
+        filters: [
+          {
+            id: 'pickupLocationId-filter',
+            column: 'pickupLocationId',
+            operator: 'equals',
+            value: pickupLocationId.toString(),
+          },
+        ],
+        logicOperator: 'AND',
+        includeDeleted: false,
+      })
+
+      const products = (response.data ?? []) as Array<{
+        productId?: number
+        title?: string
+        upc?: string
+        brand?: string
+        price?: number
+        discount?: number
+        isDiscountPercent?: boolean
+        model?: string
+        condition?: string
+        countryOfManufacture?: string
+        weightKgs?: number
+        length?: number
+        breadth?: number
+        height?: number
+        category?: { categoryName?: string }
+        mainImageUrl?: string
+        topImageUrl?: string
+        bottomImageUrl?: string
+        frontImageUrl?: string
+        backImageUrl?: string
+        rightImageUrl?: string
+        leftImageUrl?: string
+        detailsImageUrl?: string
+        defectImageUrl?: string
+        additionalImage1Url?: string
+        additionalImage2Url?: string
+        additionalImage3Url?: string
+        pickupLocations?: Array<{
+          availableStock?: number
+          pickupLocation?: { pickupLocationId?: number }
+        }>
+      }>
+
+      const productMappings: ProductMappingItem[] = products.map(product => {
+        const locationData = product.pickupLocations?.find(
+          loc => loc.pickupLocation?.pickupLocationId === pickupLocationId
+        )
+        const quantity = locationData?.availableStock ?? 0
+
+        const images: ProductImageInfo[] = [
+          { url: product.mainImageUrl ?? '', label: 'Main' },
+          { url: product.topImageUrl ?? '', label: 'Top' },
+          { url: product.bottomImageUrl ?? '', label: 'Bottom' },
+          { url: product.frontImageUrl ?? '', label: 'Front' },
+          { url: product.backImageUrl ?? '', label: 'Back' },
+          { url: product.rightImageUrl ?? '', label: 'Right' },
+          { url: product.leftImageUrl ?? '', label: 'Left' },
+          { url: product.detailsImageUrl ?? '', label: 'Details' },
+          { url: product.defectImageUrl ?? '', label: 'Defect' },
+          { url: product.additionalImage1Url ?? '', label: 'Additional 1' },
+          { url: product.additionalImage2Url ?? '', label: 'Additional 2' },
+          { url: product.additionalImage3Url ?? '', label: 'Additional 3' },
+        ].filter(img => img.url && img.url.trim() !== '')
+
+        return {
+          productId: product.productId ?? 0,
+          quantity,
+          productDetails: {
+            title: product.title,
+            upc: product.upc,
+            brand: product.brand,
+            price: product.price,
+            discount: product.discount,
+            isDiscountPercent: product.isDiscountPercent,
+            model: product.model,
+            condition: product.condition,
+            countryOfManufacture: product.countryOfManufacture,
+            weightKgs: product.weightKgs,
+            length: product.length,
+            breadth: product.breadth,
+            height: product.height,
+            category: product.category?.categoryName,
+            images,
+          },
+        }
+      })
+
+      setMappings(productMappings)
+      setTotalCount(response.totalDataCount ?? productMappings.length)
+      setDisplayedCount(ITEMS_PER_PAGE)
+    } catch {
+      setMappings([])
+    } finally {
+      setLoading(false)
+    }
+  }, [pickupLocationId])
+
+  // Parse mappings string and fetch product details
+  const parseMappings = useCallback(async (): Promise<void> => {
+    if (!mappingsString || mappingsString.trim() === '') {
+      setMappings([])
+      return
+    }
+
+    setLoading(true)
+    try {
+      const parts = mappingsString.split(',')
+      const parsed: ProductMappingItem[] = []
+
+      for (const part of parts) {
+        const [productIdStr, quantityStr] = part.trim().split(':')
+        const productId = parseInt(productIdStr, 10)
+        const quantity = parseInt(quantityStr, 10)
+
+        if (!isNaN(productId) && !isNaN(quantity) && productId > 0 && quantity > 0) {
+          parsed.push({ productId, quantity })
+        }
+      }
+
+      setTotalCount(parsed.length)
+
+      // Fetch product details for the first batch
+      const initialBatch = parsed.slice(0, ITEMS_PER_PAGE)
+      const productIds = initialBatch.map(p => p.productId)
+
+      if (productIds.length > 0) {
+        const response = await productApi.getProductsInBatches({
+          start: 0,
+          end: productIds.length,
+          pageSize: productIds.length,
+          selectedIds: productIds,
+          includeDeleted: false,
+        })
+
+        const productMap = new Map<number, ProductMappingItem['productDetails']>()
+        for (const apiProduct of (response.data ?? []) as Array<{
+          productId?: number
+          title?: string
+          upc?: string
+          brand?: string
+          price?: number
+          discount?: number
+          isDiscountPercent?: boolean
+          model?: string
+          condition?: string
+          countryOfManufacture?: string
+          weightKgs?: number
+          length?: number
+          breadth?: number
+          height?: number
+          category?: { categoryName?: string }
+          // Individual image URL fields from API
+          mainImageUrl?: string
+          topImageUrl?: string
+          bottomImageUrl?: string
+          frontImageUrl?: string
+          backImageUrl?: string
+          rightImageUrl?: string
+          leftImageUrl?: string
+          detailsImageUrl?: string
+          defectImageUrl?: string
+          additionalImage1Url?: string
+          additionalImage2Url?: string
+          additionalImage3Url?: string
+          // Sometimes data is nested under product object
+          product?: {
+            productId?: number
+            title?: string
+            upc?: string
+            brand?: string
+            price?: number
+            discount?: number
+            isDiscountPercent?: boolean
+            model?: string
+            condition?: string
+            countryOfManufacture?: string
+            weightKgs?: number
+            length?: number
+            breadth?: number
+            height?: number
+            category?: { categoryName?: string }
+            mainImageUrl?: string
+            topImageUrl?: string
+            bottomImageUrl?: string
+            frontImageUrl?: string
+            backImageUrl?: string
+            rightImageUrl?: string
+            leftImageUrl?: string
+            detailsImageUrl?: string
+            defectImageUrl?: string
+            additionalImage1Url?: string
+            additionalImage2Url?: string
+            additionalImage3Url?: string
+          }
+        }>) {
+          // Handle both root-level and nested product data
+          const product = apiProduct.product ?? apiProduct
+          const productId = apiProduct.productId ?? product.productId
+
+          if (productId) {
+            // Build images array from individual URL fields (check both root and nested)
+            const images: ProductImageInfo[] = [
+              { url: apiProduct.mainImageUrl ?? product.mainImageUrl ?? '', label: 'Main' },
+              { url: apiProduct.topImageUrl ?? product.topImageUrl ?? '', label: 'Top' },
+              { url: apiProduct.bottomImageUrl ?? product.bottomImageUrl ?? '', label: 'Bottom' },
+              { url: apiProduct.frontImageUrl ?? product.frontImageUrl ?? '', label: 'Front' },
+              { url: apiProduct.backImageUrl ?? product.backImageUrl ?? '', label: 'Back' },
+              { url: apiProduct.rightImageUrl ?? product.rightImageUrl ?? '', label: 'Right' },
+              { url: apiProduct.leftImageUrl ?? product.leftImageUrl ?? '', label: 'Left' },
+              { url: apiProduct.detailsImageUrl ?? product.detailsImageUrl ?? '', label: 'Details' },
+              { url: apiProduct.defectImageUrl ?? product.defectImageUrl ?? '', label: 'Defect' },
+              { url: apiProduct.additionalImage1Url ?? product.additionalImage1Url ?? '', label: 'Additional 1' },
+              { url: apiProduct.additionalImage2Url ?? product.additionalImage2Url ?? '', label: 'Additional 2' },
+              { url: apiProduct.additionalImage3Url ?? product.additionalImage3Url ?? '', label: 'Additional 3' },
+            ].filter(img => img.url && img.url.trim() !== '')
+
+            productMap.set(productId, {
+              title: apiProduct.title ?? product.title,
+              upc: apiProduct.upc ?? product.upc,
+              brand: apiProduct.brand ?? product.brand,
+              price: apiProduct.price ?? product.price,
+              discount: apiProduct.discount ?? product.discount,
+              isDiscountPercent: apiProduct.isDiscountPercent ?? product.isDiscountPercent,
+              model: apiProduct.model ?? product.model,
+              condition: apiProduct.condition ?? product.condition,
+              countryOfManufacture: apiProduct.countryOfManufacture ?? product.countryOfManufacture,
+              weightKgs: apiProduct.weightKgs ?? product.weightKgs,
+              length: apiProduct.length ?? product.length,
+              breadth: apiProduct.breadth ?? product.breadth,
+              height: apiProduct.height ?? product.height,
+              category: apiProduct.category?.categoryName ?? product.category?.categoryName,
+              images,
+            })
+          }
+        }
+
+        for (const mapping of parsed) {
+          mapping.productDetails = productMap.get(mapping.productId)
+        }
+      }
+
+      setMappings(parsed)
+      setDisplayedCount(ITEMS_PER_PAGE)
+    } catch {
+      // Keep parsed mappings without details
+    } finally {
+      setLoading(false)
+    }
+  }, [mappingsString])
+
+  useEffect(() => {
+    if (open) {
+      // Use pickupLocationId if provided, otherwise parse mappingsString
+      if (pickupLocationId) {
+        void fetchByPickupLocation()
+      } else {
+        void parseMappings()
+      }
+    }
+  }, [open, pickupLocationId, fetchByPickupLocation, parseMappings])
+
+  // Load more products
+  const handleLoadMore = async (): Promise<void> => {
+    setLoadingMore(true)
+    try {
+      const nextBatch = mappings.slice(displayedCount, displayedCount + ITEMS_PER_PAGE)
+      const productIds = nextBatch.filter(p => !p.productDetails).map(p => p.productId)
+
+      if (productIds.length > 0) {
+        const response = await productApi.getProductsInBatches({
+          start: 0,
+          end: productIds.length,
+          pageSize: productIds.length,
+          selectedIds: productIds,
+          includeDeleted: false,
+        })
+
+        const productMap = new Map<number, ProductMappingItem['productDetails']>()
+        for (const apiProduct of (response.data ?? []) as Array<{
+          productId?: number
+          title?: string
+          upc?: string
+          brand?: string
+          price?: number
+          discount?: number
+          isDiscountPercent?: boolean
+          model?: string
+          condition?: string
+          countryOfManufacture?: string
+          weightKgs?: number
+          length?: number
+          breadth?: number
+          height?: number
+          category?: { categoryName?: string }
+          // Individual image URL fields from API
+          mainImageUrl?: string
+          topImageUrl?: string
+          bottomImageUrl?: string
+          frontImageUrl?: string
+          backImageUrl?: string
+          rightImageUrl?: string
+          leftImageUrl?: string
+          detailsImageUrl?: string
+          defectImageUrl?: string
+          additionalImage1Url?: string
+          additionalImage2Url?: string
+          additionalImage3Url?: string
+          // Sometimes data is nested under product object
+          product?: {
+            productId?: number
+            title?: string
+            upc?: string
+            brand?: string
+            price?: number
+            discount?: number
+            isDiscountPercent?: boolean
+            model?: string
+            condition?: string
+            countryOfManufacture?: string
+            weightKgs?: number
+            length?: number
+            breadth?: number
+            height?: number
+            category?: { categoryName?: string }
+            mainImageUrl?: string
+            topImageUrl?: string
+            bottomImageUrl?: string
+            frontImageUrl?: string
+            backImageUrl?: string
+            rightImageUrl?: string
+            leftImageUrl?: string
+            detailsImageUrl?: string
+            defectImageUrl?: string
+            additionalImage1Url?: string
+            additionalImage2Url?: string
+            additionalImage3Url?: string
+          }
+        }>) {
+          // Handle both root-level and nested product data
+          const product = apiProduct.product ?? apiProduct
+          const productId = apiProduct.productId ?? product.productId
+
+          if (productId) {
+            // Build images array from individual URL fields (check both root and nested)
+            const images: ProductImageInfo[] = [
+              { url: apiProduct.mainImageUrl ?? product.mainImageUrl ?? '', label: 'Main' },
+              { url: apiProduct.topImageUrl ?? product.topImageUrl ?? '', label: 'Top' },
+              { url: apiProduct.bottomImageUrl ?? product.bottomImageUrl ?? '', label: 'Bottom' },
+              { url: apiProduct.frontImageUrl ?? product.frontImageUrl ?? '', label: 'Front' },
+              { url: apiProduct.backImageUrl ?? product.backImageUrl ?? '', label: 'Back' },
+              { url: apiProduct.rightImageUrl ?? product.rightImageUrl ?? '', label: 'Right' },
+              { url: apiProduct.leftImageUrl ?? product.leftImageUrl ?? '', label: 'Left' },
+              { url: apiProduct.detailsImageUrl ?? product.detailsImageUrl ?? '', label: 'Details' },
+              { url: apiProduct.defectImageUrl ?? product.defectImageUrl ?? '', label: 'Defect' },
+              { url: apiProduct.additionalImage1Url ?? product.additionalImage1Url ?? '', label: 'Additional 1' },
+              { url: apiProduct.additionalImage2Url ?? product.additionalImage2Url ?? '', label: 'Additional 2' },
+              { url: apiProduct.additionalImage3Url ?? product.additionalImage3Url ?? '', label: 'Additional 3' },
+            ].filter(img => img.url && img.url.trim() !== '')
+
+            productMap.set(productId, {
+              title: apiProduct.title ?? product.title,
+              upc: apiProduct.upc ?? product.upc,
+              brand: apiProduct.brand ?? product.brand,
+              price: apiProduct.price ?? product.price,
+              discount: apiProduct.discount ?? product.discount,
+              isDiscountPercent: apiProduct.isDiscountPercent ?? product.isDiscountPercent,
+              model: apiProduct.model ?? product.model,
+              condition: apiProduct.condition ?? product.condition,
+              countryOfManufacture: apiProduct.countryOfManufacture ?? product.countryOfManufacture,
+              weightKgs: apiProduct.weightKgs ?? product.weightKgs,
+              length: apiProduct.length ?? product.length,
+              breadth: apiProduct.breadth ?? product.breadth,
+              height: apiProduct.height ?? product.height,
+              category: apiProduct.category?.categoryName ?? product.category?.categoryName,
+              images,
+            })
+          }
+        }
+
+        setMappings(prev =>
+          prev.map(m => ({
+            ...m,
+            productDetails: m.productDetails ?? productMap.get(m.productId),
+          }))
+        )
+      }
+
+      setDisplayedCount(prev => prev + ITEMS_PER_PAGE)
+    } catch {
+      // Continue without fetching details
+      setDisplayedCount(prev => prev + ITEMS_PER_PAGE)
+    } finally {
+      setLoadingMore(false)
+    }
+  }
+
+  // Load more products for pickupLocationId mode
+  const handleLoadMoreByLocation = async (): Promise<void> => {
+    if (!pickupLocationId) return
+
+    setLoadingMore(true)
+    try {
+      const response = await productApi.getProductsInBatches({
+        start: displayedCount,
+        end: displayedCount + ITEMS_PER_PAGE,
+        pageSize: ITEMS_PER_PAGE,
+        filters: [
+          {
+            id: 'pickupLocationId-filter',
+            column: 'pickupLocationId',
+            operator: 'equals',
+            value: pickupLocationId.toString(),
+          },
+        ],
+        logicOperator: 'AND',
+        includeDeleted: false,
+      })
+
+      const products = (response.data ?? []) as Array<{
+        productId?: number
+        title?: string
+        upc?: string
+        brand?: string
+        price?: number
+        discount?: number
+        isDiscountPercent?: boolean
+        model?: string
+        condition?: string
+        countryOfManufacture?: string
+        weightKgs?: number
+        length?: number
+        breadth?: number
+        height?: number
+        category?: { categoryName?: string }
+        mainImageUrl?: string
+        topImageUrl?: string
+        bottomImageUrl?: string
+        frontImageUrl?: string
+        backImageUrl?: string
+        rightImageUrl?: string
+        leftImageUrl?: string
+        detailsImageUrl?: string
+        defectImageUrl?: string
+        additionalImage1Url?: string
+        additionalImage2Url?: string
+        additionalImage3Url?: string
+        pickupLocations?: Array<{
+          availableStock?: number
+          pickupLocation?: { pickupLocationId?: number }
+        }>
+      }>
+
+      const newMappings: ProductMappingItem[] = products.map(product => {
+        const locationData = product.pickupLocations?.find(
+          loc => loc.pickupLocation?.pickupLocationId === pickupLocationId
+        )
+        const quantity = locationData?.availableStock ?? 0
+
+        const images: ProductImageInfo[] = [
+          { url: product.mainImageUrl ?? '', label: 'Main' },
+          { url: product.topImageUrl ?? '', label: 'Top' },
+          { url: product.bottomImageUrl ?? '', label: 'Bottom' },
+          { url: product.frontImageUrl ?? '', label: 'Front' },
+          { url: product.backImageUrl ?? '', label: 'Back' },
+          { url: product.rightImageUrl ?? '', label: 'Right' },
+          { url: product.leftImageUrl ?? '', label: 'Left' },
+          { url: product.detailsImageUrl ?? '', label: 'Details' },
+          { url: product.defectImageUrl ?? '', label: 'Defect' },
+          { url: product.additionalImage1Url ?? '', label: 'Additional 1' },
+          { url: product.additionalImage2Url ?? '', label: 'Additional 2' },
+          { url: product.additionalImage3Url ?? '', label: 'Additional 3' },
+        ].filter(img => img.url && img.url.trim() !== '')
+
+        return {
+          productId: product.productId ?? 0,
+          quantity,
+          productDetails: {
+            title: product.title,
+            upc: product.upc,
+            brand: product.brand,
+            price: product.price,
+            discount: product.discount,
+            isDiscountPercent: product.isDiscountPercent,
+            model: product.model,
+            condition: product.condition,
+            countryOfManufacture: product.countryOfManufacture,
+            weightKgs: product.weightKgs,
+            length: product.length,
+            breadth: product.breadth,
+            height: product.height,
+            category: product.category?.categoryName,
+            images,
+          },
+        }
+      })
+
+      setMappings(prev => [...prev, ...newMappings])
+      setDisplayedCount(prev => prev + ITEMS_PER_PAGE)
+    } catch {
+      // Ignore error
+    } finally {
+      setLoadingMore(false)
+    }
+  }
+
+  const displayedMappings = mappings.slice(0, displayedCount)
+  const hasMore = pickupLocationId ? displayedCount < totalCount : displayedCount < mappings.length
+  const remainingCount = pickupLocationId ? totalCount - mappings.length : mappings.length - displayedCount
+
+  const onLoadMore = (): void => {
+    if (pickupLocationId) {
+      void handleLoadMoreByLocation()
+    } else {
+      void handleLoadMore()
+    }
+  }
+
+  return (
+    <Modal open={open} onClose={onClose} aria-labelledby="product-mappings-modal">
+      <Box className={styles['mappings-modal']}>
+        <Box className={styles['mappings-modal__header']}>
+          <Box className={styles['mappings-modal__header-content']}>
+            <ShoppingCartIcon color="primary" />
+            <Subheader label={pickupLocationId ? 'Products' : 'Product Mappings'} variant="h6" />
+            {!loading && <Chip label={pickupLocationId ? totalCount : mappings.length} size="small" color="primary" />}
+          </Box>
+          <IconButton onClick={onClose} size="small">
+            <CloseIcon />
+          </IconButton>
+        </Box>
+
+        {locationName && (
+          <Box className={styles['mappings-modal__subtitle']}>
+            <SecondaryFont>
+              Products {pickupLocationId ? 'at' : 'for'}: <strong>{locationName}</strong>
+            </SecondaryFont>
+          </Box>
+        )}
+
+        <Box className={styles['mappings-modal__content']}>
+          {loading ? (
+            <Box className={styles['mappings-modal__loading']}>
+              <CircularProgress size={40} />
+              <SecondaryFont>Loading products...</SecondaryFont>
+            </Box>
+          ) : mappings.length === 0 ? (
+            <Box className={styles['mappings-modal__empty']}>
+              <BodyText color="text.secondary">No products found</BodyText>
+            </Box>
+          ) : (
+            <>
+              <Box className={styles['mappings-modal__grid']}>
+                {displayedMappings.map((mapping, index) => (
+                  <ProductCard key={`${mapping.productId}-${index}`} mapping={mapping} />
+                ))}
+              </Box>
+
+              {hasMore && (
+                <Box className={styles['mappings-modal__load-more']}>
+                  <Button
+                    variant="outlined"
+                    onClick={onLoadMore}
+                    disabled={loadingMore}
+                    startIcon={loadingMore ? <CircularProgress size={16} /> : <ExpandMoreIcon />}
+                  >
+                    {loadingMore ? 'Loading...' : `Load More (${remainingCount} remaining)`}
+                  </Button>
+                </Box>
+              )}
+            </>
+          )}
+        </Box>
+      </Box>
+    </Modal>
+  )
+}
+
+export default ProductModal

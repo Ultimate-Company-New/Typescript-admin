@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useEffect, useState } from "react";
 
 import { format } from "date-fns";
 
@@ -8,8 +8,59 @@ import { Avatar, Box, Chip, IconButton, Switch, Tooltip } from "@mui/material";
 import { type GridColDef, type GridRenderCellParams } from "@mui/x-data-grid";
 
 import { RenderLongCellItem } from "../../components/datagrid";
+import { TextFieldInput } from "../../components/form-input";
 import { getConditionColor, getConditionLabel } from "../../constants/appConstants";
 import { ProductActionsCell } from "../../pages/products/components";
+
+/**
+ * Memoized Quantity Input Component
+ * Manages its own local state to prevent grid re-renders on every keystroke
+ */
+interface QuantityInputProps {
+  initialValue: number | undefined
+  onValueChange: (value: number) => void
+}
+
+const QuantityInput = memo(({ initialValue, onValueChange }: QuantityInputProps) => {
+  const [localValue, setLocalValue] = useState<string>(initialValue?.toString() ?? '')
+
+  // Sync local state when initialValue changes from outside
+  useEffect(() => {
+    setLocalValue(initialValue?.toString() ?? '')
+  }, [initialValue])
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLocalValue(e.target.value)
+  }
+
+  const handleBlur = () => {
+    const value = parseInt(localValue, 10)
+    if (isNaN(value) || value < 1) {
+      setLocalValue('1')
+      onValueChange(1)
+    } else {
+      onValueChange(value)
+    }
+  }
+
+  return (
+    <TextFieldInput
+      type="number"
+      size="small"
+      variant="outlined"
+      margin="none"
+      value={localValue}
+      placeholder="1"
+      onChange={handleChange}
+      onBlur={handleBlur}
+      inputProps={{ min: 1, style: { textAlign: 'center' } }}
+      sx={{ width: 100, backgroundColor: '#fff' }}
+      fullWidth={false}
+    />
+  )
+})
+
+QuantityInput.displayName = 'QuantityInput'
 
 import PickupLocationsButton from "./PickupLocationsButton";
 
@@ -205,6 +256,7 @@ export interface ProductData extends ProductImageUrls {
     price?: number;
     discount?: number;
     discountPercent?: boolean;
+    isDiscountPercent?: boolean;
     availableStock?: number;
     itemAvailableFrom?: string;
     itemAvailableFromTimezone?: string;
@@ -234,6 +286,7 @@ export interface ProductData extends ProductImageUrls {
   price?: number;
   discount?: number;
   discountPercent?: boolean;
+  isDiscountPercent?: boolean;
   availableStock?: number;
   itemAvailableFrom?: string;
   itemAvailableFromTimezone?: string;
@@ -257,12 +310,52 @@ export interface ProductData extends ProductImageUrls {
 }
 
 /**
+ * Options for configuring product grid columns
+ */
+export interface ProductGridColumnOptions {
+  /** Handler for toggling product active state */
+  onToggleProduct: (productId: number) => void
+  /** Handler for toggling returns allowed */
+  onToggleReturns: (productId: number) => void
+  /** When true, displays a Quantity column (used for pickup location inventory view) */
+  displayQuantity?: boolean
+  /** The pickup location ID to get quantity from (required when displayQuantity is true) */
+  pickupLocationId?: number
+  /** When true, makes quantity column editable with a text input */
+  quantityEditable?: boolean
+  /** Map of productId to quantity value (used when quantityEditable is true) */
+  quantityValues?: Record<number, number>
+  /** Callback when quantity is changed (used when quantityEditable is true) */
+  onQuantityChange?: (productId: number, quantity: number) => void
+  /** Set of selected product IDs (used when quantityEditable is true to show input only for selected rows) */
+  selectedProductIds?: Set<number>
+}
+
+/**
  * Get product grid columns with action handlers
  */
 export const getProductGridColumns = (
   onToggleProduct: (productId: number) => void,
-  onToggleReturns: (productId: number) => void
-): GridColDef[] => [
+  onToggleReturns: (productId: number) => void,
+  options?: {
+    displayQuantity?: boolean
+    pickupLocationId?: number
+    quantityEditable?: boolean
+    quantityValues?: Record<number, number>
+    onQuantityChange?: (productId: number, quantity: number) => void
+    selectedProductIds?: Set<number>
+  }
+): GridColDef[] => {
+  const {
+    displayQuantity = false,
+    pickupLocationId,
+    quantityEditable = false,
+    quantityValues = {},
+    onQuantityChange,
+    selectedProductIds,
+  } = options ?? {}
+
+  const baseColumns: GridColDef[] = [
   {
     field: "productId",
     headerName: "Product ID",
@@ -438,7 +531,9 @@ export const getProductGridColumns = (
       const rowData = row;
       const discount = rowData.discount ?? rowData.product?.discount;
       if (discount == null) return "—";
+      // Check both isDiscountPercent (API field name) and discountPercent (legacy)
       const isPercent =
+        rowData.isDiscountPercent ?? rowData.product?.isDiscountPercent ??
         rowData.discountPercent ?? rowData.product?.discountPercent ?? false;
       return isPercent ? `${discount}%` : `₹ ${discount}`;
     },
@@ -801,4 +896,87 @@ export const getProductGridColumns = (
       );
     },
   },
-];
+  ]
+
+  // Add quantity column if displayQuantity is enabled (read-only, from API)
+  if (displayQuantity && pickupLocationId !== undefined && !quantityEditable) {
+    // Insert quantity column after title column
+    const titleIndex = baseColumns.findIndex(col => col.field === 'title')
+    const quantityColumn: GridColDef = {
+      field: 'availableStock',
+      headerName: 'Quantity',
+      minWidth: 120,
+      flex: 0.8,
+      headerAlign: 'center',
+      align: 'center',
+      sortable: false,
+      filterable: false,
+      valueGetter: (_value, row: ProductData) => {
+        const rowData = row
+        const locations = rowData.pickupLocations ?? rowData.product?.pickupLocations ?? []
+        // Find the pickup location item that matches the given pickupLocationId
+        // The response format is: { pickupLocation: { pickupLocationId, ... }, availableStock: number }
+        const locationItem = locations.find(
+          (loc: PickupLocation) => {
+            const locData = loc as unknown as { pickupLocation?: { pickupLocationId?: number }; pickupLocationId?: number }
+            return (locData.pickupLocation?.pickupLocationId === pickupLocationId) ||
+                   (locData.pickupLocationId === pickupLocationId)
+          }
+        )
+        if (locationItem) {
+          const itemData = locationItem as unknown as { availableStock?: number }
+          return itemData.availableStock ?? 0
+        }
+        return 0
+      },
+      renderCell: (params: GridRenderCellParams) => (
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+          {params.value}
+        </Box>
+      ),
+    }
+    baseColumns.splice(titleIndex + 1, 0, quantityColumn)
+  }
+
+  // Add editable quantity column if quantityEditable is enabled
+  if (quantityEditable) {
+    // Insert quantity column after title column
+    const titleIndex = baseColumns.findIndex(col => col.field === 'title')
+    const quantityColumn: GridColDef = {
+      field: 'editableQuantity',
+      headerName: 'Quantity',
+      minWidth: 120,
+      flex: 0.8,
+      headerAlign: 'center',
+      align: 'center',
+      sortable: false,
+      filterable: false,
+      renderCell: (params: GridRenderCellParams<ProductData>) => {
+        const productId = params.row.productId ?? params.row.product?.productId ?? 0
+        const isSelected = selectedProductIds?.has(productId) ?? false
+        const currentValue = quantityValues[productId]
+
+        // Only show input for selected rows
+        if (!isSelected) {
+          return (
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+              —
+            </Box>
+          )
+        }
+
+        return (
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", py: 1 }}>
+            <QuantityInput
+              initialValue={currentValue}
+              onValueChange={(value) => onQuantityChange?.(productId, value)}
+            />
+          </Box>
+        )
+      },
+    }
+    baseColumns.splice(titleIndex + 1, 0, quantityColumn)
+  }
+
+  return baseColumns
+}

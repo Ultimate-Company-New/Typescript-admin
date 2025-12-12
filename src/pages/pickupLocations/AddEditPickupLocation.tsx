@@ -9,7 +9,9 @@ import { toast } from 'react-toastify'
 import { Cancel as CancelIcon, Save as SaveIcon } from '@mui/icons-material'
 import { Box, Container, Divider, Grid, Paper } from '@mui/material'
 
+import { packageApi } from '../../api/packageApi'
 import { pickupLocationApi } from '../../api/pickupLocationApi'
+import { productApi } from '../../api/productApi'
 import { BlueButton, RedButton } from '../../components/buttons'
 import { Subheader } from '../../components/fonts'
 import { AddressFormController, FieldType, FormFieldRenderer, type SectionConfig } from '../../components/form'
@@ -23,7 +25,36 @@ import {
     type PickupLocationFormData,
 } from '../../utils/validationSchemas'
 
-import { FillTestDataButton, PickupLocationDetailsView } from './components'
+import {
+    PackageSelectionGrid,
+    ProductSelectionGrid,
+    type PackageQuantityMapping,
+    type ProductQuantityMapping,
+} from '../../components/datagrid'
+import { type PackageData } from '../../models/grid-models/PackageGridColumns'
+import { type ProductData } from '../../models/grid-models/ProductGridColumns'
+import {
+    FillTestDataButton,
+    PickupLocationDetailsView,
+} from './components'
+
+/**
+ * Product mapping for API request
+ */
+interface ProductMappingRequest {
+  productId: number
+  quantity: number
+}
+
+/**
+ * Package mapping for API request
+ */
+interface PackageMappingRequest {
+  packageId: number
+  quantity: number
+  reorderLevel: number
+  maxStockLevel: number
+}
 
 /**
  * Pickup Location Request Model for API
@@ -46,6 +77,8 @@ interface PickupLocationRequestModel {
     phoneOnAddress?: string
   }
   notes?: string
+  productMappings?: ProductMappingRequest[]
+  packageMappings?: PackageMappingRequest[]
 }
 
 /**
@@ -92,6 +125,10 @@ const AddEditPickupLocation = (): React.JSX.Element => {
   const [loading, setLoading] = useState(false)
   const [selectedState, setSelectedState] = useState<string>('')
   const [shipRocketId, setShipRocketId] = useState<number | null>(null)
+
+  // Product and Package selection state
+  const [selectedProducts, setSelectedProducts] = useState<ProductQuantityMapping[]>([])
+  const [selectedPackages, setSelectedPackages] = useState<PackageQuantityMapping[]>([])
 
   // Get user permissions for authorization
   const { hasPermission } = usePermissions()
@@ -203,13 +240,83 @@ const AddEditPickupLocation = (): React.JSX.Element => {
         },
         notes: response.notes ?? '',
       })
+
+      // Fetch products and packages associated with this pickup location (for edit mode)
+      const locationId = parseInt(pickupLocationId, 10)
+
+      // Fetch products with pickupLocationId filter
+      const productResponse = await productApi.getProductsInBatches({
+        start: 0,
+        end: 1000, // Fetch all products for this location
+        filters: [
+          {
+            id: 'pickupLocationId-filter',
+            column: 'pickupLocationId',
+            operator: 'equals',
+            value: locationId.toString(),
+          },
+        ],
+        logicOperator: 'AND',
+        includeDeleted: false,
+      })
+
+      // Map products to ProductQuantityMapping with quantities
+      if (productResponse.data && productResponse.data.length > 0) {
+        const productMappings: ProductQuantityMapping[] = productResponse.data.map((product: ProductData) => {
+          const pickupLocationQuantities = product.pickupLocations ?? []
+          // Find the quantity for this specific pickup location
+          const locationData = pickupLocationQuantities.find(
+            (loc: { pickupLocation?: { pickupLocationId?: number }; availableStock?: number }) =>
+              loc.pickupLocation?.pickupLocationId === locationId
+          )
+          return {
+            productId: product.productId ?? 0,
+            productTitle: product.title ?? '',
+            quantity: locationData?.availableStock ?? 1,
+          }
+        })
+        setSelectedProducts(productMappings)
+      }
+
+      // Fetch packages with pickupLocationId filter
+      const packageResponse = await packageApi.getPackagesInBatches({
+        start: 0,
+        end: 1000, // Fetch all packages for this location
+        filters: [
+          {
+            id: 'pickupLocationId-filter',
+            column: 'pickupLocationId',
+            operator: 'equals',
+            value: locationId.toString(),
+          },
+        ],
+        logicOperator: 'AND',
+        includeDeleted: false,
+      })
+
+      // Map packages to PackageQuantityMapping with quantities
+      if (packageResponse.data && packageResponse.data.length > 0) {
+        const packageMappings: PackageQuantityMapping[] = packageResponse.data.map((pkg: PackageData) => {
+          const pickupLocationQuantities = pkg.pickupLocationQuantities ?? {}
+          // Get the quantity data for this specific pickup location
+          const locationData = pickupLocationQuantities[locationId]
+          return {
+            packageId: pkg.packageId ?? 0,
+            packageName: pkg.packageName ?? '',
+            quantity: locationData?.quantity ?? locationData?.availableQuantity ?? 1,
+            reorderLevel: locationData?.reorderLevel ?? 1,
+            maxStockLevel: locationData?.maxStockLevel ?? 1,
+          }
+        })
+        setSelectedPackages(packageMappings)
+      }
     } catch {
       toast.error('Failed to fetch pickup location details')
       navigate(APP_ROUTES.DASHBOARD.PICKUP_LOCATIONS, { replace: true })
     } finally {
       setLoading(false)
     }
-  }, [pickupLocationId, reset, navigate])
+  }, [pickupLocationId, reset, navigate, setSelectedProducts, setSelectedPackages])
 
   // Fetch pickup location details on mount (edit/view mode)
   useEffect(() => {
@@ -241,6 +348,22 @@ const AddEditPickupLocation = (): React.JSX.Element => {
             phoneOnAddress: data.address.phoneOnAddress?.trim() || undefined,
           },
           notes: data.notes?.trim() || undefined,
+          // Include product mappings if any are selected
+          productMappings: selectedProducts.length > 0
+            ? selectedProducts.map(p => ({
+                productId: p.productId,
+                quantity: p.quantity,
+              }))
+            : undefined,
+          // Include package mappings if any are selected
+          packageMappings: selectedPackages.length > 0
+            ? selectedPackages.map(p => ({
+                packageId: p.packageId,
+                quantity: p.quantity,
+                reorderLevel: p.reorderLevel,
+                maxStockLevel: p.maxStockLevel,
+              }))
+            : undefined,
         }
 
         if (isEdit && pickupLocationId) {
@@ -258,7 +381,7 @@ const AddEditPickupLocation = (): React.JSX.Element => {
         setLoading(false)
       }
     },
-    [isEdit, pickupLocationId, navigate],
+    [isEdit, pickupLocationId, navigate, selectedProducts, selectedPackages],
   )
 
   // Cancel handler
@@ -335,6 +458,7 @@ const AddEditPickupLocation = (): React.JSX.Element => {
               shipRocketPickupLocationId={shipRocketId}
               address={watchedValues.address}
               notes={watchedValues.notes}
+              pickupLocationId={pickupLocationId ? parseInt(pickupLocationId, 10) : undefined}
             />
           ) : (
             // Edit/Add mode - display form
@@ -382,6 +506,20 @@ const AddEditPickupLocation = (): React.JSX.Element => {
                 sectionTitleClassName={styles['add-pickup-location-page__section-title']}
                 dividerClassName={styles['add-pickup-location-page__divider']}
               />
+
+              {/* Product Selection Grid */}
+              <ProductSelectionGrid
+                selectedProducts={selectedProducts}
+                onSelectionChange={setSelectedProducts}
+                title="Products at this Location"
+              />
+
+              {/* Package Selection Grid */}
+              <PackageSelectionGrid
+                selectedPackages={selectedPackages}
+                onSelectionChange={setSelectedPackages}
+                title="Packages at this Location"
+              />
             </>
           )}
 
@@ -418,6 +556,8 @@ const AddEditPickupLocation = (): React.JSX.Element => {
         <FillTestDataButton
           setValue={setValue}
           reset={reset}
+          setSelectedProducts={setSelectedProducts}
+          setSelectedPackages={setSelectedPackages}
         />
       )}
     </Container>

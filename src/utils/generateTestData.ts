@@ -1,3 +1,4 @@
+import { leadApi } from '../api/leadApi'
 import { pickupLocationApi } from '../api/pickupLocationApi'
 import { productCategoryApi, type ProductCategoryWithPath } from '../api/productCategoryApi'
 import type { UserGroupRequestModel } from '../api/userGroupApi'
@@ -1407,5 +1408,265 @@ export const generatePickupLocationFormTest = (preserveName?: string): PickupLoc
       phoneOnAddress: phone,
     },
     notes,
+  }
+}
+
+// ============================================================================
+// Purchase Order Test Data Generation
+// ============================================================================
+
+/**
+ * Purchase order status options matching database constraints
+ */
+const PURCHASE_ORDER_STATUSES = [
+  'DRAFT',
+  'PENDING_APPROVAL',
+  'APPROVED',
+  'SENT_TO_VENDOR',
+  'ACKNOWLEDGED',
+  'IN_PRODUCTION',
+  'SHIPPED',
+  'PARTIALLY_RECEIVED',
+  'RECEIVED',
+  'COMPLETED',
+  'ON_HOLD',
+] as const
+
+/**
+ * Priority options matching database constraints
+ */
+const PRIORITY_OPTIONS = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'] as const
+
+/**
+ * Vendor templates for test data generation
+ */
+interface VendorTemplate {
+  prefix: string
+  description: string
+  termsConditions: string
+  notes: string
+}
+
+/**
+ * Pre-defined vendor templates for variety in test data
+ */
+const VENDOR_TEMPLATES: VendorTemplate[] = [
+  {
+    prefix: 'TECH',
+    description: 'Technology equipment and accessories supplier',
+    termsConditions: `
+      <h3>Terms & Conditions</h3>
+      <ul>
+        <li>Payment due within 30 days of invoice date</li>
+        <li>All products covered under manufacturer warranty</li>
+        <li>Returns accepted within 15 days of delivery</li>
+        <li>Shipping charges will be billed separately</li>
+      </ul>
+    `,
+    notes: 'Preferred vendor for electronics and IT equipment',
+  },
+  {
+    prefix: 'OFFICE',
+    description: 'Office supplies and stationery provider',
+    termsConditions: `
+      <h3>Terms & Conditions</h3>
+      <ul>
+        <li>Net 45 payment terms</li>
+        <li>Minimum order value: ₹5,000</li>
+        <li>Free delivery on orders above ₹10,000</li>
+        <li>Bulk discounts available</li>
+      </ul>
+    `,
+    notes: 'Regular supplier for office consumables',
+  },
+  {
+    prefix: 'RAW',
+    description: 'Raw materials and manufacturing supplies',
+    termsConditions: `
+      <h3>Terms & Conditions</h3>
+      <ul>
+        <li>50% advance payment required</li>
+        <li>Quality inspection upon delivery</li>
+        <li>Claims must be filed within 7 days</li>
+        <li>Price subject to market fluctuations</li>
+      </ul>
+    `,
+    notes: 'Key supplier for production materials',
+  },
+  {
+    prefix: 'PKG',
+    description: 'Packaging materials and solutions',
+    termsConditions: `
+      <h3>Terms & Conditions</h3>
+      <ul>
+        <li>Weekly delivery schedule</li>
+        <li>Custom packaging available with 2-week lead time</li>
+        <li>Volume discounts on annual contracts</li>
+        <li>Eco-friendly options at 10% premium</li>
+      </ul>
+    `,
+    notes: 'Packaging and shipping materials vendor',
+  },
+  {
+    prefix: 'MAINT',
+    description: 'Maintenance and facility supplies',
+    termsConditions: `
+      <h3>Terms & Conditions</h3>
+      <ul>
+        <li>Emergency orders processed same day</li>
+        <li>Annual maintenance contracts available</li>
+        <li>All products meet safety standards</li>
+        <li>Technical support included</li>
+      </ul>
+    `,
+    notes: 'Facility maintenance supplies vendor',
+  },
+  {
+    prefix: 'EQUIP',
+    description: 'Industrial equipment and machinery',
+    termsConditions: `
+      <h3>Terms & Conditions</h3>
+      <ul>
+        <li>Installation services included</li>
+        <li>1-year warranty on all equipment</li>
+        <li>Financing options available</li>
+        <li>Training provided at no extra cost</li>
+      </ul>
+    `,
+    notes: 'Heavy equipment and machinery supplier',
+  },
+]
+
+/**
+ * Purchase order test data model
+ */
+export interface PurchaseOrderTestData {
+  vendorNumber: string
+  expectedDeliveryDate: string
+  purchaseOrderStatus: string
+  priority: string
+  assignedLeadId: number
+  termsConditionsHtml: string
+  address: {
+    streetAddress: string
+    streetAddress2?: string
+    streetAddress3?: string
+    city: string
+    state: string
+    postalCode: string
+    country: string
+    addressType: string
+    nameOnAddress?: string
+    emailOnAddress?: string
+    phoneOnAddress?: string
+  }
+  deliveryFee: number
+  serviceFee: number
+  packagingFee: number
+  discount: number
+  notes: string
+}
+
+/**
+ * Generate test data for a single purchase order form
+ * Creates a purchase order with randomly generated test data
+ * Fetches a real lead ID from the database
+ *
+ * @param preserveVendorNumber - Optional existing vendor number to preserve (for edit mode)
+ * @returns Promise<PurchaseOrderTestData> for form population
+ */
+export const generatePurchaseOrderFormTest = async (preserveVendorNumber?: string): Promise<PurchaseOrderTestData> => {
+  const template = VENDOR_TEMPLATES[Math.floor(Math.random() * VENDOR_TEMPLATES.length)]
+  const timestamp = Date.now()
+
+  // Random status (prefer DRAFT or PENDING_APPROVAL for new orders)
+  const statusIndex = Math.random() > 0.7
+    ? Math.floor(Math.random() * PURCHASE_ORDER_STATUSES.length)
+    : Math.floor(Math.random() * 2) // 70% chance of DRAFT or PENDING_APPROVAL
+  const status = PURCHASE_ORDER_STATUSES[statusIndex]
+
+  // Random priority
+  const priority = PRIORITY_OPTIONS[Math.floor(Math.random() * PRIORITY_OPTIONS.length)]
+
+  // Generate expected delivery date (7-60 days from now)
+  const daysInFuture = 7 + Math.floor(Math.random() * 53)
+  const deliveryDate = new Date()
+  deliveryDate.setDate(deliveryDate.getDate() + daysInFuture)
+  const expectedDeliveryDate = deliveryDate.toISOString().split('T')[0]
+
+  // Fetch a lead ID from the database
+  let assignedLeadId = 1 // Default fallback
+  try {
+    const response = await leadApi.getLeadsInBatches({
+      start: 0,
+      end: 10,
+      pageSize: 10,
+    })
+    const leads = response.data || []
+    if (leads.length > 0) {
+      // Randomly select a lead
+      const randomLead = leads[Math.floor(Math.random() * leads.length)]
+      assignedLeadId = (randomLead as { leadId: number }).leadId
+    }
+  } catch (error) {
+    console.warn('Failed to fetch leads for test data, using default:', error)
+  }
+
+  // Random state and city for address
+  const state = INDIAN_STATES[Math.floor(Math.random() * INDIAN_STATES.length)]
+  const stateCities = CITIES_BY_STATE[state] || ['Unknown City']
+  const city = stateCities[Math.floor(Math.random() * stateCities.length)]
+
+  // Random street
+  const street = STREET_TEMPLATES[Math.floor(Math.random() * STREET_TEMPLATES.length)]
+  const buildingNumber = 1 + Math.floor(Math.random() * 500)
+
+  // Generate postal code (Indian format: 6 digits)
+  const postalCode = `${400000 + Math.floor(Math.random() * 200000)}`
+
+  // Random phone (10 digits starting with 9 or 8)
+  const phonePrefix = Math.random() > 0.5 ? '98' : '88'
+  const phoneRemaining = Math.floor(10000000 + Math.random() * 90000000)
+  const phone = `${phonePrefix}${phoneRemaining}`
+
+  // Random email
+  const emailDomain = ['vendor.com', 'suppliers.com', 'business.com', 'procurement.com'][Math.floor(Math.random() * 4)]
+  const emailPrefix = `po_contact_${timestamp % 100000}`
+
+  // Optional floor/building info (70% chance)
+  const hasFloor = Math.random() > 0.3
+  const hasBuilding = Math.random() > 0.3
+
+  // Random fees
+  const deliveryFee = Math.round((50 + Math.random() * 450) * 100) / 100 // ₹50-500
+  const serviceFee = Math.round((10 + Math.random() * 90) * 100) / 100 // ₹10-100
+  const packagingFee = Math.round((20 + Math.random() * 180) * 100) / 100 // ₹20-200
+  const discount = Math.round((0 + Math.random() * 500) * 100) / 100 // ₹0-500
+
+  return {
+    vendorNumber: preserveVendorNumber ?? `${template.prefix}-${timestamp % 100000}`,
+    expectedDeliveryDate,
+    purchaseOrderStatus: status,
+    priority,
+    assignedLeadId,
+    termsConditionsHtml: template.termsConditions.trim(),
+    address: {
+      streetAddress: `${buildingNumber}, ${street}`,
+      streetAddress2: hasFloor ? `Floor ${1 + Math.floor(Math.random() * 10)}` : '',
+      streetAddress3: hasBuilding ? `Building ${String.fromCharCode(65 + Math.floor(Math.random() * 10))}` : '',
+      city,
+      state,
+      postalCode,
+      country: 'India',
+      addressType: 'OFFICE',
+      nameOnAddress: `${template.description.split(' ')[0]} Procurement Manager`,
+      emailOnAddress: `${emailPrefix}@${emailDomain}`,
+      phoneOnAddress: phone,
+    },
+    deliveryFee,
+    serviceFee,
+    packagingFee,
+    discount,
+    notes: template.notes,
   }
 }

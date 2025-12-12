@@ -1,6 +1,9 @@
+import { memo, useEffect, useState } from 'react'
+
 import { Box, Chip, Link } from '@mui/material'
 import { type GridColDef, type GridRenderCellParams } from '@mui/x-data-grid'
 
+import { TextFieldInput } from '../../components/form-input'
 import { getPackageTypeColor, getPackageTypeLabel, PERMISSIONS } from '../../constants/appConstants'
 import { APP_ROUTES } from '../../constants/routes'
 import { usePermissions } from '../../hooks/usePermissions'
@@ -8,6 +11,56 @@ import styles from '../../styles/Packages.module.scss'
 import type { PackagePickupLocationMappingResponseModel } from '../api-models/PackageModels'
 
 import PackageLocationsButton from './PackageLocationsButton'
+
+/**
+ * Memoized Quantity Input Component
+ * Manages its own local state to prevent grid re-renders on every keystroke
+ */
+interface PackageQuantityInputProps {
+  initialValue: number | undefined
+  onValueChange: (value: number) => void
+}
+
+const PackageQuantityInput = memo(({ initialValue, onValueChange }: PackageQuantityInputProps) => {
+  const [localValue, setLocalValue] = useState<string>(initialValue?.toString() ?? '')
+
+  // Sync local state when initialValue changes from outside
+  useEffect(() => {
+    setLocalValue(initialValue?.toString() ?? '')
+  }, [initialValue])
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLocalValue(e.target.value)
+  }
+
+  const handleBlur = () => {
+    const value = parseInt(localValue, 10)
+    if (isNaN(value) || value < 1) {
+      setLocalValue('1')
+      onValueChange(1)
+    } else {
+      onValueChange(value)
+    }
+  }
+
+  return (
+    <TextFieldInput
+      type="number"
+      size="small"
+      variant="outlined"
+      margin="none"
+      value={localValue}
+      placeholder="1"
+      onChange={handleChange}
+      onBlur={handleBlur}
+      inputProps={{ min: 1, style: { textAlign: 'center' } }}
+      sx={{ width: 100, backgroundColor: '#fff' }}
+      fullWidth={false}
+    />
+  )
+})
+
+PackageQuantityInput.displayName = 'PackageQuantityInput'
 
 /**
  * Package data structure matching API response
@@ -151,9 +204,65 @@ const PackageActionsCell = ({
 }
 
 /**
+ * Options for configuring package grid columns
+ */
+export interface PackageGridColumnOptions {
+  /** Handler for toggling package active state */
+  onTogglePackage: (packageId: number) => void
+  /** When true, displays a Quantity column (used for pickup location inventory view) */
+  displayQuantity?: boolean
+  /** The pickup location ID to get quantity from (required when displayQuantity is true) */
+  pickupLocationId?: number
+  /** When true, makes quantity column editable with a text input */
+  quantityEditable?: boolean
+  /** Map of packageId to quantity value (used when quantityEditable is true) */
+  quantityValues?: Record<number, number>
+  /** Map of packageId to reorder level value (used when quantityEditable is true) */
+  reorderLevelValues?: Record<number, number>
+  /** Map of packageId to max stock level value (used when quantityEditable is true) */
+  maxStockLevelValues?: Record<number, number>
+  /** Callback when quantity is changed (used when quantityEditable is true) */
+  onQuantityChange?: (packageId: number, quantity: number) => void
+  /** Callback when reorder level is changed (used when quantityEditable is true) */
+  onReorderLevelChange?: (packageId: number, reorderLevel: number) => void
+  /** Callback when max stock level is changed (used when quantityEditable is true) */
+  onMaxStockLevelChange?: (packageId: number, maxStockLevel: number) => void
+  /** Set of selected package IDs (used when quantityEditable is true to show input only for selected rows) */
+  selectedPackageIds?: Set<number>
+}
+
+/**
  * Get package grid columns with action handlers
  */
-export const getPackageGridColumns = (onTogglePackage: (packageId: number) => void): GridColDef[] => [
+export const getPackageGridColumns = (
+  onTogglePackage: (packageId: number) => void,
+  options?: {
+    displayQuantity?: boolean
+    pickupLocationId?: number
+    quantityEditable?: boolean
+    quantityValues?: Record<number, number>
+    reorderLevelValues?: Record<number, number>
+    maxStockLevelValues?: Record<number, number>
+    onQuantityChange?: (packageId: number, quantity: number) => void
+    onReorderLevelChange?: (packageId: number, reorderLevel: number) => void
+    onMaxStockLevelChange?: (packageId: number, maxStockLevel: number) => void
+    selectedPackageIds?: Set<number>
+  }
+): GridColDef[] => {
+  const {
+    displayQuantity = false,
+    pickupLocationId,
+    quantityEditable = false,
+    quantityValues = {},
+    reorderLevelValues = {},
+    maxStockLevelValues = {},
+    onQuantityChange,
+    onReorderLevelChange,
+    onMaxStockLevelChange,
+    selectedPackageIds,
+  } = options ?? {}
+
+  const baseColumns: GridColDef[] = [
   {
     field: 'packageId',
     headerName: 'Package ID',
@@ -300,7 +409,242 @@ export const getPackageGridColumns = (onTogglePackage: (packageId: number) => vo
       return <PackageActionsCell packageId={packageId} isDeleted={isDeleted} onTogglePackage={onTogglePackage} />
     },
   },
-]
+  ]
+
+  // Add quantity, reorder level, and max stock level columns if displayQuantity is enabled (read-only, from API)
+  if (displayQuantity && pickupLocationId !== undefined && !quantityEditable) {
+    // Insert columns after packageName column
+    const packageNameIndex = baseColumns.findIndex(col => col.field === 'packageName')
+
+    const quantityColumn: GridColDef = {
+      field: 'quantity',
+      headerName: 'Quantity',
+      minWidth: 120,
+      flex: 0.8,
+      headerAlign: 'center',
+      align: 'center',
+      sortable: false,
+      filterable: false,
+      valueGetter: (_value, row: PackageData) => {
+        const rowData = row
+        const pickupLocationQuantities = rowData.pickupLocationQuantities ?? rowData._package?.pickupLocationQuantities ?? {}
+        const locationData = pickupLocationQuantities[pickupLocationId]
+        if (locationData) {
+          return locationData.quantity ?? locationData.availableQuantity ?? 0
+        }
+        return 0
+      },
+      renderCell: (params: GridRenderCellParams) => (
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+          }}
+        >
+          {params.value}
+        </Box>
+      ),
+    }
+
+    const reorderLevelColumn: GridColDef = {
+      field: 'reorderLevel',
+      headerName: 'Reorder Level',
+      minWidth: 130,
+      flex: 0.8,
+      headerAlign: 'center',
+      align: 'center',
+      sortable: false,
+      filterable: false,
+      valueGetter: (_value, row: PackageData) => {
+        const rowData = row
+        const pickupLocationQuantities = rowData.pickupLocationQuantities ?? rowData._package?.pickupLocationQuantities ?? {}
+        const locationData = pickupLocationQuantities[pickupLocationId]
+        if (locationData) {
+          return locationData.reorderLevel ?? 0
+        }
+        return 0
+      },
+      renderCell: (params: GridRenderCellParams) => (
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+          }}
+        >
+          {params.value}
+        </Box>
+      ),
+    }
+
+    const maxStockLevelColumn: GridColDef = {
+      field: 'maxStockLevel',
+      headerName: 'Max Stock Level',
+      minWidth: 140,
+      flex: 0.8,
+      headerAlign: 'center',
+      align: 'center',
+      sortable: false,
+      filterable: false,
+      valueGetter: (_value, row: PackageData) => {
+        const rowData = row
+        const pickupLocationQuantities = rowData.pickupLocationQuantities ?? rowData._package?.pickupLocationQuantities ?? {}
+        const locationData = pickupLocationQuantities[pickupLocationId]
+        if (locationData) {
+          return locationData.maxStockLevel ?? 0
+        }
+        return 0
+      },
+      renderCell: (params: GridRenderCellParams) => (
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+          }}
+        >
+          {params.value}
+        </Box>
+      ),
+    }
+
+    // Insert all three columns after packageName
+    baseColumns.splice(packageNameIndex + 1, 0, quantityColumn, reorderLevelColumn, maxStockLevelColumn)
+  }
+
+  // Add editable quantity column if quantityEditable is enabled
+  if (quantityEditable) {
+    // Insert quantity column after packageName column
+    const packageNameIndex = baseColumns.findIndex(col => col.field === 'packageName')
+    const quantityColumn: GridColDef = {
+      field: 'editableQuantity',
+      headerName: 'Quantity',
+      minWidth: 120,
+      flex: 0.8,
+      headerAlign: 'center',
+      align: 'center',
+      sortable: false,
+      filterable: false,
+      renderCell: (params: GridRenderCellParams<PackageData>) => {
+        const packageId = params.row.packageId ?? params.row._package?.packageId ?? 0
+        const isSelected = selectedPackageIds?.has(packageId) ?? false
+        const currentValue = quantityValues[packageId]
+
+        // Only show input for selected rows
+        if (!isSelected) {
+          return (
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '100%',
+              }}
+            >
+              —
+            </Box>
+          )
+        }
+
+        return (
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '100%',
+              py: 1,
+            }}
+          >
+            <PackageQuantityInput
+              initialValue={currentValue}
+              onValueChange={(value) => onQuantityChange?.(packageId, value)}
+            />
+          </Box>
+        )
+      },
+    }
+    baseColumns.splice(packageNameIndex + 1, 0, quantityColumn)
+
+    // Add Reorder Level column
+    const reorderLevelColumn: GridColDef = {
+      field: 'editableReorderLevel',
+      headerName: 'Reorder Level',
+      minWidth: 130,
+      flex: 0.8,
+      headerAlign: 'center',
+      align: 'center',
+      sortable: false,
+      filterable: false,
+      renderCell: (params: GridRenderCellParams<PackageData>) => {
+        const packageId = params.row.packageId ?? params.row._package?.packageId ?? 0
+        const isSelected = selectedPackageIds?.has(packageId) ?? false
+        const currentValue = reorderLevelValues[packageId]
+
+        if (!isSelected) {
+          return (
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+              —
+            </Box>
+          )
+        }
+
+        return (
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', py: 1 }}>
+            <PackageQuantityInput
+              initialValue={currentValue}
+              onValueChange={(value) => onReorderLevelChange?.(packageId, value)}
+            />
+          </Box>
+        )
+      },
+    }
+    // Insert after quantity column
+    baseColumns.splice(packageNameIndex + 2, 0, reorderLevelColumn)
+
+    // Add Max Stock Level column
+    const maxStockLevelColumn: GridColDef = {
+      field: 'editableMaxStockLevel',
+      headerName: 'Max Stock Level',
+      minWidth: 140,
+      flex: 0.8,
+      headerAlign: 'center',
+      align: 'center',
+      sortable: false,
+      filterable: false,
+      renderCell: (params: GridRenderCellParams<PackageData>) => {
+        const packageId = params.row.packageId ?? params.row._package?.packageId ?? 0
+        const isSelected = selectedPackageIds?.has(packageId) ?? false
+        const currentValue = maxStockLevelValues[packageId]
+
+        if (!isSelected) {
+          return (
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+              —
+            </Box>
+          )
+        }
+
+        return (
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', py: 1 }}>
+            <PackageQuantityInput
+              initialValue={currentValue}
+              onValueChange={(value) => onMaxStockLevelChange?.(packageId, value)}
+            />
+          </Box>
+        )
+      },
+    }
+    // Insert after reorder level column
+    baseColumns.splice(packageNameIndex + 3, 0, maxStockLevelColumn)
+  }
+
+  return baseColumns
+}
 
 /**
  * Export the PackageActionsCell for potential reuse
