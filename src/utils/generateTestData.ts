@@ -9,6 +9,7 @@ import {
     USER_ROLES,
 } from '../constants/appConstants'
 import type { LeadRequestModel, ProductRequestModel, PromoRequestModel, UserRequestModel } from '../models/api-models'
+import type { PackagePickupLocationMappingRequestModel, PackageRequestModel } from '../models/api-models/PackageModels'
 
 // ============================================================================
 // User Test Data Generation
@@ -355,7 +356,7 @@ export const generateLeadFormTest = (preserveEmail?: string): LeadRequestModel =
       streetAddress3: `Building ${String.fromCharCode(65 + Math.floor(Math.random() * 26))}`,
       city: 'Mumbai',
       state: 'Maharashtra',
-      postalCode: `40${String(Math.floor(1000 + Math.random() * 9000)).substring(0, 4)}`,
+      postalCode: getValidPincodeForCity('Mumbai'),
       country: 'India',
       addressType: 'OFFICE',
     },
@@ -397,7 +398,7 @@ export const generateLeadImportTest = (numberOfRecords: number): LeadRequestMode
         streetAddress3: `Building ${String.fromCharCode(65 + Math.floor(Math.random() * 26))}`,
         city: 'Mumbai',
         state: 'Maharashtra',
-        postalCode: `40${String(Math.floor(1000 + Math.random() * 9000)).substring(0, 4)}`,
+        postalCode: getValidPincodeForCity('Mumbai'),
         country: 'India',
         addressType: 'OFFICE',
       },
@@ -1271,17 +1272,100 @@ const INDIAN_STATES = [
 ] as const
 
 /**
+ * Valid pincode ranges by city (based on India Post data)
+ * Each city has an array of valid pincodes to randomly select from
+ */
+const VALID_PINCODES_BY_CITY: Record<string, string[]> = {
+  // Maharashtra
+  Mumbai: ['400001', '400002', '400003', '400004', '400005', '400006', '400007', '400008', '400009', '400010', '400011', '400012', '400013', '400014', '400015', '400016', '400017', '400018', '400019', '400020', '400021', '400022', '400023', '400024', '400025', '400026', '400027', '400028', '400029', '400030', '400031', '400032', '400033', '400034', '400036', '400037', '400039', '400042', '400043', '400049', '400050', '400051', '400052', '400053', '400054', '400055', '400056', '400057', '400058', '400059', '400060', '400061', '400062', '400063', '400064', '400065', '400066', '400067', '400068', '400069', '400070', '400071', '400072', '400074', '400075', '400076', '400077', '400078', '400079', '400080', '400081', '400082', '400083', '400084', '400085', '400086', '400087', '400088', '400089', '400090', '400091', '400092', '400093', '400094', '400095', '400096', '400097', '400098', '400099', '400101', '400102', '400103', '400104'],
+  Pune: ['411001', '411002', '411003', '411004', '411005', '411006', '411007', '411008', '411009', '411011', '411012', '411013', '411014', '411015', '411016', '411017', '411018', '411019', '411020', '411021', '411022', '411023', '411024', '411025', '411026', '411027', '411028', '411029', '411030', '411031', '411032', '411033', '411034', '411035', '411036', '411037', '411038', '411039', '411040', '411041', '411042', '411043', '411044', '411045', '411046', '411047', '411048', '411051', '411052', '411057', '411058', '411060', '411061', '411062'],
+  Nagpur: ['440001', '440002', '440003', '440004', '440005', '440006', '440007', '440008', '440009', '440010', '440012', '440013', '440014', '440015', '440016', '440017', '440018', '440019', '440020', '440021', '440022', '440023', '440024', '440025', '440026', '440027', '440030', '440032', '440033', '440034', '440035'],
+  Nashik: ['422001', '422002', '422003', '422004', '422005', '422006', '422007', '422008', '422009', '422010', '422011', '422012', '422013'],
+  Thane: ['400601', '400602', '400603', '400604', '400605', '400606', '400607', '400608', '400610', '400612', '400614', '400615'],
+  // Karnataka
+  Bangalore: ['560001', '560002', '560003', '560004', '560005', '560006', '560007', '560008', '560009', '560010', '560011', '560012', '560013', '560014', '560015', '560016', '560017', '560018', '560019', '560020', '560021', '560022', '560023', '560024', '560025', '560026', '560027', '560028', '560029', '560030', '560032', '560033', '560034', '560035', '560036', '560037', '560038', '560039', '560040', '560041', '560042', '560043', '560045', '560046', '560047', '560048', '560049', '560050', '560051', '560052', '560053', '560054', '560055', '560056', '560057', '560058', '560059', '560060', '560061', '560062', '560063', '560064', '560065', '560066', '560067', '560068', '560069', '560070', '560071', '560072', '560073', '560074', '560075', '560076', '560077', '560078', '560079', '560080', '560083', '560084', '560085', '560086', '560087', '560089', '560090', '560091', '560092', '560093', '560094', '560095', '560096', '560097', '560098', '560099', '560100', '560102', '560103', '560104', '560105', '560107', '560108', '560109', '560110', '560111', '560112', '560113', '560114'],
+  Mysore: ['570001', '570002', '570003', '570004', '570005', '570006', '570007', '570008', '570009', '570010', '570011', '570012', '570014', '570015', '570016', '570017', '570018', '570019', '570020', '570021', '570022', '570023', '570024', '570025', '570026', '570027', '570028', '570029', '570030', '570031'],
+  Mangalore: ['575001', '575002', '575003', '575004', '575005', '575006', '575007', '575008', '575010', '575011', '575013', '575014', '575015', '575016', '575017', '575018', '575019', '575020', '575022', '575023', '575025', '575028', '575029', '575030'],
+  Hubli: ['580001', '580002', '580003', '580004', '580005', '580006', '580007', '580008', '580009', '580010', '580011', '580012', '580013', '580014', '580015', '580016', '580017', '580018', '580019', '580020', '580021', '580022', '580023', '580024', '580025', '580026', '580027', '580028', '580029', '580030', '580031', '580032'],
+  Belgaum: ['590001', '590002', '590003', '590004', '590005', '590006', '590008', '590009', '590010', '590011', '590014', '590015', '590016', '590018', '590019'],
+  // Tamil Nadu
+  Chennai: ['600001', '600002', '600003', '600004', '600005', '600006', '600007', '600008', '600009', '600010', '600011', '600012', '600013', '600014', '600015', '600016', '600017', '600018', '600019', '600020', '600021', '600022', '600023', '600024', '600025', '600026', '600027', '600028', '600029', '600030', '600031', '600032', '600033', '600034', '600035', '600036', '600037', '600038', '600039', '600040', '600041', '600042', '600044', '600045', '600046', '600047', '600048', '600049', '600050', '600051', '600052', '600053', '600054', '600055', '600056', '600057', '600058', '600059', '600060', '600061', '600062', '600063', '600064', '600065', '600066', '600068', '600069', '600070', '600071', '600072', '600073', '600074', '600075', '600077', '600078', '600079', '600080', '600081', '600082', '600083', '600084', '600085', '600086', '600087', '600088', '600089', '600090', '600091', '600092', '600093', '600094', '600095', '600096', '600097', '600098', '600099', '600100', '600101', '600102', '600103', '600104', '600106', '600107', '600108', '600109', '600110', '600112', '600113', '600114', '600115', '600116', '600117', '600118', '600119', '600122', '600123', '600124', '600125', '600126', '600127', '600128', '600129', '600130'],
+  Coimbatore: ['641001', '641002', '641003', '641004', '641005', '641006', '641007', '641008', '641009', '641010', '641011', '641012', '641013', '641014', '641015', '641016', '641017', '641018', '641019', '641020', '641021', '641022', '641023', '641024', '641025', '641026', '641027', '641028', '641029', '641030', '641031', '641032', '641033', '641034', '641035', '641036', '641037', '641038', '641039', '641040', '641041', '641042', '641043', '641044', '641045', '641046', '641047', '641048', '641049', '641050', '641062'],
+  Madurai: ['625001', '625002', '625003', '625004', '625005', '625006', '625007', '625008', '625009', '625010', '625011', '625012', '625013', '625014', '625015', '625016', '625017', '625018', '625019', '625020', '625021', '625022'],
+  Salem: ['636001', '636002', '636003', '636004', '636005', '636006', '636007', '636008', '636009', '636010', '636011', '636012', '636013', '636014', '636015', '636016'],
+  Tiruchirappalli: ['620001', '620002', '620003', '620004', '620005', '620006', '620007', '620008', '620009', '620010', '620011', '620012', '620013', '620014', '620015', '620016', '620017', '620018', '620019', '620020', '620021', '620022', '620023', '620024', '620025', '620026', '620027'],
+  // Delhi
+  'New Delhi': ['110001', '110002', '110003', '110004', '110005', '110006', '110007', '110008', '110009', '110010', '110011', '110012', '110013', '110014', '110015', '110016', '110017', '110018', '110019', '110020', '110021', '110022', '110023', '110024', '110025', '110026', '110027', '110028', '110029', '110030'],
+  'South Delhi': ['110017', '110019', '110020', '110023', '110024', '110025', '110030', '110044', '110049', '110062', '110065', '110067', '110068', '110070', '110074', '110076'],
+  'North Delhi': ['110006', '110007', '110009', '110033', '110035', '110036', '110039', '110040', '110042', '110052', '110054', '110084', '110086', '110088'],
+  'East Delhi': ['110031', '110032', '110051', '110053', '110091', '110092', '110093', '110095', '110096'],
+  'West Delhi': ['110015', '110018', '110026', '110027', '110041', '110045', '110046', '110056', '110057', '110058', '110059', '110060', '110063', '110064', '110066', '110071', '110073', '110075', '110078', '110081', '110087'],
+  // Gujarat
+  Ahmedabad: ['380001', '380002', '380003', '380004', '380005', '380006', '380007', '380008', '380009', '380010', '380013', '380014', '380015', '380016', '380018', '380019', '380021', '380022', '380023', '380024', '380025', '380026', '380027', '380028', '380050', '380051', '380052', '380053', '380054', '380055', '380058', '380059', '380060', '380061', '380063'],
+  Surat: ['395001', '395002', '395003', '395004', '395005', '395006', '395007', '395008', '395009', '395010', '395011', '395012', '395017'],
+  Vadodara: ['390001', '390002', '390003', '390004', '390005', '390006', '390007', '390008', '390009', '390010', '390011', '390012', '390013', '390014', '390015', '390016', '390017', '390018', '390019', '390020', '390021', '390022', '390023', '390024', '390025'],
+  Rajkot: ['360001', '360002', '360003', '360004', '360005', '360006', '360007'],
+  Gandhinagar: ['382001', '382006', '382007', '382009', '382010', '382016', '382020', '382021', '382022', '382023', '382024', '382028', '382029', '382030', '382040', '382041', '382042', '382043', '382044', '382045', '382051', '382305', '382308', '382315', '382320', '382325', '382330', '382340', '382345', '382350', '382352', '382355', '382405', '382415', '382418', '382421', '382424', '382426', '382427', '382428', '382430', '382433', '382435', '382440', '382443', '382445', '382449', '382450', '382455', '382460', '382463', '382465', '382470', '382475', '382480', '382481'],
+  Bhavnagar: ['364001', '364002', '364003', '364004', '364005', '364006'],
+  // Rajasthan
+  Jaipur: ['302001', '302002', '302003', '302004', '302005', '302006', '302007', '302008', '302010', '302011', '302012', '302013', '302015', '302016', '302017', '302018', '302019', '302020', '302021', '302022', '302023', '302024', '302025', '302026', '302027', '302028', '302029', '302030', '302031', '302032', '302033', '302034', '302036', '302037', '302039'],
+  Jodhpur: ['342001', '342002', '342003', '342004', '342005', '342006', '342007', '342008', '342009', '342010', '342011', '342012', '342013', '342014', '342015', '342024', '342025', '342026', '342027'],
+  Udaipur: ['313001', '313002', '313003', '313004', '313011', '313015', '313024', '313026', '313027', '313031'],
+  Kota: ['324001', '324002', '324003', '324004', '324005', '324006', '324007', '324008', '324009', '324010'],
+  Ajmer: ['305001', '305002', '305003', '305004', '305005', '305006', '305007', '305008', '305009', '305012', '305021', '305022', '305023', '305024', '305025'],
+  // West Bengal
+  Kolkata: ['700001', '700002', '700003', '700004', '700005', '700006', '700007', '700008', '700009', '700010', '700011', '700012', '700013', '700014', '700015', '700016', '700017', '700018', '700019', '700020', '700021', '700022', '700023', '700024', '700025', '700026', '700027', '700028', '700029', '700030', '700031', '700032', '700033', '700034', '700035', '700036', '700037', '700038', '700039', '700040', '700041', '700042', '700043', '700044', '700045', '700046', '700047', '700048', '700049', '700050', '700051', '700052', '700053', '700054', '700055', '700056', '700057', '700058', '700059', '700060', '700061', '700062', '700063', '700064', '700065', '700066', '700067', '700068', '700069', '700070', '700071', '700072', '700073', '700074', '700075', '700076', '700077', '700078', '700079', '700080', '700081', '700082', '700083', '700084', '700085', '700086', '700087', '700088', '700089', '700090', '700091', '700092', '700093', '700094', '700095', '700096', '700097', '700098', '700099', '700100', '700101', '700102', '700103', '700104', '700105', '700106', '700107', '700108', '700109', '700110', '700111', '700112', '700113', '700114', '700115', '700116', '700117', '700118', '700119', '700120', '700121', '700122', '700123', '700124', '700125', '700126', '700127', '700128', '700129', '700130', '700131', '700132', '700133', '700134', '700135', '700136', '700137', '700138', '700139', '700140', '700141', '700142', '700143', '700144', '700145', '700146', '700147', '700148', '700149', '700150', '700151', '700152', '700153', '700154', '700155', '700156', '700157'],
+  Howrah: ['711101', '711102', '711103', '711104', '711105', '711106', '711107', '711108', '711109', '711110', '711111', '711112', '711113', '711114', '711201', '711202', '711203', '711204', '711205', '711301', '711302', '711303', '711304', '711305', '711306', '711307', '711308', '711309', '711310', '711311', '711312', '711313', '711314', '711315', '711316', '711317', '711401', '711402', '711403', '711404', '711405', '711406', '711407', '711408', '711409', '711410', '711411', '711412', '711413', '711414', '711415'],
+  Durgapur: ['713201', '713202', '713203', '713204', '713205', '713206', '713207', '713208', '713209', '713210', '713211', '713212', '713213', '713214', '713215', '713216'],
+  Asansol: ['713301', '713302', '713303', '713304', '713305', '713321', '713322', '713323', '713324', '713325', '713326', '713331', '713332', '713333', '713334', '713335', '713336', '713337', '713338', '713339', '713340', '713341', '713342', '713343', '713344', '713345', '713346', '713347'],
+  Siliguri: ['734001', '734002', '734003', '734004', '734005', '734006', '734007', '734008', '734009', '734010', '734011', '734012', '734013', '734014', '734015', '734016'],
+  // Uttar Pradesh
+  Lucknow: ['226001', '226002', '226003', '226004', '226005', '226006', '226007', '226008', '226010', '226011', '226012', '226013', '226014', '226015', '226016', '226017', '226018', '226019', '226020', '226021', '226022', '226023', '226024', '226025', '226026', '226027', '226028', '226029', '226030'],
+  Kanpur: ['208001', '208002', '208003', '208004', '208005', '208006', '208007', '208008', '208009', '208010', '208011', '208012', '208013', '208014', '208015', '208016', '208017', '208018', '208019', '208020', '208021', '208022', '208023', '208024', '208025', '208026', '208027'],
+  Noida: ['201301', '201303', '201304', '201305', '201306', '201307', '201309', '201310'],
+  Ghaziabad: ['201001', '201002', '201003', '201004', '201005', '201006', '201007', '201008', '201009', '201010', '201011', '201012', '201013', '201014', '201015', '201016', '201017'],
+  Agra: ['282001', '282002', '282003', '282004', '282005', '282006', '282007', '282008', '282009', '282010'],
+  Varanasi: ['221001', '221002', '221003', '221004', '221005', '221006', '221007', '221008', '221009', '221010', '221011'],
+  // Telangana
+  Hyderabad: ['500001', '500002', '500003', '500004', '500005', '500006', '500007', '500008', '500009', '500010', '500011', '500012', '500013', '500014', '500015', '500016', '500017', '500018', '500019', '500020', '500022', '500023', '500024', '500025', '500026', '500027', '500028', '500029', '500030', '500031', '500032', '500033', '500034', '500035', '500036', '500037', '500038', '500039', '500040', '500041', '500042', '500043', '500044', '500045', '500046', '500047', '500048', '500049', '500050', '500051', '500052', '500053', '500054', '500055', '500056', '500057', '500058', '500059', '500060', '500061', '500062', '500063', '500064', '500065', '500066', '500067', '500068', '500069', '500070', '500071', '500072', '500073', '500074', '500075', '500076', '500077', '500078', '500079', '500080', '500081', '500082', '500083', '500084', '500085', '500086', '500087', '500088', '500089', '500090', '500091', '500092', '500093', '500094', '500095', '500096', '500097'],
+  Warangal: ['506001', '506002', '506003', '506004', '506005', '506006', '506007', '506008', '506009', '506010', '506011', '506012', '506013', '506014', '506015'],
+  Nizamabad: ['503001', '503002', '503003'],
+  Karimnagar: ['505001', '505002', '505003', '505004', '505005', '505122', '505129', '505152', '505153', '505162', '505172', '505174', '505182', '505184', '505185', '505186', '505187', '505188', '505189', '505208', '505209', '505210', '505211', '505212', '505213', '505214', '505215', '505301', '505302', '505303', '505304', '505305', '505306', '505307', '505325', '505326', '505327', '505330', '505331', '505401', '505402', '505403', '505404', '505405', '505415', '505416', '505417', '505425', '505445', '505446', '505450', '505451', '505452', '505453', '505454', '505455', '505460', '505461', '505462', '505463', '505464', '505465', '505466', '505467', '505468', '505469', '505470', '505471', '505472', '505473', '505474', '505475', '505476', '505480', '505481', '505490', '505491', '505492', '505497', '505498', '505501', '505502', '505503', '505504', '505505', '505524', '505525', '505526', '505527', '505528', '505529', '505530'],
+  Khammam: ['507001', '507002', '507003', '507101', '507102', '507103', '507111', '507112', '507113', '507114', '507115', '507116', '507117', '507118', '507119', '507120', '507121', '507122', '507123', '507124', '507125', '507126', '507127', '507128', '507129', '507130', '507131', '507132', '507133', '507134', '507135', '507136', '507137', '507138', '507139', '507140', '507141', '507142', '507154', '507155', '507156', '507157', '507158', '507159', '507160', '507161', '507162', '507163', '507164', '507165', '507166', '507167', '507168', '507169', '507170', '507201', '507202', '507203', '507204', '507205', '507206', '507207', '507208', '507209', '507210', '507211', '507212', '507213', '507301', '507302', '507303', '507304', '507305', '507306', '507316', '507317', '507318'],
+  // Kerala
+  Thiruvananthapuram: ['695001', '695002', '695003', '695004', '695005', '695006', '695007', '695008', '695009', '695010', '695011', '695012', '695013', '695014', '695015', '695016', '695017', '695018', '695019', '695020', '695021', '695022', '695023', '695024', '695025', '695026', '695027', '695028', '695029', '695030', '695031', '695032', '695033', '695034', '695035', '695036', '695037', '695038', '695039', '695040', '695041', '695042', '695043'],
+  Kochi: ['682001', '682002', '682003', '682004', '682005', '682006', '682007', '682008', '682009', '682010', '682011', '682012', '682013', '682014', '682015', '682016', '682017', '682018', '682019', '682020', '682021', '682022', '682023', '682024', '682025', '682026', '682027', '682028', '682029', '682030'],
+  Kozhikode: ['673001', '673002', '673003', '673004', '673005', '673006', '673007', '673008', '673009', '673010', '673011', '673012', '673013', '673014', '673015', '673016', '673017', '673018', '673019', '673020', '673021', '673022', '673023', '673024', '673025', '673026', '673027'],
+  Thrissur: ['680001', '680002', '680003', '680004', '680005', '680006', '680007', '680008', '680009', '680010', '680011', '680012', '680013', '680014', '680015', '680020', '680021', '680022', '680023', '680024', '680025', '680026', '680027', '680028'],
+  Kollam: ['691001', '691002', '691003', '691004', '691005', '691006', '691007', '691008', '691009', '691010', '691011', '691012', '691013', '691014', '691015', '691016', '691017', '691018', '691019', '691020'],
+}
+
+/**
+ * Get a valid pincode for a given city
+ * @param city - The city name
+ * @returns A valid pincode for that city
+ */
+const getValidPincodeForCity = (city: string): string => {
+  const pincodes = VALID_PINCODES_BY_CITY[city]
+  if (pincodes && pincodes.length > 0) {
+    return pincodes[Math.floor(Math.random() * pincodes.length)]
+  }
+  // Fallback to Mumbai if city not found
+  return VALID_PINCODES_BY_CITY['Mumbai'][Math.floor(Math.random() * VALID_PINCODES_BY_CITY['Mumbai'].length)]
+}
+
+/**
  * Cities by state for test data
  */
 const CITIES_BY_STATE: Record<string, string[]> = {
   Maharashtra: ['Mumbai', 'Pune', 'Nagpur', 'Nashik', 'Thane'],
   Karnataka: ['Bangalore', 'Mysore', 'Mangalore', 'Hubli', 'Belgaum'],
   'Tamil Nadu': ['Chennai', 'Coimbatore', 'Madurai', 'Salem', 'Tiruchirappalli'],
-  Delhi: ['New Delhi', 'South Delhi', 'North Delhi', 'East Delhi', 'West Delhi'],
-  Gujarat: ['Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Gandhinagar'],
+  Delhi: ['New Delhi', 'South Delhi', 'North Delhi', 'East Delhi'],
+  Gujarat: ['Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Gandhinagar', 'Bhavnagar'],
   Rajasthan: ['Jaipur', 'Jodhpur', 'Udaipur', 'Kota', 'Ajmer'],
   'West Bengal': ['Kolkata', 'Howrah', 'Durgapur', 'Asansol', 'Siliguri'],
-  'Uttar Pradesh': ['Lucknow', 'Noida', 'Ghaziabad', 'Kanpur', 'Varanasi'],
+  'Uttar Pradesh': ['Lucknow', 'Noida', 'Ghaziabad', 'Kanpur', 'Varanasi', 'Agra'],
   Telangana: ['Hyderabad', 'Warangal', 'Nizamabad', 'Karimnagar', 'Khammam'],
   Kerala: ['Thiruvananthapuram', 'Kochi', 'Kozhikode', 'Thrissur', 'Kollam'],
 }
@@ -1353,15 +1437,15 @@ export const generatePickupLocationFormTest = (preserveName?: string): PickupLoc
 
   // Random state and city
   const state = INDIAN_STATES[Math.floor(Math.random() * INDIAN_STATES.length)]
-  const stateCities = CITIES_BY_STATE[state] || ['Unknown City']
+  const stateCities = CITIES_BY_STATE[state] || ['Mumbai']
   const city = stateCities[Math.floor(Math.random() * stateCities.length)]
 
   // Random street
   const street = STREET_TEMPLATES[Math.floor(Math.random() * STREET_TEMPLATES.length)]
   const buildingNumber = 1 + Math.floor(Math.random() * 500)
 
-  // Generate postal code (Indian format: 6 digits)
-  const postalCode = `${400000 + Math.floor(Math.random() * 200000)}`
+  // Get valid postal code for the selected city
+  const postalCode = getValidPincodeForCity(city)
 
   // Random phone (10 digits starting with 9 or 8)
   const phonePrefix = Math.random() > 0.5 ? '98' : '88'
@@ -1448,91 +1532,292 @@ interface VendorTemplate {
 }
 
 /**
+ * Comprehensive rich text terms and conditions template for testing all formatting options
+ * This includes all possible rich text editor features: headers, lists, colors, alignment, tables, etc.
+ */
+const COMPREHENSIVE_TERMS_CONDITIONS_HTML = `
+  <h1 style="color: #1976d2; text-align: center;">PURCHASE ORDER TERMS & CONDITIONS</h1>
+
+  <h2 style="color: #d32f2f; border-bottom: 2px solid #d32f2f; padding-bottom: 8px;">1. Payment Terms</h2>
+  <p style="text-align: left;">
+    Payment is due within <strong>30 days</strong> of invoice date.
+    <em>Late payments</em> may incur a <u>2% monthly interest charge</u>.
+    Payments can be made via <span style="color: #2e7d32; font-weight: bold;">bank transfer</span>,
+    <span style="color: #ed6c02; font-weight: bold;">credit card</span>, or
+    <span style="color: #9c27b0; font-weight: bold;">check</span>.
+  </p>
+
+  <h3 style="color: #0288d1; margin-top: 20px;">1.1 Payment Methods</h3>
+  <ul style="list-style-type: disc; padding-left: 30px;">
+    <li><strong>Bank Transfer:</strong> Account details provided upon order confirmation</li>
+    <li><strong>Credit Card:</strong> Accepted with 2.5% processing fee</li>
+    <li><strong>Check:</strong> Must be received before shipment</li>
+    <li><strong>Net Terms:</strong> Available for orders above ₹50,000</li>
+  </ul>
+
+  <h3 style="color: #0288d1; margin-top: 20px;">1.2 Discounts</h3>
+  <ol style="list-style-type: decimal; padding-left: 30px;">
+    <li><span style="background-color: #fff9c4;">Early payment discount:</span> 2% if paid within 10 days</li>
+    <li><span style="background-color: #c8e6c9;">Volume discount:</span> 5% for orders above ₹1,00,000</li>
+    <li><span style="background-color: #ffccbc;">Bulk discount:</span> 10% for orders above ₹5,00,000</li>
+  </ol>
+
+  <h2 style="color: #d32f2f; border-bottom: 2px solid #d32f2f; padding-bottom: 8px; margin-top: 30px;">2. Delivery & Shipping</h2>
+  <p style="text-align: justify; line-height: 1.8;">
+    All orders will be shipped within <strong>5-7 business days</strong> of order confirmation.
+    Delivery times vary based on location: <em>Metro cities (3-5 days)</em>,
+    <em>Tier 2 cities (5-7 days)</em>, <em>Other locations (7-10 days)</em>.
+  </p>
+
+  <h3 style="color: #0288d1;">2.1 Shipping Charges</h3>
+  <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+    <thead>
+      <tr style="background-color: #1976d2; color: white;">
+        <th style="border: 1px solid #ddd; padding: 12px; text-align: left;">Order Value</th>
+        <th style="border: 1px solid #ddd; padding: 12px; text-align: left;">Shipping Charge</th>
+        <th style="border: 1px solid #ddd; padding: 12px; text-align: left;">Delivery Time</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="background-color: #f5f5f5;">
+        <td style="border: 1px solid #ddd; padding: 12px;">Below ₹5,000</td>
+        <td style="border: 1px solid #ddd; padding: 12px;">₹150</td>
+        <td style="border: 1px solid #ddd; padding: 12px;">5-7 days</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #ddd; padding: 12px;">₹5,000 - ₹25,000</td>
+        <td style="border: 1px solid #ddd; padding: 12px;">₹100</td>
+        <td style="border: 1px solid #ddd; padding: 12px;">4-6 days</td>
+      </tr>
+      <tr style="background-color: #f5f5f5;">
+        <td style="border: 1px solid #ddd; padding: 12px;">Above ₹25,000</td>
+        <td style="border: 1px solid #ddd; padding: 12px; color: #2e7d32; font-weight: bold;">FREE</td>
+        <td style="border: 1px solid #ddd; padding: 12px;">3-5 days</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3 style="color: #0288d1;">2.2 Delivery Options</h3>
+  <ul style="list-style-type: square; padding-left: 30px;">
+    <li><strong>Standard Delivery:</strong> 5-7 business days</li>
+    <li><strong>Express Delivery:</strong> 2-3 business days (additional ₹500)</li>
+    <li><strong>Same Day Delivery:</strong> Available in metro cities (additional ₹1,000)</li>
+  </ul>
+
+  <h2 style="color: #d32f2f; border-bottom: 2px solid #d32f2f; padding-bottom: 8px; margin-top: 30px;">3. Returns & Refunds</h2>
+  <blockquote style="border-left: 4px solid #1976d2; padding-left: 20px; margin: 20px 0; font-style: italic; color: #555;">
+    "Customer satisfaction is our top priority. We accept returns within 15 days of delivery
+    for unused products in original packaging."
+  </blockquote>
+
+  <h3 style="color: #0288d1;">3.1 Return Policy</h3>
+  <ul style="list-style-type: circle; padding-left: 30px;">
+    <li>Returns accepted within <strong>15 days</strong> of delivery</li>
+    <li>Products must be <em>unused</em> and in <em>original packaging</em></li>
+    <li>Return shipping charges apply unless product is defective</li>
+    <li>Refunds processed within <u>7-10 business days</u> after inspection</li>
+  </ul>
+
+  <h3 style="color: #0288d1;">3.2 Non-Returnable Items</h3>
+  <p>The following items are <span style="color: #d32f2f; font-weight: bold;">NOT eligible</span> for return:</p>
+  <ul style="list-style-type: disc; padding-left: 30px;">
+    <li>Customized or personalized products</li>
+    <li>Perishable goods</li>
+    <li>Software licenses (once activated)</li>
+    <li>Items damaged by customer misuse</li>
+  </ul>
+
+  <h2 style="color: #d32f2f; border-bottom: 2px solid #d32f2f; padding-bottom: 8px; margin-top: 30px;">4. Warranty & Support</h2>
+  <p style="text-align: center; background-color: #e3f2fd; padding: 15px; border-radius: 5px;">
+    <strong style="font-size: 18px; color: #1976d2;">All products come with manufacturer warranty</strong>
+  </p>
+
+  <h3 style="color: #0288d1;">4.1 Warranty Period</h3>
+  <ul style="list-style-type: decimal; padding-left: 30px;">
+    <li><strong>Electronics:</strong> 1 year from date of purchase</li>
+    <li><strong>Furniture:</strong> 2 years from date of purchase</li>
+    <li><strong>Appliances:</strong> 1 year parts, 5 years compressor (for ACs/Refrigerators)</li>
+    <li><strong>Software:</strong> As per license agreement</li>
+  </ul>
+
+  <h3 style="color: #0288d1;">4.2 Support Channels</h3>
+  <p>Contact us through any of the following:</p>
+  <ul style="list-style-type: none; padding-left: 0;">
+    <li>📧 Email: <a href="mailto:support@vendor.com" style="color: #1976d2; text-decoration: underline;">support@vendor.com</a></li>
+    <li>📞 Phone: <a href="tel:+919876543210" style="color: #1976d2; text-decoration: underline;">+91 98765 43210</a></li>
+    <li>🌐 Website: <a href="https://www.vendor.com" target="_blank" style="color: #1976d2; text-decoration: underline;">www.vendor.com</a></li>
+    <li>💬 Live Chat: Available Monday-Friday, 9 AM - 6 PM IST</li>
+  </ul>
+
+  <h2 style="color: #d32f2f; border-bottom: 2px solid #d32f2f; padding-bottom: 8px; margin-top: 30px;">5. Quality & Inspection</h2>
+  <p style="text-align: right; font-size: 14px; color: #666;">
+    All products undergo <strong>quality inspection</strong> before shipment
+  </p>
+
+  <h3 style="color: #0288d1;">5.1 Quality Standards</h3>
+  <p>We ensure:</p>
+  <ul style="list-style-type: disc; padding-left: 30px;">
+    <li>All products meet <span style="background-color: #fff9c4;">industry standards</span></li>
+    <li>Certification documents provided where applicable</li>
+    <li>Batch testing for consumables</li>
+    <li>ISO 9001:2015 certified processes</li>
+  </ul>
+
+  <h2 style="color: #d32f2f; border-bottom: 2px solid #d32f2f; padding-bottom: 8px; margin-top: 30px;">6. Pricing & Taxes</h2>
+  <p>
+    All prices are in <strong>Indian Rupees (₹)</strong> and are <em>exclusive of taxes</em>.
+    Applicable <u>GST</u> will be added as per current tax rates:
+  </p>
+
+  <h3 style="color: #0288d1;">6.1 Tax Structure</h3>
+  <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+    <thead>
+      <tr style="background-color: #9c27b0; color: white;">
+        <th style="border: 1px solid #ddd; padding: 12px; text-align: left;">Product Category</th>
+        <th style="border: 1px solid #ddd; padding: 12px; text-align: center;">GST Rate</th>
+        <th style="border: 1px solid #ddd; padding: 12px; text-align: left;">Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="border: 1px solid #ddd; padding: 12px;">Electronics</td>
+        <td style="border: 1px solid #ddd; padding: 12px; text-align: center; font-weight: bold;">18%</td>
+        <td style="border: 1px solid #ddd; padding: 12px;">Standard rate</td>
+      </tr>
+      <tr style="background-color: #f5f5f5;">
+        <td style="border: 1px solid #ddd; padding: 12px;">Office Supplies</td>
+        <td style="border: 1px solid #ddd; padding: 12px; text-align: center; font-weight: bold;">12%</td>
+        <td style="border: 1px solid #ddd; padding: 12px;">Reduced rate</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #ddd; padding: 12px;">Raw Materials</td>
+        <td style="border: 1px solid #ddd; padding: 12px; text-align: center; font-weight: bold;">5%</td>
+        <td style="border: 1px solid #ddd; padding: 12px;">Essential goods</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2 style="color: #d32f2f; border-bottom: 2px solid #d32f2f; padding-bottom: 8px; margin-top: 30px;">7. Order Modifications & Cancellations</h2>
+  <p>
+    Orders can be <strong>modified</strong> within <span style="color: #ed6c02;">24 hours</span> of placement.
+    Cancellations are accepted before shipment with <em>full refund</em>.
+    After shipment, standard return policy applies.
+  </p>
+
+  <h3 style="color: #0288d1;">7.1 Modification Charges</h3>
+  <ul style="list-style-type: disc; padding-left: 30px;">
+    <li>No charge for modifications within 24 hours</li>
+    <li>₹500 processing fee for modifications after 24 hours</li>
+    <li>Price adjustments apply if order value changes</li>
+  </ul>
+
+  <h2 style="color: #d32f2f; border-bottom: 2px solid #d32f2f; padding-bottom: 8px; margin-top: 30px;">8. Force Majeure</h2>
+  <p style="text-align: justify;">
+    Neither party shall be liable for delays or failures in performance resulting from acts beyond
+    reasonable control, including but not limited to: <strong>natural disasters</strong>,
+    <strong>war</strong>, <strong>pandemics</strong>, <strong>government actions</strong>, or
+    <strong>labor strikes</strong>.
+  </p>
+
+  <hr style="border: none; border-top: 2px solid #ddd; margin: 30px 0;" />
+
+  <h2 style="color: #2e7d32; text-align: center; margin-top: 30px;">Additional Information</h2>
+
+  <h4 style="color: #666;">Text Formatting Examples</h4>
+  <p>
+    This document demonstrates various text formatting options:
+    <strong>Bold text</strong>,
+    <em>Italic text</em>,
+    <u>Underlined text</u>,
+    <s>Strikethrough text</s>,
+    <span style="color: #d32f2f;">Red colored text</span>,
+    <span style="background-color: #fff9c4;">Highlighted text</span>,
+    <code style="background-color: #f5f5f5; padding: 2px 6px; border-radius: 3px;">inline code</code>,
+    H<sub>2</sub>O (subscript),
+    E=mc<sup>2</sup> (superscript),
+    <span style="font-size: 24px;">Large text</span>,
+    <span style="font-size: 12px;">Small text</span>.
+  </p>
+
+  <h4 style="color: #666;">Code Block Example</h4>
+  <pre style="background-color: #263238; color: #aed581; padding: 15px; border-radius: 5px; overflow-x: auto;"><code>// Example code block
+function calculateTotal(items) {
+  return items.reduce((sum, item) => {
+    return sum + (item.price * item.quantity);
+  }, 0);
+}</code></pre>
+
+  <h4 style="color: #666;">Nested Lists</h4>
+  <ul style="padding-left: 30px;">
+    <li>First level item
+      <ul style="list-style-type: circle; padding-left: 25px;">
+        <li>Second level item</li>
+        <li>Another second level item
+          <ol style="list-style-type: lower-alpha; padding-left: 25px;">
+            <li>Third level item (alpha)</li>
+            <li>Another third level item</li>
+          </ol>
+        </li>
+      </ul>
+    </li>
+    <li>Another first level item</li>
+  </ul>
+
+  <h4 style="color: #666;">Text Alignment Examples</h4>
+  <p style="text-align: left; background-color: #f5f5f5; padding: 10px;">Left aligned text</p>
+  <p style="text-align: center; background-color: #e3f2fd; padding: 10px;">Center aligned text</p>
+  <p style="text-align: right; background-color: #f3e5f5; padding: 10px;">Right aligned text</p>
+  <p style="text-align: justify; background-color: #e8f5e9; padding: 10px;">
+    Justified text spreads across the full width of the container, creating even spacing
+    between words. This is useful for formal documents and improves readability in wide columns.
+  </p>
+
+  <hr style="border: none; border-top: 1px dashed #999; margin: 30px 0;" />
+
+  <p style="text-align: center; color: #666; font-size: 12px; margin-top: 40px;">
+    <em>This is a comprehensive test document for rich text editor formatting capabilities.</em><br/>
+    Last updated: <strong>2024</strong> | Version: <code>1.0</code>
+  </p>
+`
+
+/**
  * Pre-defined vendor templates for variety in test data
  */
 const VENDOR_TEMPLATES: VendorTemplate[] = [
   {
     prefix: 'TECH',
     description: 'Technology equipment and accessories supplier',
-    termsConditions: `
-      <h3>Terms & Conditions</h3>
-      <ul>
-        <li>Payment due within 30 days of invoice date</li>
-        <li>All products covered under manufacturer warranty</li>
-        <li>Returns accepted within 15 days of delivery</li>
-        <li>Shipping charges will be billed separately</li>
-      </ul>
-    `,
+    termsConditions: COMPREHENSIVE_TERMS_CONDITIONS_HTML,
     notes: 'Preferred vendor for electronics and IT equipment',
   },
   {
     prefix: 'OFFICE',
     description: 'Office supplies and stationery provider',
-    termsConditions: `
-      <h3>Terms & Conditions</h3>
-      <ul>
-        <li>Net 45 payment terms</li>
-        <li>Minimum order value: ₹5,000</li>
-        <li>Free delivery on orders above ₹10,000</li>
-        <li>Bulk discounts available</li>
-      </ul>
-    `,
+    termsConditions: COMPREHENSIVE_TERMS_CONDITIONS_HTML,
     notes: 'Regular supplier for office consumables',
   },
   {
     prefix: 'RAW',
     description: 'Raw materials and manufacturing supplies',
-    termsConditions: `
-      <h3>Terms & Conditions</h3>
-      <ul>
-        <li>50% advance payment required</li>
-        <li>Quality inspection upon delivery</li>
-        <li>Claims must be filed within 7 days</li>
-        <li>Price subject to market fluctuations</li>
-      </ul>
-    `,
+    termsConditions: COMPREHENSIVE_TERMS_CONDITIONS_HTML,
     notes: 'Key supplier for production materials',
   },
   {
     prefix: 'PKG',
     description: 'Packaging materials and solutions',
-    termsConditions: `
-      <h3>Terms & Conditions</h3>
-      <ul>
-        <li>Weekly delivery schedule</li>
-        <li>Custom packaging available with 2-week lead time</li>
-        <li>Volume discounts on annual contracts</li>
-        <li>Eco-friendly options at 10% premium</li>
-      </ul>
-    `,
+    termsConditions: COMPREHENSIVE_TERMS_CONDITIONS_HTML,
     notes: 'Packaging and shipping materials vendor',
   },
   {
     prefix: 'MAINT',
     description: 'Maintenance and facility supplies',
-    termsConditions: `
-      <h3>Terms & Conditions</h3>
-      <ul>
-        <li>Emergency orders processed same day</li>
-        <li>Annual maintenance contracts available</li>
-        <li>All products meet safety standards</li>
-        <li>Technical support included</li>
-      </ul>
-    `,
+    termsConditions: COMPREHENSIVE_TERMS_CONDITIONS_HTML,
     notes: 'Facility maintenance supplies vendor',
   },
   {
     prefix: 'EQUIP',
     description: 'Industrial equipment and machinery',
-    termsConditions: `
-      <h3>Terms & Conditions</h3>
-      <ul>
-        <li>Installation services included</li>
-        <li>1-year warranty on all equipment</li>
-        <li>Financing options available</li>
-        <li>Training provided at no extra cost</li>
-      </ul>
-    `,
+    termsConditions: COMPREHENSIVE_TERMS_CONDITIONS_HTML,
     notes: 'Heavy equipment and machinery supplier',
   },
 ]
@@ -1614,15 +1899,15 @@ export const generatePurchaseOrderFormTest = async (preserveVendorNumber?: strin
 
   // Random state and city for address
   const state = INDIAN_STATES[Math.floor(Math.random() * INDIAN_STATES.length)]
-  const stateCities = CITIES_BY_STATE[state] || ['Unknown City']
+  const stateCities = CITIES_BY_STATE[state] || ['Mumbai']
   const city = stateCities[Math.floor(Math.random() * stateCities.length)]
 
   // Random street
   const street = STREET_TEMPLATES[Math.floor(Math.random() * STREET_TEMPLATES.length)]
   const buildingNumber = 1 + Math.floor(Math.random() * 500)
 
-  // Generate postal code (Indian format: 6 digits)
-  const postalCode = `${400000 + Math.floor(Math.random() * 200000)}`
+  // Get valid postal code for the selected city
+  const postalCode = getValidPincodeForCity(city)
 
   // Random phone (10 digits starting with 9 or 8)
   const phonePrefix = Math.random() > 0.5 ? '98' : '88'

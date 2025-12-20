@@ -1,13 +1,14 @@
 import { type ReactNode } from 'react'
 
 import {
-  Controller,
-  type Control,
-  type ControllerRenderProps,
-  type FieldErrors,
-  type FieldValues,
-  type Path,
-  type UseFormSetValue,
+    Controller,
+    type Control,
+    type ControllerRenderProps,
+    type FieldErrors,
+    type FieldValues,
+    type Path,
+    type UseFormSetValue,
+    type UseFormTrigger,
 } from 'react-hook-form'
 
 import { Box, Divider, FormControlLabel, Grid, Paper, Switch } from '@mui/material'
@@ -15,19 +16,20 @@ import { Box, Divider, FormControlLabel, Grid, Paper, Switch } from '@mui/materi
 import { FieldType } from '../../constants/appConstants'
 import { Subheader } from '../fonts'
 import {
-  AutocompleteInput,
-  DateTimePickerInput,
-  EmailInput,
-  ImageUploadInput,
-  LazyAutocompleteInput,
-  PasswordInput,
-  PhoneInput,
-  SelectInput,
-  TextFieldInput,
-  type DateTimeValue,
-  type LazyFetchFunction,
-  type LazyOption,
+    AutocompleteInput,
+    DateTimePickerInput,
+    EmailInput,
+    ImageUploadInput,
+    LazyAutocompleteInput,
+    PasswordInput,
+    PhoneInput,
+    SelectInput,
+    TextFieldInput,
+    type DateTimeValue,
+    type LazyFetchFunction,
+    type LazyOption,
 } from '../form-input'
+import RichTextEditor from './RichTextEditor'
 
 import AddressFormController, { type AddressableFormValues } from './AddressFormController'
 
@@ -77,6 +79,7 @@ export interface FieldConfig<TFieldValues extends FieldValues = FieldValues> {
   cities?: string[]
   onStateChange?: (state: string) => void
   setValue?: UseFormSetValue<TFieldValues>
+  trigger?: UseFormTrigger<TFieldValues>
   // For switch fields
   switchLabel?: string
   switchLabelPlacement?: 'start' | 'end' | 'top' | 'bottom'
@@ -85,6 +88,7 @@ export interface FieldConfig<TFieldValues extends FieldValues = FieldValues> {
   timezoneLabel?: string
   minDateTime?: Date
   maxDateTime?: Date
+  hideTimezone?: boolean
   modifyFieldProps?: (
     field: ControllerRenderProps<TFieldValues, Path<TFieldValues>>,
   ) => ControllerRenderProps<TFieldValues, Path<TFieldValues>>
@@ -180,12 +184,14 @@ export const FormFieldRenderer = <TFieldValues extends FieldValues = FieldValues
       cities = [],
       onStateChange,
       setValue,
+      trigger,
       switchLabel,
       switchLabelPlacement = 'end',
       dateTimeLabel,
       timezoneLabel,
       minDateTime,
       maxDateTime,
+      hideTimezone,
       modifyFieldProps,
       customContent,
     } = fieldConfig
@@ -210,6 +216,7 @@ export const FormFieldRenderer = <TFieldValues extends FieldValues = FieldValues
       const addressControl = control as unknown as Control<AddressableFormValues>
       const addressErrors = errors as FieldErrors<AddressableFormValues>
       const addressSetValue = setValue as unknown as UseFormSetValue<AddressableFormValues>
+      const addressTrigger = trigger as unknown as UseFormTrigger<AddressableFormValues>
 
       return (
         <AddressFormController
@@ -221,6 +228,7 @@ export const FormFieldRenderer = <TFieldValues extends FieldValues = FieldValues
           cities={cities}
           onStateChange={onStateChange}
           setValue={addressSetValue}
+          trigger={addressTrigger}
         />
       )
     }
@@ -350,7 +358,7 @@ export const FormFieldRenderer = <TFieldValues extends FieldValues = FieldValues
               )
             }
 
-            // DateTime field with timezone
+            // DateTime field with optional timezone
             if (type === FieldType.DateTime) {
               const currentValue = fieldProps.value as DateTimeValue | null
               return (
@@ -363,6 +371,7 @@ export const FormFieldRenderer = <TFieldValues extends FieldValues = FieldValues
                   timezoneLabel={timezoneLabel ?? 'Timezone'}
                   minDateTime={minDateTime}
                   maxDateTime={maxDateTime}
+                  hideTimezone={hideTimezone}
                   required={required}
                   disabled={isFieldDisabled}
                   error={!!fieldError}
@@ -431,6 +440,21 @@ export const FormFieldRenderer = <TFieldValues extends FieldValues = FieldValues
                     labelPlacement={switchLabelPlacement}
                   />
                 </Box>
+              )
+            }
+
+            // RichText field (rich text editor)
+            if (type === FieldType.RichText) {
+              return (
+                <RichTextEditor
+                  label={label}
+                  value={(fieldProps.value as string) ?? ''}
+                  onChange={fieldProps.onChange}
+                  disabled={isFieldDisabled}
+                  error={!!fieldError}
+                  helperText={fieldError?.message}
+                  placeholder={placeholder}
+                />
               )
             }
 

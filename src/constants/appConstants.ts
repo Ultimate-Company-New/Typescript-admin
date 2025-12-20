@@ -18,6 +18,7 @@ export enum FieldType {
   Autocomplete = 'autocomplete',
   LazyAutocomplete = 'lazy-autocomplete',
   Textarea = 'textarea',
+  RichText = 'richtext',
   Image = 'image',
   Address = 'address',
   Switch = 'switch',
@@ -1793,3 +1794,93 @@ export const TIMEZONE_OPTIONS = [
   { value: 'Australia/Sydney', label: 'AEST (Australian Eastern Standard Time)' },
   { value: 'Pacific/Auckland', label: 'NZST (New Zealand Standard Time)' },
 ] as const
+
+// ============================================================================
+// PURCHASE ORDER CONSTANTS
+// ============================================================================
+
+/**
+ * Purchase Order Status options
+ * Used in purchase order forms and grids for status selection
+ * Colors are chosen to reflect the workflow state:
+ * - Draft/Pending: neutral/info
+ * - Active/In-progress: primary/secondary
+ * - Success states: success
+ * - Warning/Hold: warning
+ * - Error/Cancelled: error
+ */
+export const PURCHASE_ORDER_STATUS_OPTIONS = [
+  { value: 'DRAFT', label: 'Draft', color: 'default' as const },
+  { value: 'PENDING_APPROVAL', label: 'Pending Approval', color: 'info' as const },
+  { value: 'APPROVED', label: 'Approved', color: 'primary' as const },
+  { value: 'REJECTED', label: 'Rejected', color: 'error' as const },
+  { value: 'SENT_TO_VENDOR', label: 'Sent to Vendor', color: 'secondary' as const },
+  { value: 'ACKNOWLEDGED', label: 'Acknowledged', color: 'info' as const },
+  { value: 'IN_PRODUCTION', label: 'In Production', color: 'primary' as const },
+  { value: 'SHIPPED', label: 'Shipped', color: 'secondary' as const },
+  { value: 'PARTIALLY_RECEIVED', label: 'Partially Received', color: 'warning' as const },
+  { value: 'RECEIVED', label: 'Received', color: 'success' as const },
+  { value: 'COMPLETED', label: 'Completed', color: 'success' as const },
+  { value: 'CANCELLED', label: 'Cancelled', color: 'error' as const },
+  { value: 'ON_HOLD', label: 'On Hold', color: 'warning' as const },
+] as const
+
+export type PurchaseOrderStatus = (typeof PURCHASE_ORDER_STATUS_OPTIONS)[number]['value']
+
+/**
+ * Get purchase order status label by value
+ * Returns the display label for a given status value
+ */
+export const getPurchaseOrderStatusLabel = (statusValue: string): string => {
+  const status = PURCHASE_ORDER_STATUS_OPTIONS.find(opt => opt.value === statusValue)
+  return status?.label ?? statusValue
+}
+
+/**
+ * Get purchase order status color by value
+ * Returns the MUI chip color for a given status value
+ */
+export const getPurchaseOrderStatusColor = (
+  statusValue: string,
+): 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info' => {
+  const status = PURCHASE_ORDER_STATUS_OPTIONS.find(opt => opt.value === statusValue)
+  return status?.color ?? 'default'
+}
+
+/**
+ * Priority options for purchase orders
+ * Used in purchase order forms and grids for priority selection
+ * Colors reflect urgency level:
+ * - Low: default (grey)
+ * - Medium: info (blue)
+ * - High: warning (orange)
+ * - Urgent: error (red)
+ */
+export const PRIORITY_OPTIONS = [
+  { value: 'LOW', label: 'Low', color: 'default' as const },
+  { value: 'MEDIUM', label: 'Medium', color: 'info' as const },
+  { value: 'HIGH', label: 'High', color: 'warning' as const },
+  { value: 'URGENT', label: 'Urgent', color: 'error' as const },
+] as const
+
+export type Priority = (typeof PRIORITY_OPTIONS)[number]['value']
+
+/**
+ * Get priority label by value
+ * Returns the display label for a given priority value
+ */
+export const getPriorityLabel = (priorityValue: string): string => {
+  const priority = PRIORITY_OPTIONS.find(opt => opt.value === priorityValue)
+  return priority?.label ?? priorityValue
+}
+
+/**
+ * Get priority color by value
+ * Returns the MUI chip color for a given priority value
+ */
+export const getPriorityColor = (
+  priorityValue: string,
+): 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info' => {
+  const priority = PRIORITY_OPTIONS.find(opt => opt.value === priorityValue)
+  return priority?.color ?? 'default'
+}

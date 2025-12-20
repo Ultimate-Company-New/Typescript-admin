@@ -183,7 +183,7 @@ const AddEditPickupLocation = (): React.JSX.Element => {
       notes: '',
     },
   })
-  const { control, handleSubmit: handleFormSubmit, formState, reset, setValue } = formMethods
+  const { control, handleSubmit: handleFormSubmit, formState, reset, setValue, trigger } = formMethods
   const errors = formState.errors as Record<string, { message?: string } | undefined>
 
   // Watch all form values for view mode
@@ -348,22 +348,20 @@ const AddEditPickupLocation = (): React.JSX.Element => {
             phoneOnAddress: data.address.phoneOnAddress?.trim() || undefined,
           },
           notes: data.notes?.trim() || undefined,
-          // Include product mappings if any are selected
-          productMappings: selectedProducts.length > 0
-            ? selectedProducts.map(p => ({
-                productId: p.productId,
-                quantity: p.quantity,
-              }))
-            : undefined,
-          // Include package mappings if any are selected
-          packageMappings: selectedPackages.length > 0
-            ? selectedPackages.map(p => ({
-                packageId: p.packageId,
-                quantity: p.quantity,
-                reorderLevel: p.reorderLevel,
-                maxStockLevel: p.maxStockLevel,
-              }))
-            : undefined,
+          // Include product mappings - send empty array to clear, or list to update
+          // Sending empty array tells backend to delete all existing mappings
+          productMappings: selectedProducts.map(p => ({
+            productId: p.productId,
+            quantity: p.quantity,
+          })),
+          // Include package mappings - send empty array to clear, or list to update
+          // Sending empty array tells backend to delete all existing mappings
+          packageMappings: selectedPackages.map(p => ({
+            packageId: p.packageId,
+            quantity: p.quantity,
+            reorderLevel: p.reorderLevel,
+            maxStockLevel: p.maxStockLevel,
+          })),
         }
 
         if (isEdit && pickupLocationId) {
@@ -491,6 +489,7 @@ const AddEditPickupLocation = (): React.JSX.Element => {
                     cities={cities}
                     onStateChange={handleStateChange}
                     setValue={setValue}
+                    trigger={trigger}
                   />
                 </Grid>
               </Paper>

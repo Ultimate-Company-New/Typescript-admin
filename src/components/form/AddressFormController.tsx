@@ -1,13 +1,14 @@
 import { useEffect, useMemo } from 'react'
 
 import {
-  Controller,
-  useWatch,
-  type Control,
-  type FieldErrors,
-  type Path,
-  type PathValue,
-  type UseFormSetValue,
+    Controller,
+    useWatch,
+    type Control,
+    type FieldErrors,
+    type Path,
+    type PathValue,
+    type UseFormSetValue,
+    type UseFormTrigger,
 } from 'react-hook-form'
 
 import { Grid } from '@mui/material'
@@ -50,6 +51,7 @@ export interface AddressFormControllerProps<TFieldValues extends AddressableForm
   cities?: string[]
   onStateChange?: (state: string) => void
   setValue: UseFormSetValue<TFieldValues>
+  trigger?: UseFormTrigger<TFieldValues>
 }
 
 const AddressFormController = <TFieldValues extends AddressableFormValues>({
@@ -60,6 +62,7 @@ const AddressFormController = <TFieldValues extends AddressableFormValues>({
   cities = [],
   onStateChange,
   setValue,
+  trigger,
 }: AddressFormControllerProps<TFieldValues>): JSX.Element => {
   const formErrors = errors ?? ({} as FieldErrors<TFieldValues>)
 
@@ -106,9 +109,11 @@ const AddressFormController = <TFieldValues extends AddressableFormValues>({
     const cityExists = cityOptions.some(option => option.value === cityValue)
 
     if (!cityExists) {
+      // Don't validate when clearing - let user select first
+      // Validation will happen on form submit or when user selects a city
       setValue(cityFieldPath, '' as PathValue<TFieldValues, typeof cityFieldPath>, {
         shouldDirty: true,
-        shouldValidate: true,
+        shouldValidate: false,
       })
     }
   }, [cityOptions, cityValue, cityFieldPath, setValue])
@@ -118,6 +123,14 @@ const AddressFormController = <TFieldValues extends AddressableFormValues>({
       onStateChange(stateValue)
     }
   }, [onStateChange, stateValue])
+
+  // Trigger validation when city value changes to clear any stale errors
+  useEffect(() => {
+    if (trigger && cityValue && cityValue.trim() !== '') {
+      // Re-validate the city field to clear the error when a valid city is selected
+      void trigger(cityFieldPath)
+    }
+  }, [trigger, cityValue, cityFieldPath])
 
   const addressFields = useMemo<Array<FieldConfig<TFieldValues>>>(() => {
     const fields: AddressFieldConfig[] = [

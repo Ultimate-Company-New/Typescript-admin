@@ -583,3 +583,66 @@ export const pickupLocationFormSchema = z.object({
 })
 
 export type PickupLocationFormData = z.infer<typeof pickupLocationFormSchema>
+
+// ============================================================================
+// Purchase Order Validation
+// ============================================================================
+
+/**
+ * Purchase Order form validation schema
+ * Used for add/edit purchase order forms
+ */
+// Pickup Location Allocation schema
+const pickupLocationAllocationSchema = z.object({
+  pickupLocationId: z.number().min(1, 'Pickup location ID is required'),
+  locationName: z.string().min(1, 'Location name is required'),
+  allocatedQuantity: z.number().min(1, 'Allocated quantity must be at least 1'),
+  availableStock: z.number().min(0, 'Available stock must be 0 or greater'),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  postalCode: z.string().optional(),
+})
+
+// Purchase Order Product Item schema
+const purchaseOrderProductItemSchema = z.object({
+  productId: z.number().min(1, 'Product ID is required'),
+  productTitle: z.string().min(1, 'Product title is required'),
+  quantity: z.number().min(1, 'Quantity must be at least 1'),
+  pricePerUnit: z.number().min(0, 'Price per unit must be 0 or greater'),
+  pickupAllocations: z.array(pickupLocationAllocationSchema).optional(),
+})
+
+export const purchaseOrderFormSchema = z.object({
+  vendorNumber: z.string().min(1, 'Vendor number is required').max(100, 'Vendor number must be 100 characters or less'),
+  expectedDeliveryDate: z.string().optional(),
+  purchaseOrderStatus: z.string().min(1, 'Status is required'),
+  priority: z.string().min(1, 'Priority is required'),
+  assignedLeadId: z.number().min(1, 'Assigned lead is required'),
+  termsConditionsHtml: z.string().optional(),
+  purchaseOrderReceipt: z.string().optional(),
+  address: z.object({
+    streetAddress: z.string().min(1, 'Street address is required'),
+    streetAddress2: z.string().optional(),
+    streetAddress3: z.string().optional(),
+    city: z.string().min(1, 'City is required'),
+    state: z.string().min(1, 'State is required'),
+    postalCode: z.string().min(1, 'Postal code is required'),
+    country: z.string().min(1, 'Country is required'),
+    addressType: z.string().min(1, 'Address type is required'),
+    nameOnAddress: z.string().optional(),
+    emailOnAddress: z.string().email('Invalid email').optional().or(z.literal('')),
+    phoneOnAddress: z.string().optional(),
+  }),
+  // Product items
+  productItems: z.array(purchaseOrderProductItemSchema).default([]),
+  // Payment/Fee fields
+  deliveryFee: z.number().min(0, 'Delivery fee must be 0 or greater').optional(),
+  serviceFee: z.number().min(0, 'Service fee must be 0 or greater').optional(),
+  packagingFee: z.number().min(0, 'Packaging fee must be 0 or greater').optional(),
+  discount: z.number().min(0, 'Discount must be 0 or greater').optional(),
+  notes: z.string().optional(),
+  // Attachments (images only)
+  attachments: z.record(z.string(), z.string()).optional(), // Map of fileName -> base64Data
+})
+
+export type PurchaseOrderFormData = z.infer<typeof purchaseOrderFormSchema>

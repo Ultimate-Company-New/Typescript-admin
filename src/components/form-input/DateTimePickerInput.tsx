@@ -45,6 +45,8 @@ export interface DateTimePickerInputProps
   maxDateTime?: Date
   variant?: 'outlined' | 'filled' | 'standard'
   margin?: 'none' | 'dense' | 'normal'
+  /** Hide the timezone selector (defaults to false) */
+  hideTimezone?: boolean
 }
 
 /**
@@ -66,6 +68,7 @@ const DateTimePickerInput = forwardRef<HTMLDivElement, DateTimePickerInputProps>
       error = false,
       helperText,
       required = false,
+      hideTimezone = false,
       ...props
     },
     ref,
@@ -134,34 +137,36 @@ const DateTimePickerInput = forwardRef<HTMLDivElement, DateTimePickerInputProps>
           />
         </LocalizationProvider>
 
-        {/* Timezone Selector */}
-        <Autocomplete
-          value={selectedTimezoneOption}
-          onChange={handleTimezoneChange}
-          options={[...TIMEZONE_OPTIONS]}
-          getOptionLabel={option => option.label}
-          isOptionEqualToValue={(option, val) => option.value === val.value}
-          disabled={disabled}
-          disableClearable
-          renderInput={params => (
-            <TextField
-              {...params}
-              label={timezoneLabel}
-              variant={variant}
-              margin={margin}
-              required={required}
-              className={styles['filled-input']}
-              InputLabelProps={{
-                ...params.InputLabelProps,
-                shrink: true,
-              }}
-              InputProps={{
-                ...params.InputProps,
-                disableUnderline: variant === 'filled',
-              }}
-            />
-          )}
-        />
+        {/* Timezone Selector - only show if not hidden */}
+        {!hideTimezone && (
+          <Autocomplete
+            value={selectedTimezoneOption}
+            onChange={handleTimezoneChange}
+            options={[...TIMEZONE_OPTIONS]}
+            getOptionLabel={option => option.label}
+            isOptionEqualToValue={(option, val) => option.value === val.value}
+            disabled={disabled}
+            disableClearable
+            renderInput={params => (
+              <TextField
+                {...params}
+                label={timezoneLabel}
+                variant={variant}
+                margin={margin}
+                required={required}
+                className={styles['filled-input']}
+                InputLabelProps={{
+                  ...params.InputLabelProps,
+                  shrink: true,
+                }}
+                InputProps={{
+                  ...params.InputProps,
+                  disableUnderline: variant === 'filled',
+                }}
+              />
+            )}
+          />
+        )}
       </Box>
     )
   },
