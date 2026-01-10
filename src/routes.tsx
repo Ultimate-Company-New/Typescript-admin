@@ -18,9 +18,9 @@ import { AddEditPackage, ImportPackages, Packages } from './pages/packages'
 import { AddEditPickupLocation, ImportPickupLocations, PickupLocations } from './pages/pickupLocations'
 import { AddEditProduct, ImportProducts, Products } from './pages/products'
 import { AddEditPromo, ImportPromos, Promos } from './pages/promos'
-import { AddEditPurchaseOrder, ImportPurchaseOrders, PurchaseOrders } from './pages/purchaseOrders'
+import { AddEditPurchaseOrder, ImportPurchaseOrders, PurchaseOrders, ViewPurchaseOrder } from './pages/purchaseOrders'
+import { Shipments } from './pages/shipments'
 import { QADashboard } from './pages/qaDashboard'
-import { AddSalesOrders, SalesOrders } from './pages/salesOrders'
 import { Settings } from './pages/settings'
 import { Support } from './pages/support'
 import { TodoList } from './pages/todo'
@@ -169,8 +169,16 @@ export const routes: RouteObject[] = [
         element: <AddEditPurchaseOrder />,
       },
       {
+        path: 'purchase-orders/view/:purchaseOrderId',
+        element: <ViewPurchaseOrder />,
+      },
+      {
         path: 'purchase-orders/import',
         element: <ImportPurchaseOrders />,
+      },
+      {
+        path: 'shipments',
+        element: <Shipments />,
       },
       {
         path: 'messages',
@@ -203,14 +211,6 @@ export const routes: RouteObject[] = [
       {
         path: 'web-templates/import',
         element: <ImportWebTemplates />,
-      },
-      {
-        path: 'sales-orders',
-        element: <SalesOrders />,
-      },
-      {
-        path: 'sales-orders/add',
-        element: <AddSalesOrders />,
       },
       // Placeholder routes for navbar items
       {
@@ -245,5 +245,9 @@ export const routes: RouteObject[] = [
   },
 ]
 
-const router = createBrowserRouter(routes)
+const router = createBrowserRouter(routes, {
+  future: {
+    v7_startTransition: true,
+  },
+})
 export default router

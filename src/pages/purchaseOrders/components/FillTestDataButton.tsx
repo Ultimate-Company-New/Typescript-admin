@@ -5,11 +5,15 @@ import { toast } from 'react-toastify'
 import { Science as ScienceIcon } from '@mui/icons-material'
 import { CircularProgress, Fab, Tooltip } from '@mui/material'
 
+import { leadApi } from '../../../api/leadApi'
 import { productApi } from '../../../api/productApi'
-import { type FillTestDataButtonProps, type ProductBatchItem, type PurchaseOrderProductItemForm } from '../../../models'
+import shippingApi, { type OrderOptimizationRequest } from '../../../api/shippingApi'
+import { type DateTimeValue } from '../../../components/form-input'
+import { type FillTestDataButtonProps, type ProductBatchItem, type ProductItemsSectionProps, type PurchaseOrderProductItemForm } from '../../../models'
 import { type PurchaseOrderProductItem } from '../../../models/api-models'
 import styles from '../../../styles/PurchaseOrders.module.scss'
 import { generatePurchaseOrderFormTest } from '../../../utils/generateTestData'
+import { convertImageUrlToBase64 } from '../../../utils/imageUtils'
 
 /**
  * Fill Test Data Button Component for Purchase Order Forms
@@ -45,6 +49,10 @@ const FillTestDataButton = ({
   currentVendorNumber,
   onStateChange,
   onProductItemsChange,
+  onInitialLeadOptionChange,
+  getValues,
+  deliveryAddress,
+  onShippingChange,
 }: FillTestDataButtonProps): JSX.Element => {
   // Loading state: Prevents multiple simultaneous fills and shows spinner
   const [filling, setFilling] = useState(false)
@@ -138,6 +146,32 @@ const FillTestDataButton = ({
     const selectedProducts = shuffled.slice(0, Math.min(count, allProducts.length))
 
     /**
+     * Fetch stock data for all selected products in parallel.
+     * This matches the approach used in ProductPickerModal for consistency.
+     */
+    const stockResults = await Promise.allSettled(
+      selectedProducts.map(async (product) => {
+        try {
+          const stockData = await productApi.getProductStockAtLocationsByProductId(product.productId)
+          // Sum up available stock across all locations
+          const totalStock = stockData.reduce((sum, loc) => sum + (loc.availableStock ?? 0), 0)
+          return { productId: product.productId, totalAvailableStock: totalStock }
+        } catch {
+          // If stock fetch fails, return null (stock data unavailable)
+          return { productId: product.productId, totalAvailableStock: null }
+        }
+      })
+    )
+
+    // Create a map of productId -> totalAvailableStock for quick lookup
+    const stockMap = new Map<number, number | null>()
+    stockResults.forEach((result) => {
+      if (result.status === 'fulfilled') {
+        stockMap.set(result.value.productId, result.value.totalAvailableStock)
+      }
+    })
+
+    /**
      * Map each selected product to PurchaseOrderProductItemForm format.
      *
      * This conversion is necessary because:
@@ -170,6 +204,9 @@ const FillTestDataButton = ({
       // Calculate initial subtotal: quantity × price
       const subtotal = quantity * product.price
 
+      // Get total available stock from stock map
+      const totalAvailableStock = stockMap.get(product.productId) ?? null
+
       // Return formatted product item
       return {
         productId: product.productId,
@@ -185,6 +222,13 @@ const FillTestDataButton = ({
         totalPackagingFee: 0, // Will be calculated via shipping optimization
         totalShippingFee: 0, // Will be calculated via shipping optimization
         grandTotal: subtotal, // Just subtotal for now (will be recalculated)
+        // Include total available stock for validation labels
+        totalAvailableStock,
+        // Include product metadata for display
+        brand: product.brand,
+        upc: product.upc,
+        model: product.model,
+        weightKgs: product.weightKgs,
       }
     })
   }
@@ -225,11 +269,33 @@ const FillTestDataButton = ({
 
       // Fill form fields
       setValue('vendorNumber', testData.vendorNumber, { shouldValidate: true })
-      setValue('expectedDeliveryDate', testData.expectedDeliveryDate, { shouldValidate: true })
+
+      // Convert ISO string to DateTimeValue object for DateTimePickerInput
+      const deliveryDateValue: DateTimeValue = {
+        dateTime: new Date(testData.expectedDeliveryDate),
+        timezone: 'UTC',
+      }
+      setValue('expectedDeliveryDate', deliveryDateValue, { shouldValidate: true })
+
       setValue('purchaseOrderStatus', testData.purchaseOrderStatus, { shouldValidate: true })
       setValue('priority', testData.priority, { shouldValidate: true })
       setValue('assignedLeadId', testData.assignedLeadId, { shouldValidate: true })
       setValue('termsConditionsHtml', testData.termsConditionsHtml, { shouldValidate: true })
+
+      // Fetch lead details and set initial lead option for LazyAutocomplete
+      if (testData.assignedLeadId && onInitialLeadOptionChange) {
+        try {
+          const leadResponse = await leadApi.getLeadById(testData.assignedLeadId)
+          if (leadResponse) {
+            onInitialLeadOptionChange({
+              value: leadResponse.leadId,
+              label: `${leadResponse.firstName} ${leadResponse.lastName} (${leadResponse.email})`,
+            })
+          }
+        } catch (error) {
+          // Continue without setting the option - the ID is already set
+        }
+      }
 
       // Address fields
       setValue('address.streetAddress', testData.address.streetAddress, { shouldValidate: true })
@@ -258,9 +324,21 @@ const FillTestDataButton = ({
       // Notes
       setValue('notes', testData.notes, { shouldValidate: true })
 
-      // Attachments - 5 test images (same approach as products)
-      const testAttachments = generateTestAttachments()
-      setValue('attachments', testAttachments, { shouldValidate: true })
+      // Attachments - 5 test images, convert URLs to base64
+      const testAttachmentsUrls = generateTestAttachments()
+      const testAttachmentsBase64: Record<string, string> = {}
+
+      // Convert all URL attachments to base64
+      await Promise.all(
+        Object.entries(testAttachmentsUrls).map(async ([fileName, url]) => {
+          const base64 = await convertImageUrlToBase64(url)
+          if (base64) {
+            testAttachmentsBase64[fileName] = base64
+          }
+        })
+      )
+
+      setValue('attachments', testAttachmentsBase64, { shouldValidate: true })
 
       // Wait for address change effects to complete before adding products
       // The parent component clears products when address changes, so we need to delay
@@ -270,13 +348,237 @@ const FillTestDataButton = ({
       // Type assertion needed: form schema expects availableStock: number (required),
       // but PurchaseOrderProductItemForm has it optional. Since pickupAllocations is [],
       // the type mismatch doesn't affect runtime behavior.
+      // Set form with full product data (images, totals, etc.)
       setValue('productItems', productItems as any, { shouldValidate: true })
-      // Also update parent's local state (cast to PurchaseOrderProductItem for API compatibility)
-      if (onProductItemsChange) {
-        onProductItemsChange(productItems as unknown as PurchaseOrderProductItem[])
+      // Wait a bit for form to update before calling onProductItemsChange
+      // handleProductItemsChange will check if form has complete data and preserve it
+      await new Promise((resolve) => setTimeout(resolve, 150))
+      // Update parent's local state - convert to PurchaseOrderProductItem format
+      // Read form data back to ensure we have the latest state with all fields preserved
+      if (onProductItemsChange && getValues) {
+        const formData = getValues()
+        const formProductItems = (formData.productItems || []) as PurchaseOrderProductItemForm[]
+
+        // Convert form items to PurchaseOrderProductItem format for parent state
+        // This ensures parent state is in sync with form data
+        // Preserve totalAvailableStock when converting
+        const convertedProductItems: PurchaseOrderProductItem[] = formProductItems.map((item) => {
+          const productItem: any = {
+            product: {
+              productId: item.productId,
+              title: item.productTitle,
+            } as any,
+            quantity: item.quantity,
+            pricePerUnit: item.pricePerUnit,
+          }
+          // Preserve totalAvailableStock if available
+          if ((item as any).totalAvailableStock !== undefined) {
+            productItem.totalAvailableStock = (item as any).totalAvailableStock
+          }
+          return productItem as PurchaseOrderProductItem
+        })
+        onProductItemsChange(convertedProductItems)
       }
 
-      toast.success(`Test data filled with ${productItems.length} products and ${Object.keys(testAttachments).length} attachments!`)
+      // Wait a bit for products to be set, then calculate shipping automatically
+      await new Promise((resolve) => setTimeout(resolve, 200))
+
+      // Automatically calculate shipping if we have products, delivery address, and callbacks
+      // Read postal code directly from form values instead of relying on deliveryAddress prop
+      // (which might not be updated yet due to React state batching)
+      const formData = getValues ? getValues() : null
+      const formPostalCode = formData?.address?.postalCode
+      const postalCodeToUse = formPostalCode || deliveryAddress?.postalCode
+
+      if (
+        productItems.length > 0 &&
+        postalCodeToUse &&
+        getValues &&
+        onShippingChange &&
+        onProductItemsChange
+      ) {
+        try {
+          // Build product quantities map: productId -> quantity
+          const productQuantities: Record<number, number> = {}
+          for (const item of productItems) {
+            productQuantities[item.productId] = item.quantity
+          }
+
+          // Build optimization request
+          const optimizationRequest: OrderOptimizationRequest = {
+            productQuantities,
+            deliveryPostcode: postalCodeToUse,
+            isCod: false,
+          }
+
+          // Call optimization API
+          const optimizationResponse = await shippingApi.optimizeOrder(optimizationRequest)
+
+          if (optimizationResponse.success && optimizationResponse.shipments && optimizationResponse.shipments.length > 0) {
+            // Automatically select the first (cheapest) courier for each shipment
+            const courierSelections = new Map<number, import('../../../api/shippingApi').CourierOption>()
+
+            optimizationResponse.shipments.forEach((shipment) => {
+              const locationId = shipment.pickupLocation?.pickupLocationId || 0
+              // Select first courier (cheapest, as they're sorted by rate)
+              if (shipment.availableCouriers && shipment.availableCouriers.length > 0) {
+                courierSelections.set(locationId, shipment.availableCouriers[0])
+              }
+            })
+
+            // Convert to shipping allocations format (must match handleShippingConfirm structure)
+            const allocations: ProductItemsSectionProps['shippingAllocations'] = optimizationResponse.shipments.map((shipment) => {
+              const selectedCourier = courierSelections.get(shipment.pickupLocation?.pickupLocationId || 0)
+              const locationId = shipment.pickupLocation?.pickupLocationId || 0
+              const locationName = shipment.pickupLocation?.addressNickName || ''
+
+              // Validate that packagesUsed exists (same validation as handleShippingConfirm)
+              if (!shipment.packagesUsed || shipment.packagesUsed.length === 0) {
+                throw new Error(`Shipment for ${locationName} has no packages. Please recalculate shipping.`)
+              }
+
+              return {
+                pickupLocationId: locationId,
+                locationName,
+                postalCode: shipment.pickupLocation?.address?.postalCode || '',
+                totalWeightKgs: shipment.totalWeightKgs,
+                totalQuantity: shipment.totalQuantity,
+                productIds: shipment.products.map((p) => p.product.productId),
+                packagingCost: shipment.packagingCost, // Include packaging cost
+                packagesUsed: shipment.packagesUsed.map((pkg) => {
+                  // Validate package data
+                  if (!pkg.packageInfo?.packageId || pkg.packageInfo.packageId <= 0) {
+                    throw new Error(`Invalid packageId in package for ${locationName}`)
+                  }
+
+                  return {
+                    packageInfo: {
+                      packageId: pkg.packageInfo.packageId,
+                      packageName: pkg.packageInfo?.packageName || '',
+                      packageType: pkg.packageInfo?.packageType || '',
+                      pricePerUnit: pkg.packageInfo?.pricePerUnit || 0,
+                    },
+                    quantityUsed: pkg.quantityUsed,
+                    totalCost: pkg.totalCost,
+                    productDetails: pkg.productDetails,
+                  }
+                }),
+                selectedCourier: selectedCourier
+                  ? {
+                      courierCompanyId: selectedCourier.courierCompanyId,
+                      courierName: selectedCourier.courierName,
+                      courierType: selectedCourier.courierType,
+                      rate: selectedCourier.rate,
+                      estimatedDeliveryDays: selectedCourier.estimatedDeliveryDays || '',
+                      etd: selectedCourier.etd,
+                      courierOption: selectedCourier, // Store full CourierOption for metadata
+                    }
+                  : undefined,
+              }
+            })
+
+            // Build per-product pickup allocations
+            const productAllocationsMap: Record<number, NonNullable<PurchaseOrderProductItemForm['pickupAllocations']>> = {}
+
+            optimizationResponse.shipments.forEach((shipment) => {
+              const pickupLocation = shipment.pickupLocation
+
+              shipment.products.forEach((productAlloc) => {
+                const productId = productAlloc.product.productId
+
+                if (!productAllocationsMap[productId]) {
+                  productAllocationsMap[productId] = []
+                }
+
+                const packagingEstimate = shipment.packagesUsed?.map((pkg) => ({
+                  packageId: pkg.packageInfo?.packageId || 0,
+                  packageName: pkg.packageInfo?.packageName || '',
+                  packageType: pkg.packageInfo?.packageType || '',
+                  quantityUsed: pkg.quantityUsed,
+                  pricePerUnit: pkg.packageInfo?.pricePerUnit || 0,
+                  totalCost: pkg.totalCost,
+                }))
+
+                const allocation: NonNullable<PurchaseOrderProductItemForm['pickupAllocations']>[number] = {
+                  pickupLocationId: pickupLocation?.pickupLocationId || 0,
+                  locationName: pickupLocation?.addressNickName || '',
+                  allocatedQuantity: productAlloc.allocatedQuantity,
+                  availableStock: 0,
+                  addressType: pickupLocation?.address?.addressType,
+                  streetAddress: pickupLocation?.address?.streetAddress,
+                  streetAddress2: pickupLocation?.address?.streetAddress2,
+                  streetAddress3: pickupLocation?.address?.streetAddress3,
+                  city: pickupLocation?.address?.city,
+                  state: pickupLocation?.address?.state,
+                  postalCode: pickupLocation?.address?.postalCode,
+                  country: pickupLocation?.address?.country,
+                  nameOnAddress: pickupLocation?.address?.nameOnAddress,
+                  emailOnAddress: pickupLocation?.address?.emailOnAddress,
+                  phoneOnAddress: pickupLocation?.address?.phoneOnAddress,
+                  packagingEstimate,
+                  totalPackagingCost: shipment.packagingCost,
+                }
+
+                productAllocationsMap[productId].push(allocation)
+              })
+            })
+
+            // Get current form items and update with allocations (same as handleShippingConfirm)
+            const currentFormData = getValues()
+            const formProductItems = (currentFormData.productItems || []) as PurchaseOrderProductItemForm[]
+
+            // Update form items with allocations
+            const updatedFormItems = formProductItems.map((item) => ({
+              ...item,
+              pickupAllocations: productAllocationsMap[item.productId] || [],
+            }))
+
+            // Convert back to PurchaseOrderProductItem format (matching handleShippingConfirm exactly)
+            // Need to preserve the product object structure from the original productItems
+            const convertedItems: PurchaseOrderProductItem[] = updatedFormItems.map((item) => {
+              // Find the original item from productItems prop (which has nested product object)
+              // This matches the logic in handleShippingConfirm
+              const originalItem = productItems.find((pi: PurchaseOrderProductItemForm) => pi.productId === item.productId)
+
+              // Preserve the original product object if it exists, otherwise create a minimal one
+              const product = originalItem
+                ? { productId: originalItem.productId, title: originalItem.productTitle }
+                : { productId: item.productId, title: item.productTitle }
+
+              const productItem: any = {
+                product: product as any,
+                quantity: item.quantity,
+                pricePerUnit: item.pricePerUnit,
+              }
+
+              // Preserve totalAvailableStock from the form item
+              if ((item as any).totalAvailableStock !== undefined) {
+                productItem.totalAvailableStock = (item as any).totalAvailableStock
+              }
+
+              return productItem as PurchaseOrderProductItem
+            })
+
+            // Update form with allocations first
+            setValue('productItems', updatedFormItems as any, { shouldValidate: true })
+
+            // Wait a bit for form to update
+            await new Promise((resolve) => setTimeout(resolve, 100))
+
+            // Update parent's product items state (this triggers ProductItemsSection to update)
+            onProductItemsChange(convertedItems)
+
+            // Update shipping allocations and fees (same as handleShippingConfirm)
+            onShippingChange(allocations, optimizationResponse.totalShippingCost)
+            setValue('deliveryFee', optimizationResponse.totalShippingCost, { shouldValidate: true })
+            setValue('packagingFee', optimizationResponse.totalPackagingCost, { shouldValidate: true })
+          }
+        } catch (error) {
+          // Don't show error toast - shipping calculation is optional
+        }
+      }
+
+      toast.success(`Test data filled with ${productItems.length} products and ${Object.keys(testAttachmentsBase64).length} attachments!`)
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to generate test data'
       toast.error(message)

@@ -32,6 +32,14 @@ interface ProductModalProps {
   /** Pickup location ID to fetch products for (alternative to mappingsString) */
   pickupLocationId?: number
   locationName?: string
+  /** Purchase order products array (alternative to mappingsString/pickupLocationId) */
+  purchaseOrderProducts?: Array<{
+    productId: number
+    quantity: number
+    pricePerUnit?: number | null
+  }>
+  /** Purchase order ID for display */
+  purchaseOrderId?: number
 }
 
 export const ProductModal = ({
@@ -40,6 +48,8 @@ export const ProductModal = ({
   mappingsString,
   pickupLocationId,
   locationName,
+  purchaseOrderProducts,
+  purchaseOrderId,
 }: ProductModalProps): JSX.Element => {
   const [mappings, setMappings] = useState<ProductMappingItem[]>([])
   const [displayedCount, setDisplayedCount] = useState(ITEMS_PER_PAGE)
@@ -310,16 +320,160 @@ export const ProductModal = ({
     }
   }, [mappingsString])
 
+  // Fetch products from purchase order products array
+  const fetchPurchaseOrderProducts = useCallback(async (): Promise<void> => {
+    if (!purchaseOrderProducts || purchaseOrderProducts.length === 0) {
+      setMappings([])
+      setTotalCount(0)
+      setDisplayedCount(ITEMS_PER_PAGE)
+      return
+    }
+
+    setLoading(true)
+    try {
+      const productIds = purchaseOrderProducts.map(p => p.productId)
+      const productMap = new Map<number, { quantity: number; pricePerUnit?: number | null }>()
+
+      purchaseOrderProducts.forEach(p => {
+        productMap.set(p.productId, { quantity: p.quantity, pricePerUnit: p.pricePerUnit })
+      })
+
+      const response = await productApi.getProductsInBatches({
+        start: 0,
+        end: productIds.length,
+        pageSize: productIds.length,
+        selectedIds: productIds,
+        includeDeleted: false,
+      })
+
+      const parsed: ProductMappingItem[] = []
+      for (const apiProduct of (response.data ?? []) as Array<{
+        productId?: number
+        title?: string
+        upc?: string
+        brand?: string
+        price?: number
+        discount?: number
+        isDiscountPercent?: boolean
+        model?: string
+        condition?: string
+        countryOfManufacture?: string
+        weightKgs?: number
+        length?: number
+        breadth?: number
+        height?: number
+        category?: { categoryName?: string }
+        mainImageUrl?: string
+        topImageUrl?: string
+        bottomImageUrl?: string
+        frontImageUrl?: string
+        backImageUrl?: string
+        rightImageUrl?: string
+        leftImageUrl?: string
+        detailsImageUrl?: string
+        defectImageUrl?: string
+        additionalImage1Url?: string
+        additionalImage2Url?: string
+        additionalImage3Url?: string
+        product?: {
+          productId?: number
+          title?: string
+          upc?: string
+          brand?: string
+          price?: number
+          discount?: number
+          isDiscountPercent?: boolean
+          model?: string
+          condition?: string
+          countryOfManufacture?: string
+          weightKgs?: number
+          length?: number
+          breadth?: number
+          height?: number
+          category?: { categoryName?: string }
+          mainImageUrl?: string
+          topImageUrl?: string
+          bottomImageUrl?: string
+          frontImageUrl?: string
+          backImageUrl?: string
+          rightImageUrl?: string
+          leftImageUrl?: string
+          detailsImageUrl?: string
+          defectImageUrl?: string
+          additionalImage1Url?: string
+          additionalImage2Url?: string
+          additionalImage3Url?: string
+        }
+      }>) {
+        const product = apiProduct.product ?? apiProduct
+        const productId = apiProduct.productId ?? product.productId
+
+        if (productId) {
+          const productData = productMap.get(productId)
+          if (!productData) continue
+
+          const images: ProductImageInfo[] = [
+            { url: apiProduct.mainImageUrl ?? product.mainImageUrl ?? '', label: 'Main' },
+            { url: apiProduct.topImageUrl ?? product.topImageUrl ?? '', label: 'Top' },
+            { url: apiProduct.bottomImageUrl ?? product.bottomImageUrl ?? '', label: 'Bottom' },
+            { url: apiProduct.frontImageUrl ?? product.frontImageUrl ?? '', label: 'Front' },
+            { url: apiProduct.backImageUrl ?? product.backImageUrl ?? '', label: 'Back' },
+            { url: apiProduct.rightImageUrl ?? product.rightImageUrl ?? '', label: 'Right' },
+            { url: apiProduct.leftImageUrl ?? product.leftImageUrl ?? '', label: 'Left' },
+            { url: apiProduct.detailsImageUrl ?? product.detailsImageUrl ?? '', label: 'Details' },
+            { url: apiProduct.defectImageUrl ?? product.defectImageUrl ?? '', label: 'Defect' },
+            { url: apiProduct.additionalImage1Url ?? product.additionalImage1Url ?? '', label: 'Additional 1' },
+            { url: apiProduct.additionalImage2Url ?? product.additionalImage2Url ?? '', label: 'Additional 2' },
+            { url: apiProduct.additionalImage3Url ?? product.additionalImage3Url ?? '', label: 'Additional 3' },
+          ].filter(img => img.url && img.url.trim() !== '')
+
+          parsed.push({
+            productId,
+            quantity: productData.quantity,
+            pricePerUnit: productData.pricePerUnit ?? undefined,
+            productDetails: {
+              title: apiProduct.title ?? product.title,
+              upc: apiProduct.upc ?? product.upc,
+              brand: apiProduct.brand ?? product.brand,
+              price: apiProduct.price ?? product.price,
+              discount: apiProduct.discount ?? product.discount,
+              isDiscountPercent: apiProduct.isDiscountPercent ?? product.isDiscountPercent,
+              model: apiProduct.model ?? product.model,
+              condition: apiProduct.condition ?? product.condition,
+              countryOfManufacture: apiProduct.countryOfManufacture ?? product.countryOfManufacture,
+              weightKgs: apiProduct.weightKgs ?? product.weightKgs,
+              length: apiProduct.length ?? product.length,
+              breadth: apiProduct.breadth ?? product.breadth,
+              height: apiProduct.height ?? product.height,
+              category: apiProduct.category?.categoryName ?? product.category?.categoryName,
+              images,
+            },
+          })
+        }
+      }
+
+      setMappings(parsed)
+      setTotalCount(parsed.length)
+      setDisplayedCount(ITEMS_PER_PAGE)
+    } catch {
+      setMappings([])
+    } finally {
+      setLoading(false)
+    }
+  }, [purchaseOrderProducts])
+
   useEffect(() => {
     if (open) {
-      // Use pickupLocationId if provided, otherwise parse mappingsString
-      if (pickupLocationId) {
+      // Priority: purchaseOrderProducts > pickupLocationId > mappingsString
+      if (purchaseOrderProducts) {
+        void fetchPurchaseOrderProducts()
+      } else if (pickupLocationId) {
         void fetchByPickupLocation()
       } else {
         void parseMappings()
       }
     }
-  }, [open, pickupLocationId, fetchByPickupLocation, parseMappings])
+  }, [open, purchaseOrderProducts, pickupLocationId, fetchByPickupLocation, parseMappings, fetchPurchaseOrderProducts])
 
   // Load more products
   const handleLoadMore = async (): Promise<void> => {
@@ -591,7 +745,7 @@ export const ProductModal = ({
           </IconButton>
         </Box>
 
-        {locationName && (
+        {locationName && !purchaseOrderId && (
           <Box className={styles['mappings-modal__subtitle']}>
             <SecondaryFont>
               Products {pickupLocationId ? 'at' : 'for'}: <strong>{locationName}</strong>

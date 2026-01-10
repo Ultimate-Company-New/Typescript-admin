@@ -357,6 +357,7 @@ const ShippingEstimateModal = ({
         rate: loc.selectedCourier.rate,
         estimatedDeliveryDays: loc.selectedCourier.estimatedDeliveryDays,
         etd: loc.selectedCourier.etd,
+        courierOption: loc.selectedCourier, // Store full CourierOption for metadata
       } : undefined,
     }))
 

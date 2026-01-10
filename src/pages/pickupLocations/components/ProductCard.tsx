@@ -1,9 +1,4 @@
-import { useState } from 'react'
-
 import CategoryIcon from '@mui/icons-material/Category'
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
-import ChevronRightIcon from '@mui/icons-material/ChevronRight'
-import ImageNotSupportedIcon from '@mui/icons-material/ImageNotSupported'
 import LocalOfferIcon from '@mui/icons-material/LocalOffer'
 import ScaleIcon from '@mui/icons-material/Scale'
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'
@@ -14,10 +9,10 @@ import {
     CardContent,
     Chip,
     Divider,
-    IconButton,
     Tooltip
 } from '@mui/material'
 
+import { ProductImageCarousel } from '../../../components/carousel'
 import { BodyText, SecondaryFont } from '../../../components/fonts'
 import { getConditionColor, getConditionLabel } from '../../../constants/appConstants'
 import styles from '../../../styles/PickupLocations.module.scss'
@@ -34,6 +29,7 @@ export interface ProductImageInfo {
 export interface ProductMappingItem {
   productId: number
   quantity: number
+  pricePerUnit?: number
   productDetails?: {
     title?: string
     upc?: string
@@ -55,93 +51,6 @@ export interface ProductMappingItem {
 }
 
 // ============================================================================
-// Image Carousel Component
-// ============================================================================
-
-interface ImageCarouselProps {
-  images: ProductImageInfo[]
-}
-
-const ImageCarousel = ({ images }: ImageCarouselProps): JSX.Element => {
-  const [currentIndex, setCurrentIndex] = useState(0)
-
-  if (!images || images.length === 0) {
-    return (
-      <Box className={styles['image-carousel__empty']}>
-        <ImageNotSupportedIcon color="disabled" />
-        <SecondaryFont>No images</SecondaryFont>
-      </Box>
-    )
-  }
-
-  const handlePrev = (e: React.MouseEvent): void => {
-    e.stopPropagation()
-    setCurrentIndex(prev => (prev === 0 ? images.length - 1 : prev - 1))
-  }
-
-  const handleNext = (e: React.MouseEvent): void => {
-    e.stopPropagation()
-    setCurrentIndex(prev => (prev === images.length - 1 ? 0 : prev + 1))
-  }
-
-  const currentImage = images[currentIndex]
-
-  return (
-    <Box className={styles['image-carousel']}>
-      <Box className={styles['image-carousel__container']}>
-        <img
-          src={currentImage.url}
-          alt={currentImage.label || `Image ${currentIndex + 1}`}
-          className={styles['image-carousel__image']}
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="%23f0f0f0" width="100" height="100"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%23999" font-size="12">No Image</text></svg>'
-          }}
-        />
-        {images.length > 1 && (
-          <>
-            <IconButton
-              size="small"
-              onClick={handlePrev}
-              className={styles['image-carousel__nav-btn']}
-              sx={{ left: 4 }}
-            >
-              <ChevronLeftIcon fontSize="small" />
-            </IconButton>
-            <IconButton
-              size="small"
-              onClick={handleNext}
-              className={styles['image-carousel__nav-btn']}
-              sx={{ right: 4 }}
-            >
-              <ChevronRightIcon fontSize="small" />
-            </IconButton>
-          </>
-        )}
-      </Box>
-      {images.length > 1 && (
-        <Box className={styles['image-carousel__dots']}>
-          {images.map((_, idx) => (
-            <Box
-              key={idx}
-              className={`${styles['image-carousel__dot']} ${idx === currentIndex ? styles['image-carousel__dot--active'] : ''}`}
-              onClick={(e) => {
-                e.stopPropagation()
-                setCurrentIndex(idx)
-              }}
-            />
-          ))}
-        </Box>
-      )}
-      {currentImage.label && (
-        <SecondaryFont className={styles['image-carousel__label']}>
-          {currentImage.label}
-        </SecondaryFont>
-      )}
-    </Box>
-  )
-}
-
-// ============================================================================
 // Product Card Component
 // ============================================================================
 
@@ -150,7 +59,7 @@ interface ProductCardProps {
 }
 
 export const ProductCard = ({ mapping }: ProductCardProps): JSX.Element => {
-  const { productId, quantity, productDetails } = mapping
+  const { productId, quantity, pricePerUnit, productDetails } = mapping
 
   // Calculate final price with discount
   const getFinalPrice = (): { original: number; final: number; hasDiscount: boolean } | null => {
@@ -169,8 +78,15 @@ export const ProductCard = ({ mapping }: ProductCardProps): JSX.Element => {
 
   return (
     <Card variant="outlined" className={styles['product-mapping-card']}>
-      {/* Image Carousel */}
-      <ImageCarousel images={productDetails?.images ?? []} />
+      {/* Image Carousel - Using grid variant with 3D flip transition */}
+      <Box sx={{ p: 1.5, pb: 0, display: 'flex', justifyContent: 'center' }}>
+        <ProductImageCarousel
+          images={productDetails?.images ?? []}
+          variant="grid"
+          size={180}
+          fallbackLetter={productDetails?.title?.[0] ?? 'P'}
+        />
+      </Box>
 
       <CardContent className={styles['product-mapping-card__content']}>
         {/* Title */}
@@ -195,14 +111,23 @@ export const ProductCard = ({ mapping }: ProductCardProps): JSX.Element => {
             size="small"
             color="primary"
           />
+          {/* Show pricePerUnit only if provided (for purchase orders) */}
+          {pricePerUnit != null && (
+            <Chip
+              label={`Price: ₹${pricePerUnit.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
+              size="small"
+              color="success"
+              variant="outlined"
+            />
+          )}
         </Box>
 
         {productDetails && (
           <>
             <Divider sx={{ my: 1 }} />
 
-            {/* Price Section */}
-            {priceInfo && (
+            {/* Price Section - Only show for pickup locations (not purchase orders) */}
+            {priceInfo && pricePerUnit == null && (
               <Box className={styles['product-mapping-card__price-section']}>
                 <LocalOfferIcon color="success" fontSize="small" />
                 <Box className={styles['product-mapping-card__price-info']}>

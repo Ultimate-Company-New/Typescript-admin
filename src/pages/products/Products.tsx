@@ -61,6 +61,7 @@ const Products = (): React.JSX.Element => {
     useState<GridColumnVisibilityModel>({
       isDeleted: false,
       productId: false,
+      pickupLocations: true,
     });
   const [visibleColumnFields, setVisibleColumnFields] = useState<string[]>([]);
 
@@ -122,7 +123,8 @@ const Products = (): React.JSX.Element => {
           const isExcluded = ["isDeleted", "productId", "deleted"].includes(
             col.field
           );
-          const isVisible = columnVisibilityModel[col.field];
+          // Default to visible (true) if not explicitly set in visibility model
+          const isVisible = columnVisibilityModel[col.field] ?? true;
           return !isExcluded && isVisible;
         })
         .map((col) => col.field)

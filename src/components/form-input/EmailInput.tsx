@@ -27,7 +27,8 @@ const EmailInput = forwardRef<HTMLDivElement, EmailInputProps>(
         ...InputLabelProps,
       }}
       inputProps={{
-        pattern: '[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$',
+        // Removed pattern attribute - type="email" already provides validation
+        // HTML5 pattern attributes have compatibility issues with certain regex features
         autoComplete: 'email',
         ...inputProps,
       }}

@@ -376,6 +376,7 @@ const Settings = (): JSX.Element => {
             label: 'ShipRocket Password',
             type: FieldType.Password as FieldType,
             required: false,
+            autocomplete: 'off',
             gridSize: {
               xs: 12,
               sm: 6,
@@ -401,6 +402,7 @@ const Settings = (): JSX.Element => {
             label: 'JIRA Password',
             type: FieldType.Password as FieldType,
             required: false,
+            autocomplete: 'off',
             gridSize: {
               xs: 12,
               sm: 6,

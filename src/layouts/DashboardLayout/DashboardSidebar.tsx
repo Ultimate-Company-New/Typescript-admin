@@ -20,7 +20,6 @@ import {
   Message as MessageIcon,
   People as PeopleIcon,
   PersonAdd as PersonAddIcon,
-  Receipt as ReceiptIcon,
   Settings as SettingsIcon,
   ShoppingCart as ShoppingCartIcon,
   Support as SupportIcon,
@@ -124,7 +123,6 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
   const [purchaseOrdersExpanded, setPurchaseOrdersExpanded] = useState(false)
   const [messagesExpanded, setMessagesExpanded] = useState(false)
   const [webTemplatesExpanded, setWebTemplatesExpanded] = useState(false)
-  const [salesOrdersExpanded, setSalesOrdersExpanded] = useState(false)
 
   const handleUsersToggle = (): void => {
     setUsersExpanded(!usersExpanded)
@@ -164,10 +162,6 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
 
   const handleWebTemplatesToggle = (): void => {
     setWebTemplatesExpanded(!webTemplatesExpanded)
-  }
-
-  const handleSalesOrdersToggle = (): void => {
-    setSalesOrdersExpanded(!salesOrdersExpanded)
   }
 
   const isActive = (path: string): boolean => location.pathname === path
@@ -705,6 +699,25 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
           </List>
         </Collapse>
 
+        {/* Shipments - Parent Item */}
+        <ListItemButton
+          component={RouterLink}
+          to={APP_ROUTES.DASHBOARD.SHIPMENTS}
+          selected={location.pathname === APP_ROUTES.DASHBOARD.SHIPMENTS}
+          data-test-id="sidebar-shipments-item"
+          className={`dashboard-sidebar__list-item dashboard-sidebar__parent-item ${open ? 'dashboard-sidebar__list-item--open' : 'dashboard-sidebar__list-item--closed'}`}
+        >
+          <ListItemIcon
+            className={`dashboard-sidebar__list-item-icon ${open ? 'dashboard-sidebar__list-item-icon--open' : 'dashboard-sidebar__list-item-icon--closed'}`}
+          >
+            <LocalShippingIcon />
+          </ListItemIcon>
+          <ListItemText
+            primary="Shipments"
+            className={`dashboard-sidebar__list-item-text ${open ? 'dashboard-sidebar__list-item-text--visible' : 'dashboard-sidebar__list-item-text--hidden'}`}
+          />
+        </ListItemButton>
+
         {/* Messages - Parent Item */}
         <ListItemButton
           component={RouterLink}
@@ -831,57 +844,6 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
                 <UploadIcon fontSize="small" />
               </ListItemIcon>
               <ListItemText primary="Import Templates" />
-            </ListItemButton>
-          </List>
-        </Collapse>
-
-        {/* Sales Orders - Parent Item */}
-        <ListItemButton
-          component={RouterLink}
-          to={APP_ROUTES.DASHBOARD.SALES_ORDERS}
-          selected={location.pathname === APP_ROUTES.DASHBOARD.SALES_ORDERS}
-          data-test-id="sidebar-sales-orders-item"
-          className={`dashboard-sidebar__list-item dashboard-sidebar__parent-item ${open ? 'dashboard-sidebar__list-item--open' : 'dashboard-sidebar__list-item--closed'}`}
-        >
-          <ListItemIcon
-            className={`dashboard-sidebar__list-item-icon ${open ? 'dashboard-sidebar__list-item-icon--open' : 'dashboard-sidebar__list-item-icon--closed'}`}
-          >
-            <ReceiptIcon />
-          </ListItemIcon>
-          <ListItemText
-            primary="Sales Orders"
-            className={`dashboard-sidebar__list-item-text ${open ? 'dashboard-sidebar__list-item-text--visible' : 'dashboard-sidebar__list-item-text--hidden'}`}
-          />
-          {open && (
-            <IconButton
-              size="small"
-              onClick={e => {
-                e.preventDefault()
-                e.stopPropagation()
-                handleSalesOrdersToggle()
-              }}
-              className={styles['dashboard-sidebar__expand-icon']}
-            >
-              {salesOrdersExpanded ? <ExpandLess /> : <ExpandMore />}
-            </IconButton>
-          )}
-        </ListItemButton>
-
-        {/* Sales Orders - Sub Items */}
-        <Collapse in={salesOrdersExpanded && open} timeout="auto" unmountOnExit>
-          <List component="div" disablePadding>
-            {/* Add Sales Order */}
-            <ListItemButton
-              component={RouterLink}
-              to={APP_ROUTES.DASHBOARD.ADD_SALES_ORDER}
-              selected={isActive(APP_ROUTES.DASHBOARD.ADD_SALES_ORDER)}
-              data-test-id="sidebar-add-sales-order-item"
-              className={styles['dashboard-sidebar__sub-item']}
-            >
-              <ListItemIcon className={styles['dashboard-sidebar__sub-item-icon']}>
-                <AddIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText primary="Add Sales Order" />
             </ListItemButton>
           </List>
         </Collapse>

@@ -14,11 +14,12 @@ import {
   DialogTitle,
   Grid,
   InputAdornment,
+  Typography
 } from '@mui/material'
 
 
 import { productApi } from '../../../api/productApi'
-import { BlueButton, IconButton, RedButton } from '../../../components/buttons'
+import { BlueButton, IconButton } from '../../../components/buttons'
 import { BodyText, SecondaryFont, Subheader } from '../../../components/fonts'
 import { TextFieldInput } from '../../../components/form-input'
 import {
@@ -73,15 +74,8 @@ const SimpleQuantityPriceDialog = ({
   const [quantity, setQuantity] = useState(1)
   const [quantityInput, setQuantityInput] = useState('1')
 
-  // Price state: Numeric value and string input (for controlled input)
+  // Price state: Numeric value (TextFieldInput handles formatting automatically)
   const [pricePerUnit, setPricePerUnit] = useState(0)
-  const [priceInput, setPriceInput] = useState('0')
-
-  // Stock state: Total available stock across all locations (null = not loaded)
-  const [totalAvailable, setTotalAvailable] = useState<number | null>(null)
-
-  // Loading state: Whether stock data is being fetched
-  const [loadingStock, setLoadingStock] = useState(false)
 
   /**
    * Initialize dialog state when it opens with a product.
@@ -93,7 +87,7 @@ const SimpleQuantityPriceDialog = ({
    * It performs:
    * 1. Resets quantity to 1
    * 2. Calculates default price (with discount applied)
-   * 3. Fetches stock availability from API
+   * 3. Uses pre-fetched stock availability (no additional API call)
    *
    * Price Calculation:
    * - Percentage discount: finalPrice = originalPrice - (originalPrice × discountPercent / 100)
@@ -122,29 +116,12 @@ const SimpleQuantityPriceDialog = ({
         finalPrice = Math.max(0, defaultPrice - product.discount)
       }
       setPricePerUnit(finalPrice)
-      setPriceInput(finalPrice.toString())
 
       /**
-       * Fetch stock availability from API.
-       *
-       * Gets stock at all pickup locations and sums them up to show
-       * total available stock. This helps user know if requested quantity
-       * is available.
+       * Use pre-fetched stock availability from product data.
+       * Stock was fetched during search, so no additional API call needed.
        */
-      setLoadingStock(true)
-      productApi.getProductStockAtLocationsByProductId(product.productId)
-        .then((stockData) => {
-          // Sum available stock across all locations
-          const total = stockData.reduce((sum, loc) => sum + loc.availableStock, 0)
-          setTotalAvailable(total)
-        })
-        .catch(() => {
-          // On error, set to null (will show "Loading stock..." or no limit)
-          setTotalAvailable(null)
-        })
-        .finally(() => {
-          setLoadingStock(false)
-        })
+      // Stock is already available in product.totalAvailableStock
     }
   }, [product, open])
 
@@ -175,7 +152,7 @@ const SimpleQuantityPriceDialog = ({
    *
    * Validates and clamps the quantity value:
    * - Minimum: 1 (cannot order 0 or negative)
-   * - Maximum: totalAvailable (if stock data loaded) or current value
+   * - Maximum: product.totalAvailableStock (if stock data available) or current value
    *
    * Why clamp on blur instead of onChange?
    * - Allows user to type freely while editing
@@ -185,7 +162,7 @@ const SimpleQuantityPriceDialog = ({
   const handleQuantityBlur = (): void => {
     const parsed = parseInt(quantityInput) || 0
     // Clamp between 1 and max available (or parsed if stock not loaded)
-    const maxQty = totalAvailable ?? parsed
+    const maxQty = product?.totalAvailableStock ?? parsed
     const validQty = Math.max(1, Math.min(parsed, maxQty))
     setQuantity(validQty)
     setQuantityInput(validQty.toString())
@@ -207,14 +184,12 @@ const SimpleQuantityPriceDialog = ({
   /**
    * Handle price input change (while typing).
    *
-   * Updates both string input and numeric price.
-   * Only updates price if value is >= 0 (prevents negative prices).
+   * TextFieldInput handles formatting automatically, so we just need to update the numeric value.
    *
-   * @param {string} value - The new input value from the text field
+   * @param {React.ChangeEvent<HTMLInputElement>} e - The change event
    */
-  const handlePriceInputChange = (value: string): void => {
-    setPriceInput(value)
-    const parsed = parseFloat(value) || 0
+  const handlePriceInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const parsed = parseFloat(e.target.value) || 0
     // Only update if non-negative
     if (parsed >= 0) {
       setPricePerUnit(parsed)
@@ -231,12 +206,11 @@ const SimpleQuantityPriceDialog = ({
    * - Allows user to type freely while editing
    * - Validates when they're done (better UX)
    */
-  const handlePriceBlur = (): void => {
-    const parsed = parseFloat(priceInput) || 0
+  const handlePriceBlur = (e: React.FocusEvent<HTMLInputElement>): void => {
+    const parsed = parseFloat(e.target.value) || 0
     // Clamp to minimum price (for fixed discounts)
     const validPrice = Math.max(minPrice, parsed)
     setPricePerUnit(validPrice)
-    setPriceInput(validPrice.toString())
   }
 
   /**
@@ -244,8 +218,8 @@ const SimpleQuantityPriceDialog = ({
    *
    * These are used to show error states and disable confirm button.
    */
-  // Quantity validation: Check if exceeds available stock (only if stock data loaded)
-  const isQuantityInvalid = totalAvailable !== null && quantity > totalAvailable
+  // Quantity validation: Check if exceeds available stock (only if stock data available)
+  const isQuantityInvalid = product?.totalAvailableStock !== null && product?.totalAvailableStock !== undefined && quantity > (product.totalAvailableStock ?? 0)
 
   // Price validation: Check if below minimum required price
   const isPriceTooLow = pricePerUnit < minPrice
@@ -256,11 +230,14 @@ const SimpleQuantityPriceDialog = ({
    * Called when user clicks "Add to Order" button.
    * Validates quantity > 0 before calling parent callback.
    *
-   * The parent callback (onConfirm) will create the product item
-   * and add it to the purchase order.
+   * Closes this quantity/price dialog first, then calls parent callback
+   * which will add the product and close the main modal.
    */
   const handleConfirm = (): void => {
     if (quantity > 0) {
+      // Close this dialog first
+      onClose()
+      // Then call parent callback to add product and close main modal
       onConfirm(quantity, pricePerUnit)
     }
   }
@@ -274,14 +251,27 @@ const SimpleQuantityPriceDialog = ({
   const subtotal = quantity * pricePerUnit
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{
+        className: styles['product-picker__dialog-paper']
+      }}
+    >
+      <DialogTitle className={styles['product-picker__dialog-title-container']}>
         <Box className={styles['product-picker__dialog-title']}>
-          <ShoppingCartIcon color="primary" />
-          <Subheader variant="h6" label="Add to Purchase Order" />
+          <Box className={styles['product-picker__dialog-title-left']}>
+            <ShoppingCartIcon color="primary" />
+            <Subheader variant="h6" label="Add to Purchase Order" />
+          </Box>
+          <IconButton onClick={onClose} size="small" className={styles['product-picker__dialog-close-button']}>
+            <CloseIcon />
+          </IconButton>
         </Box>
       </DialogTitle>
-      <DialogContent>
+      <DialogContent className={styles['product-picker__dialog-content-container']}>
         {product && (
           <Box className={styles['product-picker__dialog-content']}>
             <Subheader variant="subtitle1" label={product.title} className={styles['product-picker__dialog-product-title']} />
@@ -326,15 +316,16 @@ const SimpleQuantityPriceDialog = ({
                   value={quantityInput}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleQuantityInputChange(e.target.value)}
                   onBlur={handleQuantityBlur}
-                  inputProps={{ min: 1, max: totalAvailable ?? undefined }}
+                  inputProps={{ min: 1, max: product?.totalAvailableStock ?? undefined }}
                   helperText={
-                    loadingStock
-                      ? 'Loading stock...'
-                      : totalAvailable !== null
-                        ? `Max available: ${totalAvailable.toLocaleString()}`
-                        : undefined
+                    product?.totalAvailableStock !== null && product?.totalAvailableStock !== undefined
+                      ? product.totalAvailableStock === 0
+                        ? 'Stock data unavailable (ProductPickupLocationMapping table not found)'
+                        : `Max available: ${product.totalAvailableStock.toLocaleString()}`
+                      : undefined
                   }
-                  error={totalAvailable !== null && quantity > totalAvailable}
+                  error={product?.totalAvailableStock !== null && product?.totalAvailableStock !== undefined && quantity > (product.totalAvailableStock ?? 0)}
+
                 />
               </Grid>
               <Grid item xs={6}>
@@ -342,11 +333,15 @@ const SimpleQuantityPriceDialog = ({
                   label="Price per Unit"
                   type="number"
                   fullWidth
-                  value={priceInput}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handlePriceInputChange(e.target.value)}
+                  value={pricePerUnit}
+                  onChange={handlePriceInputChange}
                   onBlur={handlePriceBlur}
                   InputProps={{
-                    startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        ₹
+                      </InputAdornment>
+                    ),
                   }}
                   inputProps={{ min: minPrice, step: 0.01 }}
                   helperText={
@@ -361,15 +356,19 @@ const SimpleQuantityPriceDialog = ({
 
             {/* Subtotal Display */}
             <Box className={styles['product-picker__dialog-subtotal']}>
-              <Subheader variant="subtitle1" label="Subtotal:" className={styles['product-picker__dialog-subtotal-label']} />
-              <Subheader variant="h5" label={`₹${subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} className={styles['product-picker__dialog-subtotal-value']} />
+              <Typography variant="subtitle1" className={styles['product-picker__dialog-subtotal-label']}>
+                Subtotal:
+              </Typography>
+              <Typography variant="body1" className={styles['product-picker__dialog-subtotal-value']}>
+                ₹{subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </Typography>
             </Box>
 
             {/* Stock Warning */}
             {isQuantityInvalid && (
               <Box className={styles['product-picker__dialog-warning']}>
                 <SecondaryFont variant="caption" className={styles['product-picker__dialog-warning-text']}>
-                  ⚠️ Requested quantity ({quantity}) exceeds available stock ({totalAvailable}). The order may not be fulfillable.
+                  ⚠️ Requested quantity ({quantity}) exceeds available stock ({product?.totalAvailableStock ?? 0}). The order may not be fulfillable.
                 </SecondaryFont>
               </Box>
             )}
@@ -392,8 +391,7 @@ const SimpleQuantityPriceDialog = ({
           </Box>
         )}
       </DialogContent>
-      <DialogActions>
-        <RedButton onClick={onClose} variant="outlined">Cancel</RedButton>
+      <DialogActions className={styles['product-picker__dialog-actions-container']}>
         <BlueButton
           variant="contained"
           onClick={handleConfirm}
@@ -501,7 +499,7 @@ const ProductPickerModal = ({
          * Collect all available image URLs from the API response.
          *
          * The API provides multiple image fields. We collect all non-empty
-         * URLs and label them appropriately for the ImageCarousel component.
+         * URLs and label them appropriately for the ProductImageCarousel component.
          */
         const images: ProductImageInfoLocal[] = []
         if (p.mainImageUrl) images.push({ url: p.mainImageUrl, label: 'Main' })
@@ -535,10 +533,38 @@ const ProductPickerModal = ({
           height: p.height,
           category: p.category?.categoryName ?? p.categoryName, // Handle nested category object
           images,
+          totalAvailableStock: null, // Will be populated below
         }
       })
 
-      setProducts(mappedProducts)
+      /**
+       * Fetch stock for all products in parallel.
+       * This avoids additional database calls when selecting a product.
+       */
+      const stockPromises = mappedProducts.map(async (product) => {
+        try {
+          const stockData = await productApi.getProductStockAtLocationsByProductId(product.productId)
+          const total = stockData.reduce((sum, loc) => {
+            const stock = loc.availableStock ?? 0
+            return sum + stock
+          }, 0)
+          return { productId: product.productId, totalAvailableStock: total }
+        } catch (error) {
+          return { productId: product.productId, totalAvailableStock: null }
+        }
+      })
+
+      // Wait for all stock requests to complete
+      const stockResults = await Promise.all(stockPromises)
+
+      // Map stock results back to products
+      const stockMap = new Map(stockResults.map(r => [r.productId, r.totalAvailableStock]))
+      const productsWithStock = mappedProducts.map(product => ({
+        ...product,
+        totalAvailableStock: stockMap.get(product.productId) ?? null,
+      }))
+
+      setProducts(productsWithStock)
     } catch {
       // On error, show empty state (no products found)
       setProducts([])
@@ -620,11 +646,20 @@ const ProductPickerModal = ({
         totalPackagingFee: 0, // Will be calculated at order level via shipping optimization
         totalShippingFee: 0, // Will be calculated at order level via shipping optimization
         grandTotal: subtotal, // Just subtotal for now (will be recalculated with fees)
+        // Preserve stock information for validation labels
+        totalAvailableStock: selectedProduct.totalAvailableStock ?? null,
+        // Include product metadata for display
+        brand: selectedProduct.brand,
+        upc: selectedProduct.upc,
+        model: selectedProduct.model,
+        weightKgs: selectedProduct.weightKgs,
       } as unknown as PurchaseOrderProductItem)
 
-      // Clean up: Close dialog, clear selection, close modal
-      setQuantityDialogOpen(false)
+      // Clean up: Clear selected product state
+      // Note: The quantity dialog is already closed by handleConfirm calling onClose()
       setSelectedProduct(null)
+
+      // Close the main ProductPickerModal
       onClose()
     }
   }
@@ -678,9 +713,12 @@ const ProductPickerModal = ({
             onSearch={() => void handleSearch()}
             onKeyPress={handleKeyDown}
           />
-          <SecondaryFont variant="caption" className={styles['product-picker__search-hint']}>
-            Enter at least 2 characters and press Enter or click Search
-          </SecondaryFont>
+          {/* Search Hint - Only show when no search has been performed and no products loaded */}
+          {!hasSearched && products.length === 0 && !loading && (
+            <SecondaryFont variant="caption" className={styles['product-picker__search-hint']}>
+              Enter at least 2 characters and press Enter or click Search
+            </SecondaryFont>
+          )}
 
           {/* Loading State */}
           {loading && (

@@ -131,6 +131,10 @@ export interface ProductResponseModel {
     loginName: string;
     fullName?: string;
   };
+
+  // Shipment-specific fields (only populated when product is part of a shipment)
+  allocatedQuantity?: number;
+  allocatedPrice?: number;
 }
 
 /**

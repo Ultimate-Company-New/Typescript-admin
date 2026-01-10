@@ -1,3 +1,5 @@
+import type { PackageProductResponseData } from "./ShipmentModels";
+
 /**
  * Package API Models
  * Type definitions for package-related API requests and responses
@@ -98,6 +100,13 @@ export interface PackageResponseModel {
   modifiedUser?: string
   /** Pickup location data - map of locationId to PackagePickupLocationMappingResponseModel */
   pickupLocationQuantities?: Record<number, PackagePickupLocationMappingResponseModel>
+
+  // Shipment-specific fields (only populated when package is part of a shipment)
+  quantityUsed?: number
+  totalCost?: number
+
+  // Products in this package (only populated when package is part of a shipment)
+  products?: PackageProductResponseData[]
 }
 
 /**

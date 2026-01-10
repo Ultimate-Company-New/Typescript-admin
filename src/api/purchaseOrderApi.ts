@@ -1,3 +1,4 @@
+import { type PurchaseOrderRequestModel } from '../models/api-models'
 import { type PaginationBaseRequestModel, type PaginationBaseResponseModel } from '../types/grid.types'
 
 import axiosInstance from './axiosConfig'
@@ -26,7 +27,7 @@ export const purchaseOrderApi = {
    * Get purchase order details by ID
    */
   getPurchaseOrderById: async (purchaseOrderId: number): Promise<unknown> => {
-    const response = await axiosInstance.get<unknown>(`${API_BASE_URL}/getPurchaseOrderDetailsById/${purchaseOrderId}`)
+    const response = await axiosInstance.get<unknown>(`${API_BASE_URL}/getPurchaseOrderById/${purchaseOrderId}`)
     return response.data
   },
 
@@ -100,6 +101,14 @@ export const purchaseOrderApi = {
     })
 
     return response.data
+  },
+
+  /**
+   * Bulk create purchase orders
+   * @param purchaseOrders - Array of purchase order request models
+   */
+  bulkCreatePurchaseOrders: async (purchaseOrders: PurchaseOrderRequestModel[]): Promise<void> => {
+    await axiosInstance.put<void>(`${API_BASE_URL}/bulkCreatePurchaseOrder`, purchaseOrders)
   },
 }
 

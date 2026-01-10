@@ -598,6 +598,11 @@ $odd-opacity: 0.2;
       color: rgba(0, 0, 0, 0.85);
     }
 
+    // Remove padding for product images cell (so carousel can use full cell width/height)
+    .MuiDataGrid-cell.product-grid__images-cell {
+      padding: 0 !important;
+    }
+
     // Pagination styling
     .MuiPaginationItem-root {
       border-radius: 0;

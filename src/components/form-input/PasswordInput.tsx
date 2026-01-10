@@ -10,6 +10,7 @@ export interface PasswordInputProps extends Omit<TextFieldProps, 'variant' | 'ma
   variant?: 'outlined' | 'filled' | 'standard'
   margin?: 'none' | 'dense' | 'normal'
   showPasswordToggle?: boolean
+  autocomplete?: 'current-password' | 'new-password' | 'off'
 }
 
 /**
@@ -24,6 +25,7 @@ const PasswordInput = forwardRef<HTMLDivElement, PasswordInputProps>(
       margin = 'normal',
       fullWidth = true,
       showPasswordToggle = true,
+      autocomplete = 'current-password',
       InputLabelProps,
       inputProps,
       ...props
@@ -54,6 +56,7 @@ const PasswordInput = forwardRef<HTMLDivElement, PasswordInputProps>(
         }}
         inputProps={{
           maxLength,
+          autoComplete: autocomplete,
           ...inputProps,
         }}
         InputProps={{

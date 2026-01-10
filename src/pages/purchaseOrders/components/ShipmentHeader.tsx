@@ -6,7 +6,9 @@ import {
     LocationOn as LocationIcon,
     Inventory as PackageIcon,
     Inventory2 as ProductIcon,
+    CalendarToday as CalendarIcon,
 } from '@mui/icons-material'
+import { format } from 'date-fns'
 
 import { type CourierOption, type OptimizationShipment } from '../../../api/shippingApi'
 import { IconButton } from '../../../components/buttons'
@@ -24,8 +26,11 @@ import styles from '../../../styles/PurchaseOrders.module.scss'
  *   Affects icon display (expand/collapse).
  * @property {boolean} isValid - Whether the shipment is valid (has packages and couriers).
  *   Affects location icon color (primary for valid, error for invalid).
- * @property {string | null} [shipmentLabel] - Optional label for the shipment.
- *   Used to indicate weight-split shipments (e.g., "Shipment 1 of 3").
+ * @property {string | null} [shipmentLabel] - Primary shipment label (e.g., "Shipment 1 of 52").
+ *   Shows the global sequential number of the shipment.
+ * @property {string | null} [weightSplitLabel] - Optional weight split label (e.g., "Part 1 of 3").
+ *   Shown when a location has multiple shipments due to weight limits.
+ * @property {string} [expectedDeliveryDate] - Optional expected delivery date for the shipment.
  * @property {onToggleExpand} onToggleExpand - Callback invoked when header is clicked
  *   to expand/collapse the shipment details.
  */
@@ -34,7 +39,11 @@ interface ShipmentHeaderProps {
   selectedCourier?: CourierOption
   isExpanded: boolean
   isValid: boolean
+  /** Primary shipment label (e.g., "Shipment 1 of 52") */
   shipmentLabel?: string | null
+  /** Weight split label shown when a location has multiple shipments (e.g., "Part 1 of 3") */
+  weightSplitLabel?: string | null
+  expectedDeliveryDate?: string
   onToggleExpand: () => void
 }
 
@@ -57,7 +66,8 @@ interface ShipmentHeaderProps {
  * - Location icon color: Primary (valid) or Error (invalid)
  * - "No Packages Available" chip: Shown when no packaging solution found
  * - "No Couriers" chip: Shown when packages exist but no couriers available
- * - Shipment label chip: Shows "Shipment X of Y" for weight-split shipments
+ * - Shipment label chip: Shows global "Shipment X of Y" (e.g., "Shipment 1 of 52")
+ * - Weight split label chip: Shows "Part X of Y" for weight-split shipments (e.g., "Part 1 of 3")
  *
  * Calculations:
  * - Total Boxes: Sums quantityUsed from all packagesUsed
@@ -82,6 +92,8 @@ const ShipmentHeader = ({
   isExpanded,
   isValid,
   shipmentLabel,
+  weightSplitLabel,
+  expectedDeliveryDate,
   onToggleExpand,
 }: ShipmentHeaderProps): JSX.Element => {
   // Extract location name with fallback
@@ -93,9 +105,23 @@ const ShipmentHeader = ({
   /**
    * Format address line from address components.
    * Filters out empty values and joins with commas.
+   * Handles cases where address fields might be empty strings.
+   * Address should always be available as backend ensures it's loaded.
    */
   const addressLine = address
-    ? [address.streetAddress, address.city, address.state, address.postalCode].filter(Boolean).join(', ')
+    ? (() => {
+        const parts = [
+          address.streetAddress,
+          address.streetAddress2,
+          address.streetAddress3,
+          address.city,
+          address.state,
+          address.postalCode,
+          address.country,
+        ].filter(part => part && typeof part === 'string' && part.trim() !== '')
+
+        return parts.length > 0 ? parts.join(', ') : 'Address not available'
+      })()
     : 'Address not available'
 
   // Check if couriers are available for this shipment
@@ -109,6 +135,22 @@ const ShipmentHeader = ({
 
   // Determine if packages are available (packaging solution exists)
   const hasPackages = totalBoxes > 0
+
+  /**
+   * CRITICAL: Validate that selectedCourier is actually in availableCouriers.
+   *
+   * This prevents showing a selected courier (like Ekart) that's not in the
+   * available couriers list. If the selected courier is not available, don't show it.
+   *
+   * Why this validation?
+   * - When shipping is recalculated, old courier selections might persist
+   * - The old courier (e.g., Ekart) might not be in the new availableCouriers list
+   * - We should only display couriers that are actually selectable
+   */
+  const isValidSelectedCourier = selectedCourier &&
+    shipment.availableCouriers.some(
+      c => c.courierCompanyId === selectedCourier.courierCompanyId
+    )
 
   return (
     <Box
@@ -124,6 +166,15 @@ const ShipmentHeader = ({
               label={shipmentLabel}
               size="small"
               color="info"
+              variant="outlined"
+              className={styles['shipping-optimization-modal__shipment-label-chip']}
+            />
+          )}
+          {weightSplitLabel && (
+            <Chip
+              label={weightSplitLabel}
+              size="small"
+              color="warning"
               variant="outlined"
               className={styles['shipping-optimization-modal__shipment-label-chip']}
             />
@@ -145,9 +196,28 @@ const ShipmentHeader = ({
             />
           )}
         </Box>
-        <SecondaryFont variant="body2" className={styles['shipping-optimization-modal__shipment-address']}>
+        <SecondaryFont variant="body2" className={styles['shipping-optimization-modal__shipment-address']} sx={{ fontStyle: 'italic' }}>
           {addressLine}
         </SecondaryFont>
+        {expectedDeliveryDate && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, marginTop: 0.5 }}>
+            <CalendarIcon fontSize="small" color="primary" />
+            <SecondaryFont variant="body2" sx={{ fontWeight: 500 }}>
+              Expected Delivery:{' '}
+              {(() => {
+                try {
+                  const date = new Date(expectedDeliveryDate)
+                  if (!isNaN(date.getTime())) {
+                    return format(date, 'do MMM yyyy, h:mm a')
+                  }
+                  return expectedDeliveryDate
+                } catch {
+                  return expectedDeliveryDate
+                }
+              })()}
+            </SecondaryFont>
+          </Box>
+        )}
         <Box className={styles['shipping-optimization-modal__shipment-chips-row']}>
           <Chip
             icon={<ProductIcon />}
@@ -185,8 +255,10 @@ const ShipmentHeader = ({
       </Box>
 
       {/* Selected Courier Summary */}
+      {/* CRITICAL: Only show selected courier if it's actually in availableCouriers */}
+      {/* This prevents showing Ekart (or any courier) that's not available */}
       <Box className={styles['shipping-optimization-modal__shipment-selected-courier-container']}>
-        {selectedCourier && (
+        {isValidSelectedCourier && selectedCourier && (
           <Paper className={styles['shipping-optimization-modal__shipment-selected-courier-paper']}>
             <SecondaryFont variant="caption" className={styles['shipping-optimization-modal__shipment-selected-courier-label']}>
               Selected Courier

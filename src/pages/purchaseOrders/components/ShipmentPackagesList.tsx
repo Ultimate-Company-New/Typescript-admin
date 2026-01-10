@@ -1,10 +1,19 @@
-import { Box, Chip, Paper } from '@mui/material'
+import { Box, Chip, Paper } from "@mui/material";
 
-import { Inventory as PackageIcon } from '@mui/icons-material'
+import {
+  Straighten as DimensionsIcon,
+  Inventory as PackageIcon,
+  CurrencyRupee as PriceIcon,
+  Scale as WeightIcon,
+} from "@mui/icons-material";
 
-import { type OptimizationShipment } from '../../../api/shippingApi'
-import { BodyText, SecondaryFont, Subheader } from '../../../components/fonts'
-import styles from '../../../styles/PurchaseOrders.module.scss'
+import { type OptimizationShipment } from "../../../api/shippingApi";
+import {
+  ProductImageCarousel,
+  buildProductImages,
+} from "../../../components/carousel";
+import { BodyText, SecondaryFont, Subheader } from "../../../components/fonts";
+import styles from "../../../styles/PurchaseOrders.module.scss";
 
 /**
  * Props for ShipmentPackagesList component
@@ -13,7 +22,7 @@ import styles from '../../../styles/PurchaseOrders.module.scss'
  *   and products. Packages are grouped and aggregated for display.
  */
 interface ShipmentPackagesListProps {
-  shipment: OptimizationShipment
+  shipment: OptimizationShipment;
 }
 
 /**
@@ -50,7 +59,9 @@ interface ShipmentPackagesListProps {
  * @param {ShipmentPackagesListProps} props - Component props
  * @returns {JSX.Element} Rendered packages list
  */
-const ShipmentPackagesList = ({ shipment }: ShipmentPackagesListProps): JSX.Element => {
+const ShipmentPackagesList = ({
+  shipment,
+}: ShipmentPackagesListProps): JSX.Element => {
   /**
    * Build a map of productId -> product for quick lookup.
    *
@@ -62,10 +73,10 @@ const ShipmentPackagesList = ({ shipment }: ShipmentPackagesListProps): JSX.Elem
    */
   const productMap = shipment.products.reduce((acc, prodAlloc) => {
     if (prodAlloc.product) {
-      acc[prodAlloc.product.productId] = prodAlloc.product
+      acc[prodAlloc.product.productId] = prodAlloc.product;
     }
-    return acc
-  }, {} as Record<number, typeof shipment.products[0]['product']>)
+    return acc;
+  }, {} as Record<number, (typeof shipment.products)[0]["product"]>);
 
   /**
    * Group packages by packageId and aggregate data.
@@ -84,153 +95,343 @@ const ShipmentPackagesList = ({ shipment }: ShipmentPackagesListProps): JSX.Elem
    * @returns {Record<number, GroupedPackage>} Map of packageId to grouped package data
    */
   const groupedPackages = shipment.packagesUsed.reduce((acc, pkg) => {
-    const pkgId = pkg.packageInfo.packageId
+    const pkgId = pkg.packageInfo.packageId;
     if (!acc[pkgId]) {
       acc[pkgId] = {
         packageInfo: pkg.packageInfo,
         totalBoxes: 0,
         totalCost: 0,
-        productQuantities: {} as Record<number, { product: typeof shipment.products[0]['product'], quantity: number }>
-      }
+        productQuantities: {} as Record<
+          number,
+          {
+            product: (typeof shipment.products)[0]["product"];
+            quantity: number;
+          }
+        >,
+      };
     }
-    acc[pkgId].totalBoxes += pkg.quantityUsed
-    acc[pkgId].totalCost += pkg.totalCost
+    acc[pkgId].totalBoxes += pkg.quantityUsed;
+    acc[pkgId].totalCost += pkg.totalCost;
     // Aggregate product quantities - look up product from productMap by productId
-    pkg.productDetails?.forEach(detail => {
-      const prodId = detail.productId
-      const product = productMap[prodId]
+    pkg.productDetails?.forEach((detail) => {
+      const prodId = detail.productId;
+      const product = productMap[prodId];
       if (product && !acc[pkgId].productQuantities[prodId]) {
-        acc[pkgId].productQuantities[prodId] = { product, quantity: 0 }
+        acc[pkgId].productQuantities[prodId] = { product, quantity: 0 };
       }
       if (acc[pkgId].productQuantities[prodId]) {
-        acc[pkgId].productQuantities[prodId].quantity += detail.quantity
+        acc[pkgId].productQuantities[prodId].quantity += detail.quantity;
       }
-    })
-    return acc
-  }, {} as Record<number, { packageInfo: typeof shipment.packagesUsed[0]['packageInfo'], totalBoxes: number, totalCost: number, productQuantities: Record<number, { product: typeof shipment.products[0]['product'], quantity: number }> }>)
+    });
+    return acc;
+  }, {} as Record<number, { packageInfo: (typeof shipment.packagesUsed)[0]["packageInfo"]; totalBoxes: number; totalCost: number; productQuantities: Record<number, { product: (typeof shipment.products)[0]["product"]; quantity: number }> }>);
 
-  const groupedList = Object.values(groupedPackages)
-  const totalBoxes = groupedList.reduce((sum, p) => sum + p.totalBoxes, 0)
+  const groupedList = Object.values(groupedPackages);
+  const totalBoxes = groupedList.reduce((sum, p) => sum + p.totalBoxes, 0);
 
   return (
     <>
-      <Subheader variant="subtitle2" label={`Packing Details (${totalBoxes} boxes total)`} className={styles['shipping-optimization-modal__shipment-packages-header']}>
+      <Subheader
+        variant="subtitle2"
+        label={`Packing Details (${totalBoxes} boxes total)`}
+        className={
+          styles["shipping-optimization-modal__shipment-packages-header"]
+        }
+      >
         <PackageIcon fontSize="small" color="secondary" />
       </Subheader>
-      <Box className={styles['shipping-optimization-modal__shipment-packages-list']}>
+      <Box
+        className={
+          styles["shipping-optimization-modal__shipment-packages-list"]
+        }
+      >
         {groupedList.length === 0 ? (
-          <Paper variant="outlined" className={styles['shipping-optimization-modal__shipment-no-packages-paper']}>
-            <PackageIcon color="error" className={styles['shipping-optimization-modal__shipment-no-packages-icon']} />
-            <BodyText variant="body2" className={styles['shipping-optimization-modal__shipment-no-packages-text']}>
+          <Paper
+            variant="outlined"
+            className={
+              styles["shipping-optimization-modal__shipment-no-packages-paper"]
+            }
+          >
+            <PackageIcon
+              color="error"
+              className={
+                styles["shipping-optimization-modal__shipment-no-packages-icon"]
+              }
+            />
+            <BodyText
+              variant="body2"
+              className={
+                styles["shipping-optimization-modal__shipment-no-packages-text"]
+              }
+            >
               ⚠️ No packages available to fit products at this location
             </BodyText>
           </Paper>
         ) : (
           groupedList.map((pkg) => {
-            const productList = Object.values(pkg.productQuantities)
+            const productList = Object.values(pkg.productQuantities);
             return (
-              <Paper key={pkg.packageInfo.packageId} variant="outlined" className={styles['shipping-optimization-modal__shipment-package-paper']}>
+              <Paper
+                key={pkg.packageInfo.packageId}
+                variant="outlined"
+                className={
+                  styles["shipping-optimization-modal__shipment-package-paper"]
+                }
+              >
                 {/* Package Header */}
-                <Box className={styles['shipping-optimization-modal__shipment-package-header']}>
+                <Box
+                  className={
+                    styles[
+                      "shipping-optimization-modal__shipment-package-header"
+                    ]
+                  }
+                >
                   <Box>
-                    <BodyText variant="body1" className={styles['shipping-optimization-modal__shipment-package-name']}>
+                    <BodyText
+                      variant="body1"
+                      className={
+                        styles[
+                          "shipping-optimization-modal__shipment-package-name"
+                        ]
+                      }
+                    >
                       📦 {pkg.packageInfo.packageName}
                     </BodyText>
-                    <Box className={styles['shipping-optimization-modal__shipment-package-info-row']}>
-                      <Chip label={pkg.packageInfo.packageType} size="small" className={styles['shipping-optimization-modal__shipment-package-type-chip']} />
-                      {pkg.packageInfo.length && pkg.packageInfo.breadth && pkg.packageInfo.height && (
-                        <SecondaryFont variant="caption" className={styles['shipping-optimization-modal__shipment-package-dimensions']}>
-                          {pkg.packageInfo.length}×{pkg.packageInfo.breadth}×{pkg.packageInfo.height} cm
-                        </SecondaryFont>
-                      )}
+                    <Box
+                      className={
+                        styles[
+                          "shipping-optimization-modal__shipment-package-info-row"
+                        ]
+                      }
+                    >
+                      <Chip
+                        label={pkg.packageInfo.packageType}
+                        size="small"
+                        color="primary"
+                        variant="filled"
+                        className={
+                          styles[
+                            "shipping-optimization-modal__shipment-package-type-chip"
+                          ]
+                        }
+                      />
+                      {pkg.packageInfo.length &&
+                        pkg.packageInfo.breadth &&
+                        pkg.packageInfo.height && (
+                          <Box
+                            className={
+                              styles[
+                                "shipping-optimization-modal__shipment-package-info-item"
+                              ]
+                            }
+                          >
+                            <DimensionsIcon
+                              fontSize="inherit"
+                              className={
+                                styles[
+                                  "shipping-optimization-modal__shipment-package-info-icon"
+                                ]
+                              }
+                            />
+                            <SecondaryFont
+                              variant="caption"
+                              className={
+                                styles[
+                                  "shipping-optimization-modal__shipment-package-dimensions"
+                                ]
+                              }
+                            >
+                              {pkg.packageInfo.length}×{pkg.packageInfo.breadth}
+                              ×{pkg.packageInfo.height} cm
+                            </SecondaryFont>
+                          </Box>
+                        )}
                       {pkg.packageInfo.maxWeight && (
-                        <SecondaryFont variant="caption" className={styles['shipping-optimization-modal__shipment-package-max-weight']}>
-                          Max: {pkg.packageInfo.maxWeight} kg
-                        </SecondaryFont>
+                        <Box
+                          className={
+                            styles[
+                              "shipping-optimization-modal__shipment-package-info-item"
+                            ]
+                          }
+                        >
+                          <WeightIcon
+                            fontSize="inherit"
+                            className={
+                              styles[
+                                "shipping-optimization-modal__shipment-package-info-icon"
+                              ]
+                            }
+                          />
+                          <SecondaryFont
+                            variant="caption"
+                            className={
+                              styles[
+                                "shipping-optimization-modal__shipment-package-max-weight"
+                              ]
+                            }
+                          >
+                            Max: {pkg.packageInfo.maxWeight} kg
+                          </SecondaryFont>
+                        </Box>
                       )}
                       {pkg.packageInfo.pricePerUnit != null && (
-                        <SecondaryFont variant="caption" className={styles['shipping-optimization-modal__shipment-package-price']}>
-                          ₹{pkg.packageInfo.pricePerUnit.toLocaleString('en-IN')}/box
-                        </SecondaryFont>
+                        <Box
+                          className={`${styles["shipping-optimization-modal__shipment-package-info-item"]} ${styles["shipping-optimization-modal__shipment-package-info-item--price"]}`}
+                        >
+                          <PriceIcon
+                            fontSize="inherit"
+                            className={
+                              styles[
+                                "shipping-optimization-modal__shipment-package-info-icon--price"
+                              ]
+                            }
+                          />
+                          <SecondaryFont
+                            variant="caption"
+                            className={
+                              styles[
+                                "shipping-optimization-modal__shipment-package-price"
+                              ]
+                            }
+                          >
+                            ₹
+                            {pkg.packageInfo.pricePerUnit.toLocaleString(
+                              "en-IN"
+                            )}
+                            /box
+                          </SecondaryFont>
+                        </Box>
                       )}
                     </Box>
                   </Box>
-                  <Box className={styles['shipping-optimization-modal__shipment-package-quantity-container']}>
+                  <Box
+                    className={
+                      styles[
+                        "shipping-optimization-modal__shipment-package-quantity-container"
+                      ]
+                    }
+                  >
                     <Chip
-                      label={`${pkg.totalBoxes} ${pkg.totalBoxes === 1 ? 'box' : 'boxes'}`}
+                      label={`${pkg.totalBoxes} ${
+                        pkg.totalBoxes === 1 ? "box" : "boxes"
+                      }`}
                       size="small"
                       color="secondary"
-                      className={styles['shipping-optimization-modal__shipment-package-quantity-chip']}
+                      className={
+                        styles[
+                          "shipping-optimization-modal__shipment-package-quantity-chip"
+                        ]
+                      }
                     />
-                    <SecondaryFont variant="caption" className={styles['shipping-optimization-modal__shipment-package-total-cost']}>
-                      ₹{pkg.totalCost.toLocaleString('en-IN')}
+                    <SecondaryFont
+                      variant="caption"
+                      className={
+                        styles[
+                          "shipping-optimization-modal__shipment-package-total-cost"
+                        ]
+                      }
+                    >
+                      ₹{pkg.totalCost.toLocaleString("en-IN")}
                     </SecondaryFont>
                   </Box>
                 </Box>
 
                 {/* Products in this Package Type */}
                 {productList.length > 0 && (
-                  <Box className={styles['shipping-optimization-modal__shipment-package-products-container']}>
+                  <Box
+                    className={
+                      styles[
+                        "shipping-optimization-modal__shipment-package-products-container"
+                      ]
+                    }
+                  >
                     {/* Table Header */}
-                    <Box className={styles['shipping-optimization-modal__shipment-package-products-header']}>
+                    <Box
+                      className={
+                        styles[
+                          "shipping-optimization-modal__shipment-package-products-header"
+                        ]
+                      }
+                    >
                       <span>Product</span>
-                      <span className={styles['shipping-optimization-modal__shipment-package-products-header-cell']}>#/Box</span>
-                      <span className={styles['shipping-optimization-modal__shipment-package-products-header-cell']}>Qty</span>
+                      <span
+                        className={
+                          styles[
+                            "shipping-optimization-modal__shipment-package-products-header-cell"
+                          ]
+                        }
+                      >
+                        Qty
+                      </span>
                     </Box>
 
                     {/* Product rows: Show each product with quantities */}
                     {productList.map((item, idx) => {
-                      /**
-                       * Calculate quantity per box for this product.
-                       *
-                       * Divides total quantity by number of boxes, using Math.ceil
-                       * to round up (ensures we show at least 1 per box if product exists).
-                       *
-                       * Example: 10 units in 3 boxes = 4 per box (rounded up)
-                       */
-                      const qtyPerBox = pkg.totalBoxes > 0 ? Math.ceil(item.quantity / pkg.totalBoxes) : item.quantity
+                      // Build product images using shared utility
+                      const productImages = buildProductImages(item.product);
+
                       return (
                         <Box
                           key={item.product.productId}
-                          className={styles['shipping-optimization-modal__shipment-package-product-row']}
-                          style={{ borderBottom: idx < productList.length - 1 ? '1px solid rgba(0, 0, 0, 0.12)' : 'none' }}
+                          className={
+                            styles[
+                              "shipping-optimization-modal__shipment-package-product-row"
+                            ]
+                          }
+                          style={{
+                            borderBottom:
+                              idx < productList.length - 1
+                                ? "1px solid rgba(0, 0, 0, 0.12)"
+                                : "none",
+                          }}
                         >
-                          {/* Product with image and title */}
-                          <Box className={styles['shipping-optimization-modal__shipment-package-product-info']}>
-                            {item.product.mainImageUrl ? (
-                              <Box
-                                component="img"
-                                src={item.product.mainImageUrl}
-                                alt={item.product.title}
-                                className={styles['shipping-optimization-modal__shipment-package-product-image']}
-                              />
-                            ) : (
-                              <Box className={styles['shipping-optimization-modal__shipment-package-product-image-placeholder']}>
-                                <PackageIcon className={styles['shipping-optimization-modal__shipment-package-product-image-placeholder-icon']} />
-                              </Box>
-                            )}
-                            <BodyText variant="body2" className={styles['shipping-optimization-modal__shipment-package-product-title']}>
+                          {/* Product with image carousel and title */}
+                          <Box
+                            className={
+                              styles[
+                                "shipping-optimization-modal__shipment-package-product-info"
+                              ]
+                            }
+                          >
+                            <ProductImageCarousel
+                              images={productImages}
+                              variant="grid"
+                              size={120}
+                              fallbackLetter={item.product.title?.[0] ?? "P"}
+                            />
+                            <BodyText
+                              variant="body2"
+                              className={
+                                styles[
+                                  "shipping-optimization-modal__shipment-package-product-title"
+                                ]
+                              }
+                            >
                               {item.product.title}
                             </BodyText>
                           </Box>
-                          <BodyText variant="body1" className={styles['shipping-optimization-modal__shipment-package-product-qty-per-box']}>
-                            {qtyPerBox}
-                          </BodyText>
-                          <BodyText variant="body1" className={styles['shipping-optimization-modal__shipment-package-product-qty']}>
+                          <BodyText
+                            variant="body1"
+                            className={
+                              styles[
+                                "shipping-optimization-modal__shipment-package-product-qty"
+                              ]
+                            }
+                          >
                             {item.quantity}
                           </BodyText>
                         </Box>
-                      )
+                      );
                     })}
                   </Box>
                 )}
               </Paper>
-            )
+            );
           })
         )}
       </Box>
     </>
-  )
-}
+  );
+};
 
-export default ShipmentPackagesList
+export default ShipmentPackagesList;

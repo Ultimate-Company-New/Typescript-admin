@@ -1,28 +1,28 @@
 import {
-  Add as AddIcon,
-  Category as CategoryIcon,
-  LocalOffer as LocalOfferIcon,
-  Public as PublicIcon,
-  Scale as ScaleIcon,
-  ShoppingCart as ShoppingCartIcon,
-  Straighten as StraightenIcon,
+    Add as AddIcon,
+    Category as CategoryIcon,
+    LocalOffer as LocalOfferIcon,
+    Public as PublicIcon,
+    Scale as ScaleIcon,
+    ShoppingCart as ShoppingCartIcon,
+    Straighten as StraightenIcon,
 } from '@mui/icons-material'
 import {
-  Box,
-  Card,
-  CardContent,
-  Chip,
-  Divider,
-  Tooltip,
+    Box,
+    Card,
+    CardContent,
+    Chip,
+    Divider,
+    Tooltip,
+    Typography,
 } from '@mui/material'
 
 import { BlueButton } from '../../../components/buttons'
+import { ProductImageCarousel } from '../../../components/carousel'
 import { BodyText, SecondaryFont, Subheader } from '../../../components/fonts'
 import { getConditionColor, getConditionLabel } from '../../../constants/appConstants'
 import { type ProductPickerCardProps } from '../../../models/purchase-order-components/PurchaseOrderComponentModels'
 import styles from '../../../styles/PurchaseOrders.module.scss'
-
-import ImageCarousel from './ImageCarousel'
 
 /**
  * Product Picker Card Component
@@ -31,7 +31,7 @@ import ImageCarousel from './ImageCarousel'
  * Shows comprehensive product information and allows selection via a button.
  *
  * Features:
- * - Image carousel (full-size with thumbnails)
+ * - Image carousel (reusing ProductImageCarousel component with size 200px)
  * - Product title with tooltip (for long titles)
  * - Product ID and UPC chips
  * - Detailed product information grid:
@@ -120,8 +120,10 @@ const ProductPickerCard = ({ product, onSelect, disabled }: ProductPickerCardPro
       variant="outlined"
       className={`${styles['product-picker__card']} ${disabled ? styles['product-picker__card--disabled'] : ''}`}
     >
-      {/* Image Carousel - Centered with navigation */}
-      <ImageCarousel images={product.images} />
+      {/* Image Carousel - Using grid variant with 3D flip transition */}
+      <Box className={styles['product-picker__image-carousel-wrapper']} sx={{ display: 'flex', justifyContent: 'center' }}>
+        <ProductImageCarousel images={product.images} variant="grid" size={200} fallbackLetter={product.title?.[0] ?? 'P'} />
+      </Box>
 
       <CardContent className={styles['product-picker__card-content']}>
         {/* Title */}
@@ -142,7 +144,7 @@ const ProductPickerCard = ({ product, onSelect, disabled }: ProductPickerCardPro
           {product.upc && <Chip label={`UPC: ${product.upc}`} size="small" variant="outlined" />}
         </Box>
 
-        <Divider className={styles['product-picker__divider']} />
+        <Divider className={`${styles['product-picker__divider']} ${styles['product-picker__divider--spacing']}`} />
 
         {/* Details Grid */}
         <Box className={styles['product-picker__details-grid']}>
@@ -223,14 +225,17 @@ const ProductPickerCard = ({ product, onSelect, disabled }: ProductPickerCardPro
               <Box className={styles['product-picker__price-info']}>
                 {priceInfo.hasDiscount ? (
                   <>
-                    <BodyText className={styles['product-picker__price-final']}>
-                      ₹{priceInfo.final.toLocaleString()}
-                    </BodyText>
+                    <Typography
+                      variant="body1"
+                      className={`${styles['product-picker__price-final']} ${styles['product-picker__price-final--green']}`}
+                    >
+                      ₹{priceInfo.final.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </Typography>
                     <BodyText variant="body2" className={styles['product-picker__price-original']}>
-                      ₹{priceInfo.original.toLocaleString()}
+                      ₹{priceInfo.original.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </BodyText>
                     <Chip
-                      label={product.isDiscountPercent ? `${product.discount}% OFF` : `₹${product.discount} OFF`}
+                      label={product.isDiscountPercent ? `${product.discount}% OFF` : `₹${product.discount.toLocaleString('en-IN')} OFF`}
                       size="small"
                       color="error"
                       variant="outlined"
@@ -238,9 +243,12 @@ const ProductPickerCard = ({ product, onSelect, disabled }: ProductPickerCardPro
                     />
                   </>
                 ) : (
-                  <BodyText className={styles['product-picker__price-final']}>
-                    ₹{priceInfo.original.toLocaleString()}
-                  </BodyText>
+                  <Typography
+                    variant="body1"
+                    className={`${styles['product-picker__price-final']} ${styles['product-picker__price-final--green']}`}
+                  >
+                    ₹{priceInfo.original.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </Typography>
                 )}
               </Box>
             </Box>

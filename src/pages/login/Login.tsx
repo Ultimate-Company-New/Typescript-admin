@@ -111,6 +111,7 @@ const Login = (): JSX.Element => {
                     disabled={isLoading}
                     inputProps={{
                       'data-test-id': 'login-email-input',
+                      autoComplete: 'username',
                     }}
                   />
                 )}
@@ -126,6 +127,7 @@ const Login = (): JSX.Element => {
                     label="Password"
                     placeholder="Enter your password"
                     required
+                    autocomplete="current-password"
                     error={!!errors.password}
                     helperText={errors.password?.message}
                     disabled={isLoading}

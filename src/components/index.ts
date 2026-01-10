@@ -2,6 +2,7 @@ export { default as DevLogger } from './DevLogger'
 export type { ApiLog } from './DevLogger'
 
 export * from './buttons'
+export * from './carousel'
 export * from './datagrid'
 export * from './fonts'
 export * from './form'

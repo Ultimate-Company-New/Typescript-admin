@@ -2,11 +2,10 @@ import { memo, useEffect, useState } from "react";
 
 import { format } from "date-fns";
 
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import { Avatar, Box, Chip, IconButton, Switch, Tooltip } from "@mui/material";
+import { Box, Chip, Switch, Tooltip } from "@mui/material";
 import { type GridColDef, type GridRenderCellParams } from "@mui/x-data-grid";
 
+import { ProductImageCarousel } from "../../components/carousel";
 import { RenderLongCellItem } from "../../components/datagrid";
 import { TextFieldInput } from "../../components/form-input";
 import { getConditionColor, getConditionLabel } from "../../constants/appConstants";
@@ -63,144 +62,6 @@ const QuantityInput = memo(({ initialValue, onValueChange }: QuantityInputProps)
 QuantityInput.displayName = 'QuantityInput'
 
 import PickupLocationsButton from "./PickupLocationsButton";
-
-/**
- * Product Image Carousel - Simple, clean carousel for product images
- */
-interface ProductImageCarouselProps {
-  images: Array<{ url: string; label: string }>;
-  fallbackLetter?: string;
-}
-
-const ProductImageCarousel = ({ images, fallbackLetter = "P" }: ProductImageCarouselProps): JSX.Element => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isHovered, setIsHovered] = useState(false);
-
-  // Filter out empty/undefined images
-  const validImages = images.filter(img => img.url);
-
-  if (validImages.length === 0) {
-    return (
-      <Avatar variant="square" sx={{ width: 150, height: 150 }}>
-        {fallbackLetter}
-      </Avatar>
-    );
-  }
-
-  const handlePrev = (e: React.MouseEvent): void => {
-    e.stopPropagation();
-    setCurrentIndex(prev => (prev === 0 ? validImages.length - 1 : prev - 1));
-  };
-
-  const handleNext = (e: React.MouseEvent): void => {
-    e.stopPropagation();
-    setCurrentIndex(prev => (prev === validImages.length - 1 ? 0 : prev + 1));
-  };
-
-  const handleDotClick = (index: number, e: React.MouseEvent): void => {
-    e.stopPropagation();
-    setCurrentIndex(index);
-  };
-
-  return (
-    <Box
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      sx={{
-        position: "relative",
-        width: 150,
-        height: 150,
-        borderRadius: 1,
-        overflow: "hidden",
-      }}
-    >
-      {/* Main Image */}
-      <Tooltip title={validImages[currentIndex]?.label || ""} placement="top">
-        <Avatar
-          variant="square"
-          src={validImages[currentIndex]?.url}
-          sx={{
-            width: 150,
-            height: 150,
-            transition: "opacity 0.2s ease",
-          }}
-        >
-          {fallbackLetter}
-        </Avatar>
-      </Tooltip>
-
-      {/* Navigation Arrows - Only show if multiple images and hovered */}
-      {validImages.length > 1 && isHovered && (
-        <>
-          <IconButton
-            onClick={handlePrev}
-            size="small"
-            sx={{
-              position: "absolute",
-              left: 2,
-              top: "50%",
-              transform: "translateY(-50%)",
-              backgroundColor: "rgba(0,0,0,0.5)",
-              color: "white",
-              padding: "2px",
-              "&:hover": { backgroundColor: "rgba(0,0,0,0.7)" },
-            }}
-          >
-            <ChevronLeftIcon fontSize="small" />
-          </IconButton>
-          <IconButton
-            onClick={handleNext}
-            size="small"
-            sx={{
-              position: "absolute",
-              right: 2,
-              top: "50%",
-              transform: "translateY(-50%)",
-              backgroundColor: "rgba(0,0,0,0.5)",
-              color: "white",
-              padding: "2px",
-              "&:hover": { backgroundColor: "rgba(0,0,0,0.7)" },
-            }}
-          >
-            <ChevronRightIcon fontSize="small" />
-          </IconButton>
-        </>
-      )}
-
-      {/* Dots Indicator - Only show if multiple images */}
-      {validImages.length > 1 && (
-        <Box
-          sx={{
-            position: "absolute",
-            bottom: 4,
-            left: "50%",
-            transform: "translateX(-50%)",
-            display: "flex",
-            gap: 0.5,
-          }}
-        >
-          {validImages.map((_, index) => (
-            <Box
-              key={index}
-              onClick={(e) => handleDotClick(index, e)}
-              sx={{
-                width: 6,
-                height: 6,
-                borderRadius: "50%",
-                backgroundColor: index === currentIndex ? "white" : "rgba(255,255,255,0.5)",
-                cursor: "pointer",
-                transition: "background-color 0.2s ease",
-                boxShadow: "0 1px 2px rgba(0,0,0,0.3)",
-                "&:hover": { backgroundColor: "white" },
-              }}
-            />
-          ))}
-        </Box>
-      )}
-
-    </Box>
-  );
-};
 
 /**
  * Pickup location data structure
@@ -373,6 +234,7 @@ export const getProductGridColumns = (
     filterable: false,
     align: "center",
     headerAlign: "center",
+    cellClassName: "product-grid__images-cell",
     renderCell: (params: GridRenderCellParams<ProductData>) => {
       const rowData = params.row;
       const product = rowData.product;
@@ -401,10 +263,15 @@ export const getProductGridColumns = (
             alignItems: "center",
             height: "100%",
             width: "100%",
+            p: 0,
+            m: 0,
+            gap: 0,
           }}
         >
           <ProductImageCarousel
             images={images}
+            variant="grid"
+            size={150}
             fallbackLetter={rowData.title?.[0] ?? "P"}
           />
         </Box>

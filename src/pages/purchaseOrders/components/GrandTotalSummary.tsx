@@ -1,7 +1,8 @@
-import { Divider, Grid, Paper } from '@mui/material'
+import { Box, Grid, InputAdornment, Paper } from "@mui/material";
 
-import { BodyText, SecondaryFont, Subheader } from '../../../components/fonts'
-import styles from '../../../styles/PurchaseOrders.module.scss'
+import { BodyText, SecondaryFont, Subheader } from "../../../components/fonts";
+import { TextFieldInput } from "../../../components/form-input";
+import styles from "../../../styles/PurchaseOrders.module.scss";
 
 /**
  * Props for GrandTotalSummary component
@@ -19,19 +20,28 @@ import styles from '../../../styles/PurchaseOrders.module.scss'
  *   Sum of all selected courier rates across all pickup locations.
  * @property {boolean} shippingCalculated - Whether shipping has been calculated via optimization.
  *   When false, shows "Calculate shipping" placeholder text instead of costs.
+ * @property {number} serviceFee - Service fee amount (user input, defaults to 0).
+ * @property {function} onServiceFeeChange - Callback to update service fee when user changes it.
+ * @property {boolean} isView - Whether the component is in view-only mode.
+ * @property {boolean} disabled - Whether the component is disabled.
  */
 interface GrandTotalSummaryProps {
   grandTotals: {
-    grossSubtotal: number
-    subtotal: number
-    discount: number
-    packaging: number
-    shipping: number
-    total: number
-  }
-  totalPackagingCost: number
-  totalShippingCost: number
-  shippingCalculated: boolean
+    grossSubtotal: number;
+    subtotal: number;
+    discount: number;
+    packaging: number;
+    shipping: number;
+    total: number;
+  };
+  totalPackagingCost: number;
+  totalShippingCost: number;
+  shippingCalculated: boolean;
+  hasShippingData?: boolean; // Whether shipping allocations actually exist
+  serviceFee?: number;
+  onServiceFeeChange?: (serviceFee: number) => void;
+  isView?: boolean;
+  disabled?: boolean;
 }
 
 /**
@@ -52,7 +62,7 @@ interface GrandTotalSummaryProps {
  * Calculation flow:
  * 1. Products Subtotal = sum of (quantity × pricePerUnit) before discount
  * 2. Discount = sum of all product discounts
- * 3. Subtotal Before GST = (Products after discount) + Packaging + Shipping
+ * 3. Subtotal Before GST = (Products after discount) + Packaging + Shipping + Service Fee
  * 4. GST = Subtotal Before GST × 18%
  * 5. Grand Total = Subtotal Before GST + GST
  *
@@ -64,77 +74,322 @@ const GrandTotalSummary = ({
   totalPackagingCost,
   totalShippingCost,
   shippingCalculated,
+  hasShippingData = false,
+  serviceFee = 0,
+  onServiceFeeChange,
+  isView = false,
+  disabled = false,
 }: GrandTotalSummaryProps): JSX.Element => {
+  // Show numbers if:
+  // 1. Shipping has been calculated AND there's actual shipping data, OR
+  // 2. We have packaging or shipping costs (from orderSummary in view/edit mode, or from calculation)
+  // Note: Removed isView restriction - edit mode also needs to display saved values
+  const shouldShowShippingNumbers =
+    (shippingCalculated && hasShippingData) ||
+    totalPackagingCost > 0 ||
+    totalShippingCost > 0;
   return (
-    <Paper className={styles['product-items-section__grand-total-paper']}>
-      <Subheader variant="subtitle1" label="🧾 Order Summary" className={styles['product-items-section__grand-total-header']} />
-      <Grid container spacing={1}>
-        {/* Products Subtotal (before discount) */}
-        <Grid item xs={8}>
-          <BodyText variant="body2" className={styles['product-items-section__grand-total-label']}>
-            Products Subtotal
-          </BodyText>
-        </Grid>
-        <Grid item xs={4}>
-          <BodyText variant="body2" className={styles['product-items-section__grand-total-value']}>
-            ₹{grandTotals.grossSubtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-          </BodyText>
+    <Paper
+      className={styles["product-items-section__grand-total-paper"]}
+      sx={
+        isView
+          ? { paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0 }
+          : undefined
+      }
+    >
+      <Subheader
+        variant="subtitle1"
+        label="🧾 Order Summary"
+        className={styles["product-items-section__grand-total-header"]}
+      />
+      <Grid
+        container
+        spacing={1}
+        sx={{
+          padding: "16px",
+          paddingTop: "0",
+          "& .MuiGrid-item": { paddingTop: "10px !important" },
+        }}
+      >
+        {/* Products Subtotal - Show grossSubtotal (before discount) so the discount line makes visual sense */}
+        {/* When discount is shown as a separate line, users expect: Products - Discount = Net */}
+        <Grid
+          item
+          xs={12}
+          className={styles["product-items-section__grand-total-row"]}
+        >
+          <Grid container spacing={0}>
+            <Grid
+              item
+              xs={12}
+              sm={8}
+              className={
+                styles["product-items-section__grand-total-label-grid"]
+              }
+            >
+              <BodyText
+                variant="body2"
+                className={styles["product-items-section__grand-total-label"]}
+              >
+                🛒 Products Subtotal
+              </BodyText>
+            </Grid>
+            <Grid
+              item
+              xs={12}
+              sm={4}
+              className={
+                styles["product-items-section__grand-total-value-grid"]
+              }
+            >
+              <BodyText
+                variant="body2"
+                className={`${styles["product-items-section__grand-total-value"]} ${styles["product-items-section__grand-total-value--blue"]}`}
+              >
+                ₹
+                {grandTotals.grossSubtotal.toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                })}
+              </BodyText>
+            </Grid>
+          </Grid>
         </Grid>
 
         {/* Discount - only show when there's a discount */}
         {grandTotals.discount > 0 && (
-          <>
-            <Grid item xs={8}>
-              <BodyText variant="body2" className={styles['product-items-section__price-value-success']}>
-                Total Discount
-              </BodyText>
+          <Grid
+            item
+            xs={12}
+            className={styles["product-items-section__grand-total-row"]}
+          >
+            <Grid container spacing={0}>
+              <Grid
+                item
+                xs={12}
+                sm={8}
+                className={
+                  styles["product-items-section__grand-total-label-grid"]
+                }
+              >
+                <BodyText
+                  variant="body2"
+                  className={`${styles["product-items-section__grand-total-label"]} ${styles["product-items-section__grand-total-label--red"]}`}
+                >
+                  🏷️ Total Discount
+                </BodyText>
+              </Grid>
+              <Grid
+                item
+                xs={12}
+                sm={4}
+                className={
+                  styles["product-items-section__grand-total-value-grid"]
+                }
+              >
+                <BodyText
+                  variant="body2"
+                  className={`${styles["product-items-section__grand-total-value"]} ${styles["product-items-section__grand-total-value--red"]}`}
+                >
+                  -₹
+                  {grandTotals.discount.toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                  })}
+                </BodyText>
+              </Grid>
             </Grid>
-            <Grid item xs={4}>
-              <BodyText variant="body2" className={styles['product-items-section__price-value-success']}>
-                -₹{grandTotals.discount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-              </BodyText>
-            </Grid>
-          </>
+          </Grid>
         )}
 
         {/* Packaging Fee - from optimization result */}
-        <Grid item xs={8}>
-          <BodyText variant="body2" className={styles['product-items-section__grand-total-label']}>
-            📦 Packaging Fee
-          </BodyText>
-        </Grid>
-        <Grid item xs={4}>
-          <BodyText variant="body2" className={styles['product-items-section__grand-total-value']}>
-            {shippingCalculated ? (
-              `₹${totalPackagingCost.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`
-            ) : (
-              <SecondaryFont component="span" variant="caption" className={styles['product-items-section__info-text']}>
-                Calculate shipping
-              </SecondaryFont>
-            )}
-          </BodyText>
+        <Grid
+          item
+          xs={12}
+          className={styles["product-items-section__grand-total-row"]}
+        >
+          <Grid container spacing={0}>
+            <Grid
+              item
+              xs={12}
+              sm={8}
+              className={
+                styles["product-items-section__grand-total-label-grid"]
+              }
+            >
+              <BodyText
+                variant="body2"
+                className={styles["product-items-section__grand-total-label"]}
+              >
+                📦 Packaging Fee
+              </BodyText>
+            </Grid>
+            <Grid
+              item
+              xs={12}
+              sm={4}
+              className={
+                styles["product-items-section__grand-total-value-grid"]
+              }
+            >
+              {shouldShowShippingNumbers ? (
+                <BodyText
+                  variant="body2"
+                  className={styles["product-items-section__grand-total-value"]}
+                >
+                  ₹
+                  {totalPackagingCost.toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                  })}
+                </BodyText>
+              ) : (
+                <SecondaryFont
+                  variant="caption"
+                  className={
+                    styles["product-items-section__grand-total-helper-text"]
+                  }
+                >
+                  Click on "Calculate Shipping" to calculate cost
+                </SecondaryFont>
+              )}
+            </Grid>
+          </Grid>
         </Grid>
 
         {/* Shipping */}
-        <Grid item xs={8}>
-          <BodyText variant="body2" className={styles['product-items-section__grand-total-label']}>
-            🚚 Total Shipping
-          </BodyText>
-        </Grid>
-        <Grid item xs={4}>
-          <BodyText variant="body2" className={styles['product-items-section__grand-total-value']}>
-            {shippingCalculated ? (
-              `₹${totalShippingCost.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`
-            ) : (
-              <SecondaryFont component="span" variant="caption" className={styles['product-items-section__info-text']}>
-                Calculate shipping
-              </SecondaryFont>
-            )}
-          </BodyText>
+        <Grid
+          item
+          xs={12}
+          className={styles["product-items-section__grand-total-row"]}
+        >
+          <Grid container spacing={0}>
+            <Grid
+              item
+              xs={12}
+              sm={8}
+              className={
+                styles["product-items-section__grand-total-label-grid"]
+              }
+            >
+              <BodyText
+                variant="body2"
+                className={styles["product-items-section__grand-total-label"]}
+              >
+                🚚 Total Shipping
+              </BodyText>
+            </Grid>
+            <Grid
+              item
+              xs={12}
+              sm={4}
+              className={
+                styles["product-items-section__grand-total-value-grid"]
+              }
+            >
+              {shouldShowShippingNumbers ? (
+                <BodyText
+                  variant="body2"
+                  className={styles["product-items-section__grand-total-value"]}
+                >
+                  ₹
+                  {totalShippingCost.toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                  })}
+                </BodyText>
+              ) : (
+                <SecondaryFont
+                  variant="caption"
+                  className={
+                    styles["product-items-section__grand-total-helper-text"]
+                  }
+                >
+                  Click on "Calculate Shipping" to calculate cost
+                </SecondaryFont>
+              )}
+            </Grid>
+          </Grid>
         </Grid>
 
-        <Grid item xs={12}>
-          <Divider className={styles['product-items-section__grand-total-divider']} />
+        {/* Service Fee - Editable input */}
+        <Grid
+          item
+          xs={12}
+          className={styles["product-items-section__grand-total-row"]}
+        >
+          <Grid container spacing={0}>
+            <Grid
+              item
+              xs={12}
+              sm={8}
+              className={
+                styles["product-items-section__grand-total-label-grid"]
+              }
+            >
+              <BodyText
+                variant="body2"
+                className={styles["product-items-section__grand-total-label"]}
+              >
+                💼 Service Fee
+              </BodyText>
+            </Grid>
+            <Grid
+              item
+              xs={12}
+              sm={4}
+              className={styles["product-items-section__service-fee-grid"]}
+            >
+              {isView || !onServiceFeeChange ? (
+                <BodyText
+                  variant="body2"
+                  className={styles["product-items-section__grand-total-value"]}
+                >
+                  ₹
+                  {serviceFee.toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                  })}
+                </BodyText>
+              ) : (
+                <TextFieldInput
+                  type="number"
+                  formatNumber={false}
+                  value={serviceFee}
+                  onChange={(e) => {
+                    const value = parseFloat(e.target.value) || 0;
+                    onServiceFeeChange(value);
+                  }}
+                  disabled={disabled}
+                  size="small"
+                  margin="none"
+                  inputProps={{
+                    min: 0,
+                    step: 0.01,
+                    className:
+                      styles["product-items-section__service-fee-input-field"],
+                  }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment
+                        position="start"
+                        className={
+                          styles["product-items-section__service-fee-adornment"]
+                        }
+                      >
+                        <Box
+                          className={
+                            styles[
+                              "product-items-section__service-fee-rupee-box"
+                            ]
+                          }
+                        >
+                          ₹
+                        </Box>
+                      </InputAdornment>
+                    ),
+                  }}
+                  className={styles["product-items-section__service-fee-input"]}
+                  placeholder="0.00"
+                />
+              )}
+            </Grid>
+          </Grid>
         </Grid>
 
         {/*
@@ -144,60 +399,164 @@ const GrandTotalSummary = ({
           avoid polluting the component's scope with temporary variables.
 
           Formula:
-          - Subtotal Before GST = Products (after discount) + Packaging + Shipping
+          - Subtotal Before GST = Products (after discount) + Packaging + Shipping + Service Fee
           - GST = 18% of Subtotal Before GST (standard Indian GST rate)
           - Grand Total = Subtotal Before GST + GST
         */}
         {(() => {
-          // Calculate subtotal before GST: products (already discounted) + packaging + shipping
-          const subtotalBeforeGst = grandTotals.subtotal + totalPackagingCost + totalShippingCost
+          // Calculate subtotal before GST: products (already discounted) + packaging + shipping + service fee
+          // Only include packaging and shipping costs if there's actual shipping data
+          const packagingCost = shouldShowShippingNumbers
+            ? totalPackagingCost
+            : 0;
+          const shippingCost = shouldShowShippingNumbers
+            ? totalShippingCost
+            : 0;
+          const subtotalBeforeGst =
+            grandTotals.subtotal + packagingCost + shippingCost + serviceFee;
           // Calculate GST: 18% of subtotal (standard Indian tax rate)
-          const gstAmount = subtotalBeforeGst * 0.18
+          const gstAmount = subtotalBeforeGst * 0.18;
           // Grand total: subtotal + GST
-          const grandTotal = subtotalBeforeGst + gstAmount
+          const grandTotal = subtotalBeforeGst + gstAmount;
 
           return (
             <>
-              <Grid item xs={8}>
-                <BodyText variant="body2" className={styles['product-items-section__grand-total-value-bold']}>
-                  Subtotal
-                </BodyText>
-              </Grid>
-              <Grid item xs={4}>
-                <BodyText variant="body2" className={styles['product-items-section__grand-total-value-bold']}>
-                  ₹{subtotalBeforeGst.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                </BodyText>
+              <Grid
+                item
+                xs={12}
+                className={styles["product-items-section__grand-total-row"]}
+              >
+                <Grid container spacing={0}>
+                  <Grid
+                    item
+                    xs={12}
+                    sm={8}
+                    className={
+                      styles["product-items-section__grand-total-label-grid"]
+                    }
+                  >
+                    <BodyText
+                      variant="body2"
+                      className={`${styles["product-items-section__grand-total-label"]} ${styles["product-items-section__grand-total-value-bold--orange"]}`}
+                    >
+                      💰 Subtotal
+                    </BodyText>
+                  </Grid>
+                  <Grid
+                    item
+                    xs={12}
+                    sm={4}
+                    className={
+                      styles["product-items-section__grand-total-value-grid"]
+                    }
+                  >
+                    <BodyText
+                      variant="body2"
+                      className={`${styles["product-items-section__grand-total-value-bold"]} ${styles["product-items-section__grand-total-value-bold--orange"]}`}
+                    >
+                      ₹
+                      {subtotalBeforeGst.toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                      })}
+                    </BodyText>
+                  </Grid>
+                </Grid>
               </Grid>
 
               {/* Tax calculation - 18% GST on subtotal */}
-              <Grid item xs={8}>
-                <BodyText variant="body2" className={styles['product-items-section__grand-total-label']}>
-                  GST (18%)
-                </BodyText>
-              </Grid>
-              <Grid item xs={4}>
-                <BodyText variant="body2" className={styles['product-items-section__grand-total-value']}>
-                  ₹{gstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                </BodyText>
-              </Grid>
-
-              <Grid item xs={12}>
-                <Divider className={styles['product-items-section__grand-total-divider-large']} />
+              <Grid
+                item
+                xs={12}
+                className={styles["product-items-section__grand-total-row"]}
+              >
+                <Grid container spacing={0}>
+                  <Grid
+                    item
+                    xs={12}
+                    sm={8}
+                    className={
+                      styles["product-items-section__grand-total-label-grid"]
+                    }
+                  >
+                    <BodyText
+                      variant="body2"
+                      className={
+                        styles["product-items-section__grand-total-label"]
+                      }
+                    >
+                      📊 GST (18%)
+                    </BodyText>
+                  </Grid>
+                  <Grid
+                    item
+                    xs={12}
+                    sm={4}
+                    className={
+                      styles["product-items-section__grand-total-value-grid"]
+                    }
+                  >
+                    <BodyText
+                      variant="body2"
+                      className={
+                        styles["product-items-section__grand-total-value"]
+                      }
+                    >
+                      ₹
+                      {gstAmount.toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                      })}
+                    </BodyText>
+                  </Grid>
+                </Grid>
               </Grid>
 
               {/* Grand Total = subtotal + GST */}
-              <Grid item xs={8}>
-                <Subheader variant="h6" label="Grand Total" className={styles['product-items-section__grand-total-final-label']} />
-              </Grid>
-              <Grid item xs={4}>
-                <Subheader variant="h5" label={`₹${grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`} className={styles['product-items-section__grand-total-final-value']} />
+              <Grid
+                item
+                xs={12}
+                className={styles["product-items-section__grand-total-row"]}
+              >
+                <Grid container spacing={0}>
+                  <Grid
+                    item
+                    xs={12}
+                    sm={8}
+                    className={
+                      styles["product-items-section__grand-total-label-grid"]
+                    }
+                  >
+                    <Subheader
+                      variant="h6"
+                      label="✨ Grand Total"
+                      className={
+                        styles["product-items-section__grand-total-final-label"]
+                      }
+                    />
+                  </Grid>
+                  <Grid
+                    item
+                    xs={12}
+                    sm={4}
+                    className={
+                      styles["product-items-section__grand-total-value-grid"]
+                    }
+                  >
+                    <Subheader
+                      variant="h5"
+                      label={`₹${grandTotal.toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                      })}`}
+                      className={`${styles["product-items-section__grand-total-final-value"]} ${styles["product-items-section__grand-total-final-value--green"]}`}
+                    />
+                  </Grid>
+                </Grid>
               </Grid>
             </>
-          )
+          );
         })()}
       </Grid>
     </Paper>
-  )
-}
+  );
+};
 
-export default GrandTotalSummary
+export default GrandTotalSummary;

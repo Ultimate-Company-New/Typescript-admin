@@ -1,5 +1,5 @@
 import type React from 'react'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { Box } from '@mui/material'
 import {
@@ -12,6 +12,8 @@ import {
 } from '@mui/x-data-grid'
 
 import { purchaseOrderApi } from '../../api/purchaseOrderApi'
+import { ConfirmDialog } from '../../components/dialogs/ConfirmDialog'
+import { PaymentModal } from '../../components/dialogs/PaymentModal'
 import {
     CustomNoRowsOverlay,
     GridDensity,
@@ -27,8 +29,13 @@ import {
     type FilterGroup,
     type GridDensityType,
 } from '../../components/datagrid'
-import { getPurchaseOrderGridColumns } from '../../models/grid-models/PurchaseOrderGridColumns'
+import { getPurchaseOrderGridColumns, type ApprovePaymentData } from '../../models/grid-models/PurchaseOrderGridColumns'
 import { type PaginatedGridInterface } from '../../types/grid.types'
+import ProductModal from '../pickupLocations/components/ProductModal'
+import ShipmentsModal from './components/ShipmentsModal'
+import FinancialsModal from './components/FinancialsModal'
+import PaymentsModal from './components/PaymentsModal'
+import { type ShipmentResponseData, type OrderSummaryResponseData, type PaymentResponseModel } from '../../models/api-models'
 
 import styles from '../../styles/PurchaseOrders.module.scss'
 
@@ -67,9 +74,39 @@ const PurchaseOrders = (): React.JSX.Element => {
   })
   const [columnVisibilityModel, setColumnVisibilityModel] = useState<GridColumnVisibilityModel>({
     isDeleted: false,
-    purchaseOrderId: false,
+    purchaseOrderId: true,
   })
   const [visibleColumnFields, setVisibleColumnFields] = useState<string[]>([])
+
+  // Product modal state
+  const [productModalOpen, setProductModalOpen] = useState(false)
+  const [selectedPurchaseOrderId, setSelectedPurchaseOrderId] = useState<number | undefined>()
+  const [selectedProducts, setSelectedProducts] = useState<Array<{ productId: number; quantity: number; pricePerUnit?: number }>>([])
+
+  // Shipments modal state
+  const [shipmentsModalOpen, setShipmentsModalOpen] = useState(false)
+  const [selectedShipments, setSelectedShipments] = useState<ShipmentResponseData[]>([])
+
+  // Financials modal state
+  const [financialsModalOpen, setFinancialsModalOpen] = useState(false)
+  const [selectedOrderSummary, setSelectedOrderSummary] = useState<OrderSummaryResponseData | null>(null)
+  const [selectedShipmentsCount, setSelectedShipmentsCount] = useState<number>(0)
+
+  // Confirmation dialog state (for reject only)
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false)
+  const [confirmDialogPurchaseOrderId, setConfirmDialogPurchaseOrderId] = useState<number | null>(null)
+
+  // Payment modal state (for approve with payment)
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false)
+  const [paymentModalData, setPaymentModalData] = useState<ApprovePaymentData | null>(null)
+
+  // Payments history modal state
+  const [paymentsModalOpen, setPaymentsModalOpen] = useState(false)
+  const [selectedPayments, setSelectedPayments] = useState<PaymentResponseModel[]>([])
+  const [paymentsGrandTotal, setPaymentsGrandTotal] = useState<number>(0)
+  const [paymentsPendingAmount, setPaymentsPendingAmount] = useState<number>(0)
+  const [paymentsPurchaseOrderId, setPaymentsPurchaseOrderId] = useState<number | undefined>()
+  const [paymentsVendorNumber, setPaymentsVendorNumber] = useState<string>('')
 
   // Pagination model
   const [paginationModel, setPaginationModel] = useState<PaginatedGridInterface>({
@@ -80,6 +117,98 @@ const PurchaseOrders = (): React.JSX.Element => {
     actualDataCount: 0,
     totalPaginationBlockCount: 0,
   })
+
+  // Handle products click
+  const handleProductsClick = useCallback((purchaseOrderId: number, products: Array<{ productId: number; quantity: number; pricePerUnit?: number }>): void => {
+    setSelectedPurchaseOrderId(purchaseOrderId)
+    setSelectedProducts(products)
+    setProductModalOpen(true)
+  }, [])
+
+  // Handle shipments click
+  const handleShipmentsClick = useCallback((shipments: unknown[]): void => {
+    // Convert unknown[] to ShipmentResponseData[]
+    const typedShipments = shipments as ShipmentResponseData[]
+    setSelectedShipments(typedShipments)
+    setShipmentsModalOpen(true)
+  }, [])
+
+  const handleFinancialsClick = useCallback((orderSummary: unknown, shipmentsCount: number): void => {
+    // Convert unknown to OrderSummaryResponseData
+    const typedOrderSummary = orderSummary as OrderSummaryResponseData
+    setSelectedOrderSummary(typedOrderSummary)
+    setSelectedShipmentsCount(shipmentsCount)
+    setFinancialsModalOpen(true)
+  }, [])
+
+  // Handle payments click
+  const handlePaymentsClick = useCallback((payments: unknown[], grandTotal: number, pendingAmount: number, purchaseOrderId?: number, vendorNumber?: string): void => {
+    // Convert unknown[] to PaymentResponseModel[]
+    const typedPayments = payments as PaymentResponseModel[]
+    setSelectedPayments(typedPayments)
+    setPaymentsGrandTotal(grandTotal)
+    setPaymentsPendingAmount(pendingAmount)
+    setPaymentsPurchaseOrderId(purchaseOrderId)
+    setPaymentsVendorNumber(vendorNumber || '')
+    setPaymentsModalOpen(true)
+  }, [])
+
+  // Handle approve - opens payment modal
+  const handleApproveClick = useCallback((data: ApprovePaymentData): void => {
+    setPaymentModalData(data)
+    setPaymentModalOpen(true)
+  }, [])
+
+  // Handle reject - opens confirmation dialog
+  const handleRejectClick = useCallback((purchaseOrderId: number): void => {
+    setConfirmDialogPurchaseOrderId(purchaseOrderId)
+    setConfirmDialogOpen(true)
+  }, [])
+
+  // Handle payment success - refresh the grid
+  const handlePaymentSuccess = useCallback(async (): Promise<void> => {
+    await createFetchFunction(
+      purchaseOrderApi.getPurchaseOrdersInBatches,
+      setLoading,
+      setRows,
+      setTotalCount,
+      paginationModel,
+      includeDeleted,
+      activeFilterGroup,
+    )
+  }, [paginationModel, includeDeleted, activeFilterGroup])
+
+  // Close payment modal
+  const handleClosePaymentModal = useCallback((): void => {
+    setPaymentModalOpen(false)
+    setPaymentModalData(null)
+  }, [])
+
+  // Execute reject after confirmation
+  const handleConfirmReject = async (): Promise<void> => {
+    if (!confirmDialogPurchaseOrderId) return
+
+    await createToggleFunction(purchaseOrderApi.rejectPurchaseOrder, confirmDialogPurchaseOrderId, async () => {
+      await createFetchFunction(
+        purchaseOrderApi.getPurchaseOrdersInBatches,
+        setLoading,
+        setRows,
+        setTotalCount,
+        paginationModel,
+        includeDeleted,
+        activeFilterGroup,
+      )
+    })
+
+    // Close dialog after action completes
+    setConfirmDialogOpen(false)
+    setConfirmDialogPurchaseOrderId(null)
+  }
+
+  const handleCloseDialog = (): void => {
+    setConfirmDialogOpen(false)
+    setConfirmDialogPurchaseOrderId(null)
+  }
 
   // Get grid columns with action handlers
   const columns = useMemo(
@@ -98,34 +227,14 @@ const PurchaseOrders = (): React.JSX.Element => {
             )
           })
         },
-        async (purchaseOrderId: number) => {
-          await createToggleFunction(purchaseOrderApi.approvePurchaseOrder, purchaseOrderId, async () => {
-            await createFetchFunction(
-              purchaseOrderApi.getPurchaseOrdersInBatches,
-              setLoading,
-              setRows,
-              setTotalCount,
-              paginationModel,
-              includeDeleted,
-              activeFilterGroup,
-            )
-          })
-        },
-        async (purchaseOrderId: number) => {
-          await createToggleFunction(purchaseOrderApi.rejectPurchaseOrder, purchaseOrderId, async () => {
-            await createFetchFunction(
-              purchaseOrderApi.getPurchaseOrdersInBatches,
-              setLoading,
-              setRows,
-              setTotalCount,
-              paginationModel,
-              includeDeleted,
-              activeFilterGroup,
-            )
-          })
-        },
+        handleApproveClick,
+        handleRejectClick,
+        handleProductsClick,
+        handleShipmentsClick,
+        handleFinancialsClick,
+        handlePaymentsClick,
       ),
-    [paginationModel, includeDeleted, activeFilterGroup],
+    [paginationModel, includeDeleted, activeFilterGroup, handleApproveClick, handleRejectClick, handleProductsClick, handleShipmentsClick, handleFinancialsClick, handlePaymentsClick],
   )
 
   useEffect(() => {
@@ -224,6 +333,94 @@ const PurchaseOrders = (): React.JSX.Element => {
           />
         </Box>
       </Box>
+
+      {/* Product Modal */}
+      <ProductModal
+        open={productModalOpen}
+        onClose={() => {
+          setProductModalOpen(false)
+          setSelectedPurchaseOrderId(undefined)
+          setSelectedProducts([])
+        }}
+        purchaseOrderProducts={selectedProducts}
+        purchaseOrderId={selectedPurchaseOrderId}
+      />
+
+      {/* Shipments Modal */}
+      <ShipmentsModal
+        open={shipmentsModalOpen}
+        onClose={() => {
+          setShipmentsModalOpen(false)
+          setSelectedShipments([])
+        }}
+        shipments={selectedShipments}
+      />
+
+      {/* Financials Modal */}
+      {selectedOrderSummary && (
+        <FinancialsModal
+          open={financialsModalOpen}
+          onClose={() => {
+            setFinancialsModalOpen(false)
+            setSelectedOrderSummary(null)
+            setSelectedShipmentsCount(0)
+          }}
+          orderSummary={selectedOrderSummary}
+          shipmentsCount={selectedShipmentsCount}
+        />
+      )}
+
+      {/* Payment Modal (for Approve with Payment) */}
+      {paymentModalData && (
+        <PaymentModal
+          open={paymentModalOpen}
+          onClose={handleClosePaymentModal}
+          purchaseOrderId={paymentModalData.purchaseOrderId}
+          vendorNumber={paymentModalData.vendorNumber}
+          grandTotal={paymentModalData.grandTotal}
+          pendingAmount={paymentModalData.pendingAmount}
+          onPaymentSuccess={handlePaymentSuccess}
+        />
+      )}
+
+      {/* Payments History Modal */}
+      <PaymentsModal
+        open={paymentsModalOpen}
+        onClose={() => {
+          setPaymentsModalOpen(false)
+          setSelectedPayments([])
+          setPaymentsGrandTotal(0)
+          setPaymentsPendingAmount(0)
+          setPaymentsPurchaseOrderId(undefined)
+          setPaymentsVendorNumber('')
+        }}
+        payments={selectedPayments}
+        grandTotal={paymentsGrandTotal}
+        pendingAmount={paymentsPendingAmount}
+        purchaseOrderId={paymentsPurchaseOrderId}
+        vendorNumber={paymentsVendorNumber}
+        onPaymentSuccess={handlePaymentSuccess}
+      />
+
+      {/* Confirmation Dialog (for Reject only) */}
+      {confirmDialogPurchaseOrderId && (
+        <ConfirmDialog
+          open={confirmDialogOpen}
+          onClose={handleCloseDialog}
+          title="Reject Purchase Order"
+          message={
+            <>
+              Are you sure you want to reject Purchase Order{' '}
+              <strong>#{confirmDialogPurchaseOrderId}</strong>?
+              <br />
+              This action cannot be undone.
+            </>
+          }
+          confirmLabel="Reject"
+          confirmColor="error"
+          onConfirm={handleConfirmReject}
+        />
+      )}
     </Box>
   )
 }

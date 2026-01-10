@@ -496,6 +496,88 @@ export const bulkProductImportSchema = z.object({
 export type BulkProductImportData = z.infer<typeof bulkProductImportSchema>
 
 // ============================================================================
+// Purchase Order Import Validation Schema
+// ============================================================================
+
+/**
+ * Validate products string format: "productId:quantity:pricePerUnit, productId:quantity:pricePerUnit"
+ */
+const productsStringValidator = z.string().min(1, 'At least one product is required').refine(
+  (val) => {
+    if (!val || val.trim() === '') return false
+    const entries = val.split(',').map(s => s.trim()).filter(Boolean)
+    if (entries.length === 0) return false
+
+    for (const entry of entries) {
+      const parts = entry.split(':').map(s => s.trim())
+      // Require explicit custom price per unit in import (id:qty:price)
+      if (parts.length < 3) return false
+      const productId = parseInt(parts[0], 10)
+      const quantity = parseInt(parts[1], 10)
+      // Normalize price: remove commas and non-numeric currency characters
+      const rawPrice = parts[2] ?? ''
+      const normalizedPrice = rawPrice.replace(/,/g, '').replace(/[^\d.-]/g, '')
+      const pricePerUnit = parseFloat(normalizedPrice)
+
+      if (
+        isNaN(productId) ||
+        isNaN(quantity) ||
+        isNaN(pricePerUnit) ||
+        productId <= 0 ||
+        quantity <= 0 ||
+        pricePerUnit < 0
+      ) {
+        return false
+      }
+    }
+    return true
+  },
+  { message: 'Products must be in format "id:qty:price, id:qty:price" (e.g., "123:10:99.99, 456:5:149.50")' }
+)
+
+/**
+ * Bulk purchase order import validation schema
+ * Used for validating purchase order data from Excel/CSV files
+ */
+export const bulkPurchaseOrderImportSchema = z.object({
+  // Order Information
+  vendorNumber: z.string().min(1, 'Vendor number is required').max(100, 'Vendor number is too long'),
+  purchaseOrderStatus: z.string().min(1, 'Status is required').refine(
+    (val) => ['DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'APPROVED_WITH_PARTIAL_PAYMENT', 'REJECTED', 'SENT_TO_VENDOR', 'ACKNOWLEDGED', 'IN_PRODUCTION', 'SHIPPED', 'PARTIALLY_RECEIVED', 'RECEIVED', 'COMPLETED', 'CANCELLED', 'ON_HOLD'].includes(val.toUpperCase()),
+    { message: 'Status must be one of: DRAFT, PENDING_APPROVAL, APPROVED, APPROVED_WITH_PARTIAL_PAYMENT, REJECTED, SENT_TO_VENDOR, ACKNOWLEDGED, IN_PRODUCTION, SHIPPED, PARTIALLY_RECEIVED, RECEIVED, COMPLETED, CANCELLED, ON_HOLD' }
+  ),
+  priority: z.string().min(1, 'Priority is required').refine(
+    (val) => ['LOW', 'MEDIUM', 'HIGH', 'URGENT'].includes(val.toUpperCase()),
+    { message: 'Priority must be one of: LOW, MEDIUM, HIGH, URGENT' }
+  ),
+  assignedLeadId: z.preprocess(
+    (val) => (val === '' || val === null || val === undefined ? null : Number(val)),
+    z.number().positive('Lead ID must be positive').nullable().optional()
+  ),
+
+  // Delivery Address
+  streetAddress: z.string().min(1, 'Street address is required').max(500, 'Street address is too long'),
+  streetAddress2: z.string().max(500, 'Street address 2 is too long').optional().or(z.literal('')),
+  city: z.string().min(1, 'City is required').max(100, 'City is too long'),
+  state: z.string().min(1, 'State is required').max(100, 'State is too long'),
+  postalCode: z.string().min(1, 'Postal code is required').max(20, 'Postal code is too long'),
+  country: z.string().min(1, 'Country is required').max(100, 'Country is too long'),
+  nameOnAddress: z.string().max(200, 'Name on address is too long').optional().or(z.literal('')),
+  phoneOnAddress: z.string().max(20, 'Phone is too long').optional().or(z.literal('')),
+  emailOnAddress: z.string().email('Invalid email format').optional().or(z.literal('')),
+
+  // Order Details
+  expectedDeliveryDate: z.string().optional().or(z.literal('')),
+  notes: z.string().max(2000, 'Notes is too long').optional().or(z.literal('')),
+  termsConditionsHtml: z.string().optional().or(z.literal('')),
+
+  // Products
+  products: productsStringValidator,
+})
+
+export type BulkPurchaseOrderImportData = z.infer<typeof bulkPurchaseOrderImportSchema>
+
+// ============================================================================
 // Package Validation Schemas
 // ============================================================================
 
@@ -593,28 +675,38 @@ export type PickupLocationFormData = z.infer<typeof pickupLocationFormSchema>
  * Used for add/edit purchase order forms
  */
 // Pickup Location Allocation schema
+// Uses passthrough() to preserve additional fields like packagingEstimate, totalPackagingCost, etc.
 const pickupLocationAllocationSchema = z.object({
   pickupLocationId: z.number().min(1, 'Pickup location ID is required'),
   locationName: z.string().min(1, 'Location name is required'),
-  allocatedQuantity: z.number().min(1, 'Allocated quantity must be at least 1'),
-  availableStock: z.number().min(0, 'Available stock must be 0 or greater'),
+  allocatedQuantity: z.number().min(0, 'Allocated quantity must be 0 or greater'),
+  availableStock: z.number().min(0, 'Available stock must be 0 or greater').optional(), // Optional: not available when loading from API
   city: z.string().optional(),
   state: z.string().optional(),
   postalCode: z.string().optional(),
-})
+}).passthrough()
 
 // Purchase Order Product Item schema
+// Uses passthrough() to preserve additional fields like images, brand, weightKgs, etc.
 const purchaseOrderProductItemSchema = z.object({
   productId: z.number().min(1, 'Product ID is required'),
-  productTitle: z.string().min(1, 'Product title is required'),
+  productTitle: z.string().optional(), // Optional: nested structure may not have this
   quantity: z.number().min(1, 'Quantity must be at least 1'),
   pricePerUnit: z.number().min(0, 'Price per unit must be 0 or greater'),
   pickupAllocations: z.array(pickupLocationAllocationSchema).optional(),
-})
+}).passthrough()
 
 export const purchaseOrderFormSchema = z.object({
   vendorNumber: z.string().min(1, 'Vendor number is required').max(100, 'Vendor number must be 100 characters or less'),
-  expectedDeliveryDate: z.string().optional(),
+  expectedDeliveryDate: z
+    .union([
+      z.string(),
+      z.object({
+        dateTime: z.date().nullable(),
+        timezone: z.string(),
+      }),
+    ])
+    .optional(),
   purchaseOrderStatus: z.string().min(1, 'Status is required'),
   priority: z.string().min(1, 'Priority is required'),
   assignedLeadId: z.number().min(1, 'Assigned lead is required'),

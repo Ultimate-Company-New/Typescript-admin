@@ -2,13 +2,13 @@ import type React from 'react'
 import { useState } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm, Controller } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
-import { Container, Box, Stack, Divider } from '@mui/material'
+import { Box, Container, Divider, Stack } from '@mui/material'
 
-import { Header, Subheader, BodyText, TextFieldInput, PasswordInput, BlueButton, LinkButton } from '../components'
+import { BlueButton, BodyText, Header, LinkButton, PasswordInput, Subheader, TextFieldInput } from '../components'
 import { APP_ROUTES } from '../constants/routes'
 import { registrationSchema, type RegistrationFormData } from '../utils/validationSchemas'
 
@@ -108,6 +108,7 @@ const Register = (): React.JSX.Element => {
                     label="Password"
                     placeholder="Create a strong password"
                     required
+                    autocomplete="new-password"
                     error={!!errors.password}
                     helperText={errors.password?.message}
                     disabled={isLoading}
@@ -125,6 +126,7 @@ const Register = (): React.JSX.Element => {
                     label="Confirm Password"
                     placeholder="Re-enter your password"
                     required
+                    autocomplete="new-password"
                     error={!!errors.confirmPassword}
                     helperText={errors.confirmPassword?.message}
                     disabled={isLoading}

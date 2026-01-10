@@ -92,16 +92,20 @@ const ProductSearchBar = ({
          * onKeyPress callback is optional - parent may handle it differently.
          */
         onKeyDown={onKeyPress}
+        className={styles['product-picker__search-input']}
         InputProps={{
           /**
            * Start adornment: Search icon.
            *
            * Provides visual indication that this is a search field.
-           * Uses Material-UI's action color for subtle appearance.
+           * Uses primary blue color (#1976d2) to match application theme.
            */
           startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon color="action" />
+            <InputAdornment
+              position="start"
+              className={styles['product-picker__search-adornment']}
+            >
+              <SearchIcon className={styles['product-picker__search-icon']} />
             </InputAdornment>
           ),
           /**

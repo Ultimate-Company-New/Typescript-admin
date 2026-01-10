@@ -112,11 +112,8 @@ export const PERMISSIONS = {
   INSERT_PURCHASE_ORDERS: 'InsertPurchaseOrders',
   UPDATE_PURCHASE_ORDERS: 'UpdatePurchaseOrders',
   TOGGLE_PURCHASE_ORDERS: 'TogglePurchaseOrders',
-  // Sales Management
-  VIEW_SALES_ORDERS: 'ViewSalesOrders',
-  INSERT_SALES_ORDERS: 'InsertSalesOrders',
-  UPDATE_SALES_ORDERS: 'UpdateSalesOrders',
-  TOGGLE_SALES_ORDERS: 'ToggleSalesOrders',
+  // Shipment Management
+  VIEW_SHIPMENTS: 'ViewShipments',
   // Order Management
   VIEW_ORDERS: 'ViewOrders',
   INSERT_ORDERS: 'InsertOrders',
@@ -241,16 +238,13 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
     PERMISSIONS.INSERT_PICKUP_LOCATIONS,
     PERMISSIONS.UPDATE_PICKUP_LOCATIONS,
     PERMISSIONS.DELETE_PICKUP_LOCATIONS,
+    // Shipment Management
+    PERMISSIONS.VIEW_SHIPMENTS,
     // Purchase Management
     PERMISSIONS.VIEW_PURCHASE_ORDERS,
     PERMISSIONS.INSERT_PURCHASE_ORDERS,
     PERMISSIONS.UPDATE_PURCHASE_ORDERS,
     PERMISSIONS.TOGGLE_PURCHASE_ORDERS,
-    // Sales Management
-    PERMISSIONS.VIEW_SALES_ORDERS,
-    PERMISSIONS.INSERT_SALES_ORDERS,
-    PERMISSIONS.UPDATE_SALES_ORDERS,
-    PERMISSIONS.TOGGLE_SALES_ORDERS,
     // Order Management
     PERMISSIONS.VIEW_ORDERS,
     PERMISSIONS.INSERT_ORDERS,
@@ -336,16 +330,13 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
     PERMISSIONS.INSERT_PICKUP_LOCATIONS,
     PERMISSIONS.UPDATE_PICKUP_LOCATIONS,
     PERMISSIONS.DELETE_PICKUP_LOCATIONS,
+    // Shipment Management
+    PERMISSIONS.VIEW_SHIPMENTS,
     // Purchase Management
     PERMISSIONS.VIEW_PURCHASE_ORDERS,
     PERMISSIONS.INSERT_PURCHASE_ORDERS,
     PERMISSIONS.UPDATE_PURCHASE_ORDERS,
     PERMISSIONS.TOGGLE_PURCHASE_ORDERS,
-    // Sales Management
-    PERMISSIONS.VIEW_SALES_ORDERS,
-    PERMISSIONS.INSERT_SALES_ORDERS,
-    PERMISSIONS.UPDATE_SALES_ORDERS,
-    PERMISSIONS.TOGGLE_SALES_ORDERS,
     // Order Management
     PERMISSIONS.VIEW_ORDERS,
     PERMISSIONS.INSERT_ORDERS,
@@ -414,12 +405,11 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
     // Logistics (Pickup Locations)
     PERMISSIONS.VIEW_PICKUP_LOCATIONS,
     PERMISSIONS.INSERT_PICKUP_LOCATIONS,
+    // Shipment Management
+    PERMISSIONS.VIEW_SHIPMENTS,
     // Purchase Management
     PERMISSIONS.VIEW_PURCHASE_ORDERS,
     PERMISSIONS.INSERT_PURCHASE_ORDERS,
-    // Sales Management
-    PERMISSIONS.VIEW_SALES_ORDERS,
-    PERMISSIONS.INSERT_SALES_ORDERS,
     // Order Management
     PERMISSIONS.VIEW_ORDERS,
     PERMISSIONS.INSERT_ORDERS,
@@ -469,10 +459,10 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
     PERMISSIONS.VIEW_PACKAGES,
     // Logistics (Pickup Locations)
     PERMISSIONS.VIEW_PICKUP_LOCATIONS,
+    // Shipment Management
+    PERMISSIONS.VIEW_SHIPMENTS,
     // Purchase Management
     PERMISSIONS.VIEW_PURCHASE_ORDERS,
-    // Sales Management
-    PERMISSIONS.VIEW_SALES_ORDERS,
     // Order Management
     PERMISSIONS.VIEW_ORDERS,
     // Payment Management
@@ -1813,6 +1803,7 @@ export const PURCHASE_ORDER_STATUS_OPTIONS = [
   { value: 'DRAFT', label: 'Draft', color: 'default' as const },
   { value: 'PENDING_APPROVAL', label: 'Pending Approval', color: 'info' as const },
   { value: 'APPROVED', label: 'Approved', color: 'primary' as const },
+  { value: 'APPROVED_WITH_PARTIAL_PAYMENT', label: 'Approved with Partial Payment', color: 'warning' as const },
   { value: 'REJECTED', label: 'Rejected', color: 'error' as const },
   { value: 'SENT_TO_VENDOR', label: 'Sent to Vendor', color: 'secondary' as const },
   { value: 'ACKNOWLEDGED', label: 'Acknowledged', color: 'info' as const },

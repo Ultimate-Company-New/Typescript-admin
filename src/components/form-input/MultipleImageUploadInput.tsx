@@ -62,12 +62,24 @@ const MultipleImageUploadInput = ({
       }
 
       const newAttachments: Record<string, string> = { ...value }
+      const filesArray = Array.from(files)
+      let processedCount = 0
+      let errorCount = 0
 
       // Process each file
-      Array.from(files).forEach((file) => {
+      filesArray.forEach((file) => {
         // Validate file type
         if (!file.type.startsWith('image/')) {
           toast.error(`${file.name} is not an image file`)
+          errorCount++
+          processedCount++
+          // Always call onChange when all files are processed, even if some failed
+          if (processedCount === filesArray.length) {
+            onChange(newAttachments)
+            if (errorCount < filesArray.length) {
+              toast.success(`Uploaded ${filesArray.length - errorCount} image(s) successfully`)
+            }
+          }
           return
         }
 
@@ -75,16 +87,26 @@ const MultipleImageUploadInput = ({
         const maxSizeBytes = maxSizeMB * 1024 * 1024
         if (file.size > maxSizeBytes) {
           toast.error(`${file.name} size must be less than ${maxSizeMB}MB`)
+          errorCount++
+          processedCount++
+          // Always call onChange when all files are processed, even if some failed
+          if (processedCount === filesArray.length) {
+            onChange(newAttachments)
+            if (errorCount < filesArray.length) {
+              toast.success(`Uploaded ${filesArray.length - errorCount} image(s) successfully`)
+            }
+          }
           return
         }
 
         // Check for duplicate file names
+        let finalFileName = file.name
         if (newAttachments[file.name]) {
           toast.warning(`${file.name} already exists. Renaming to ${file.name}_${Date.now()}`)
           const timestamp = Date.now()
           const extension = file.name.split('.').pop()
           const nameWithoutExt = file.name.substring(0, file.name.lastIndexOf('.'))
-          file = new File([file], `${nameWithoutExt}_${timestamp}.${extension}`, { type: file.type })
+          finalFileName = `${nameWithoutExt}_${timestamp}.${extension}`
         }
 
         // Convert to base64
@@ -93,16 +115,28 @@ const MultipleImageUploadInput = ({
           const dataUrl = e.target?.result as string
           // Strip the data:image/...;base64, prefix to get pure base64
           const base64 = dataUrl.split(',')[1] || dataUrl
-          newAttachments[file.name] = base64
+          newAttachments[finalFileName] = base64
+          processedCount++
 
           // Update state after all files are processed
-          if (Object.keys(newAttachments).length === currentCount + newFilesCount) {
+          if (processedCount === filesArray.length) {
             onChange(newAttachments)
-            toast.success(`Uploaded ${newFilesCount} image(s) successfully`)
+            if (errorCount < filesArray.length) {
+              toast.success(`Uploaded ${filesArray.length - errorCount} image(s) successfully`)
+            }
           }
         }
         reader.onerror = () => {
           toast.error(`Failed to read ${file.name}`)
+          errorCount++
+          processedCount++
+          // Always call onChange when all files are processed, even if some failed
+          if (processedCount === filesArray.length) {
+            onChange(newAttachments)
+            if (errorCount < filesArray.length) {
+              toast.success(`Uploaded ${filesArray.length - errorCount} image(s) successfully`)
+            }
+          }
         }
         reader.readAsDataURL(file)
       })

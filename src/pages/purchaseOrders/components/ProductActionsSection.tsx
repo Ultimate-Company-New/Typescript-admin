@@ -95,14 +95,15 @@ const ProductActionsSection = ({
         {/* Wrap in span to enable tooltip on disabled button */}
         <span>
           <BlueButton
-            variant={shippingCalculated ? 'outlined' : 'contained'} // Outlined if already calculated
+            variant="outlined" // Always outlined for white background with green border
             color="success"
             startIcon={shippingLoading ? <CircularProgress size={16} color="inherit" /> : <CalculateIcon />}
             onClick={onCalculateShipping}
             disabled={disabled || shippingLoading || !canCalculateShipping} // Disabled if form disabled, loading, or prerequisites not met
+            className={styles['product-items-section__calculate-shipping-button']}
           >
-            {/* Dynamic text: Show "Calculating..." during load, "Recalculate" if done, "Calculate" otherwise */}
-            {shippingLoading ? 'Calculating...' : (shippingCalculated ? 'Recalculate Shipping' : 'Calculate Shipping')}
+            {/* Dynamic text: Show "Calculating..." during load, show calculated state, otherwise "Calculate Shipping" */}
+            {shippingLoading ? 'Calculating...' : (shippingCalculated ? 'Shipping Calculated' : 'Calculate Shipping')}
           </BlueButton>
         </span>
       </Tooltip>

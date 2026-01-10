@@ -89,6 +89,8 @@ export interface FieldConfig<TFieldValues extends FieldValues = FieldValues> {
   minDateTime?: Date
   maxDateTime?: Date
   hideTimezone?: boolean
+  // For password fields
+  autocomplete?: 'current-password' | 'new-password' | 'off'
   modifyFieldProps?: (
     field: ControllerRenderProps<TFieldValues, Path<TFieldValues>>,
   ) => ControllerRenderProps<TFieldValues, Path<TFieldValues>>
@@ -192,6 +194,7 @@ export const FormFieldRenderer = <TFieldValues extends FieldValues = FieldValues
       minDateTime,
       maxDateTime,
       hideTimezone,
+      autocomplete,
       modifyFieldProps,
       customContent,
     } = fieldConfig
@@ -410,6 +413,7 @@ export const FormFieldRenderer = <TFieldValues extends FieldValues = FieldValues
                   error={!!fieldError}
                   helperText={fieldError?.message}
                   placeholder={placeholder}
+                  autocomplete={autocomplete}
                 />
               )
             }
