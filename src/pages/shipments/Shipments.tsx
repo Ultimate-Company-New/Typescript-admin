@@ -1,5 +1,6 @@
 import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "react-toastify";
 
 import {
   Close as CloseIcon,
@@ -9,9 +10,12 @@ import {
 import {
   Box,
   Dialog,
+  DialogActions,
   DialogContent,
+  DialogContentText,
   DialogTitle,
   Paper,
+  Button,
 } from "@mui/material";
 import {
   type GridColumnVisibilityModel,
@@ -24,6 +28,8 @@ import {
 
 import shipmentApi from "../../api/shipmentApi";
 import { type OptimizationShipment } from "../../api/shippingApi";
+import { PERMISSIONS } from "../../constants/appConstants";
+import { usePermissions } from "../../hooks";
 import { IconButton as CustomIconButton } from "../../components/buttons";
 import {
   CustomNoRowsOverlay,
@@ -51,6 +57,8 @@ import {
 import { type PaginatedGridInterface } from "../../types/grid.types";
 import ProductModal from "../pickupLocations/components/ProductModal";
 import ShipmentPackagesList from "../purchaseOrders/components/ShipmentPackagesList";
+import { ReturnShipmentModal } from "./components";
+import ViewReturnsModal from "./components/ViewReturnsModal";
 
 import styles from "../../styles/PurchaseOrders.module.scss";
 
@@ -209,6 +217,9 @@ const convertShipmentToOptimizationFormat = (
  * - Product, Package, and Courier Metadata modals
  */
 const Shipments = (): React.JSX.Element => {
+  const { hasPermission } = usePermissions();
+  const canModifyShipments = hasPermission(PERMISSIONS.MODIFY_SHIPMENTS);
+
   const [rows, setRows] = useState<ShipmentData[]>([]);
   const [loading, setLoading] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
@@ -223,6 +234,11 @@ const Shipments = (): React.JSX.Element => {
       shipmentId: false,
     });
   const [visibleColumnFields, setVisibleColumnFields] = useState<string[]>([]);
+
+  // Cancel confirmation dialog state
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [shipmentToCancel, setShipmentToCancel] = useState<ShipmentData | null>(null);
+  const [cancelLoading, setCancelLoading] = useState(false);
 
   // Product modal state
   const [productModalOpen, setProductModalOpen] = useState(false);
@@ -251,6 +267,16 @@ const Shipments = (): React.JSX.Element => {
   >(null);
   const [selectedShipRocketOrderId, setSelectedShipRocketOrderId] =
     useState<string>("");
+
+  // Return modal state
+  const [returnModalOpen, setReturnModalOpen] = useState(false);
+  const [selectedShipmentForReturn, setSelectedShipmentForReturn] =
+    useState<ShipmentData | null>(null);
+
+  // View returns modal state
+  const [viewReturnsModalOpen, setViewReturnsModalOpen] = useState(false);
+  const [selectedShipmentForViewReturns, setSelectedShipmentForViewReturns] =
+    useState<ShipmentData | null>(null);
 
   // Pagination model
   const [paginationModel, setPaginationModel] =
@@ -302,6 +328,55 @@ const Shipments = (): React.JSX.Element => {
     []
   );
 
+  // Handle cancel click - open confirmation dialog
+  const handleCancelClick = useCallback((shipment: ShipmentData): void => {
+    setShipmentToCancel(shipment);
+    setCancelDialogOpen(true);
+  }, []);
+
+  // Handle return click - open return modal
+  const handleReturnClick = useCallback((shipment: ShipmentData): void => {
+    setSelectedShipmentForReturn(shipment);
+    setReturnModalOpen(true);
+  }, []);
+
+  // Handle return success - refresh grid
+  const handleReturnSuccess = useCallback((): void => {
+    setPaginationModel((prev) => ({ ...prev }));
+  }, []);
+
+  // Handle view returns click - open view returns modal
+  const handleViewReturnsClick = useCallback((shipment: ShipmentData): void => {
+    setSelectedShipmentForViewReturns(shipment);
+    setViewReturnsModalOpen(true);
+  }, []);
+
+  // Handle return cancelled - refresh grid
+  const handleReturnCancelled = useCallback((): void => {
+    setPaginationModel((prev) => ({ ...prev }));
+    toast.success("Return shipment cancelled successfully");
+  }, []);
+
+  // Confirm cancel shipment
+  const handleConfirmCancel = useCallback(async (): Promise<void> => {
+    if (!shipmentToCancel) return;
+
+    setCancelLoading(true);
+    try {
+      await shipmentApi.cancelShipment(shipmentToCancel.shipmentId);
+      toast.success(`Shipment #${shipmentToCancel.shipmentId} cancelled successfully`);
+      setCancelDialogOpen(false);
+      setShipmentToCancel(null);
+      // Refresh the grid
+      setPaginationModel((prev) => ({ ...prev }));
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to cancel shipment";
+      toast.error(errorMessage);
+    } finally {
+      setCancelLoading(false);
+    }
+  }, [shipmentToCancel]);
+
   // Grid callbacks
   const gridCallbacks: ShipmentGridCallbacks = useMemo(
     () => ({
@@ -309,8 +384,12 @@ const Shipments = (): React.JSX.Element => {
       onPackagesClick: handlePackagesClick,
       onCourierMetadataClick: handleCourierMetadataClick,
       onShipRocketMetadataClick: handleShipRocketMetadataClick,
+      onCancelClick: handleCancelClick,
+      onReturnClick: handleReturnClick,
+      onViewReturnsClick: handleViewReturnsClick,
+      canModifyShipments,
     }),
-    [handleProductsClick, handlePackagesClick, handleCourierMetadataClick, handleShipRocketMetadataClick]
+    [handleProductsClick, handlePackagesClick, handleCourierMetadataClick, handleShipRocketMetadataClick, handleCancelClick, handleReturnClick, handleViewReturnsClick, canModifyShipments]
   );
 
   // Get grid columns with callbacks
@@ -618,6 +697,75 @@ const Shipments = (): React.JSX.Element => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Cancel Confirmation Dialog */}
+      <Dialog
+        open={cancelDialogOpen}
+        onClose={() => {
+          if (!cancelLoading) {
+            setCancelDialogOpen(false);
+            setShipmentToCancel(null);
+          }
+        }}
+      >
+        <DialogTitle>Cancel Shipment</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to cancel shipment #{shipmentToCancel?.shipmentId}?
+            {shipmentToCancel?.shipRocketOrderId && (
+              <>
+                <br />
+                <br />
+                This will also cancel the ShipRocket order #{shipmentToCancel.shipRocketOrderId}.
+              </>
+            )}
+            <br />
+            <br />
+            This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setCancelDialogOpen(false);
+              setShipmentToCancel(null);
+            }}
+            disabled={cancelLoading}
+          >
+            No, Keep It
+          </Button>
+          <Button
+            onClick={() => void handleConfirmCancel()}
+            color="error"
+            variant="contained"
+            disabled={cancelLoading}
+          >
+            {cancelLoading ? "Cancelling..." : "Yes, Cancel Shipment"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Return Shipment Modal */}
+      <ReturnShipmentModal
+        open={returnModalOpen}
+        onClose={() => {
+          setReturnModalOpen(false);
+          setSelectedShipmentForReturn(null);
+        }}
+        shipment={selectedShipmentForReturn}
+        onSuccess={handleReturnSuccess}
+      />
+
+      {/* View Returns Modal */}
+      <ViewReturnsModal
+        open={viewReturnsModalOpen}
+        onClose={() => {
+          setViewReturnsModalOpen(false);
+          setSelectedShipmentForViewReturns(null);
+        }}
+        shipment={selectedShipmentForViewReturns}
+        onReturnCancelled={handleReturnCancelled}
+      />
     </Box>
   );
 };

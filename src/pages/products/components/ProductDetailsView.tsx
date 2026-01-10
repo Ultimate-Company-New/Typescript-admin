@@ -453,10 +453,10 @@ const ProductDetailsView = ({
 
           <Grid item xs={12} sm={6} md={3}>
             <Box className={styles["product-details-view__field"]}>
-              <FieldLabel>Returns Allowed</FieldLabel>
+              <FieldLabel>Return Window (Days)</FieldLabel>
               <Chip
-                label={watchedValues.returnsAllowed ? "Yes" : "No"}
-                color={watchedValues.returnsAllowed ? "success" : "default"}
+                label={watchedValues.returnWindowDays > 0 ? `${watchedValues.returnWindowDays} days` : "No Returns"}
+                color={watchedValues.returnWindowDays > 0 ? "success" : "default"}
                 size="small"
               />
             </Box>

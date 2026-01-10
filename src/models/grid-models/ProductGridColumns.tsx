@@ -127,7 +127,7 @@ export interface ProductData extends ProductImageUrls {
     model?: string;
     itemModified?: boolean;
     weightKgs?: number;
-    returnsAllowed?: boolean;
+    returnWindowDays?: number;
     deleted?: boolean;
     createdByUserInfo?: CreatedByUserInfo;
     category?:
@@ -157,7 +157,7 @@ export interface ProductData extends ProductImageUrls {
   model?: string;
   itemModified?: boolean;
   weightKgs?: number;
-  returnsAllowed?: boolean;
+  returnWindowDays?: number;
   isDeleted?: boolean;
   deleted?: boolean;
   createdByUserInfo?: CreatedByUserInfo;
@@ -176,8 +176,6 @@ export interface ProductData extends ProductImageUrls {
 export interface ProductGridColumnOptions {
   /** Handler for toggling product active state */
   onToggleProduct: (productId: number) => void
-  /** Handler for toggling returns allowed */
-  onToggleReturns: (productId: number) => void
   /** When true, displays a Quantity column (used for pickup location inventory view) */
   displayQuantity?: boolean
   /** The pickup location ID to get quantity from (required when displayQuantity is true) */
@@ -197,7 +195,6 @@ export interface ProductGridColumnOptions {
  */
 export const getProductGridColumns = (
   onToggleProduct: (productId: number) => void,
-  onToggleReturns: (productId: number) => void,
   options?: {
     displayQuantity?: boolean
     pickupLocationId?: number
@@ -654,19 +651,22 @@ export const getProductGridColumns = (
     },
   },
   {
-    field: "returnsAllowed",
-    headerName: "Returns Allowed",
-    minWidth: 150,
-    flex: 1,
+    field: "returnWindowDays",
+    headerName: "Return Window",
+    minWidth: 130,
+    flex: 0.8,
     align: "center",
     headerAlign: "center",
-    sortable: false,
-    filterable: false,
+    sortable: true,
+    filterable: true,
+    valueGetter: (_value, row: ProductData) => {
+      const rowData = row;
+      return rowData.returnWindowDays ?? rowData.product?.returnWindowDays ?? 0;
+    },
     renderCell: (params: GridRenderCellParams<ProductData>) => {
       const rowData = params.row;
-      const productId = rowData.productId ?? rowData.product?.productId;
-      const returnsAllowed =
-        rowData.returnsAllowed ?? rowData.product?.returnsAllowed ?? false;
+      const returnWindowDays =
+        rowData.returnWindowDays ?? rowData.product?.returnWindowDays ?? 0;
 
       return (
         <Box
@@ -677,15 +677,11 @@ export const getProductGridColumns = (
             height: "100%",
           }}
         >
-          <Switch
-            checked={returnsAllowed}
-            onChange={() => {
-              if (productId != null) {
-                onToggleReturns(productId);
-              }
-            }}
-            color="primary"
+          <Chip
+            label={returnWindowDays > 0 ? `${returnWindowDays} days` : "No Returns"}
+            color={returnWindowDays > 0 ? "success" : "default"}
             size="small"
+            variant="outlined"
           />
         </Box>
       );

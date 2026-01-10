@@ -88,7 +88,7 @@ const FillImportTestDataButton = (_props: FillImportTestDataButtonProps): JSX.El
           product.price,
           product.discount,
           product.isDiscountPercent,
-          product.returnsAllowed,
+          product.returnWindowDays,
           // Dimensions
           product.length || '',
           product.breadth || '',

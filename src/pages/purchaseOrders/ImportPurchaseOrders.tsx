@@ -1222,8 +1222,7 @@ const ImportPurchaseOrders = (): React.JSX.Element => {
   // Product reference columns with productId as first column, actions and returnsAllowed columns removed entirely
   const productColumns = useMemo<GridColDef[]>(() => {
     const baseColumns = getProductGridColumns(
-      () => {}, // No toggle needed for reference grid
-      () => {} // No toggle returns needed for reference grid
+      () => {} // No toggle needed for reference grid
     );
     // Remove actions and returnsAllowed columns entirely (not just hide)
     const filteredColumns = baseColumns.filter(

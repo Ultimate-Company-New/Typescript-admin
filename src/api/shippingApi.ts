@@ -284,6 +284,15 @@ export const shippingApi = {
     )
     return response.data
   },
+
+  /**
+   * Get the ShipRocket wallet balance for the client
+   * @returns The wallet balance as a number
+   */
+  getWalletBalance: async (): Promise<number> => {
+    const response = await axiosInstance.get<number>(`${API_BASE_URL}/getWalletBalance`)
+    return response.data
+  },
 }
 
 export default shippingApi

@@ -153,13 +153,7 @@ const PickupLocationDetailsView = ({
     )
   }, [fetchProducts])
 
-  const handleToggleReturns = useCallback(async (productId: number): Promise<void> => {
-    await createToggleFunction(
-      productApi.toggleProductReturns,
-      productId,
-      fetchProducts,
-      'Returns status updated successfully'
-    )
+  // Note: handleToggleReturns removed - returnWindowDays is set at product creation and cannot be changed
   }, [fetchProducts])
 
   // ==================== Package Grid Functions ====================
@@ -202,11 +196,11 @@ const PickupLocationDetailsView = ({
 
   // ==================== Grid Columns with Quantity ====================
   const productColumns = useMemo(
-    () => getProductGridColumns(handleToggleProduct, handleToggleReturns, {
+    () => getProductGridColumns(handleToggleProduct, {
       displayQuantity: true,
       pickupLocationId,
     }),
-    [handleToggleProduct, handleToggleReturns, pickupLocationId]
+    [handleToggleProduct, pickupLocationId]
   )
 
   const packageColumns = useMemo(

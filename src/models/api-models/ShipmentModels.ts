@@ -19,6 +19,7 @@ export interface ShipmentData {
   totalWeightKgs?: number;
   totalQuantity?: number;
   expectedDeliveryDate?: string;
+  deliveredDate?: string;  // Actual delivery date
 
   // Cost Breakdown
   packagingCost?: number;
@@ -42,6 +43,12 @@ export interface ShipmentData {
   shipRocketInvoiceUrl?: string;
   shipRocketLabelUrl?: string;
   shipRocketFullResponse?: string;  // Complete ShipRocket order details as JSON
+  shipRocketAwbMetadata?: string;
+  shipRocketPickupMetadata?: string;
+  shipRocketGeneratedManifestUrl?: string;
+  shipRocketGeneratedLabelUrl?: string;
+  shipRocketGeneratedInvoiceUrl?: string;
+  shipRocketTrackingMetadata?: string;   // AWB assignment response as JSON
 
   // Audit Fields
   clientId?: number;
@@ -65,6 +72,9 @@ export interface ShipmentData {
 
   // Packages (with quantityUsed and totalCost when part of shipment)
   packages?: PackageResponseModel[];
+
+  // Return shipments for this shipment
+  returnShipments?: ReturnShipmentData[];
 }
 
 /**
@@ -107,4 +117,43 @@ export type ShipRocketStatus =
   | "RTO_DELIVERED"
   | "CANCELLED"
   | "PENDING"
-  | "FAILED";
+  | "FAILED"
+  | "FULL_RETURN_INITIATED"
+  | "PARTIAL_RETURN_INITIATED";
+
+/**
+ * Return shipment data
+ */
+export interface ReturnShipmentData {
+  returnShipmentId?: number;
+  shipmentId?: number;
+  returnType?: "FULL_RETURN" | "PARTIAL_RETURN";
+  shipRocketReturnOrderId?: string;
+  shipRocketReturnShipmentId?: number;
+  shipRocketReturnStatus?: string;
+  shipRocketReturnStatusCode?: number;
+  shipRocketReturnAwbCode?: string;
+  shipRocketReturnAwbMetadata?: string;
+  shipRocketReturnOrderMetadata?: string;
+  returnWeightKgs?: number;
+  returnLength?: number;
+  returnBreadth?: number;
+  returnHeight?: number;
+  products?: ReturnProductData[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/**
+ * Return product data
+ */
+export interface ReturnProductData {
+  returnShipmentProductId?: number;
+  productId?: number;
+  returnQuantity?: number;
+  returnReason?: string;  // Return reason string - can be any value from RETURN_REASON_OPTIONS
+  returnComments?: string;
+  productName?: string;
+  productSku?: string;
+  productSellingPrice?: number;
+}

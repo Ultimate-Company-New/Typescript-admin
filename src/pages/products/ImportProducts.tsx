@@ -96,7 +96,7 @@ const mapToApiPayload = (product: ImportProductData): ProductRequestModel => ({
   price: product.price,
   discount: product.discount,
   isDiscountPercent: product.isDiscountPercent,
-  returnsAllowed: product.returnsAllowed,
+  returnWindowDays: product.returnWindowDays,
   length: product.length,
   breadth: product.breadth,
   height: product.height,
@@ -404,7 +404,7 @@ const ImportProducts = (): React.JSX.Element => {
           const priceRaw = getRequiredValue('price')
           const discountRaw = getRequiredValue('discount')
           const isDiscountPercentRaw = getRequiredValue('isDiscountPercent')
-          const returnsAllowedRaw = getRequiredValue('returnsAllowed')
+          const returnWindowDaysRaw = getRequiredValue('returnWindowDays')
 
           // Dimensions
           const lengthRaw = getOptionalValue('length')
@@ -447,8 +447,7 @@ const ImportProducts = (): React.JSX.Element => {
           const discount = parseFloat(String(discountRaw)) || 0
           const isDiscountPercentStr = String(isDiscountPercentRaw).toLowerCase()
           const isDiscountPercent = isDiscountPercentStr === 'true' || isDiscountPercentStr === 'yes' || isDiscountPercentStr === '1'
-          const returnsAllowedStr = String(returnsAllowedRaw).toLowerCase()
-          const returnsAllowed = returnsAllowedStr === 'true' || returnsAllowedStr === 'yes' || returnsAllowedStr === '1'
+          const returnWindowDays = parseInt(String(returnWindowDaysRaw), 10) || 30
           const itemModifiedStr = String(itemModifiedRaw || '').toLowerCase()
           const itemModified = itemModifiedStr === 'true' || itemModifiedStr === 'yes' || itemModifiedStr === '1'
           const parseOptionalNumber = (val: unknown): number | undefined => {
@@ -475,7 +474,7 @@ const ImportProducts = (): React.JSX.Element => {
             price,
             discount,
             isDiscountPercent,
-            returnsAllowed,
+            returnWindowDays,
             length: length ?? null,
             breadth: breadth ?? null,
             height: height ?? null,
@@ -515,7 +514,7 @@ const ImportProducts = (): React.JSX.Element => {
             price,
             discount,
             isDiscountPercent,
-            returnsAllowed,
+            returnWindowDays,
             length,
             breadth,
             height,

@@ -57,6 +57,8 @@ const getStatusColor = (
     CANCELLED: { bg: "#9E9E9E", text: "#FFFFFF" },
     PENDING: { bg: "#FFC107", text: "#000000" },
     FAILED: { bg: "#F44336", text: "#FFFFFF" },
+    FULL_RETURN_INITIATED: { bg: "#9C27B0", text: "#FFFFFF" },
+    PARTIAL_RETURN_INITIATED: { bg: "#E91E63", text: "#FFFFFF" },
   };
 
   if (!status) return { bg: "#757575", text: "#FFFFFF" };
@@ -71,8 +73,18 @@ const getStatusColor = (
  */
 const ShipmentActionsCell = ({
   purchaseOrderId,
+  shipment,
+  canModifyShipments,
+  onCancelClick,
+  onReturnClick,
+  onViewReturnsClick,
 }: {
   purchaseOrderId?: number;
+  shipment: ShipmentData;
+  canModifyShipments?: boolean;
+  onCancelClick?: (shipment: ShipmentData) => void;
+  onReturnClick?: (shipment: ShipmentData) => void;
+  onViewReturnsClick?: (shipment: ShipmentData) => void;
 }): JSX.Element => {
   const actions: JSX.Element[] = [];
 
@@ -85,6 +97,100 @@ const ShipmentActionsCell = ({
         sx={{ cursor: "pointer" }}
       >
         View PO
+      </Link>
+    );
+  }
+
+  // Cancel action - only show if user has permission and shipment is not already cancelled
+  const status = shipment.shipRocketStatus?.toUpperCase();
+  const canCancel = canModifyShipments &&
+    status !== "CANCELLED" &&
+    status !== "DELIVERED" &&
+    shipment.shipRocketOrderId;
+
+  if (canCancel) {
+    actions.push(
+      <Link
+        key="cancel"
+        component="button"
+        onClick={(e: React.MouseEvent) => {
+          e.stopPropagation();
+          onCancelClick?.(shipment);
+        }}
+        sx={{
+          cursor: "pointer",
+          color: "error.main",
+          "&:hover": { textDecoration: "underline" }
+        }}
+      >
+        Cancel
+      </Link>
+    );
+  }
+
+  // Generate Return action - only show if:
+  // 1. User has modify permission
+  // 2. Shipment is DELIVERED
+  // 3. Has products within their return window
+  const deliveryDateStr = shipment.deliveredDate || shipment.expectedDeliveryDate;
+  const hasReturnableProducts = (() => {
+    if (!shipment.products || !deliveryDateStr) return false;
+
+    const deliveryDate = new Date(deliveryDateStr);
+    const today = new Date();
+    const daysSinceDelivery = Math.floor(
+      (today.getTime() - deliveryDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    // Check if any product has a return window > 0 and is still within the window
+    return shipment.products.some(p => {
+      const returnWindowDays = p.returnWindowDays ?? 0;
+      return returnWindowDays > 0 && daysSinceDelivery <= returnWindowDays;
+    });
+  })();
+
+  const canGenerateReturn = canModifyShipments &&
+    status === "DELIVERED" &&
+    hasReturnableProducts;
+
+  if (canGenerateReturn) {
+    actions.push(
+      <Link
+        key="return"
+        component="button"
+        onClick={(e: React.MouseEvent) => {
+          e.stopPropagation();
+          onReturnClick?.(shipment);
+        }}
+        sx={{
+          cursor: "pointer",
+          color: "secondary.main",
+          "&:hover": { textDecoration: "underline" }
+        }}
+      >
+        Generate Return
+      </Link>
+    );
+  }
+
+  // View Returns action - only show if shipment has return shipments
+  const hasReturnShipments = shipment.returnShipments && shipment.returnShipments.length > 0;
+  if (hasReturnShipments) {
+    actions.push(
+      <Link
+        key="view-returns"
+        component="button"
+        onClick={(e: React.MouseEvent) => {
+          e.stopPropagation();
+          onViewReturnsClick?.(shipment);
+        }}
+        sx={{
+          cursor: "pointer",
+          color: "info.main",
+          "&:hover": { textDecoration: "underline" }
+        }}
+      >
+        View Returns ({shipment.returnShipments?.length})
       </Link>
     );
   }
@@ -113,6 +219,10 @@ export interface ShipmentGridCallbacks {
   onPackagesClick?: (shipment: ShipmentData) => void;
   onCourierMetadataClick?: (shipment: ShipmentData) => void;
   onShipRocketMetadataClick?: (shipment: ShipmentData) => void;
+  onCancelClick?: (shipment: ShipmentData) => void;
+  onReturnClick?: (shipment: ShipmentData) => void;
+  onViewReturnsClick?: (shipment: ShipmentData) => void;
+  canModifyShipments?: boolean;
 }
 
 /**
@@ -708,13 +818,22 @@ export const getShipmentGridColumns = (
   {
     field: "actions",
     headerName: "Actions",
-    minWidth: 150,
-    flex: 0.8,
+    minWidth: 180,
+    flex: 1,
     sortable: false,
     filterable: false,
     renderCell: (params: GridRenderCellParams<ShipmentData>) => {
       const rowData = params.row;
-      return <ShipmentActionsCell purchaseOrderId={rowData.purchaseOrderId} />;
+      return (
+        <ShipmentActionsCell
+          purchaseOrderId={rowData.purchaseOrderId}
+          shipment={rowData}
+          canModifyShipments={callbacks?.canModifyShipments}
+          onCancelClick={callbacks?.onCancelClick}
+          onReturnClick={callbacks?.onReturnClick}
+          onViewReturnsClick={callbacks?.onViewReturnsClick}
+        />
+      );
     },
   },
 ];

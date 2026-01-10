@@ -160,7 +160,6 @@ const ProductSelectionGrid = ({
 
       return getProductGridColumns(
         () => {}, // onToggleProduct - not used in selection grid
-        () => {}, // onToggleReturns - not used in selection grid
         {
           quantityEditable: !isView,
           quantityValues: quantityMap,

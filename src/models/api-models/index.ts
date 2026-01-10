@@ -96,6 +96,9 @@ export type {
   ShipRocketStatus,
   ShipmentData,
   ShipmentUserInfo,
+  ReturnShipmentData,
+  ReturnProductData,
+  ReturnReasonType,
 } from "./ShipmentModels";
 
 // User Models

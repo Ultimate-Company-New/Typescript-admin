@@ -71,15 +71,6 @@ export const productApi = {
     return response.data;
   },
 
-  /**
-   * Toggle product returns allowed status
-   */
-  toggleProductReturns: async (productId: number): Promise<unknown> => {
-    const response = await axiosInstance.delete<unknown>(
-      `${API_BASE_URL}/toggleReturnProduct/${productId}`
-    );
-    return response.data;
-  },
 
   /**
    * Bulk create products

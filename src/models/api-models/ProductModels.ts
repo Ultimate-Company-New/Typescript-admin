@@ -24,7 +24,7 @@ export interface ProductRequestModel {
   price: number;
   discount: number;
   isDiscountPercent: boolean;
-  returnsAllowed: boolean;
+  returnWindowDays: number;  // Number of days from delivery within which returns are allowed (0 = no returns)
   breadth?: number;
   height?: number;
   weightKgs?: number;
@@ -77,7 +77,7 @@ export interface ProductResponseModel {
   price: number;
   discount: number;
   isDiscountPercent: boolean;
-  returnsAllowed: boolean;
+  returnWindowDays: number;  // Number of days from delivery within which returns are allowed (0 = no returns)
   breadth?: number;
   height?: number;
   weightKgs?: number;

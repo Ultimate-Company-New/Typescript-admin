@@ -61,7 +61,7 @@ const FillTestDataButton = ({
       setValue("isDiscountPercent", testData.isDiscountPercent ?? false, {
         shouldValidate: true,
       });
-      setValue("returnsAllowed", testData.returnsAllowed ?? false, {
+      setValue("returnWindowDays", testData.returnWindowDays ?? 30, {
         shouldValidate: true,
       });
 

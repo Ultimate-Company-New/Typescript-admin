@@ -818,6 +818,8 @@ const AddEditPurchaseOrder = (): React.JSX.Element => {
       };
 
       // Helper function to extract products from shipments (aggregates products across all shipments)
+      // NOTE: Backend now returns ProductResponseModel directly in shipment.products[] (not nested)
+      // The ProductResponseModel contains allocatedQuantity and allocatedPrice at root level
       const extractProductsFromShipments = (
         shipments: typeof response.shipments
       ): PurchaseOrderProductItem[] => {
@@ -829,13 +831,14 @@ const AddEditPurchaseOrder = (): React.JSX.Element => {
 
         shipments.forEach((shipment) => {
           shipment.products?.forEach((productData) => {
+            // ProductResponseModel is now at root level (not nested in productData.product)
             const productId = productData.productId;
-            if (!productId || !productData.product) return;
+            if (!productId) return;
 
             /**
              * IMPORTANT:
              * In edit mode we must use the saved per-order unit price from DB
-             * (ShipmentProduct.allocatedPrice), NOT the current Product.price.
+             * (allocatedPrice field on ProductResponseModel), NOT the current Product.price.
              *
              * Backend sends allocatedPrice as BigDecimal; depending on serialization it may
              * arrive as number or string, so normalize defensively.
@@ -851,21 +854,22 @@ const AddEditPurchaseOrder = (): React.JSX.Element => {
               ? allocatedPriceParsed
               : undefined;
 
+            const allocatedQty = (productData as any).allocatedQuantity || 0;
+
             if (productMap.has(productId)) {
               // Aggregate quantity and use latest price
               const existing = productMap.get(productId)!;
-              existing.quantity =
-                (existing.quantity || 0) + (productData.allocatedQuantity || 0);
+              existing.quantity = (existing.quantity || 0) + allocatedQty;
               // Only overwrite if the API provided a valid allocatedPrice
               if (allocatedPrice !== undefined) {
                 existing.pricePerUnit = allocatedPrice;
               }
             } else {
-              // Create new product item
+              // Create new product item - productData IS the ProductResponseModel now
               productMap.set(productId, {
-                product: productData.product,
-                pricePerUnit: allocatedPrice ?? 0,
-                quantity: productData.allocatedQuantity || 0,
+                product: productData as any, // productData is the full ProductResponseModel
+                pricePerUnit: allocatedPrice ?? productData.price ?? 0,
+                quantity: allocatedQty,
               });
             }
           });
@@ -1195,10 +1199,12 @@ const AddEditPurchaseOrder = (): React.JSX.Element => {
 
       // Initialize map for all products (extracted from shipments)
       // Use productsFromShipments instead of deprecated response.products
+      // NOTE: item.product IS the ProductResponseModel (product data is at root level)
       try {
         productsFromShipments.forEach((item) => {
-          if (item && item.product?.productId) {
-            productAllocationsMap[item.product.productId] = [];
+          const productId = item.product?.productId;
+          if (item && productId) {
+            productAllocationsMap[productId] = [];
           }
         });
       } catch {

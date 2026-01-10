@@ -99,20 +99,10 @@ const Products = (): React.JSX.Element => {
     );
   };
 
-  // Toggle product returns
-  const handleToggleReturns = async (productId: number): Promise<void> => {
-    await createToggleFunction(
-      productApi.toggleProductReturns,
-      productId,
-      fetchProducts,
-      'Returns status updated successfully'
-    );
-  };
-
   // Get grid columns with action handlers
   const columns = useMemo(
-    () => getProductGridColumns(handleToggleProduct, handleToggleReturns),
-    [handleToggleProduct, handleToggleReturns]
+    () => getProductGridColumns(handleToggleProduct),
+    [handleToggleProduct]
   );
 
   // Update visible column fields when column visibility changes

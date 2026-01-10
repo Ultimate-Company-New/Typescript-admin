@@ -4,10 +4,11 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { toast } from 'react-toastify'
 
-import { Save as SaveIcon } from '@mui/icons-material'
-import { Box, Container, Paper } from '@mui/material'
+import { Save as SaveIcon, Visibility, VisibilityOff, AccountBalanceWallet } from '@mui/icons-material'
+import { Box, Container, Paper, Typography, IconButton, TextField, InputAdornment, CircularProgress, Tooltip, Grid } from '@mui/material'
 
 import { clientApi, type ClientResponseModel } from '../../api/clientApi'
+import { shippingApi } from '../../api/shippingApi'
 import { FormFieldRenderer, type SectionConfig } from '../../components'
 import { BlueButton } from '../../components/buttons'
 import { FieldType } from '../../components/form/FormFieldRenderer'
@@ -27,6 +28,11 @@ import { FillSettingsTestDataButton } from './components'
 const Settings = (): JSX.Element => {
   const [loading, setLoading] = useState(false)
   const [currentClient, setCurrentClient] = useState<ClientResponseModel | null>(null)
+
+  // Wallet balance state
+  const [walletBalance, setWalletBalance] = useState<number | null>(null)
+  const [walletBalanceLoading, setWalletBalanceLoading] = useState(false)
+  const [showWalletBalance, setShowWalletBalance] = useState(false)
 
   // Get user permissions for authorization
   const { hasPermission } = usePermissions()
@@ -145,6 +151,29 @@ const Settings = (): JSX.Element => {
     hasFetchedSettings.current = true
     void fetchClientSettings()
   }, [fetchClientSettings])
+
+  /**
+   * Fetch ShipRocket wallet balance
+   */
+  const fetchWalletBalance = useCallback(async (): Promise<void> => {
+    setWalletBalanceLoading(true)
+    try {
+      const balance = await shippingApi.getWalletBalance()
+      setWalletBalance(balance)
+    } catch {
+      // Silently fail - wallet balance is optional and may not be configured
+      setWalletBalance(null)
+    } finally {
+      setWalletBalanceLoading(false)
+    }
+  }, [])
+
+  // Fetch wallet balance when client is loaded and has ShipRocket credentials
+  useEffect(() => {
+    if (currentClient?.shipRocketEmail && currentClient?.shipRocketPassword) {
+      void fetchWalletBalance()
+    }
+  }, [currentClient, fetchWalletBalance])
 
   /**
    * Handle form submission
@@ -489,6 +518,72 @@ const Settings = (): JSX.Element => {
             dividerClassName={styles['settings-page__divider']}
             dividerSpacerClassName={styles['settings-page__divider-spacer']}
           />
+
+          {/* ShipRocket Wallet Balance Section */}
+          {(currentClient?.shipRocketEmail && currentClient?.shipRocketPassword) && (
+            <Paper className={styles['settings-page__section']}>
+              <Typography
+                variant="h6"
+                className={styles['settings-page__section-title']}
+                sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}
+              >
+                <AccountBalanceWallet color="primary" />
+                ShipRocket Wallet Balance
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    fullWidth
+                    label="Wallet Balance"
+                    value={
+                      walletBalanceLoading
+                        ? 'Loading...'
+                        : walletBalance !== null
+                          ? showWalletBalance
+                            ? `₹ ${walletBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                            : '••••••••'
+                          : 'Not available'
+                    }
+                    slotProps={{
+                      input: {
+                        readOnly: true,
+                        startAdornment: walletBalanceLoading ? (
+                          <InputAdornment position="start">
+                            <CircularProgress size={20} />
+                          </InputAdornment>
+                        ) : undefined,
+                        endAdornment: walletBalance !== null && !walletBalanceLoading ? (
+                          <InputAdornment position="end">
+                            <Tooltip title={showWalletBalance ? 'Hide balance' : 'Show balance'}>
+                              <IconButton
+                                onClick={() => setShowWalletBalance(!showWalletBalance)}
+                                edge="end"
+                                size="small"
+                              >
+                                {showWalletBalance ? <VisibilityOff /> : <Visibility />}
+                              </IconButton>
+                            </Tooltip>
+                          </InputAdornment>
+                        ) : undefined,
+                      },
+                    }}
+                    sx={{
+                      '& .MuiInputBase-input': {
+                        color: walletBalance !== null && walletBalance < 0 ? 'error.main' : 'text.primary',
+                        fontWeight: showWalletBalance ? 600 : 400,
+                      },
+                    }}
+                    helperText={
+                      walletBalance !== null && walletBalance < 0
+                        ? 'Warning: Negative balance'
+                        : 'Read-only balance from ShipRocket'
+                    }
+                    color={walletBalance !== null && walletBalance < 0 ? 'error' : 'primary'}
+                  />
+                </Grid>
+              </Grid>
+            </Paper>
+          )}
 
           {/* Action Buttons */}
           <Paper className={styles['settings-page__section']}>

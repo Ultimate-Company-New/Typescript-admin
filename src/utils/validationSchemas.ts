@@ -397,7 +397,7 @@ export const productFormSchema = z.object({
   price: z.number().min(0, 'Price must be 0 or greater'),
   discount: z.number().min(0, 'Discount must be 0 or greater'),
   isDiscountPercent: z.boolean(),
-  returnsAllowed: z.boolean(),
+  returnWindowDays: z.number().int().min(0, 'Return window must be 0 or greater'),
   length: z.number().positive('Length must be positive').optional().nullable(),
   breadth: z.number().positive('Breadth must be positive').optional().nullable(),
   height: z.number().positive('Height must be positive').optional().nullable(),
@@ -455,7 +455,7 @@ export const bulkProductImportSchema = z.object({
   price: z.coerce.number().min(0, 'Price must be 0 or greater'),
   discount: z.coerce.number().min(0, 'Discount must be 0 or greater'),
   isDiscountPercent: z.boolean(),
-  returnsAllowed: z.boolean(),
+  returnWindowDays: z.coerce.number().int().min(0, 'Return window must be 0 or greater'),
   length: z.preprocess(
     (val) => (val === '' || val === null || val === undefined ? null : Number(val)),
     z.number().positive('Length must be positive').nullable().optional()

@@ -114,6 +114,7 @@ export const PERMISSIONS = {
   TOGGLE_PURCHASE_ORDERS: 'TogglePurchaseOrders',
   // Shipment Management
   VIEW_SHIPMENTS: 'ViewShipments',
+  MODIFY_SHIPMENTS: 'ModifyShipments',
   // Order Management
   VIEW_ORDERS: 'ViewOrders',
   INSERT_ORDERS: 'InsertOrders',
@@ -240,6 +241,7 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
     PERMISSIONS.DELETE_PICKUP_LOCATIONS,
     // Shipment Management
     PERMISSIONS.VIEW_SHIPMENTS,
+    PERMISSIONS.MODIFY_SHIPMENTS,
     // Purchase Management
     PERMISSIONS.VIEW_PURCHASE_ORDERS,
     PERMISSIONS.INSERT_PURCHASE_ORDERS,
@@ -332,6 +334,7 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
     PERMISSIONS.DELETE_PICKUP_LOCATIONS,
     // Shipment Management
     PERMISSIONS.VIEW_SHIPMENTS,
+    PERMISSIONS.MODIFY_SHIPMENTS,
     // Purchase Management
     PERMISSIONS.VIEW_PURCHASE_ORDERS,
     PERMISSIONS.INSERT_PURCHASE_ORDERS,
@@ -407,6 +410,7 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
     PERMISSIONS.INSERT_PICKUP_LOCATIONS,
     // Shipment Management
     PERMISSIONS.VIEW_SHIPMENTS,
+    PERMISSIONS.MODIFY_SHIPMENTS,
     // Purchase Management
     PERMISSIONS.VIEW_PURCHASE_ORDERS,
     PERMISSIONS.INSERT_PURCHASE_ORDERS,
@@ -1874,4 +1878,76 @@ export const getPriorityColor = (
 ): 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info' => {
   const priority = PRIORITY_OPTIONS.find(opt => opt.value === priorityValue)
   return priority?.color ?? 'default'
+}
+
+// ============================================================================
+// RETURN SHIPMENT CONSTANTS
+// ============================================================================
+
+/**
+ * Return reason options for product returns
+ * Used in return shipment forms for selecting the reason for return
+ * These values are sent to ShipRocket and stored in our database
+ */
+export const RETURN_REASON_OPTIONS = [
+  { value: 'Bought by Mistake', label: 'Bought by Mistake' },
+  { value: 'Better price available', label: 'Better price available' },
+  { value: 'Performance or quality not adequate', label: 'Performance or quality not adequate' },
+  { value: 'Incompatible or not useful', label: 'Incompatible or not useful' },
+  { value: 'Product damaged, but shipping box OK', label: 'Product damaged, but shipping box OK' },
+  { value: 'Item arrived too late', label: 'Item arrived too late' },
+  { value: 'Missing parts or accessories', label: 'Missing parts or accessories' },
+  { value: 'Both product and shipping box damaged', label: 'Both product and shipping box damaged' },
+  { value: 'Wrong item was sent', label: 'Wrong item was sent' },
+  { value: 'Item defective or doesn\'t work', label: 'Item defective or doesn\'t work' },
+  { value: 'No longer needed', label: 'No longer needed' },
+  { value: 'Didn\'t approve purchase', label: 'Didn\'t approve purchase' },
+  { value: 'Inaccurate website description', label: 'Inaccurate website description' },
+  { value: 'Return against replacement', label: 'Return against replacement' },
+  { value: 'Delay Refund', label: 'Delay Refund' },
+  { value: 'Delivered Late', label: 'Delivered Late' },
+  { value: 'Product does not Match Description on Website', label: 'Product does not Match Description on Website' },
+  { value: 'Both Product & Outer Box Damaged', label: 'Both Product & Outer Box Damaged' },
+  { value: 'Defective or does not work', label: 'Defective or does not work' },
+  { value: 'Product damaged, but outer Box OK', label: 'Product damaged, but outer Box OK' },
+  { value: 'Missing Parts or Accessories', label: 'Missing Parts or Accessories' },
+  { value: 'Incorrect Item Delivered', label: 'Incorrect Item Delivered' },
+  { value: 'Product Defective or Doesn\'t Work', label: 'Product Defective or Doesn\'t Work' },
+  { value: 'Product performance/quality is not up to my expectations', label: 'Product performance/quality is not up to my expectations' },
+  { value: 'Other', label: 'Other' },
+  { value: 'Changed my mind', label: 'Changed my mind' },
+  { value: 'Does not fit', label: 'Does not fit' },
+  { value: 'Size not as expected', label: 'Size not as expected' },
+  { value: 'Item is damaged', label: 'Item is damaged' },
+  { value: 'Received wrong item', label: 'Received wrong item' },
+  { value: 'Parcel damaged on arrival', label: 'Parcel damaged on arrival' },
+  { value: 'Quality not as expected', label: 'Quality not as expected' },
+  { value: 'Missing Item or accessories', label: 'Missing Item or accessories' },
+  { value: 'Performance not adequate', label: 'Performance not adequate' },
+  { value: 'Not as described', label: 'Not as described' },
+  { value: 'Arrived too late', label: 'Arrived too late' },
+  { value: 'Order Not Received', label: 'Order Not Received' },
+  { value: 'Empty Package', label: 'Empty Package' },
+  { value: 'Wrong item or Wrong colour was sent', label: 'Wrong item or Wrong colour was sent' },
+  { value: 'Item defective, expired, spoilt or does not work', label: 'Item defective, expired, spoilt or does not work' },
+  { value: 'Items or parts missing', label: 'Items or parts missing' },
+  { value: 'Size or Quantity issues', label: 'Size or Quantity issues' },
+  { value: 'Status as delivered but order not received', label: 'Status as delivered but order not received' },
+  { value: 'other', label: 'other' },
+] as const
+
+/**
+ * Array of return reason values for validation
+ */
+export const RETURN_REASON_VALUES = RETURN_REASON_OPTIONS.map(opt => opt.value)
+
+export type ReturnReason = (typeof RETURN_REASON_OPTIONS)[number]['value']
+
+/**
+ * Get return reason label by value
+ * Returns the display label for a given return reason value
+ */
+export const getReturnReasonLabel = (reasonValue: string): string => {
+  const reason = RETURN_REASON_OPTIONS.find(opt => opt.value === reasonValue)
+  return reason?.label ?? reasonValue
 }
