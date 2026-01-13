@@ -154,7 +154,6 @@ const PickupLocationDetailsView = ({
   }, [fetchProducts])
 
   // Note: handleToggleReturns removed - returnWindowDays is set at product creation and cannot be changed
-  }, [fetchProducts])
 
   // ==================== Package Grid Functions ====================
   const fetchPackages = useCallback(async (): Promise<void> => {

@@ -110,3 +110,24 @@ export type {
   UserRequestModel,
   UserResponseModel,
 } from "./UserModels";
+
+// QA Models
+export type {
+  CoverageSummary,
+  CoverageSummaryData,
+  LatestTestResultResponseModel,
+  MethodInfo,
+  QADashboardResponseModel,
+  QAServiceResponse,
+  ServiceBreakdown,
+  ServiceBreakdownData,
+  TestExecutionRequestModel,
+  TestExecutionStatusModel,
+  TestInfo,
+  TestResult,
+  TestResultData,
+  TestResultInfo,
+  TestRunRequestModel,
+  TestRunResponse,
+  TestRunResponseModel,
+} from "./QAModels";

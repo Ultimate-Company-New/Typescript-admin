@@ -1,4 +1,22 @@
 // QA Dashboard Page Styles
+// Modern, clean design with integrated tabs and content
+
+$primary-color: #1976d2;
+$primary-light: #e3f2fd;
+$success-color: #2e7d32;
+$success-light: #e8f5e9;
+$error-color: #d32f2f;
+$error-light: #ffebee;
+$warning-color: #ed6c02;
+$background-light: #f8fafc;
+$background-white: #ffffff;
+$border-color: #e2e8f0;
+$border-light: #f1f5f9;
+$text-primary: #1e293b;
+$text-secondary: #64748b;
+$shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+$shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+$shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
 
 .qa-dashboard {
   width: 100%;
@@ -16,24 +34,402 @@
     box-sizing: border-box;
   }
 
+  &__loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    gap: 12px;
+  }
+
+  &__alert {
+    margin-bottom: 12px;
+  }
+
+  // Main Card with Integrated Tabs
+  &__main-card {
+    border-radius: 4px;
+    border: 1px solid $border-color;
+    background: $background-white;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  &__tab-header {
+    background: #fafafa;
+    border-bottom: 1px solid $border-color;
+    padding: 0 16px;
+  }
+
+  &__tabs {
+    min-height: 48px;
+
+    .MuiTabs-indicator {
+      height: 2px;
+      background: $primary-color;
+    }
+  }
+
+  &__tab {
+    text-transform: none !important;
+    font-weight: 500 !important;
+    font-size: 0.875rem !important;
+    min-height: 48px !important;
+    padding: 12px 16px !important;
+    color: $text-secondary !important;
+    transition: color 0.2s ease !important;
+
+    &:hover {
+      color: $text-primary !important;
+    }
+
+    &.Mui-selected {
+      color: $primary-color !important;
+      font-weight: 600 !important;
+    }
+  }
+
+  &__tab-body {
+    padding: 16px;
+    min-height: 400px;
+    background: $background-white;
+  }
+
+  // Stats Cards
+  &__stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+
+    @media (max-width: 1200px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: 600px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__stat-card {
+    padding: 12px 16px;
+    text-align: center;
+    border-radius: 4px;
+    background: $background-light;
+    border: 1px solid $border-light;
+  }
+
+  &__stat-value {
+    font-weight: 700 !important;
+    color: $primary-color;
+    margin-bottom: 2px !important;
+    font-size: 1.5rem !important;
+    line-height: 1.2 !important;
+
+    &--coverage {
+      font-weight: 700 !important;
+      color: $success-color;
+      margin-bottom: 2px !important;
+      font-size: 1.5rem !important;
+      line-height: 1.2 !important;
+    }
+  }
+
+  // Section Title
+  &__section-title {
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+    color: $text-secondary;
+    margin-bottom: 12px !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  // Services
+  &__services {
+    margin-top: 0;
+  }
+
+  &__service-accordion {
+    margin-bottom: 8px !important;
+    border-radius: 4px !important;
+    border: 1px solid $border-color !important;
+    box-shadow: none !important;
+    overflow: hidden;
+
+    &::before {
+      display: none;
+    }
+  }
+
+  &__service-summary {
+    padding: 8px 16px !important;
+    background: $background-white;
+    min-height: 48px !important;
+
+    &:hover {
+      background: #fafafa;
+    }
+  }
+
+  &__service-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding-right: 8px;
+  }
+
+  &__service-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__service-name {
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+    color: $text-primary;
+  }
+
+  &__service-chips {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  &__service-details {
+    padding: 12px 16px !important;
+    background-color: #fafafa;
+  }
+
+  &__service-progress {
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    background: $background-white;
+    border-radius: 4px;
+    border: 1px solid $border-light;
+  }
+
+  &__progress-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+
+  &__progress-bar {
+    height: 4px !important;
+    border-radius: 2px;
+    background-color: #e8e8e8 !important;
+
+    .MuiLinearProgress-bar {
+      border-radius: 2px;
+    }
+  }
+
+  &__run-all-container {
+    margin-bottom: 12px;
+  }
+
+  // Methods
+  &__methods-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &__method-card {
+    padding: 10px 12px;
+    border-radius: 4px;
+    border: 1px solid $border-light;
+    background: $background-white;
+
+    &:hover {
+      border-color: $border-color;
+    }
+  }
+
+  &__method-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__method-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__method-title-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__method-name {
+    font-weight: 500 !important;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace !important;
+    font-size: 0.8125rem !important;
+    color: $text-primary;
+  }
+
+  &__method-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  &__method-progress {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid $border-light;
+  }
+
+  // Test Results
+  &__test-results {
+    padding: 8px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__test-result {
+    padding: 6px 10px;
+    background: $background-light;
+    border-radius: 3px;
+    border-left: 2px solid transparent;
+
+    &:has(.qa-dashboard__icon--passed) {
+      border-left-color: $success-color;
+      background: $success-light;
+    }
+
+    &:has(.qa-dashboard__icon--failed) {
+      border-left-color: $error-color;
+      background: $error-light;
+    }
+  }
+
+  &__test-result-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__test-result-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__test-name {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace !important;
+    font-size: 0.75rem !important;
+    word-break: break-word;
+  }
+
+  &__duration-chip {
+    background-color: $primary-light !important;
+    color: $primary-color !important;
+    font-size: 0.65rem !important;
+    height: 18px !important;
+    font-weight: 500 !important;
+  }
+
+  &__error-alert {
+    margin-top: 6px;
+    padding: 6px 10px !important;
+
+    .MuiAlert-message {
+      width: 100%;
+    }
+  }
+
+  &__stack-trace {
+    display: block;
+    margin-top: 6px;
+    padding: 6px;
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 3px;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 0.7rem;
+    white-space: pre-wrap;
+    word-break: break-all;
+    color: $text-secondary;
+  }
+
+  // Icons
+  &__icon {
+    &--passed {
+      color: $success-color;
+    }
+
+    &--failed {
+      color: $error-color;
+    }
+
+    &--running {
+      color: $primary-color;
+    }
+  }
+
+  // Placeholder content for empty tabs
+  &__placeholder-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    text-align: center;
+    color: $text-secondary;
+  }
+
+  &__placeholder-icon {
+    margin-bottom: 12px;
+    color: $text-secondary;
+    opacity: 0.4;
+  }
+
+  // Legacy styles (kept for backwards compatibility)
+  &__tabs-container {
+    margin-bottom: 16px;
+    border-radius: 4px;
+    border: 1px solid $border-color;
+  }
+
+  &__tab-content {
+    margin-top: 16px;
+  }
+
+  &__placeholder {
+    padding: 32px;
+    text-align: center;
+    border-radius: 4px;
+    border: 1px dashed $border-color;
+    background-color: $background-light;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+
   &__card {
-    padding: 24px;
+    padding: 16px;
     height: 100%;
     display: flex;
     flex-direction: column;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transition: box-shadow 0.2s ease-in-out;
-
-    &:hover {
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    }
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   }
 
   &__card-content {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
   }
 }
