@@ -1,9 +1,9 @@
 import type {
-  QADashboardResponseModel,
-  TestExecutionRequestModel,
-  TestExecutionStatusModel,
-  TestRunRequestModel,
-  TestRunResponseModel,
+    QADashboardResponseModel,
+    TestExecutionRequestModel,
+    TestExecutionStatusModel,
+    TestRunRequestModel,
+    TestRunResponseModel,
 } from "../models/api-models";
 
 import axiosInstance from "./axiosConfig";
@@ -35,9 +35,11 @@ export const getDashboardData = async (): Promise<QADashboardResponseModel> => {
  * Returns immediately with execution status that includes executionId for polling.
  *
  * Request body determines scope:
+ * Request body determines scope:
  * - { runAll: true } - Run ALL tests in the API
- * - { serviceName: "AddressService" } - Run all tests for that service
- * - { serviceName: "AddressService", methodName: "toggleAddress" } - Run tests for specific method
+ * - { runAll: true } - Run ALL tests in the API
+ * - { serviceName: "AddressService", methodName: "toggleAddress" } - Run tests for specific method using serviceName
+ * - { testClassName: "AddressServiceTest", methodName: "toggleAddress" } - Run tests for specific method using className
  * - { testNames: ["test1", "test2"], testClassName: "AddressServiceTest" } - Run specific tests
  */
 export const runTests = async (
@@ -66,15 +68,6 @@ export const getTestExecutionStatus = async (
 };
 
 /**
- * Helper function to run tests for a service
- */
-export const runTestsForService = async (
-  serviceName: string
-): Promise<TestExecutionStatusModel> => {
-  return runTests({ serviceName });
-};
-
-/**
  * Helper function to run tests for a specific method
  */
 export const runTestsForMethod = async (
@@ -89,10 +82,9 @@ export const runTestsForMethod = async (
  */
 export const runSpecificTests = async (
   testClassName: string,
-  testNames: string[],
-  serviceName?: string
+  testNames: string[]
 ): Promise<TestExecutionStatusModel> => {
-  return runTests({ testClassName, testNames, serviceName });
+  return runTests({ testClassName, testNames });
 };
 
 /**
@@ -119,7 +111,6 @@ export const qaApi = {
   getDashboardData,
   runTests,
   getTestExecutionStatus,
-  runTestsForService,
   runTestsForMethod,
   runSpecificTests,
   runAllTests,

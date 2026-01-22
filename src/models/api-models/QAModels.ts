@@ -156,7 +156,6 @@ export interface LatestTestResultResponseModel {
   serviceName: string
   testClassName: string
   testMethodName: string
-  displayName: string | null
   status: 'PASSED' | 'FAILED' | 'SKIPPED' | 'ERROR' | 'NOT_RUN'
   durationMs: number
   errorMessage: string | null
