@@ -9,11 +9,16 @@ import { toast } from 'react-toastify'
 import { Cancel as CancelIcon, Save as SaveIcon } from '@mui/icons-material'
 import { Box, Container, Paper } from '@mui/material'
 
-import { userGroupApi, type UserGroupRequestModel } from '../../api/userGroupApi'
+import {
+  userGroupApi,
+  type UserGroupRequestModel,
+  type UserGroupSimpleUserDto,
+} from '../../api/userGroupApi'
 import { BlueButton, RedButton } from '../../components/buttons'
 import { UserSelectionGrid } from '../../components/datagrid'
 import { FormFieldRenderer } from '../../components/form'
 import { FieldType } from '../../constants/appConstants'
+import { type UserResponseModel } from '../../models/api-models'
 import { APP_ROUTES } from '../../constants/routes'
 import { getUserGridColumns } from '../../models/grid-models/UserGridColumns'
 import styles from '../../styles/UserGroups.module.scss'
@@ -63,6 +68,24 @@ const AddEditUserGroup = (): React.JSX.Element => {
 
   const [loading, setLoading] = useState(false)
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([])
+  const [preloadedUsers, setPreloadedUsers] = useState<UserResponseModel[]>([])
+
+  const mapUserGroupUserToUserResponse = useCallback(
+    (user: UserGroupSimpleUserDto): UserResponseModel => ({
+      userId: user.userId,
+      loginName: user.loginName ?? '',
+      firstName: user.firstName ?? '',
+      lastName: user.lastName ?? '',
+      phone: user.phone ?? '',
+      role: user.role ?? '',
+      isDeleted: user.isDeleted ?? false,
+      emailConfirmed: user.emailConfirmed ?? false,
+      dob: '',
+      email: user.email ?? '',
+      profilePicture: user.profilePicture,
+    }),
+    [],
+  )
 
   // Form setup with react-hook-form and Zod validation
   const formMethods = useForm<UserGroupFormData>({
@@ -91,7 +114,14 @@ const AddEditUserGroup = (): React.JSX.Element => {
           description: String(response.description),
           notes: response.notes ? String(response.notes) : '',
         })
-        setSelectedUserIds(response.userIds)
+
+        const groupUsers = Array.isArray(response.users) ? response.users : []
+        const selectedIdsFromUsers = groupUsers.map(user => user.userId)
+        const fallbackUserIds = Array.isArray((response as { userIds?: number[] }).userIds)
+          ? ((response as { userIds?: number[] }).userIds ?? [])
+          : []
+        setSelectedUserIds(selectedIdsFromUsers.length > 0 ? selectedIdsFromUsers : fallbackUserIds)
+        setPreloadedUsers(groupUsers.map(mapUserGroupUserToUserResponse))
 
         toast.success('User group details loaded successfully')
       } catch (error) {
@@ -100,7 +130,7 @@ const AddEditUserGroup = (): React.JSX.Element => {
         setLoading(false)
       }
     },
-    [reset],
+    [mapUserGroupUserToUserResponse, reset],
   )
 
   /**
@@ -286,6 +316,7 @@ const AddEditUserGroup = (): React.JSX.Element => {
             defaultPageSize={10}
             hideToolbar={false}
             selectedUserIdsFilter={isView ? selectedUserIds : undefined}
+            preloadedUsers={isView ? preloadedUsers : undefined}
           />
 
           {/* Action Buttons */}

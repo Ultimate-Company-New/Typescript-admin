@@ -113,6 +113,9 @@ export type {
 
 // QA Models
 export type {
+  AutomatedApiTestCategory,
+  AutomatedApiTestInfo,
+  AutomatedApiTestsData,
   CoverageSummary,
   CoverageSummaryData,
   LatestTestResultResponseModel,

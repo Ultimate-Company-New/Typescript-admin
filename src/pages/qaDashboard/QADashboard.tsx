@@ -31,6 +31,9 @@ import { useCallback, useEffect, useState } from "react";
 
 import { qaApi } from "../../api/qaApi";
 import type {
+  AutomatedApiTestCategory,
+  AutomatedApiTestInfo,
+  AutomatedApiTestsData,
   CoverageSummaryData,
   MethodInfo,
   QAServiceResponse,
@@ -88,9 +91,14 @@ function TabPanel(props: TabPanelProps) {
 const QADashboard = (): JSX.Element => {
   const [services, setServices] = useState<QAServiceResponse[]>([]);
   const [coverage, setCoverage] = useState<CoverageSummaryData | null>(null);
+  const [automatedApiTests, setAutomatedApiTests] =
+    useState<AutomatedApiTestsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedService, setExpandedService] = useState<string | false>(false);
+  const [expandedApiCategory, setExpandedApiCategory] = useState<string | false>(
+    false
+  );
   const [serviceTestStates, setServiceTestStates] = useState<ServiceTestState>(
     {}
   );
@@ -105,6 +113,7 @@ const QADashboard = (): JSX.Element => {
 
       setServices(dashboardData.services);
       setCoverage(dashboardData.coverageSummary);
+      setAutomatedApiTests(dashboardData.automatedApiTests ?? null);
 
       // Initialize test states using the last run info from TestInfo (returned by backend)
       const initialStates: ServiceTestState = {};
@@ -583,6 +592,153 @@ const QADashboard = (): JSX.Element => {
         return null;
     }
   };
+
+  // Render Automated API Tests stats
+  const renderApiTestStats = () => {
+    if (!automatedApiTests) return null;
+
+    return (
+      <Box className={styles["qa-dashboard__stats"]}>
+        <Paper className={styles["qa-dashboard__stat-card"]}>
+          <Typography
+            variant="h3"
+            className={styles["qa-dashboard__stat-value"]}
+          >
+            {automatedApiTests.totalTests}
+          </Typography>
+          <Typography variant="body2" color="textSecondary">
+            API Test Classes
+          </Typography>
+        </Paper>
+        <Paper className={styles["qa-dashboard__stat-card"]}>
+          <Typography
+            variant="h3"
+            className={styles["qa-dashboard__stat-value"]}
+          >
+            {automatedApiTests.categories?.length ?? 0}
+          </Typography>
+          <Typography variant="body2" color="textSecondary">
+            Categories
+          </Typography>
+        </Paper>
+        {automatedApiTests.basePath && (
+          <Paper className={styles["qa-dashboard__stat-card"]}>
+            <Typography
+              variant="body2"
+              className={styles["qa-dashboard__stat-value"]}
+              sx={{ fontSize: "0.9rem", wordBreak: "break-all" }}
+            >
+              {automatedApiTests.basePath}
+            </Typography>
+            <Typography variant="body2" color="textSecondary">
+              Base Path
+            </Typography>
+          </Paper>
+        )}
+      </Box>
+    );
+  };
+
+  // Render a single API test class card
+  const renderApiTestCard = (test: AutomatedApiTestInfo) => (
+    <Paper
+      key={test.testClass}
+      className={styles["qa-dashboard__method-card"]}
+    >
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+        }}
+      >
+        <Box sx={{ flex: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <CodeIcon fontSize="small" color="action" />
+            <Typography variant="subtitle1" fontWeight={500}>
+              {test.testClass}
+            </Typography>
+          </Box>
+          <Typography
+            variant="caption"
+            color="textSecondary"
+            sx={{ ml: 3.5 }}
+          >
+            {test.relativePath}
+          </Typography>
+        </Box>
+        <Chip
+          size="small"
+          icon={<BugReportIcon />}
+          label="API Test"
+          color="primary"
+          variant="outlined"
+          sx={{ fontWeight: 500 }}
+        />
+      </Box>
+    </Paper>
+  );
+
+  // Render an API test category accordion
+  const renderApiCategoryAccordion = (category: AutomatedApiTestCategory) => (
+    <Accordion
+      key={category.categoryName}
+      expanded={expandedApiCategory === category.categoryName}
+      onChange={(_, isExpanded) =>
+        setExpandedApiCategory(isExpanded ? category.categoryName : false)
+      }
+      className={styles["qa-dashboard__service-accordion"]}
+    >
+      <AccordionSummary
+        expandIcon={<ExpandMoreIcon />}
+        className={styles["qa-dashboard__service-summary"]}
+      >
+        <Box sx={{ width: "100%" }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+              mb: 1.5,
+            }}
+          >
+            <Box className={styles["qa-dashboard__service-info"]}>
+              <Typography
+                variant="h6"
+                className={styles["qa-dashboard__service-name"]}
+              >
+                {category.categoryName}
+              </Typography>
+              <Typography variant="caption" color="textSecondary">
+                {category.relativePath}
+              </Typography>
+            </Box>
+          </Box>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+              <Chip
+                size="small"
+                label={`${category.tests?.length ?? 0} tests`}
+                color="primary"
+                variant="outlined"
+              />
+            </Box>
+          </Box>
+        </Box>
+      </AccordionSummary>
+      <AccordionDetails className={styles["qa-dashboard__service-details"]}>
+        <Box className={styles["qa-dashboard__methods-list"]}>
+          {(category.tests ?? []).map((test) => renderApiTestCard(test))}
+        </Box>
+      </AccordionDetails>
+    </Accordion>
+  );
 
   // Render coverage stats
   const renderCoverageStats = () => {
@@ -1311,16 +1467,30 @@ const QADashboard = (): JSX.Element => {
 
             {/* Automated API Tests Tab */}
             <TabPanel value={currentTab} index="api">
-              <Box className={styles["qa-dashboard__placeholder-content"]}>
-                <Box className={styles["qa-dashboard__placeholder-icon"]}>
-                  <CodeIcon style={{ fontSize: 64, opacity: 0.3 }} />
-                </Box>
-                <Typography variant="h6" gutterBottom>
-                  Automated API Tests
+              {renderApiTestStats()}
+              <Box className={styles["qa-dashboard__services"]}>
+                <Typography
+                  variant="h6"
+                  className={styles["qa-dashboard__section-title"]}
+                >
+                  API Test Categories
                 </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  API test execution and results will be displayed here.
-                </Typography>
+                {automatedApiTests?.categories?.length ? (
+                  automatedApiTests.categories.map(renderApiCategoryAccordion)
+                ) : (
+                  <Box className={styles["qa-dashboard__placeholder-content"]}>
+                    <Box className={styles["qa-dashboard__placeholder-icon"]}>
+                      <CodeIcon style={{ fontSize: 64, opacity: 0.3 }} />
+                    </Box>
+                    <Typography variant="h6" gutterBottom>
+                      No Automated API Tests Found
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      API tests are discovered from the Spring-PlayWright-Automation
+                      project. Ensure the project path is configured correctly.
+                    </Typography>
+                  </Box>
+                )}
               </Box>
             </TabPanel>
 

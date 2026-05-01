@@ -35,7 +35,7 @@ const Login = (): JSX.Element => {
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: 'nahushrai+testuser01@gmail.com',
-      password: '$2a$15$u8Yh4O2qc7Tb5rBUIpiuWO',
+      password: '$2a$15$fuFuezuR5bzPmbtT5Lwjme',
     },
   })
 

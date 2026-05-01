@@ -194,6 +194,32 @@ export interface CoverageSummaryData {
 }
 
 /**
+ * A single automated API test class
+ */
+export interface AutomatedApiTestInfo {
+  testClass: string
+  relativePath: string
+}
+
+/**
+ * A category of automated API tests (e.g., Address, Client, Lead)
+ */
+export interface AutomatedApiTestCategory {
+  categoryName: string
+  relativePath: string
+  tests: AutomatedApiTestInfo[]
+}
+
+/**
+ * Automated API tests section (Playwright/API integration tests)
+ */
+export interface AutomatedApiTestsData {
+  basePath: string
+  totalTests: number
+  categories: AutomatedApiTestCategory[]
+}
+
+/**
  * Combined QA Dashboard response model
  * Contains all data needed for the QA Dashboard in a single response
  */
@@ -201,6 +227,7 @@ export interface QADashboardResponseModel {
   services: QAServiceResponse[]
   coverageSummary: CoverageSummaryData
   availableServices: string[]
+  automatedApiTests?: AutomatedApiTestsData | null
 }
 
 // ==================== TEST EXECUTION MODELS ====================

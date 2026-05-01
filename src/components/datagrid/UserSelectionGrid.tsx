@@ -56,6 +56,7 @@ interface UserSelectionGridProps {
   defaultPageSize?: number
   hideToolbar?: boolean
   selectedUserIdsFilter?: number[]
+  preloadedUsers?: UserResponseModel[]
 }
 
 /**
@@ -77,6 +78,7 @@ const UserSelectionGrid = ({
   defaultPageSize = 10,
   hideToolbar = false,
   selectedUserIdsFilter,
+  preloadedUsers,
 }: UserSelectionGridProps): JSX.Element => {
   const [rows, setRows] = useState<UserResponseModel[]>([])
   const [loading, setLoading] = useState(false)
@@ -122,6 +124,13 @@ const UserSelectionGrid = ({
 
   // Fetch users on mount and when pagination model changes
   useEffect(() => {
+    if (isView) {
+      const viewRows = Array.isArray(preloadedUsers) ? preloadedUsers : []
+      setRows(viewRows)
+      setTotalCount(viewRows.length)
+      return
+    }
+
     void createFetchFunction(
       async (params: {
         start: number
@@ -147,7 +156,7 @@ const UserSelectionGrid = ({
       includeDeleted,
       activeFilterGroup,
     )
-  }, [paginationModel, includeDeleted, activeFilterGroup, selectedUserIdsFilter])
+  }, [paginationModel, includeDeleted, activeFilterGroup, isView, preloadedUsers, selectedUserIdsFilter])
 
   // Sync selected user IDs with row selection model
   useEffect(() => {

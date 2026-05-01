@@ -89,6 +89,18 @@ export interface UserGroupResponseModel {
   groupId: number
   groupName: string
   description?: string
+  users?: {
+    userId: number
+    firstName?: string
+    lastName?: string
+    email?: string
+    loginName?: string
+    phone?: string
+    role?: string
+    isDeleted?: boolean
+    emailConfirmed?: boolean
+    profilePicture?: string
+  }[]
   isDeleted?: boolean
   createdAt?: string
   updatedAt?: string

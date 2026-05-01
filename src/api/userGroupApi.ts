@@ -25,6 +25,19 @@ export interface UserGroupBulkCreateItem {
   userIds: number[]
 }
 
+export interface UserGroupSimpleUserDto {
+  userId: number
+  firstName?: string
+  lastName?: string
+  email?: string
+  loginName?: string
+  phone?: string
+  role?: string
+  isDeleted?: boolean
+  emailConfirmed?: boolean
+  profilePicture?: string
+}
+
 /**
  * User Group Response Model
  */
@@ -34,7 +47,7 @@ export interface UserGroupResponseModel {
   groupName: string
   description: string
   notes?: string
-  userIds: number[]
+  users: UserGroupSimpleUserDto[]
   isDeleted: boolean
   createdUser: string
   modifiedUser: string

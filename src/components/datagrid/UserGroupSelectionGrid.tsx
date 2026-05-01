@@ -42,6 +42,7 @@ export interface UserGroupData {
   name: string
   description: string
   userIds: number[]
+  users?: { userId: number }[]
   memberCount: number
   userCount?: number
   isDeleted: boolean
@@ -135,6 +136,7 @@ const UserGroupSelectionGrid = ({
           name?: string
           description?: string
           userIds?: number[]
+          users?: { userId: number }[]
           memberCount?: number
           userCount?: number
           isDeleted?: boolean
@@ -148,6 +150,8 @@ const UserGroupSelectionGrid = ({
           memberCountValue = userGroup.memberCount
         } else if (typeof userGroup.userCount === 'number') {
           memberCountValue = userGroup.userCount
+        } else if (Array.isArray(userGroup.users)) {
+          memberCountValue = userGroup.users.length
         } else if (Array.isArray(userGroup.userIds)) {
           memberCountValue = userGroup.userIds.length
         }
@@ -157,6 +161,7 @@ const UserGroupSelectionGrid = ({
           groupName: groupNameValue,
           name: userGroup.name ?? '',
           description: userGroup.description ?? '',
+          users: userGroup.users ?? [],
           userIds: userGroup.userIds ?? [],
           memberCount: memberCountValue,
           userCount: userGroup.userCount,

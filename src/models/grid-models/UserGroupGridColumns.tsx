@@ -133,7 +133,8 @@ export interface UserGroupData {
   notes?: string
   userCount?: number
   memberCount?: number
-  userIds: number[]
+  userIds?: number[]
+  users?: { userId: number }[]
   isDeleted: boolean
   clientId?: number
   createdUser?: string
@@ -197,8 +198,7 @@ export const getUserGroupGridColumns = (onToggleGroup: (userGroupId: number) => 
     sortable: true,
     valueGetter: (_value, row) => {
       const data = row as UserGroupData
-      // Try userCount, memberCount, or count userIds array length
-      return data.userCount ?? data.memberCount ?? data.userIds.length
+      return data.userCount ?? data.memberCount ?? data.users?.length ?? data.userIds?.length ?? 0
     },
     renderCell: (params: GridRenderCellParams) => {
       const value = params.value as number | undefined
