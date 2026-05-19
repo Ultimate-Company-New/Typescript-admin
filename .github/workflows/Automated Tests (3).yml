@@ -212,20 +212,51 @@ jobs:
           ref: main
           token: ${{ secrets.GH_PAT }}
 
-      - name: Run Playwright Tests (GridFlows, LoginFlow, ClientLandingFlow)
+      - name: Grid Flow Tests
         working-directory: Spring-PlayWright-Automation
+        env:
+          PROJECT_ROOT: ${{ github.workspace }}
         run: |
-          echo "Patching scripts for CI environment..."
-          # Fix path disparity: local expects siblings in specific folders, CI has flat/nested structure.
-          # 1. Allow PROJECT_ROOT to be overridden (we set it to github.workspace)
-          find . -name "_run*Tests.sh" -exec sed -i 's|PROJECT_ROOT="$(|PROJECT_ROOT="${PROJECT_ROOT:-$(|g' {} +
-          find . -name "_run*Tests.sh" -exec sed -i '/PROJECT_ROOT=/ s|&& pwd )"|&& pwd )"}|g' {} +
-          # 2. Adjust the cd path in the admin tests script from 3 levels to 4 levels to reach the project root containing pom.xml
-          sed -i 's|cd "$(dirname "$0")/../../.."|cd "$(dirname "$0")/../../../../"|g' src/test/java/AdminToolTests/_runAdminTests.sh
+          set -euo pipefail
 
-          # Make the script executable and run it
-          chmod +x src/test/java/AdminToolTests/_runAdminTests.sh
-          ./src/test/java/AdminToolTests/_runAdminTests.sh local chromium true
+          echo "Installing Playwright Chromium..."
+          mvn -B exec:java \
+            -Dexec.mainClass=com.microsoft.playwright.CLI \
+            -Dexec.args="install chromium"
+
+          GRID_FLOW_PKG="AdminToolTests.flows.GridFlows"
+
+          # Order matches Typescript-admin DashboardSidebar.tsx
+          GRID_FLOW_TESTS=(
+            UsersFlowTests
+            UserGroupsFlowTests
+            LeadsFlowTests
+            PromosFlowTests
+            ProductsFlowTests
+            PackagesFlowTests
+            PickupLocationsFlowTests
+            MessagesFlowTests
+          )
+
+          mvn -B clean
+
+          for test_class in "${GRID_FLOW_TESTS[@]}"; do
+            echo "=========================================="
+            echo "Running ${test_class}..."
+            echo "=========================================="
+            if ! mvn -B verify \
+              -Plocal \
+              -Dtest.env=local \
+              -Dplaywright.browser=chromium \
+              -Dplaywright.headless=true \
+              -Dtest="${GRID_FLOW_PKG}.${test_class}"; then
+              echo "❌ ${test_class} failed — stopping Grid Flow Tests (remaining suites skipped)"
+              exit 1
+            fi
+            echo "✓ ${test_class} passed"
+          done
+
+          echo "✓ All Grid Flow tests passed"
 
       # ── 7. ARTIFACTS ────────────────────────────────────────────────────────
       - name: Upload Playwright results
