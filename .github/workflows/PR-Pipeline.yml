@@ -1,0 +1,30 @@
+name: UI CI Pipeline
+
+on:
+  pull_request:
+    branches: ["main"]
+    types: [opened, edited, reopened, synchronize, labeled]
+
+jobs:
+  stage-1-related-work:
+    uses: ./.github/workflows/Related Work & Assignee(1).yml
+    with:
+      pr_number: ${{ github.event.pull_request.number }}
+    permissions:
+      pull-requests: write
+      issues: write
+
+  stage-2-build-and-test:
+    needs: stage-1-related-work
+    uses: ./.github/workflows/Build & Unit Test (2).yml
+    with:
+      pr_number: ${{ github.event.pull_request.number }}
+    permissions:
+      pull-requests: write
+      contents: read
+
+  stage-3-automated-tests:
+    needs: stage-2-build-and-test
+    uses: ./.github/workflows/Automated Tests (3).yml
+    secrets:
+      GH_PAT: ${{ secrets.GH_PAT }}
