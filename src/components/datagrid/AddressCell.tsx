@@ -117,13 +117,17 @@ export const AddressCell = ({
 
   return (
     <Tooltip
-      title={<Box className={tooltipClassName}>{fullAddress || 'Address not available'}</Box>}
+      title={
+        <Box
+          className={tooltipClassName}
+          data-test-id={`${testId}-tooltip`}
+        >
+          {fullAddress || 'Address not available'}
+        </Box>
+      }
       arrow
-      slotProps={{
-        tooltip: {
-          'data-test-id': `${testId}-tooltip`,
-        } as React.HTMLAttributes<HTMLDivElement>,
-      }}
+      enterDelay={0}
+      leaveDelay={0}
     >
       <Box className={containerClassName} data-test-id={testId}>
         <LocationIcon fontSize="small" className={iconClassName} />
