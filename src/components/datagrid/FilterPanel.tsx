@@ -246,19 +246,24 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
       columnField.includes('date') ||
       columnField === 'dob' ||
       columnField === 'createdAt' ||
-      columnField === 'lastLoginAt'
+      columnField === 'lastLoginAt' ||
+      columnField === 'itemAvailableFrom'
     ) {
       return 'date'
     }
     if (
       columnField === 'userId' ||
-      columnField.includes('Id') ||
-      columnField.toLowerCase().includes('count') ||
-      columnField.toLowerCase().includes('total')
+      columnField.endsWith('Id') ||
+      /Count$/.test(columnField) ||
+      /Total$/.test(columnField)
     ) {
       return 'number'
     }
-    if (columnField === 'emailConfirmed' || columnField === 'locked') {
+    if (
+      columnField === 'emailConfirmed' ||
+      columnField === 'locked' ||
+      columnField === 'itemModified'
+    ) {
       return 'boolean'
     }
     return 'string'
