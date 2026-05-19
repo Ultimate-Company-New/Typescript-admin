@@ -6,6 +6,9 @@ on:
       pr_number:
         required: true
         type: string
+    secrets:
+      GH_PAT:
+        required: false
 
 jobs:
   assignee-and-story:
@@ -17,6 +20,7 @@ jobs:
       - name: Check and Assign Agent
         uses: actions/github-script@v7
         with:
+          github-token: ${{ secrets.GH_PAT || github.token }}
           script: |
             const prNumber = parseInt('${{ inputs.pr_number }}');
             const { data: pr } = await github.rest.pulls.get({
@@ -40,6 +44,7 @@ jobs:
       - name: Check Linked Story and Reopen if Closed
         uses: actions/github-script@v7
         with:
+          github-token: ${{ secrets.GH_PAT || github.token }}
           script: |
             const prNumber = parseInt('${{ inputs.pr_number }}');
 
