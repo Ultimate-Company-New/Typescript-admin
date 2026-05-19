@@ -1,4 +1,4 @@
-import { Box, Pagination, Typography } from '@mui/material'
+import { Box, Pagination, PaginationItem, Typography } from '@mui/material'
 
 import styles from '../../../styles/Login.module.scss'
 
@@ -43,8 +43,13 @@ const PaginationComponent = ({
   return (
     <Box className={styles['pagination-component']} data-test-id={dataTestId}>
       {/* Item count display */}
-      <Typography variant="body2" color="text.secondary" className={styles['pagination-component__count']}>
-        Showing {startItem}-{endItem} of {totalItems} {itemLabel}
+      <Typography
+        variant="body2"
+        color="text.secondary"
+        className={styles['pagination-component__count']}
+        data-test-id={`${dataTestId}-info`}
+      >
+        Showing {startItem} - {endItem} of {totalItems} {itemLabel}
       </Typography>
 
       {/* Pagination controls */}
@@ -58,6 +63,16 @@ const PaginationComponent = ({
         showLastButton
         className={styles['pagination-component__controls']}
         data-test-id={`${dataTestId}-controls`}
+        renderItem={(item) => (
+          <PaginationItem
+            {...item}
+            data-test-id={
+              item.type === 'page'
+                ? `${dataTestId}-page-${item.page}`
+                : `${dataTestId}-${item.type}`
+            }
+          />
+        )}
       />
     </Box>
   )

@@ -1,3 +1,5 @@
+import LockIcon from '@mui/icons-material/Lock'
+import LockOpenIcon from '@mui/icons-material/LockOpen'
 import { Box, Chip, Tooltip } from '@mui/material'
 import { type GridColDef, type GridRenderCellParams } from '@mui/x-data-grid'
 
@@ -139,7 +141,7 @@ export const getUserGridColumns = (onToggleUser?: (userId: number) => void): Gri
 
   // 4. Email - Contact info
   {
-    field: 'email' satisfies keyof UserResponseModel,
+    field: 'loginName' satisfies keyof UserResponseModel,
     headerName: 'Email',
     minWidth: 250,
     flex: 2,
@@ -162,14 +164,19 @@ export const getUserGridColumns = (onToggleUser?: (userId: number) => void): Gri
     align: 'center',
     headerAlign: 'center',
     renderCell: (params: GridRenderCellParams<UserGridRow>) => {
-      const { firstName, lastName, email, userId } = params.row
+      const { firstName, lastName, loginName, userId } = params.row
       const permissions = getSafeArray(params.row.permissions)
       const userName = `${firstName} ${lastName}`
       const role = params.value as string
       return (
         <Box className={styles['user-grid__role-container']}>
-          <Chip label={role} size="small" className={getRoleChipClass(role)} />
-          <PermissionsButton permissions={permissions} userName={userName} userEmail={email} userId={userId} />
+          <Chip
+            label={role}
+            size="small"
+            className={getRoleChipClass(role)}
+            data-test-id="user-role-chip"
+          />
+          <PermissionsButton permissions={permissions} userName={userName} userEmail={loginName} userId={userId} />
         </Box>
       )
     },
@@ -249,7 +256,9 @@ export const getUserGridColumns = (onToggleUser?: (userId: number) => void): Gri
       const isActive = Boolean(params.value)
       const status = isActive ? 'Active' : 'Pending'
       const color = isActive ? 'success' : 'warning'
-      return <Chip label={status} color={color} size="small" />
+      return (
+        <Chip label={status} color={color} size="small" data-test-id="user-account-status-chip" />
+      )
     },
   },
 
@@ -269,6 +278,30 @@ export const getUserGridColumns = (onToggleUser?: (userId: number) => void): Gri
     minWidth: 100,
     flex: 0.5,
     type: 'boolean',
+    align: 'center',
+    headerAlign: 'center',
+    renderCell: (params: GridRenderCellParams<UserGridRow>) => {
+      const locked = Boolean(params.value)
+      return (
+        <Box
+          data-test-id="user-locked-indicator"
+          data-locked={locked ? 'true' : 'false'}
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '100%',
+            height: '100%',
+          }}
+        >
+          {locked ? (
+            <LockIcon color="error" fontSize="small" data-test-id="user-locked-icon" />
+          ) : (
+            <LockOpenIcon color="success" fontSize="small" data-test-id="user-unlocked-icon" />
+          )}
+        </Box>
+      )
+    },
   },
 
   // 13. Created Date (visible by default)

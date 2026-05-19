@@ -365,20 +365,30 @@ export const PackageModal = ({
 
   return (
     <Modal open={open} onClose={onClose} aria-labelledby="package-mappings-modal">
-      <Box className={styles['mappings-modal']}>
+      <Box className={styles['mappings-modal']} data-test-id="pickup-location-packages-modal">
         <Box className={styles['mappings-modal__header']}>
           <Box className={styles['mappings-modal__header-content']}>
             <InventoryIcon color="secondary" />
             <Subheader label={pickupLocationId ? 'Packages' : 'Package Mappings'} variant="h6" />
-            {!loading && <Chip label={pickupLocationId ? totalCount : mappings.length} size="small" color="secondary" />}
+            {!loading && (
+              <Chip
+                label={pickupLocationId ? totalCount : mappings.length}
+                size="small"
+                color="secondary"
+                data-test-id="pickup-location-packages-modal-count"
+              />
+            )}
           </Box>
-          <IconButton onClick={onClose} size="small">
+          <IconButton onClick={onClose} size="small" data-test-id="pickup-location-packages-modal-close">
             <CloseIcon />
           </IconButton>
         </Box>
 
         {locationName && (
-          <Box className={styles['mappings-modal__subtitle']}>
+          <Box
+            className={styles['mappings-modal__subtitle']}
+            data-test-id="pickup-location-packages-modal-subtitle"
+          >
             <SecondaryFont>
               Packages {pickupLocationId ? 'at' : 'for'}: <strong>{locationName}</strong>
             </SecondaryFont>
@@ -387,7 +397,10 @@ export const PackageModal = ({
 
         <Box className={styles['mappings-modal__content']}>
           {loading ? (
-            <Box className={styles['mappings-modal__loading']}>
+            <Box
+              className={styles['mappings-modal__loading']}
+              data-test-id="pickup-location-packages-modal-loading"
+            >
               <CircularProgress size={40} />
               <SecondaryFont>Loading packages...</SecondaryFont>
             </Box>

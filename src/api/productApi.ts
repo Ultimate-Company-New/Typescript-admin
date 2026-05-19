@@ -21,7 +21,7 @@ export const productApi = {
   ): Promise<PaginationBaseResponseModel<unknown>> => {
     const response = await axiosInstance.post<
       PaginationBaseResponseModel<unknown>
-    >(`${API_BASE_URL}/getProductsInBatches`, request);
+    >(`${API_BASE_URL}/fetchProductsInBatches`, request);
     return response.data;
   },
 
@@ -115,7 +115,7 @@ export const productApi = {
     // Use selectedIds field (designed for filtering by multiple IDs)
     const response = await axiosInstance.post<
       PaginationBaseResponseModel<unknown>
-    >(`${API_BASE_URL}/getProductsInBatches`, {
+    >(`${API_BASE_URL}/fetchProductsInBatches`, {
       start: 0,
       end: productIds.length,
       pageSize: productIds.length,

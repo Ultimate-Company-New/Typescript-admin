@@ -34,6 +34,7 @@ const UserGroupActionsCell = ({
       <div>
         <Link
           href="#"
+          data-test-id="user-group-action-activate"
           onClick={e => {
             e.preventDefault()
             if (onToggleGroup) {
@@ -59,6 +60,7 @@ const UserGroupActionsCell = ({
       <Link
         key="view"
         href={`${APP_ROUTES.DASHBOARD.ADD_GROUPS}?userGroupId=${groupId}&isView=true`}
+        data-test-id="user-group-action-view"
         sx={{
           cursor: 'pointer',
         }}
@@ -73,6 +75,7 @@ const UserGroupActionsCell = ({
       <Link
         key="edit"
         href={`${APP_ROUTES.DASHBOARD.ADD_GROUPS}?userGroupId=${groupId}`}
+        data-test-id="user-group-action-edit"
         sx={{
           cursor: 'pointer',
         }}
@@ -87,6 +90,7 @@ const UserGroupActionsCell = ({
       <Link
         key="deactivate"
         href="#"
+        data-test-id="user-group-action-toggle"
         onClick={e => {
           e.preventDefault()
           if (onToggleGroup) {
@@ -136,7 +140,6 @@ export interface UserGroupData {
   userIds?: number[]
   users?: { userId: number }[]
   isDeleted: boolean
-  clientId?: number
   createdUser?: string
   modifiedUser?: string
   createdAt: string

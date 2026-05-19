@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
-import { Outlet } from 'react-router-dom'
+import { Outlet, useNavigate } from 'react-router-dom'
 
 import { Box, CssBaseline } from '@mui/material'
 
+import { APP_ROUTES } from '../../constants/routes'
 import styles from '../../styles/Layouts.module.scss'
 
 import DashboardNavbar from './DashboardNavbar'
@@ -19,9 +20,21 @@ import DashboardSidebar from './DashboardSidebar'
  */
 const DashboardLayout = (): JSX.Element => {
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const isAuthenticated = localStorage.getItem('authToken') !== null
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate(APP_ROUTES.LOGIN, { replace: true })
+    }
+  }, [isAuthenticated, navigate])
 
   const handleDrawerToggle = (): void => {
     setSidebarOpen(!sidebarOpen)
+  }
+
+  if (!isAuthenticated) {
+    return <></>
   }
 
   return (

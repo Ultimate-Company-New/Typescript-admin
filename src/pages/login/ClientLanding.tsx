@@ -15,7 +15,7 @@ import styles from '../../styles/Login.module.scss'
 import { PaginationComponent } from './components'
 
 interface CarrierGridItem {
-  id: number
+  id: string
   name: string
   logoUrl?: string
   apiKey: string
@@ -23,7 +23,7 @@ interface CarrierGridItem {
 
 interface CarrierGridProps {
   carriers: CarrierGridItem[]
-  onCarrierClick: (carrierId: number, apiKey: string) => void
+  onCarrierClick: (apiKey: string) => void
 }
 
 /**
@@ -32,11 +32,11 @@ interface CarrierGridProps {
  * Mobile-friendly: 1 column on xs, 2 on sm, 3 on md+
  */
 const CarrierGrid = ({ carriers, onCarrierClick }: CarrierGridProps): JSX.Element => {
-  const [selectedId, setSelectedId] = useState<number | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
 
   const handleClick = (carrier: CarrierGridItem): void => {
     setSelectedId(carrier.id)
-    onCarrierClick(carrier.id, carrier.apiKey)
+    onCarrierClick(carrier.apiKey)
   }
 
   if (carriers.length === 0) {
@@ -57,6 +57,7 @@ const CarrierGrid = ({ carriers, onCarrierClick }: CarrierGridProps): JSX.Elemen
             className={`${styles['carrier-grid__card']} ${selectedId === carrier.id ? styles['carrier-grid__card--selected'] : styles['carrier-grid__card--unselected']}`}
             sx={{ borderColor: 'primary.main' }}
             data-test-id={`carrier-card-${carrier.id}`}
+            data-client-name={carrier.name}
           >
             <CardActionArea
               onClick={() => {
@@ -81,7 +82,7 @@ const CarrierGrid = ({ carriers, onCarrierClick }: CarrierGridProps): JSX.Elemen
                 )}
               </CardMedia>
               <CardContent className={styles['carrier-grid__card-content']}>
-                <Typography variant="h6" component="div" textAlign="center">
+                <Typography variant="h6" component="div" textAlign="center" data-test-id="carrier-card-name">
                   {carrier.name}
                 </Typography>
               </CardContent>
@@ -176,35 +177,40 @@ const ClientLanding = (): JSX.Element => {
   }
 
   // Handle client selection
-  const handleClientClick = async (clientId: number, apiKey: string): Promise<void> => {
+  const handleClientClick = async (clientApiKey: string): Promise<void> => {
     setIsLoading(true)
 
     try {
-      // Get the selected client's login name (email)
-      const selectedClient = clients.find(c => c.clientId === clientId)
+      // Get the selected client's info using apiKey
+      const selectedClient = clients.find(c => c.apiKey === clientApiKey)
 
       if (!selectedClient) {
         toast.error('Client not found')
         return
       }
 
-      // Get bearer token from API (returns plain string)
-      const token = await loginApi.getToken({
-        loginName: localStorage.getItem('loginName') ?? '',
-        apiKey: apiKey,
-      })
-
       // Store the bearer token and selected client info
-      localStorage.setItem('authToken', token)
-      localStorage.setItem('selectedCarrierId', clientId.toString())
-      localStorage.setItem('selectedClientId', clientId.toString()) // Also store as selectedClientId for consistency
-      localStorage.setItem('clientId', clientId.toString()) // Also store as clientId for backwards compatibility
+      localStorage.setItem('selectedCarrierApiKey', clientApiKey)
+      localStorage.setItem('apiKey', clientApiKey) // Also store as apiKey for backwards compatibility
       localStorage.setItem('selectedCarrierName', selectedClient.name)
       localStorage.setItem('selectedCarrierLogo', selectedClient.logoUrl ?? '') // Store logo URL
 
-      // Fetch current user's details including permissions using their login name (email)
       const storedLoginName = localStorage.getItem('loginName')
 
+      if (storedLoginName) {
+        const token = await loginApi.getToken({
+          loginName: storedLoginName,
+          apiKey: clientApiKey,
+        })
+        localStorage.setItem('authToken', token)
+        window.dispatchEvent(
+          new CustomEvent('admin-auth-changed', {
+            detail: { isAuthenticated: true, token },
+          }),
+        )
+      }
+
+      // Fetch current user's details including permissions using their login name (email)
       if (storedLoginName) {
         try {
           const userDetails = await getUserByEmail(storedLoginName)
@@ -244,7 +250,7 @@ const ClientLanding = (): JSX.Element => {
 
   // Convert to grid items (using paginated data)
   const gridItems: CarrierGridItem[] = paginatedClients.map(client => ({
-    id: client.clientId,
+    id: client.apiKey,
     name: client.name,
     logoUrl: client.logoUrl,
     apiKey: client.apiKey,
@@ -283,6 +289,7 @@ const ClientLanding = (): JSX.Element => {
           {/* Client Grid */}
           <Box
             className={`${styles['client-landing__grid-container']} ${isLoading ? styles['client-landing__grid-container--loading'] : styles['client-landing__grid-container--active']}`}
+            data-test-id="client-landing-grid-container"
           >
             <CarrierGrid carriers={gridItems} onCarrierClick={handleClientClick} />
           </Box>

@@ -148,6 +148,7 @@ const PickupLocationCard = ({ location: item, index = 0 }: PickupLocationCardPro
       variant="outlined"
       className={styles['pickup-location-card']}
       key={locationId ?? index}
+      data-test-id={`pickup-location-card-${locationId ?? index}`}
     >
       <CardContent>
         {/* Location Name */}

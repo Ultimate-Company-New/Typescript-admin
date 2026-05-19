@@ -504,6 +504,7 @@ const ProductImageCarousel = ({
         {/* Left Arrow - overlaid on image */}
         {hasMultipleImages && (
           <IconButton
+            data-test-id="product-grid-carousel-prev"
             onClick={handlePrev}
             size="small"
             sx={{
@@ -527,6 +528,7 @@ const ProductImageCarousel = ({
         {/* Right Arrow - overlaid on image */}
         {hasMultipleImages && (
           <IconButton
+            data-test-id="product-grid-carousel-next"
             onClick={handleNext}
             size="small"
             sx={{
@@ -589,6 +591,7 @@ const ProductImageCarousel = ({
 
       {/* Label below */}
       <Box
+        data-test-id="product-grid-carousel-label"
         sx={{
           mt: 0,
           mb: 0,

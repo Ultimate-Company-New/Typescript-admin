@@ -93,7 +93,6 @@ export interface PackageResponseModel {
   packageType: string
   notes?: string
   isDeleted?: boolean
-  clientId?: number
   createdAt?: string
   createdUser?: string
   updatedAt?: string

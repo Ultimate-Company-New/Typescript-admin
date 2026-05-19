@@ -106,7 +106,7 @@ export type {
   FilterCondition,
   PaginationBaseResponseModel,
   UserGroupResponseModel,
-  UserPermissionInfo,
+  PermissionResponseModel,
   UserRequestModel,
   UserResponseModel,
 } from "./UserModels";

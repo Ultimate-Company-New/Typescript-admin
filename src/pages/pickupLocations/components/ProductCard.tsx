@@ -77,9 +77,16 @@ export const ProductCard = ({ mapping }: ProductCardProps): JSX.Element => {
   const priceInfo = getFinalPrice()
 
   return (
-    <Card variant="outlined" className={styles['product-mapping-card']}>
+    <Card
+      variant="outlined"
+      className={styles['product-mapping-card']}
+      data-test-id={`pickup-location-product-card-${productId}`}
+    >
       {/* Image Carousel - Using grid variant with 3D flip transition */}
-      <Box sx={{ p: 1.5, pb: 0, display: 'flex', justifyContent: 'center' }}>
+      <Box
+        sx={{ p: 1.5, pb: 0, display: 'flex', justifyContent: 'center' }}
+        data-test-id={`pickup-location-product-card-image-${productId}`}
+      >
         <ProductImageCarousel
           images={productDetails?.images ?? []}
           variant="grid"

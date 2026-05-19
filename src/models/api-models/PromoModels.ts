@@ -64,7 +64,6 @@ export interface PromoResponseModel {
   expiryDate?: string
 
   // Related entity IDs
-  clientId: number
 
   // Audit fields
   createdAt: string

@@ -89,6 +89,7 @@ const PickupLocationActionsCell = ({
       <div>
         <Link
           href="#"
+          data-test-id="pickup-location-action-activate"
           onClick={e => {
             e.preventDefault()
             if (onTogglePickupLocation) {
@@ -111,6 +112,7 @@ const PickupLocationActionsCell = ({
       <Link
         key="view"
         href={`${APP_ROUTES.DASHBOARD.ADD_PICKUP_LOCATION}?pickupLocationId=${pickupLocationId}&isView`}
+        data-test-id="pickup-location-action-view"
         sx={{ cursor: 'pointer' }}
       >
         View
@@ -123,6 +125,7 @@ const PickupLocationActionsCell = ({
       <Link
         key="edit"
         href={`${APP_ROUTES.DASHBOARD.ADD_PICKUP_LOCATION}?pickupLocationId=${pickupLocationId}`}
+        data-test-id="pickup-location-action-edit"
         sx={{ cursor: 'pointer' }}
       >
         Edit
@@ -135,6 +138,7 @@ const PickupLocationActionsCell = ({
       <Link
         key="deactivate"
         href="#"
+        data-test-id="pickup-location-action-toggle"
         onClick={e => {
           e.preventDefault()
           if (onTogglePickupLocation) {
@@ -249,6 +253,7 @@ color: 'text.secondary' }} />
       return (
         <Tooltip title={<div style={{ whiteSpace: 'pre-line' }}>{fullAddress}</div>} placement="top">
           <Box
+            data-test-id="pickup-location-address-cell"
             sx={{
               display: 'flex',
               alignItems: 'center',
@@ -376,6 +381,7 @@ height: '100%' }}>{params.value}</Box>
               label={`${productCount} Product${productCount !== 1 ? 's' : ''}`}
               color="primary"
               size="small"
+              data-test-id="pickup-location-products-chip"
               onClick={e => {
                 e.stopPropagation()
                 mappingHandlers?.onProductsClick?.(pickupLocationId, locationName)
@@ -422,6 +428,7 @@ height: '100%' }}>{params.value}</Box>
               label={`${packageCount} Package${packageCount !== 1 ? 's' : ''}`}
               color="secondary"
               size="small"
+              data-test-id="pickup-location-packages-chip"
               onClick={e => {
                 e.stopPropagation()
                 mappingHandlers?.onPackagesClick?.(pickupLocationId, locationName)

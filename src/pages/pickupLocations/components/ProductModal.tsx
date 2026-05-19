@@ -12,13 +12,23 @@ import {
     Modal
 } from '@mui/material'
 
+import { toast } from 'react-toastify'
+
 import { productApi } from '../../../api/productApi'
 import { BodyText, SecondaryFont, Subheader } from '../../../components/fonts'
+import { resolveProductCarouselImages } from '../../../utils/productImages'
 import styles from '../../../styles/PickupLocations.module.scss'
 
 import { ProductCard, type ProductImageInfo, type ProductMappingItem } from './ProductCard'
 
 const ITEMS_PER_PAGE = 20
+
+function buildMappingImages(
+  source: Record<string, unknown>,
+  productId?: number,
+): ProductImageInfo[] {
+  return resolveProductCarouselImages(source, productId)
+}
 
 // ============================================================================
 // Product Modal Component
@@ -56,6 +66,16 @@ export const ProductModal = ({
   const [loading, setLoading] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
+
+  useEffect(() => {
+    if (!open) {
+      setMappings([])
+      setDisplayedCount(ITEMS_PER_PAGE)
+      setTotalCount(0)
+      setLoading(false)
+      setLoadingMore(false)
+    }
+  }, [open])
 
   // Fetch products by pickupLocationId
   const fetchByPickupLocation = useCallback(async (): Promise<void> => {
@@ -119,20 +139,10 @@ export const ProductModal = ({
         )
         const quantity = locationData?.availableStock ?? 0
 
-        const images: ProductImageInfo[] = [
-          { url: product.mainImageUrl ?? '', label: 'Main' },
-          { url: product.topImageUrl ?? '', label: 'Top' },
-          { url: product.bottomImageUrl ?? '', label: 'Bottom' },
-          { url: product.frontImageUrl ?? '', label: 'Front' },
-          { url: product.backImageUrl ?? '', label: 'Back' },
-          { url: product.rightImageUrl ?? '', label: 'Right' },
-          { url: product.leftImageUrl ?? '', label: 'Left' },
-          { url: product.detailsImageUrl ?? '', label: 'Details' },
-          { url: product.defectImageUrl ?? '', label: 'Defect' },
-          { url: product.additionalImage1Url ?? '', label: 'Additional 1' },
-          { url: product.additionalImage2Url ?? '', label: 'Additional 2' },
-          { url: product.additionalImage3Url ?? '', label: 'Additional 3' },
-        ].filter(img => img.url && img.url.trim() !== '')
+        const images = buildMappingImages(
+          product as unknown as Record<string, unknown>,
+          product.productId,
+        )
 
         return {
           productId: product.productId ?? 0,
@@ -160,8 +170,11 @@ export const ProductModal = ({
       setMappings(productMappings)
       setTotalCount(response.totalDataCount ?? productMappings.length)
       setDisplayedCount(ITEMS_PER_PAGE)
-    } catch {
+    } catch (error) {
+      console.error('Failed to load products for pickup location', error)
+      toast.error('Failed to load products for this pickup location')
       setMappings([])
+      setTotalCount(0)
     } finally {
       setLoading(false)
     }
@@ -270,21 +283,14 @@ export const ProductModal = ({
           const productId = apiProduct.productId ?? product.productId
 
           if (productId) {
-            // Build images array from individual URL fields (check both root and nested)
-            const images: ProductImageInfo[] = [
-              { url: apiProduct.mainImageUrl ?? product.mainImageUrl ?? '', label: 'Main' },
-              { url: apiProduct.topImageUrl ?? product.topImageUrl ?? '', label: 'Top' },
-              { url: apiProduct.bottomImageUrl ?? product.bottomImageUrl ?? '', label: 'Bottom' },
-              { url: apiProduct.frontImageUrl ?? product.frontImageUrl ?? '', label: 'Front' },
-              { url: apiProduct.backImageUrl ?? product.backImageUrl ?? '', label: 'Back' },
-              { url: apiProduct.rightImageUrl ?? product.rightImageUrl ?? '', label: 'Right' },
-              { url: apiProduct.leftImageUrl ?? product.leftImageUrl ?? '', label: 'Left' },
-              { url: apiProduct.detailsImageUrl ?? product.detailsImageUrl ?? '', label: 'Details' },
-              { url: apiProduct.defectImageUrl ?? product.defectImageUrl ?? '', label: 'Defect' },
-              { url: apiProduct.additionalImage1Url ?? product.additionalImage1Url ?? '', label: 'Additional 1' },
-              { url: apiProduct.additionalImage2Url ?? product.additionalImage2Url ?? '', label: 'Additional 2' },
-              { url: apiProduct.additionalImage3Url ?? product.additionalImage3Url ?? '', label: 'Additional 3' },
-            ].filter(img => img.url && img.url.trim() !== '')
+            const images = buildMappingImages(
+              {
+                ...(product as Record<string, unknown>),
+                ...(apiProduct as Record<string, unknown>),
+                productId,
+              },
+              productId,
+            )
 
             productMap.set(productId, {
               title: apiProduct.title ?? product.title,
@@ -412,20 +418,14 @@ export const ProductModal = ({
           const productData = productMap.get(productId)
           if (!productData) continue
 
-          const images: ProductImageInfo[] = [
-            { url: apiProduct.mainImageUrl ?? product.mainImageUrl ?? '', label: 'Main' },
-            { url: apiProduct.topImageUrl ?? product.topImageUrl ?? '', label: 'Top' },
-            { url: apiProduct.bottomImageUrl ?? product.bottomImageUrl ?? '', label: 'Bottom' },
-            { url: apiProduct.frontImageUrl ?? product.frontImageUrl ?? '', label: 'Front' },
-            { url: apiProduct.backImageUrl ?? product.backImageUrl ?? '', label: 'Back' },
-            { url: apiProduct.rightImageUrl ?? product.rightImageUrl ?? '', label: 'Right' },
-            { url: apiProduct.leftImageUrl ?? product.leftImageUrl ?? '', label: 'Left' },
-            { url: apiProduct.detailsImageUrl ?? product.detailsImageUrl ?? '', label: 'Details' },
-            { url: apiProduct.defectImageUrl ?? product.defectImageUrl ?? '', label: 'Defect' },
-            { url: apiProduct.additionalImage1Url ?? product.additionalImage1Url ?? '', label: 'Additional 1' },
-            { url: apiProduct.additionalImage2Url ?? product.additionalImage2Url ?? '', label: 'Additional 2' },
-            { url: apiProduct.additionalImage3Url ?? product.additionalImage3Url ?? '', label: 'Additional 3' },
-          ].filter(img => img.url && img.url.trim() !== '')
+          const images = buildMappingImages(
+            {
+              ...(product as Record<string, unknown>),
+              ...(apiProduct as Record<string, unknown>),
+              productId,
+            },
+            productId,
+          )
 
           parsed.push({
             productId,
@@ -557,21 +557,14 @@ export const ProductModal = ({
           const productId = apiProduct.productId ?? product.productId
 
           if (productId) {
-            // Build images array from individual URL fields (check both root and nested)
-            const images: ProductImageInfo[] = [
-              { url: apiProduct.mainImageUrl ?? product.mainImageUrl ?? '', label: 'Main' },
-              { url: apiProduct.topImageUrl ?? product.topImageUrl ?? '', label: 'Top' },
-              { url: apiProduct.bottomImageUrl ?? product.bottomImageUrl ?? '', label: 'Bottom' },
-              { url: apiProduct.frontImageUrl ?? product.frontImageUrl ?? '', label: 'Front' },
-              { url: apiProduct.backImageUrl ?? product.backImageUrl ?? '', label: 'Back' },
-              { url: apiProduct.rightImageUrl ?? product.rightImageUrl ?? '', label: 'Right' },
-              { url: apiProduct.leftImageUrl ?? product.leftImageUrl ?? '', label: 'Left' },
-              { url: apiProduct.detailsImageUrl ?? product.detailsImageUrl ?? '', label: 'Details' },
-              { url: apiProduct.defectImageUrl ?? product.defectImageUrl ?? '', label: 'Defect' },
-              { url: apiProduct.additionalImage1Url ?? product.additionalImage1Url ?? '', label: 'Additional 1' },
-              { url: apiProduct.additionalImage2Url ?? product.additionalImage2Url ?? '', label: 'Additional 2' },
-              { url: apiProduct.additionalImage3Url ?? product.additionalImage3Url ?? '', label: 'Additional 3' },
-            ].filter(img => img.url && img.url.trim() !== '')
+            const images = buildMappingImages(
+              {
+                ...(product as Record<string, unknown>),
+                ...(apiProduct as Record<string, unknown>),
+                productId,
+              },
+              productId,
+            )
 
             productMap.set(productId, {
               title: apiProduct.title ?? product.title,
@@ -672,20 +665,10 @@ export const ProductModal = ({
         )
         const quantity = locationData?.availableStock ?? 0
 
-        const images: ProductImageInfo[] = [
-          { url: product.mainImageUrl ?? '', label: 'Main' },
-          { url: product.topImageUrl ?? '', label: 'Top' },
-          { url: product.bottomImageUrl ?? '', label: 'Bottom' },
-          { url: product.frontImageUrl ?? '', label: 'Front' },
-          { url: product.backImageUrl ?? '', label: 'Back' },
-          { url: product.rightImageUrl ?? '', label: 'Right' },
-          { url: product.leftImageUrl ?? '', label: 'Left' },
-          { url: product.detailsImageUrl ?? '', label: 'Details' },
-          { url: product.defectImageUrl ?? '', label: 'Defect' },
-          { url: product.additionalImage1Url ?? '', label: 'Additional 1' },
-          { url: product.additionalImage2Url ?? '', label: 'Additional 2' },
-          { url: product.additionalImage3Url ?? '', label: 'Additional 3' },
-        ].filter(img => img.url && img.url.trim() !== '')
+        const images = buildMappingImages(
+          product as unknown as Record<string, unknown>,
+          product.productId,
+        )
 
         return {
           productId: product.productId ?? 0,
@@ -733,20 +716,30 @@ export const ProductModal = ({
 
   return (
     <Modal open={open} onClose={onClose} aria-labelledby="product-mappings-modal">
-      <Box className={styles['mappings-modal']}>
+      <Box className={styles['mappings-modal']} data-test-id="pickup-location-products-modal">
         <Box className={styles['mappings-modal__header']}>
           <Box className={styles['mappings-modal__header-content']}>
             <ShoppingCartIcon color="primary" />
             <Subheader label={pickupLocationId ? 'Products' : 'Product Mappings'} variant="h6" />
-            {!loading && <Chip label={pickupLocationId ? totalCount : mappings.length} size="small" color="primary" />}
+            {!loading && (
+              <Chip
+                label={pickupLocationId ? totalCount : mappings.length}
+                size="small"
+                color="primary"
+                data-test-id="pickup-location-products-modal-count"
+              />
+            )}
           </Box>
-          <IconButton onClick={onClose} size="small">
+          <IconButton onClick={onClose} size="small" data-test-id="pickup-location-products-modal-close">
             <CloseIcon />
           </IconButton>
         </Box>
 
         {locationName && !purchaseOrderId && (
-          <Box className={styles['mappings-modal__subtitle']}>
+          <Box
+            className={styles['mappings-modal__subtitle']}
+            data-test-id="pickup-location-products-modal-subtitle"
+          >
             <SecondaryFont>
               Products {pickupLocationId ? 'at' : 'for'}: <strong>{locationName}</strong>
             </SecondaryFont>
@@ -755,7 +748,10 @@ export const ProductModal = ({
 
         <Box className={styles['mappings-modal__content']}>
           {loading ? (
-            <Box className={styles['mappings-modal__loading']}>
+            <Box
+              className={styles['mappings-modal__loading']}
+              data-test-id="pickup-location-products-modal-loading"
+            >
               <CircularProgress size={40} />
               <SecondaryFont>Loading products...</SecondaryFont>
             </Box>

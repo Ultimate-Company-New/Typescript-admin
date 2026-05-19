@@ -66,7 +66,7 @@ const DashboardNavbar = forwardRef<HTMLDivElement, DashboardNavbarProps>(({ open
     const fetchUnreadCount = async (): Promise<void> => {
       try {
         const count = await messageApi.getUnreadMessageCount()
-        setUnreadMessageCount(count)
+        setUnreadMessageCount(typeof count === 'number' ? count : 0)
       } catch (error) {
         // Silently fail, keep count at 0
         // Error logging removed to satisfy lint rules
@@ -96,6 +96,8 @@ const DashboardNavbar = forwardRef<HTMLDivElement, DashboardNavbarProps>(({ open
     localStorage.removeItem('authToken')
     localStorage.removeItem('selectedCarrierId')
     localStorage.removeItem('selectedClientId')
+    localStorage.removeItem('selectedCarrierApiKey')
+    localStorage.removeItem('apiKey')
     localStorage.removeItem('clientId')
     localStorage.removeItem('selectedCarrierName')
     localStorage.removeItem('selectedCarrierLogo')

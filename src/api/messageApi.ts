@@ -92,8 +92,9 @@ const messageApi = {
    * Get unread message count for the current user
    */
   getUnreadMessageCount: async (): Promise<number> => {
-    const response = await axiosInstance.get<number>(`${API_BASE_URL}/getUnreadMessageCount`)
-    return response.data
+    const response = await axiosInstance.get<{ data: number }>(`${API_BASE_URL}/getUnreadMessageCount`)
+    // The API returns { "data": count }
+    return response.data.data
   },
 }
 

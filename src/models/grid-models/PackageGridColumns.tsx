@@ -121,6 +121,7 @@ const PackageActionsCell = ({
       <div>
         <Link
           href="#"
+          data-test-id="package-action-activate"
           onClick={e => {
             e.preventDefault()
             if (onTogglePackage) {
@@ -146,6 +147,7 @@ const PackageActionsCell = ({
       <Link
         key="view"
         href={`${APP_ROUTES.DASHBOARD.ADD_PACKAGE}?packageId=${packageId}&isView`}
+        data-test-id="package-action-view"
         sx={{ cursor: 'pointer' }}
       >
         View
@@ -158,6 +160,7 @@ const PackageActionsCell = ({
       <Link
         key="edit"
         href={`${APP_ROUTES.DASHBOARD.ADD_PACKAGE}?packageId=${packageId}`}
+        data-test-id="package-action-edit"
         sx={{ cursor: 'pointer' }}
       >
         Edit
@@ -170,6 +173,7 @@ const PackageActionsCell = ({
       <Link
         key="deactivate"
         href="#"
+        data-test-id="package-action-toggle"
         onClick={e => {
           e.preventDefault()
           if (onTogglePackage) {
@@ -342,6 +346,7 @@ export const getPackageGridColumns = (
             label={getPackageTypeLabel(packageType)}
             color={getPackageTypeColor(packageType)}
             size="small"
+            data-test-id="package-type-label"
           />
         </Box>
       )

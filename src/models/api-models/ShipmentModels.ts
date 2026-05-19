@@ -51,7 +51,6 @@ export interface ShipmentData {
   shipRocketTrackingMetadata?: string;   // AWB assignment response as JSON
 
   // Audit Fields
-  clientId?: number;
   createdUser?: string;
   modifiedUser?: string;
   createdAt?: string;

@@ -526,6 +526,7 @@ export const getProductGridColumns = (
           label={label}
           color={color}
             size="small"
+          data-test-id="product-condition-chip"
           />
       );
     },
@@ -682,6 +683,7 @@ export const getProductGridColumns = (
             color={returnWindowDays > 0 ? "success" : "default"}
             size="small"
             variant="outlined"
+            data-test-id="product-return-window-chip"
           />
         </Box>
       );

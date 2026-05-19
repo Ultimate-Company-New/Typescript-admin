@@ -137,6 +137,7 @@ const PackageLocationsButton = ({
       <IconButton
         onClick={handleOpen}
         size="small"
+        data-test-id="package-locations-button"
         sx={{
           '&:hover': {
             backgroundColor: 'primary.light',

@@ -156,6 +156,11 @@ axiosInstance.interceptors.response.use(
           if (!window.location.pathname.includes('/login')) {
             localStorage.removeItem('authToken')
             sessionStorage.clear()
+            window.dispatchEvent(
+              new CustomEvent('admin-auth-changed', {
+                detail: { isAuthenticated: false, token: null },
+              }),
+            )
             window.location.href = '/login'
           }
           break
