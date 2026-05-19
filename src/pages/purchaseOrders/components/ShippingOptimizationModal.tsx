@@ -1398,7 +1398,7 @@ const CustomAllocationTab = ({
                     shipmentIndex={shipmentIndexForLocation}
                     totalShipmentsFromLocation={totalFromLocation}
                     globalShipmentIndex={index + 1}
-                    totalShipments={customResult.shipments.length}
+                    totalShipments={customResult.shipments?.length ?? 0}
                   />
                 );
               });
@@ -2300,7 +2300,7 @@ const ShippingOptimizationModal = ({
     (
       result: OrderOptimizationResponse,
       isCustom: boolean = false,
-      previousSelections?: Map<number, CourierOption>
+      _previousSelections?: Map<number, CourierOption>
     ) => {
       if (result.shipments) {
         // Use shipment index as key to handle weight splits (multiple shipments from same location)
@@ -2602,7 +2602,7 @@ const ShippingOptimizationModal = ({
     if (!optimizationResult?.shipments) return 0;
 
     let total = 0;
-    optimizationResult.shipments.forEach((shipment, shipmentIndex) => {
+    optimizationResult.shipments.forEach((_shipment, shipmentIndex) => {
       const selectedCourier = courierSelections.get(shipmentIndex);
       if (selectedCourier) {
         total += selectedCourier.rate;
@@ -2624,7 +2624,7 @@ const ShippingOptimizationModal = ({
     if (!customResult?.shipments) return 0;
 
     let total = 0;
-    customResult.shipments.forEach((shipment, shipmentIndex) => {
+    customResult.shipments.forEach((_shipment, shipmentIndex) => {
       const selectedCourier = customCourierSelections.get(shipmentIndex);
       if (selectedCourier) {
         total += selectedCourier.rate;
@@ -3051,7 +3051,7 @@ const ShippingOptimizationModal = ({
                       shipmentIndex={shipmentIndexForLocation}
                       totalShipmentsFromLocation={totalFromLocation}
                       globalShipmentIndex={index + 1}
-                      totalShipments={optimizationResult.shipments.length}
+                      totalShipments={optimizationResult.shipments?.length ?? 0}
                     />
                   );
                 });

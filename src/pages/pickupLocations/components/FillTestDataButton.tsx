@@ -100,7 +100,7 @@ const FillTestDataButton = ({
 
         // Set selected products with random quantities
         if (setSelectedProducts && productsResponse?.data) {
-          const products: ProductQuantityMapping[] = productsResponse.data.slice(0, 10).map(product => ({
+          const products: ProductQuantityMapping[] = (productsResponse.data as import('../../../models/grid-models/ProductGridColumns').ProductData[]).slice(0, 10).map(product => ({
             productId: product.productId ?? product.product?.productId ?? 0,
             productTitle: product.title ?? product.product?.title ?? '',
             quantity: getRandomQuantity(),
@@ -110,7 +110,7 @@ const FillTestDataButton = ({
 
         // Set selected packages with random quantities, reorder levels, and max stock levels
         if (setSelectedPackages && packagesResponse?.data) {
-          const packages: PackageQuantityMapping[] = packagesResponse.data.slice(0, 10).map(pkg => ({
+          const packages: PackageQuantityMapping[] = (packagesResponse.data as import('../../../models/api-models/PackageModels').PackageData[]).slice(0, 10).map(pkg => ({
             packageId: pkg.packageId ?? pkg._package?.packageId ?? 0,
             packageName: pkg.packageName ?? pkg._package?.packageName ?? '',
             quantity: getRandomQuantity(),

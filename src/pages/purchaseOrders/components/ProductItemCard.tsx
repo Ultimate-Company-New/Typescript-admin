@@ -97,7 +97,7 @@ const ProductItemCard = ({
 }: ProductItemCardProps): JSX.Element => {
   // Quantity state: Numeric value and string input (for controlled input)
   const [quantity, setQuantity] = useState(item.quantity)
-  const [quantityInput, setQuantityInput] = useState(item.quantity.toString())
+  const [, setQuantityInput] = useState(item.quantity.toString())
 
   // Price state: Numeric value
   const [pricePerUnit, setPricePerUnit] = useState(item.pricePerUnit)
@@ -268,17 +268,6 @@ const ProductItemCard = ({
    *
    * @returns {number} Total number of packages needed for this product
    */
-  const totalPackages: number = item.pickupAllocations
-    ? item.pickupAllocations.reduce(
-        (sum: number, alloc) => {
-          // Sum up quantityUsed for all packages at this location
-          const packageCount = alloc.packagingEstimate?.reduce((pSum: number, p) => pSum + p.quantityUsed, 0) || 0
-          return sum + packageCount
-        },
-        0
-      )
-    : 0
-
   // Calculate product total (quantity * pricePerUnit)
   const productTotal = quantity * pricePerUnit
 

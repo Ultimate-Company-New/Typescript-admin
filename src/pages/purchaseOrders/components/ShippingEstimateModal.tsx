@@ -350,6 +350,7 @@ const ShippingEstimateModal = ({
       totalWeightKgs: loc.totalWeightKgs,
       totalQuantity: loc.totalQuantity,
       productIds: loc.products.map(p => p.productId),
+      packagingCost: 0,
       selectedCourier: loc.selectedCourier ? {
         courierCompanyId: loc.selectedCourier.courierCompanyId,
         courierName: loc.selectedCourier.courierName,

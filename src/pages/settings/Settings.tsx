@@ -531,7 +531,7 @@ const Settings = (): JSX.Element => {
                 ShipRocket Wallet Balance
               </Typography>
               <Grid container spacing={2}>
-                <Grid size={{ xs: 12, sm: 6 }}>
+                <Grid item xs={12} sm={6}>
                   <TextField
                     fullWidth
                     label="Wallet Balance"
@@ -544,19 +544,18 @@ const Settings = (): JSX.Element => {
                             : '••••••••'
                           : 'Not available'
                     }
-                    slotProps={{
-                      input: {
-                        readOnly: true,
-                        startAdornment: walletBalanceLoading ? (
-                          <InputAdornment position="start">
-                            <CircularProgress size={20} />
-                          </InputAdornment>
-                        ) : undefined,
-                        endAdornment: walletBalance !== null && !walletBalanceLoading ? (
-                          <InputAdornment position="end">
-                            <Tooltip title={showWalletBalance ? 'Hide balance' : 'Show balance'}>
-                              <IconButton
-                                onClick={() => setShowWalletBalance(!showWalletBalance)}
+                    InputProps={{
+                      readOnly: true,
+                      startAdornment: walletBalanceLoading ? (
+                        <InputAdornment position="start">
+                          <CircularProgress size={20} />
+                        </InputAdornment>
+                      ) : undefined,
+                      endAdornment: walletBalance !== null && !walletBalanceLoading ? (
+                        <InputAdornment position="end">
+                          <Tooltip title={showWalletBalance ? 'Hide balance' : 'Show balance'}>
+                            <IconButton
+                              onClick={() => setShowWalletBalance(!showWalletBalance)}
                                 edge="end"
                                 size="small"
                               >
@@ -565,7 +564,6 @@ const Settings = (): JSX.Element => {
                             </Tooltip>
                           </InputAdornment>
                         ) : undefined,
-                      },
                     }}
                     sx={{
                       '& .MuiInputBase-input': {

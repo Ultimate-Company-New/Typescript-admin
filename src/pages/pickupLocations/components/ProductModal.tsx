@@ -27,7 +27,10 @@ function buildMappingImages(
   source: Record<string, unknown>,
   productId?: number,
 ): ProductImageInfo[] {
-  return resolveProductCarouselImages(source, productId)
+  return resolveProductCarouselImages(source, productId).map((image) => ({
+    url: image.url,
+    label: image.label ?? '',
+  }))
 }
 
 // ============================================================================

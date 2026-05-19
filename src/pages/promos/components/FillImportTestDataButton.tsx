@@ -58,11 +58,11 @@ const FillImportTestDataButton = (_props: FillImportTestDataButtonProps): JSX.El
       // Map test data to XLSX row format
       // Order must match template structure: promoCode, description, discountValue, isPercent, startDate, expiryDate, notes
       const dataRows: Array<Array<string | number | boolean>> = testPromos.map(promo => [
-        promo.promoCode,
-        promo.description,
-        promo.discountValue,
+        promo.promoCode ?? '',
+        promo.description ?? '',
+        promo.discountValue ?? 0,
         promo.isPercent ? 'TRUE' : 'FALSE',
-        promo.startDate, // Required: YYYY-MM-DD format
+        promo.startDate ?? '', // Required: YYYY-MM-DD format
         promo.expiryDate ?? '', // Optional: YYYY-MM-DD format
         promo.notes ?? '',
       ])

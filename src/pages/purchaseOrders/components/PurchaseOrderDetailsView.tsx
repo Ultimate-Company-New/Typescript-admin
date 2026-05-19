@@ -8,7 +8,6 @@ import {
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
   Person as PersonIcon,
-  Receipt as ReceiptIcon,
   LocalShipping as ShippingIcon,
 } from '@mui/icons-material'
 
@@ -72,7 +71,7 @@ const PurchaseOrderDetailsView = ({ purchaseOrder }: PurchaseOrderDetailsViewPro
         address: addressObj,
       },
       products: shipment.products.map((sp) => {
-        const productAny = sp as Record<string, unknown> | null | undefined
+        const productAny = sp as unknown as Record<string, unknown> | null | undefined
         return {
           product: sp ? {
             productId: sp.productId,
@@ -97,7 +96,7 @@ const PurchaseOrderDetailsView = ({ purchaseOrder }: PurchaseOrderDetailsViewPro
             discount: undefined,
             isDiscountPercent: false,
           } : {
-            productId: sp?.productId || 0,
+            productId: 0,
             title: 'Unknown Product',
           },
           allocatedQuantity: sp?.allocatedQuantity || 0,
@@ -117,7 +116,7 @@ const PurchaseOrderDetailsView = ({ purchaseOrder }: PurchaseOrderDetailsViewPro
           maxWeight: pkg.maxWeight,
           pricePerUnit: pkg.pricePerUnit,
         } : {
-          packageId: pkg?.packageId || 0,
+          packageId: 0,
           packageName: 'Unknown Package',
           packageType: 'Standard',
         },
@@ -161,16 +160,6 @@ const PurchaseOrderDetailsView = ({ purchaseOrder }: PurchaseOrderDetailsViewPro
       return dateString
     }
   }
-
-  const formatCurrency = (amount: number | undefined): string => {
-    if (amount == null) return '₹0.00'
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 2,
-    }).format(amount)
-  }
-
 
   const shipments = purchaseOrder.shipments ?? []
   const address = purchaseOrder.address
@@ -241,7 +230,7 @@ const PurchaseOrderDetailsView = ({ purchaseOrder }: PurchaseOrderDetailsViewPro
     shipments.forEach(shipment => {
       shipment.products?.forEach(productData => {
         const productId = productData.productId
-        if (!productId || !productData.product) return
+        if (!productId) return
 
         if (productMap.has(productId)) {
           // Aggregate quantity and use latest price
@@ -251,8 +240,8 @@ const PurchaseOrderDetailsView = ({ purchaseOrder }: PurchaseOrderDetailsViewPro
         } else {
           // Create new product item
           productMap.set(productId, {
-            product: productData.product,
-            pricePerUnit: productData.allocatedPrice || 0,
+            product: productData,
+            pricePerUnit: productData.allocatedPrice || productData.price || 0,
             quantity: productData.allocatedQuantity || 0,
           })
         }
@@ -417,7 +406,7 @@ const PurchaseOrderDetailsView = ({ purchaseOrder }: PurchaseOrderDetailsViewPro
           streetAddress3={address.streetAddress3}
           city={address.city}
           state={address.state}
-          postalCode={address.postalCode}
+          postalCode={address.postalCode ?? ''}
           country={address.country}
           addressType={address.addressType}
           nameOnAddress={address.nameOnAddress}

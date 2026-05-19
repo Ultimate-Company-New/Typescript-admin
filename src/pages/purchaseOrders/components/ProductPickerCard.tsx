@@ -235,7 +235,7 @@ const ProductPickerCard = ({ product, onSelect, disabled }: ProductPickerCardPro
                       ₹{priceInfo.original.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </BodyText>
                     <Chip
-                      label={product.isDiscountPercent ? `${product.discount}% OFF` : `₹${product.discount.toLocaleString('en-IN')} OFF`}
+                      label={product.isDiscountPercent ? `${product.discount ?? 0}% OFF` : `₹${(product.discount ?? 0).toLocaleString('en-IN')} OFF`}
                       size="small"
                       color="error"
                       variant="outlined"

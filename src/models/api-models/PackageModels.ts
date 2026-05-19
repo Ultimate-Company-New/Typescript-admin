@@ -106,6 +106,14 @@ export interface PackageResponseModel {
 
   // Products in this package (only populated when package is part of a shipment)
   products?: PackageProductResponseData[]
+
+  /** Nested package info when returned as part of shipment allocation */
+  packageInfo?: {
+    packageId: number
+    packageName?: string
+    packageType?: string
+    pricePerUnit?: number
+  }
 }
 
 /**

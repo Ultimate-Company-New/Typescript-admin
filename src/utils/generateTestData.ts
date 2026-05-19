@@ -1037,8 +1037,8 @@ export const generateProductFormTest = async (
     ? Math.floor(Math.random() * 51) // 0-50%
     : Math.floor(Math.random() * 10001); // ₹0-₹10,000
 
-  // Random returns allowed (70% chance of being allowed)
-  const returnsAllowed = Math.random() > 0.3;
+  // Random return window (70% chance of returns allowed, 30 days when allowed)
+  const returnWindowDays = Math.random() > 0.3 ? 30 : 0;
 
   // Fetch real pickup locations from database and randomly select 5
   const pickupLocationQuantities: Record<string, number> = {};
@@ -1136,7 +1136,7 @@ export const generateProductFormTest = async (
     price,
     discount,
     isDiscountPercent,
-    returnsAllowed,
+    returnWindowDays,
     length: Math.round(length * 100) / 100,
     breadth: Math.round(breadth * 100) / 100,
     height: Math.round(height * 100) / 100,

@@ -279,7 +279,7 @@ const PickupLocationCard = ({ location: item, index = 0 }: PickupLocationCardPro
                 <BodyText
                   variant="body2"
                   component="a"
-                  href={`tel:${phoneOnAddress}`}
+                  {...({ href: `tel:${phoneOnAddress}` } as React.ComponentProps<typeof BodyText>)}
                   className={styles['pickup-location-card__contact-link']}
                 >
                   {phoneOnAddress}
@@ -292,7 +292,7 @@ const PickupLocationCard = ({ location: item, index = 0 }: PickupLocationCardPro
                 <BodyText
                   variant="body2"
                   component="a"
-                  href={`mailto:${emailOnAddress}`}
+                  {...({ href: `mailto:${emailOnAddress}` } as React.ComponentProps<typeof BodyText>)}
                   className={styles['pickup-location-card__contact-link']}
                 >
                   {emailOnAddress}

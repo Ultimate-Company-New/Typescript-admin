@@ -2,7 +2,7 @@ import { memo, useEffect, useState } from "react";
 
 import { format } from "date-fns";
 
-import { Box, Chip, Switch, Tooltip } from "@mui/material";
+import { Box, Chip, Tooltip } from "@mui/material";
 import { type GridColDef, type GridRenderCellParams } from "@mui/x-data-grid";
 
 import { ProductImageCarousel } from "../../components/carousel";
@@ -67,7 +67,9 @@ import PickupLocationsButton from "./PickupLocationsButton";
  * Pickup location data structure
  */
 interface PickupLocation {
-  pickupLocationId: number;
+  pickupLocationId?: number;
+  pickupLocation?: { pickupLocationId?: number };
+  availableStock?: number;
   addressNickName?: string;
   [key: string]: unknown;
 }

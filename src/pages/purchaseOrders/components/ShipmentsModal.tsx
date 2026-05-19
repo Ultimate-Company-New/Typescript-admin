@@ -138,7 +138,7 @@ const convertShipmentToOptimizationFormat = (
             pricePerUnit: pkg.pricePerUnit,
           }
         : {
-            packageId: pkg?.packageId || 0,
+            packageId: 0,
             packageName: "Unknown Package",
             packageType: "Standard",
           },

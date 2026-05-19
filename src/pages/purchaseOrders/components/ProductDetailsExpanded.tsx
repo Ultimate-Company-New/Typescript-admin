@@ -9,7 +9,6 @@ import {
     LocationOn as LocationIcon,
     Inventory as PackageIcon,
     AccountBalanceWallet as PriceIcon,
-    Speed as SpeedIcon,
     Info as InfoIcon
 } from '@mui/icons-material'
 

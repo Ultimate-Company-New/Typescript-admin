@@ -350,11 +350,6 @@ const AddEditPurchaseOrder = (): React.JSX.Element => {
 
       // Check if this is an allocation update (shipping confirmation) - incoming items might not have allocations
       // but form items should have them if shipping was just confirmed
-      const isAllocationUpdate =
-        currentProductIds === newProductIds &&
-        !hasQuantityOrPriceChange &&
-        currentFormItems.some((fi: any) => fi?.pickupAllocations?.length > 0);
-
       /**
        * Extract images from nested product structure
        * This handles both cases: when images are already extracted (flat structure)
@@ -629,7 +624,7 @@ const AddEditPurchaseOrder = (): React.JSX.Element => {
       // Only update if we're in add mode OR if totalShipping is non-zero (user is calculating shipping)
       const currentDeliveryFee = getValues("deliveryFee");
       const isEditModeWithExistingFee =
-        purchaseOrderId && currentDeliveryFee > 0;
+        purchaseOrderId && (currentDeliveryFee ?? 0) > 0;
 
       if (!isEditModeWithExistingFee || totalShipping > 0) {
         // Update delivery fee: either we're in add mode, or fee is 0, or user is calculating shipping
@@ -892,13 +887,13 @@ const AddEditPurchaseOrder = (): React.JSX.Element => {
         Array.isArray(response.shipments) &&
         response.shipments.length > 0;
       if (hasShipments) {
-        totalPackagingFeeFromShipments = response.shipments.reduce(
+        totalPackagingFeeFromShipments = (response.shipments ?? []).reduce(
           (sum, shipment) => {
             return sum + (shipment.packagingCost || 0);
           },
           0
         );
-        totalShippingCostFromShipments = response.shipments.reduce(
+        totalShippingCostFromShipments = (response.shipments ?? []).reduce(
           (sum, shipment) => {
             return sum + (shipment.shippingCost || 0);
           },
@@ -1137,10 +1132,12 @@ const AddEditPurchaseOrder = (): React.JSX.Element => {
                     },
                 quantityUsed: pkg.quantityUsed || 0,
                 totalCost: pkg.totalCost || 0,
-                productDetails: (pkg.products ?? []).map((prod) => ({
-                  productId: prod.productId,
-                  quantity: prod.quantity || 0,
-                })),
+                productDetails: (pkg.products ?? [])
+                  .filter((prod) => prod.productId != null)
+                  .map((prod) => ({
+                    productId: prod.productId as number,
+                    quantity: prod.quantity || 0,
+                  })),
               })),
               // Structure EXACTLY like ProductItemsSection.handleShippingConfirm
               selectedCourier: shipment.selectedCourierCompanyId

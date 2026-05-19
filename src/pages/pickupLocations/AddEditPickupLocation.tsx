@@ -248,6 +248,7 @@ const AddEditPickupLocation = (): React.JSX.Element => {
       const productResponse = await productApi.getProductsInBatches({
         start: 0,
         end: 1000, // Fetch all products for this location
+        pageSize: 1000,
         filters: [
           {
             id: 'pickupLocationId-filter',
@@ -262,12 +263,13 @@ const AddEditPickupLocation = (): React.JSX.Element => {
 
       // Map products to ProductQuantityMapping with quantities
       if (productResponse.data && productResponse.data.length > 0) {
-        const productMappings: ProductQuantityMapping[] = productResponse.data.map((product: ProductData) => {
+        const productMappings: ProductQuantityMapping[] = (productResponse.data as ProductData[]).map((product) => {
           const pickupLocationQuantities = product.pickupLocations ?? []
           // Find the quantity for this specific pickup location
           const locationData = pickupLocationQuantities.find(
-            (loc: { pickupLocation?: { pickupLocationId?: number }; availableStock?: number }) =>
-              loc.pickupLocation?.pickupLocationId === locationId
+            (loc) =>
+              loc.pickupLocation?.pickupLocationId === locationId ||
+              loc.pickupLocationId === locationId
           )
           return {
             productId: product.productId ?? 0,
@@ -282,6 +284,7 @@ const AddEditPickupLocation = (): React.JSX.Element => {
       const packageResponse = await packageApi.getPackagesInBatches({
         start: 0,
         end: 1000, // Fetch all packages for this location
+        pageSize: 1000,
         filters: [
           {
             id: 'pickupLocationId-filter',
@@ -296,14 +299,14 @@ const AddEditPickupLocation = (): React.JSX.Element => {
 
       // Map packages to PackageQuantityMapping with quantities
       if (packageResponse.data && packageResponse.data.length > 0) {
-        const packageMappings: PackageQuantityMapping[] = packageResponse.data.map((pkg: PackageData) => {
+        const packageMappings: PackageQuantityMapping[] = (packageResponse.data as PackageData[]).map((pkg) => {
           const pickupLocationQuantities = pkg.pickupLocationQuantities ?? {}
           // Get the quantity data for this specific pickup location
           const locationData = pickupLocationQuantities[locationId]
           return {
             packageId: pkg.packageId ?? 0,
             packageName: pkg.packageName ?? '',
-            quantity: locationData?.quantity ?? locationData?.availableQuantity ?? 1,
+            quantity: locationData?.quantity ?? 1,
             reorderLevel: locationData?.reorderLevel ?? 1,
             maxStockLevel: locationData?.maxStockLevel ?? 1,
           }

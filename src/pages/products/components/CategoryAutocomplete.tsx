@@ -170,7 +170,7 @@ const CategoryAutocomplete: React.FC<CategoryAutocompleteProps> = ({
       onOpen={handleOpen}
       onClose={() => setOpen(false)}
       options={dummyOptions}
-      value={displayValue || null}
+      value={displayValue || undefined}
       inputValue={displayValue}
       disabled={disabled}
       fullWidth

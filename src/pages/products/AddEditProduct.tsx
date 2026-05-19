@@ -159,8 +159,14 @@ const AddEditProduct = (): React.JSX.Element => {
    * Handle pickup location quantity changes
    */
   const handlePickupLocationQuantitiesChange = useCallback(
-    (newValue: Record<number, number>) => {
-      setValue('pickupLocationQuantities', newValue, { shouldValidate: true })
+    (newValue: Record<number, number> | Record<number, import('./components/PickupLocationQuantityManager').PackageLocationData>) => {
+      const quantities = Object.fromEntries(
+        Object.entries(newValue).map(([id, value]) => [
+          Number(id),
+          typeof value === 'number' ? value : value.quantity,
+        ]),
+      ) as Record<number, number>
+      setValue('pickupLocationQuantities', quantities, { shouldValidate: true })
     },
     [setValue],
   )

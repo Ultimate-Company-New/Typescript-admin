@@ -53,6 +53,7 @@ export interface UserResponseModel {
   loginName: string
   firstName: string
   lastName: string
+  email?: string
   phone: string
   datePasswordChanges?: string
   loginAttempts?: number

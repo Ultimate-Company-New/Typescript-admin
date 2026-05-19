@@ -48,9 +48,7 @@ const PickupLocationsButton = ({ locations, productTitle }: PickupLocationsButto
         <Badge
           badgeContent={locations.length}
           color="primary"
-          slotProps={{
-            badge: { 'data-test-id': 'product-pickup-locations-badge' },
-          }}
+          data-test-id="product-pickup-locations-badge"
         >
           <LocationIcon />
         </Badge>

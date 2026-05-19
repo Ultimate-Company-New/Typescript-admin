@@ -94,7 +94,7 @@ const convertShipmentToOptimizationFormat = (
 
   return {
     pickupLocation: {
-      pickupLocationId: shipment.pickupLocationId,
+      pickupLocationId: shipment.pickupLocationId ?? 0,
       addressNickName:
         shipment.pickupLocation?.addressNickName || "Unknown Location",
       address: addressObj,
@@ -162,7 +162,7 @@ const convertShipmentToOptimizationFormat = (
             pricePerUnit: pkg.pricePerUnit,
           }
         : {
-            packageId: pkg?.packageId || 0,
+            packageId: 0,
             packageName: "Unknown Package",
             packageType: "Standard",
           },
@@ -363,7 +363,7 @@ const Shipments = (): React.JSX.Element => {
 
     setCancelLoading(true);
     try {
-      await shipmentApi.cancelShipment(shipmentToCancel.shipmentId);
+      await shipmentApi.cancelShipment(shipmentToCancel.shipmentId ?? 0);
       toast.success(`Shipment #${shipmentToCancel.shipmentId} cancelled successfully`);
       setCancelDialogOpen(false);
       setShipmentToCancel(null);

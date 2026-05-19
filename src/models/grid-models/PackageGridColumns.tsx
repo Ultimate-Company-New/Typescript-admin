@@ -435,7 +435,7 @@ export const getPackageGridColumns = (
         const pickupLocationQuantities = rowData.pickupLocationQuantities ?? rowData._package?.pickupLocationQuantities ?? {}
         const locationData = pickupLocationQuantities[pickupLocationId]
         if (locationData) {
-          return locationData.quantity ?? locationData.availableQuantity ?? 0
+          return locationData.quantity ?? 0
         }
         return 0
       },

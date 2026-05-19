@@ -422,7 +422,7 @@ const QADashboard = (): JSX.Element => {
     methodName: string,
     testMethodName: string,
     _displayName: string | null,
-    declaringTestClassName?: string | null
+    _declaringTestClassName?: string | null
   ) => {
     // Get the test class name from the service
     try {
