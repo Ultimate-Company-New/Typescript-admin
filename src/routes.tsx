@@ -245,9 +245,5 @@ export const routes: RouteObject[] = [
   },
 ]
 
-const router = createBrowserRouter(routes, {
-  future: {
-    v7_startTransition: true,
-  },
-})
+const router = createBrowserRouter(routes)
 export default router

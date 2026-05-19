@@ -13,7 +13,6 @@ import type { PackageResponseModel } from "./PackageModels";
 import type { ProductResponseModel } from "./ProductModels";
 import type { PromoResponseModel } from "./PromoModels";
 import type { UserResponseModel } from "./UserModels";
-import type { PackageProductResponseData } from "./ShipmentModels";
 
 /**
  * Pickup Location Response Model

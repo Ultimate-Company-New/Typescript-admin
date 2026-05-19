@@ -17,8 +17,6 @@ export interface SelectInputProps extends Omit<TextFieldProps, 'variant' | 'marg
  */
 const SelectInput = forwardRef<HTMLDivElement, SelectInputProps>(
   ({ options, variant = 'filled', margin = 'normal', fullWidth = true, InputLabelProps, className, placeholder, ...props }, ref) => {
-    const hasValue = props.value !== undefined && props.value !== null && props.value !== ''
-
     return (
       <TextField
         ref={ref}
@@ -36,7 +34,7 @@ const SelectInput = forwardRef<HTMLDivElement, SelectInputProps>(
         }}
         SelectProps={{
           displayEmpty: true,
-          renderValue: (value) => {
+          renderValue: (value: any) => {
             // If no value and placeholder exists, show placeholder
             if ((value === '' || value === null || value === undefined) && placeholder) {
               return <span className={styles['select-placeholder']}>{placeholder}</span>

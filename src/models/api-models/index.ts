@@ -98,7 +98,6 @@ export type {
   ShipmentUserInfo,
   ReturnShipmentData,
   ReturnProductData,
-  ReturnReasonType,
 } from "./ShipmentModels";
 
 // User Models
