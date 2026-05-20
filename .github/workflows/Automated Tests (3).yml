@@ -296,7 +296,7 @@ jobs:
 
           echo "✓ All Grid Flow tests passed"
 
-      # ── 7. ARTIFACTS ────────────────────────────────────────────────────────
+      # ── 7. ARTIFACTS ───────────────────────────────────────────────────────
       - name: Upload Playwright results
         if: always()
         uses: actions/upload-artifact@v4
