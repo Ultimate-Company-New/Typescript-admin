@@ -212,6 +212,44 @@ jobs:
           ref: main
           token: ${{ secrets.GH_PAT }}
 
+      - name: Login Flow Tests
+        working-directory: Spring-PlayWright-Automation
+        env:
+          PROJECT_ROOT: ${{ github.workspace }}
+        run: |
+          set -euo pipefail
+
+          echo "Installing Playwright Chromium..."
+          mvn -B exec:java \
+            -Dexec.mainClass=com.microsoft.playwright.CLI \
+            -Dexec.args="install chromium"
+
+          LOGIN_FLOW_PKG="AdminToolTests.flows"
+          LOGIN_FLOW_TESTS=(
+            LoginFlowTests
+            ClientLandingFlowTests
+          )
+
+          mvn -B clean
+
+          for test_class in "${LOGIN_FLOW_TESTS[@]}"; do
+            echo "=========================================="
+            echo "Running ${test_class}..."
+            echo "=========================================="
+            if ! mvn -B verify \
+              -Plocal \
+              -Dtest.env=local \
+              -Dplaywright.browser=chromium \
+              -Dplaywright.headless=true \
+              -Dtest="${LOGIN_FLOW_PKG}.${test_class}"; then
+              echo "❌ ${test_class} failed — stopping Login Flow Tests (remaining suites skipped)"
+              exit 1
+            fi
+            echo "✓ ${test_class} passed"
+          done
+
+          echo "✓ All Login Flow tests passed"
+
       - name: Grid Flow Tests
         working-directory: Spring-PlayWright-Automation
         env:
