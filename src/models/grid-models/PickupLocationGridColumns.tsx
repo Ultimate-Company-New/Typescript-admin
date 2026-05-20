@@ -251,7 +251,14 @@ color: 'text.secondary' }} />
       const shortAddress = params.value as string
 
       return (
-        <Tooltip title={<div style={{ whiteSpace: 'pre-line' }}>{fullAddress}</div>} placement="top">
+        <Tooltip
+          title={
+            <div data-test-id="pickup-location-address-cell-tooltip" style={{ whiteSpace: 'pre-line' }}>
+              {fullAddress}
+            </div>
+          }
+          placement="top"
+        >
           <Box
             data-test-id="pickup-location-address-cell"
             sx={{
