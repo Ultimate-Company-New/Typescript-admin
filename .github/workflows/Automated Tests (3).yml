@@ -1,7 +1,8 @@
 name: Automated Tests (3)
 
+# PR runs only via UI CI Pipeline (PR-Pipeline.yml) so branch protection sees a single
+# stage-3-automated-tests / integration-test check, not a duplicate direct PR run.
 on:
-  pull_request:
   workflow_dispatch:
   workflow_call:
     secrets:
