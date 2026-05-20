@@ -129,7 +129,13 @@ export const AddressCell = ({
       enterDelay={0}
       leaveDelay={0}
     >
-      <Box className={containerClassName} data-test-id={testId}>
+      <Box
+        className={containerClassName}
+        data-test-id={testId}
+        tabIndex={0}
+        aria-label={fullAddress || 'Address not available'}
+        sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, outline: 'none' }}
+      >
         <LocationIcon fontSize="small" className={iconClassName} />
         <span>{shortDisplay}</span>
       </Box>

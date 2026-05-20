@@ -198,7 +198,7 @@ jobs:
           npm ci || npm install
           # Start dev server in the background
           nohup npm run dev > dev.log 2>&1 &
-          
+
           echo "Waiting for Typescript Admin dev server to start..."
           sleep 5
           cat dev.log || true
