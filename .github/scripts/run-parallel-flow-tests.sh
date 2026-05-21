@@ -29,8 +29,8 @@ if [[ ${#TEST_TARGETS[@]} -eq 0 ]]; then
   exit 2
 fi
 
-STAGGER_SEC="${FLOW_TEST_STAGGER_SEC:-0}"
-PLAYWRIGHT_BROWSER="${FLOW_TEST_BROWSER:-chromium}"
+STAGGER_SEC="${FLOW_TEST_STAGGER_SEC:-8}"
+PLAYWRIGHT_BROWSER="${FLOW_TEST_BROWSER:-chrome}"
 FAIL_FAST="${FLOW_TEST_FAIL_FAST:-false}"
 FLOW_TEST_FAST="${FLOW_TEST_FAST:-false}"
 FLOW_TEST_SKIP_COMPILE="${FLOW_TEST_SKIP_COMPILE:-false}"
@@ -61,6 +61,19 @@ else
   echo "Skipping compile (FLOW_TEST_SKIP_COMPILE=true)."
 fi
 
+PARALLEL_TARGET_ROOT="${PLAYWRIGHT_DIR}/target/parallel"
+mkdir -p "${PARALLEL_TARGET_ROOT}"
+if [[ -d "${PLAYWRIGHT_DIR}/target/test-classes" ]]; then
+  echo "Preparing isolated Maven target dirs (avoids parallel corruption of target/)..."
+  for target in "${TEST_TARGETS[@]}"; do
+    slug=$(echo "$target" | tr '#/' '__')
+    par_dir="${PARALLEL_TARGET_ROOT}/${slug}"
+    mkdir -p "${par_dir}"
+    rsync -a --delete "${PLAYWRIGHT_DIR}/target/classes/" "${par_dir}/classes/"
+    rsync -a --delete "${PLAYWRIGHT_DIR}/target/test-classes/" "${par_dir}/test-classes/"
+  done
+fi
+
 MVN_TEST_ARGS=(
   -B
   -ntp
@@ -72,6 +85,7 @@ MVN_TEST_ARGS=(
   -Dplaywright.headless=true
   -Dplaywright.video.enabled=false
   -Dplaywright.tracing.enabled=false
+  -Dplaywright.chromium.fallbackToChrome=true
   -Dsurefire.redirectTestOutputToFile=false
   -Dsurefire.printSummary=true
   -Dsurefire.useFile=false
@@ -80,10 +94,6 @@ MVN_TEST_ARGS=(
 if [[ "${FLOW_TEST_FAST}" == "true" ]]; then
   MVN_TEST_ARGS+=(-Dgrid.flow.fast=true)
 fi
-
-log_slug() {
-  echo "$1" | tr '#/' '__'
-}
 
 verify_test_log() {
   local log_file="$1"
@@ -105,6 +115,10 @@ print_failure_steps() {
     "$log_file" 2>/dev/null | tail -40 || echo "(no step markers in log)"
 }
 
+log_slug() {
+  echo "$1" | tr '#/' '__'
+}
+
 # Stream Maven stdout/stderr to CI with a prefix; write the same stream to a log file.
 run_target() {
   local target="$1"
@@ -112,10 +126,12 @@ run_target() {
   slug=$(log_slug "$target")
   local log_file="${LOG_DIR}/${slug}.log"
   local mvn_exit_file="${LOG_DIR}/${slug}.mvnexit"
+  local par_dir="${PARALLEL_TARGET_ROOT}/${slug}"
 
   (
     set -o pipefail
     stdbuf -oL -eL mvn "${MVN_TEST_ARGS[@]}" \
+      -Dproject.build.directory="${par_dir}" \
       -Dmaven.compiler.skip=true \
       -Dmaven.test.compiler.skip=true \
       -Dsurefire.reportNameSuffix="${slug}" \
@@ -131,37 +147,131 @@ target_list=()
 failed_targets=()
 suite_start_ms=$(($(date +%s) * 1000))
 
+# FIX: Launch all targets immediately (truly parallel), then sleep a flat
+# STAGGER_SEC between launches instead of multiplying index × STAGGER_SEC.
+# The old code did: sleep $((index * STAGGER_SEC)) BEFORE the launch, which
+# meant the 8th test waited 56 s just to start, and the total blocking delay
+# before all 8 were running was ~280 s — effectively sequential.
 test_index=0
+total_targets=${#TEST_TARGETS[@]}
 for target in "${TEST_TARGETS[@]}"; do
-  if [[ $test_index -gt 0 && $STAGGER_SEC -gt 0 ]]; then
-    stagger_sec=$((test_index * STAGGER_SEC))
-    echo "Staggering ${target} start by ${stagger_sec}s..."
-    sleep "$stagger_sec"
-  fi
-  test_index=$((test_index + 1))
   echo "Starting ${target}..."
   run_target "${target}" &
   pid_list+=("$!")
   target_list+=("$target")
+
+  # Stagger: flat sleep AFTER launch, skip after the last target
+  test_index=$((test_index + 1))
+  if [[ $test_index -lt $total_targets && $STAGGER_SEC -gt 0 ]]; then
+    echo "Staggering next target by ${STAGGER_SEC}s..."
+    sleep "${STAGGER_SEC}"
+  fi
 done
 
 echo "All ${SUITE_LABEL} targets launched. Streaming logs below..."
 echo ""
 
+# FIX: Use 'wait -n' (bash 4.3+) to process results as each job finishes
+# instead of waiting in strict launch order. This means a fast test at index 7
+# is reported immediately rather than waiting for slow tests at index 0-6.
+# Falls back to ordered wait if wait -n is unavailable.
+declare -A pid_to_index
 for i in "${!pid_list[@]}"; do
-  pid="${pid_list[$i]}"
-  target="${target_list[$i]}"
+  pid_to_index["${pid_list[$i]}"]=$i
+done
+
+remaining_pids=("${pid_list[@]}")
+
+while [[ ${#remaining_pids[@]} -gt 0 ]]; do
+  # Wait for any one child to finish
+  if wait -n "${remaining_pids[@]}"; then
+    finished_status=0
+  else
+    finished_status=$?
+  fi
+
+  # Find which pid just finished by checking exit files
+  finished_pid=""
+  finished_i=""
+  for pid in "${remaining_pids[@]}"; do
+    if ! kill -0 "$pid" 2>/dev/null; then
+      finished_pid="$pid"
+      finished_i="${pid_to_index[$pid]}"
+      break
+    fi
+  done
+
+  # If we couldn't match (race condition), fall back: drain remaining in order
+  if [[ -z "$finished_pid" ]]; then
+    break
+  fi
+
+  target="${target_list[$finished_i]}"
   slug=$(log_slug "$target")
   log_file="${LOG_DIR}/${slug}.log"
   mvn_exit_file="${LOG_DIR}/${slug}.mvnexit"
 
   class_start_ms=$(($(date +%s) * 1000))
+  class_elapsed_s=$(( ($(date +%s) * 1000 - suite_start_ms) / 1000 ))
+
+  mvn_exit=1
+  if [[ -f "${mvn_exit_file}" ]]; then
+    mvn_exit=$(cat "${mvn_exit_file}")
+  elif [[ $finished_status -eq 0 ]]; then
+    mvn_exit=0
+  fi
+
+  if [[ $mvn_exit -eq 0 ]] && verify_test_log "${log_file}"; then
+    test_seconds=$(grep -oE "Time elapsed: [0-9.]+ s" "${log_file}" | tail -1 | grep -oE "[0-9.]+" || echo "?")
+    echo "✓ ${target} passed (finished at ${class_elapsed_s}s suite wall, surefire ~${test_seconds}s)"
+  else
+    echo "❌ ${target} failed (mvn exit ${mvn_exit}, finished at ${class_elapsed_s}s suite wall)"
+    failed_targets+=("$target")
+    echo "=== ${target} summary ==="
+    print_log_summary "${log_file}"
+    print_failure_steps "${log_file}"
+    if [[ "${FAIL_FAST}" == "true" ]]; then
+      echo "FAIL_FAST=true — killing remaining jobs..."
+      for pid in "${remaining_pids[@]}"; do
+        [[ "$pid" == "$finished_pid" ]] && continue
+        kill "$pid" 2>/dev/null || true
+      done
+      exit 1
+    fi
+  fi
+  echo ""
+
+  # Remove finished pid from remaining list
+  new_remaining=()
+  for pid in "${remaining_pids[@]}"; do
+    [[ "$pid" == "$finished_pid" ]] && continue
+    new_remaining+=("$pid")
+  done
+  remaining_pids=("${new_remaining[@]}")
+done
+
+# Fallback: drain any remaining pids in order (handles the race-condition break above)
+for i in "${!pid_list[@]}"; do
+  pid="${pid_list[$i]}"
+  # Skip already-processed pids
+  already_done=false
+  for rp in "${remaining_pids[@]}"; do
+    [[ "$rp" == "$pid" ]] && { already_done=true; break; }
+  done
+  $already_done || continue
+
+  target="${target_list[$i]}"
+  slug=$(log_slug "$target")
+  log_file="${LOG_DIR}/${slug}.log"
+  mvn_exit_file="${LOG_DIR}/${slug}.mvnexit"
+
   if wait "$pid"; then
     wait_ok=0
   else
     wait_ok=$?
   fi
-  class_elapsed_s=$(( ($(date +%s) * 1000 - class_start_ms) / 1000 ))
+
+  class_elapsed_s=$(( ($(date +%s) * 1000 - suite_start_ms) / 1000 ))
 
   mvn_exit=1
   if [[ -f "${mvn_exit_file}" ]]; then
@@ -172,18 +282,14 @@ for i in "${!pid_list[@]}"; do
 
   if [[ $mvn_exit -eq 0 ]] && verify_test_log "${log_file}"; then
     test_seconds=$(grep -oE "Time elapsed: [0-9.]+ s" "${log_file}" | tail -1 | grep -oE "[0-9.]+" || echo "?")
-    echo "✓ ${target} passed (wall ${class_elapsed_s}s, surefire ~${test_seconds}s)"
+    echo "✓ ${target} passed (finished at ${class_elapsed_s}s suite wall, surefire ~${test_seconds}s)"
   else
-    echo "❌ ${target} failed (mvn exit ${mvn_exit}, wall ${class_elapsed_s}s)"
+    echo "❌ ${target} failed (mvn exit ${mvn_exit}, finished at ${class_elapsed_s}s suite wall)"
     failed_targets+=("$target")
     echo "=== ${target} summary ==="
     print_log_summary "${log_file}"
     print_failure_steps "${log_file}"
     if [[ "${FAIL_FAST}" == "true" ]]; then
-      for j in "${!pid_list[@]}"; do
-        [[ $j -eq $i ]] && continue
-        kill "${pid_list[$j]}" 2>/dev/null || true
-      done
       exit 1
     fi
   fi
@@ -197,7 +303,6 @@ echo "=========================================="
 
 if [[ ${#failed_targets[@]} -gt 0 ]]; then
   echo "Failed target(s): ${failed_targets[*]}"
-  echo "Log files: ${LOG_DIR}/$(printf '%s ' "${failed_targets[@]/#/${LOG_DIR}/}")"
   exit 1
 fi
 
