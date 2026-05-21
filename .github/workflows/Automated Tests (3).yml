@@ -43,7 +43,8 @@ jobs:
       SPRING_DATASOURCE_PASSWORD: ""
 
     steps:
-      - name: Checkout code
+      # Typescript-admin at repo root (PR branch on workflow_call, ref on workflow_dispatch).
+      - name: Checkout Typescript Admin
         uses: actions/checkout@v4
 
       # ── 1. WAIT FOR MYSQL ──────────────────────────────────────────────────
@@ -177,24 +178,15 @@ jobs:
             sleep 2
           done
 
-      # ── 5. CLONE AND START TYPESCRIPT ADMIN ─────────────────────────────────
-      - name: Checkout Typescript Admin
-        uses: actions/checkout@v4
-        with:
-          repository: Ultimate-Company-New/Typescript-admin
-          path: Typescript-admin
-          ref: ${{ github.head_ref || github.ref_name }}
-          token: ${{ secrets.GH_PAT }}
-
+      # ── 5. START TYPESCRIPT ADMIN (uses root checkout above) ─────────────────
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: npm
-          cache-dependency-path: Typescript-admin/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install and Start Typescript Admin Dev Server
-        working-directory: Typescript-admin
         run: |
           npm ci || npm install
           # Start dev server in the background
@@ -213,318 +205,76 @@ jobs:
           ref: main
           token: ${{ secrets.GH_PAT }}
 
-      - name: Login Flow Tests
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('Spring-PlayWright-Automation/pom.xml') }}
+          restore-keys: |
+            playwright-chromium-${{ runner.os }}-
+
+      - name: Prepare Playwright automation
         working-directory: Spring-PlayWright-Automation
         env:
           PROJECT_ROOT: ${{ github.workspace }}
         run: |
           set -euo pipefail
-
-          echo "Installing Playwright Chromium..."
+          echo "Installing Playwright Chromium (once for all flow suites)..."
           mvn -B exec:java \
             -Dexec.mainClass=com.microsoft.playwright.CLI \
             -Dexec.args="install chromium"
+          echo "Cleaning and compiling test sources (once for all flow suites)..."
+          mvn -B clean test-compile -Plocal -Dtest.env=local -DskipTests
 
-          LOGIN_FLOW_PKG="AdminToolTests.flows"
-          LOGIN_FLOW_TESTS=(
-            LoginFlowTests
+      - name: Login Flow Tests
+        working-directory: Spring-PlayWright-Automation
+        env:
+          PROJECT_ROOT: ${{ github.workspace }}
+        run: |
+          chmod +x "${GITHUB_WORKSPACE}/.github/scripts/run-parallel-flow-tests.sh"
+          "${GITHUB_WORKSPACE}/.github/scripts/run-parallel-flow-tests.sh" \
+            "Login Flow" \
+            AdminToolTests.flows \
+            LoginFlowTests \
             ClientLandingFlowTests
-          )
-
-          mvn -B clean
-
-          pids=()
-          declare -A test_map
-
-          for test_class in "${LOGIN_FLOW_TESTS[@]}"; do
-            echo "=========================================="
-            echo "Starting ${test_class} in background..."
-            echo "=========================================="
-
-            # Use unique target folder per test to prevent target directory race conditions
-            mvn -B verify \
-              -Plocal \
-              -Dtest.env=local \
-              -Dplaywright.browser=chromium \
-              -Dplaywright.headless=true \
-              -Dproject.build.directory="target/${test_class}" \
-              -Dtest="${LOGIN_FLOW_PKG}.${test_class}" > "${test_class}.log" 2>&1 &
-
-            pid=$!
-            pids+=("$pid")
-            test_map["$pid"]="$test_class"
-          done
-
-          echo "All tests launched. Monitoring execution..."
-
-          failed=0
-          while [ ${#pids[@]} -gt 0 ]; do
-            still_running=()
-            for pid in "${pids[@]}"; do
-              if kill -0 "$pid" 2>/dev/null; then
-                still_running+=("$pid")
-              else
-                # Check exit code
-                wait "$pid"
-                exit_code=$?
-                test_name="${test_map[$pid]}"
-                if [ $exit_code -ne 0 ]; then
-                  echo "❌ ${test_name} failed with exit code ${exit_code}!"
-                  echo "======================================================="
-                  echo "=== ERROR LOGS FOR TEST: ${test_name} ==="
-                  echo "======================================================="
-                  cat "${test_name}.log" || true
-                  echo "======================================================="
-                  failed=1
-                else
-                  echo "✓ ${test_name} passed successfully."
-                  echo "::group::Logs for ${test_name}"
-                  cat "${test_name}.log" || true
-                  echo "::endgroup::"
-                fi
-              fi
-            done
-
-            if [ $failed -eq 1 ]; then
-              echo "Terminating remaining running tests..."
-              for pid in "${still_running[@]}"; do
-                kill "$pid" 2>/dev/null || true
-              done
-
-              # Give processes a moment to die and flush outputs
-              sleep 1
-
-              for pid in "${still_running[@]}"; do
-                test_name="${test_map[$pid]}"
-                echo "Test ${test_name} was terminated early."
-                if [ -f "${test_name}.log" ]; then
-                  echo "::group::Partial Logs for Terminated Test ${test_name}"
-                  cat "${test_name}.log" || true
-                  echo "::endgroup::"
-                fi
-              done
-              exit 1
-            fi
-
-            pids=("${still_running[@]}")
-            [ ${#pids[@]} -gt 0 ] && sleep 2
-          done
-
-          echo "✓ All Login Flow tests completed successfully!"
 
       - name: Grid Flow Tests
         working-directory: Spring-PlayWright-Automation
         env:
           PROJECT_ROOT: ${{ github.workspace }}
         run: |
-          set -euo pipefail
-
-          echo "Installing Playwright Chromium..."
-          mvn -B exec:java \
-            -Dexec.mainClass=com.microsoft.playwright.CLI \
-            -Dexec.args="install chromium"
-
-          GRID_FLOW_PKG="AdminToolTests.flows.GridFlows"
-
+          chmod +x "${GITHUB_WORKSPACE}/.github/scripts/run-parallel-flow-tests.sh"
           # Order matches Typescript-admin DashboardSidebar.tsx
-          GRID_FLOW_TESTS=(
-            UsersFlowTests
-            UserGroupsFlowTests
-            LeadsFlowTests
-            PromosFlowTests
-            ProductsFlowTests
-            PackagesFlowTests
-            PickupLocationsFlowTests
+          "${GITHUB_WORKSPACE}/.github/scripts/run-parallel-flow-tests.sh" \
+            "Grid Flow" \
+            AdminToolTests.flows.GridFlows \
+            UsersFlowTests \
+            UserGroupsFlowTests \
+            LeadsFlowTests \
+            PromosFlowTests \
+            ProductsFlowTests \
+            PackagesFlowTests \
+            PickupLocationsFlowTests \
             MessagesFlowTests
-          )
-
-          mvn -B clean
-
-          pids=()
-          declare -A test_map
-
-          for test_class in "${GRID_FLOW_TESTS[@]}"; do
-            echo "=========================================="
-            echo "Starting ${test_class} in background..."
-            echo "=========================================="
-
-            # Use unique target folder per test to prevent target directory race conditions
-            mvn -B verify \
-              -Plocal \
-              -Dtest.env=local \
-              -Dplaywright.browser=chromium \
-              -Dplaywright.headless=true \
-              -Dproject.build.directory="target/${test_class}" \
-              -Dtest="${GRID_FLOW_PKG}.${test_class}" > "${test_class}.log" 2>&1 &
-
-            pid=$!
-            pids+=("$pid")
-            test_map["$pid"]="$test_class"
-          done
-
-          echo "All tests launched. Monitoring execution..."
-
-          failed=0
-          while [ ${#pids[@]} -gt 0 ]; do
-            still_running=()
-            for pid in "${pids[@]}"; do
-              if kill -0 "$pid" 2>/dev/null; then
-                still_running+=("$pid")
-              else
-                # Check exit code
-                wait "$pid"
-                exit_code=$?
-                test_name="${test_map[$pid]}"
-                if [ $exit_code -ne 0 ]; then
-                  echo "❌ ${test_name} failed with exit code ${exit_code}!"
-                  echo "======================================================="
-                  echo "=== ERROR LOGS FOR TEST: ${test_name} ==="
-                  echo "======================================================="
-                  cat "${test_name}.log" || true
-                  echo "======================================================="
-                  failed=1
-                else
-                  echo "✓ ${test_name} passed successfully."
-                  echo "::group::Logs for ${test_name}"
-                  cat "${test_name}.log" || true
-                  echo "::endgroup::"
-                fi
-              fi
-            done
-
-            if [ $failed -eq 1 ]; then
-              echo "Terminating remaining running tests..."
-              for pid in "${still_running[@]}"; do
-                kill "$pid" 2>/dev/null || true
-              done
-
-              # Give processes a moment to die and flush outputs
-              sleep 1
-
-              for pid in "${still_running[@]}"; do
-                test_name="${test_map[$pid]}"
-                echo "Test ${test_name} was terminated early."
-                if [ -f "${test_name}.log" ]; then
-                  echo "::group::Partial Logs for Terminated Test ${test_name}"
-                  cat "${test_name}.log" || true
-                  echo "::endgroup::"
-                fi
-              done
-              exit 1
-            fi
-
-            pids=("${still_running[@]}")
-            [ ${#pids[@]} -gt 0 ] && sleep 2
-          done
-
-          echo "✓ All Grid Flow tests completed successfully!"
 
       - name: View Flow Tests
         working-directory: Spring-PlayWright-Automation
         env:
           PROJECT_ROOT: ${{ github.workspace }}
         run: |
-          set -euo pipefail
-
-          echo "Installing Playwright Chromium..."
-          mvn -B exec:java \
-            -Dexec.mainClass=com.microsoft.playwright.CLI \
-            -Dexec.args="install chromium"
-
-          VIEW_FLOW_PKG="AdminToolTests.flows.ViewFlows"
-
+          chmod +x "${GITHUB_WORKSPACE}/.github/scripts/run-parallel-flow-tests.sh"
           # Order matches Typescript-admin DashboardSidebar.tsx (same as Grid Flow Tests)
-          VIEW_FLOW_TESTS=(
-            ViewUserFlowTests
-            ViewUserGroupFlowTests
-            ViewLeadFlowTests
-            ViewPromoFlowTests
-            ViewProductFlowTests
-            ViewPackageFlowTests
-            ViewPickupLocationFlowTests
+          "${GITHUB_WORKSPACE}/.github/scripts/run-parallel-flow-tests.sh" \
+            "View Flow" \
+            AdminToolTests.flows.ViewFlows \
+            ViewUserFlowTests \
+            ViewUserGroupFlowTests \
+            ViewLeadFlowTests \
+            ViewPromoFlowTests \
+            ViewProductFlowTests \
+            ViewPackageFlowTests \
+            ViewPickupLocationFlowTests \
             ViewMessageFlowTests
-          )
-
-          mvn -B clean
-
-          pids=()
-          declare -A test_map
-
-          for test_class in "${VIEW_FLOW_TESTS[@]}"; do
-            echo "=========================================="
-            echo "Starting ${test_class} in background..."
-            echo "=========================================="
-
-            # Use unique target folder per test to prevent target directory race conditions
-            mvn -B verify \
-              -Plocal \
-              -Dtest.env=local \
-              -Dplaywright.browser=chromium \
-              -Dplaywright.headless=true \
-              -Dproject.build.directory="target/${test_class}" \
-              -Dtest="${VIEW_FLOW_PKG}.${test_class}" > "${test_class}.log" 2>&1 &
-
-            pid=$!
-            pids+=("$pid")
-            test_map["$pid"]="$test_class"
-          done
-
-          echo "All tests launched. Monitoring execution..."
-
-          failed=0
-          while [ ${#pids[@]} -gt 0 ]; do
-            still_running=()
-            for pid in "${pids[@]}"; do
-              if kill -0 "$pid" 2>/dev/null; then
-                still_running+=("$pid")
-              else
-                # Check exit code
-                wait "$pid"
-                exit_code=$?
-                test_name="${test_map[$pid]}"
-                if [ $exit_code -ne 0 ]; then
-                  echo "❌ ${test_name} failed with exit code ${exit_code}!"
-                  echo "======================================================="
-                  echo "=== ERROR LOGS FOR TEST: ${test_name} ==="
-                  echo "======================================================="
-                  cat "${test_name}.log" || true
-                  echo "======================================================="
-                  failed=1
-                else
-                  echo "✓ ${test_name} passed successfully."
-                  echo "::group::Logs for ${test_name}"
-                  cat "${test_name}.log" || true
-                  echo "::endgroup::"
-                fi
-              fi
-            done
-
-            if [ $failed -eq 1 ]; then
-              echo "Terminating remaining running tests..."
-              for pid in "${still_running[@]}"; do
-                kill "$pid" 2>/dev/null || true
-              done
-
-              # Give processes a moment to die and flush outputs
-              sleep 1
-
-              for pid in "${still_running[@]}"; do
-                test_name="${test_map[$pid]}"
-                echo "Test ${test_name} was terminated early."
-                if [ -f "${test_name}.log" ]; then
-                  echo "::group::Partial Logs for Terminated Test ${test_name}"
-                  cat "${test_name}.log" || true
-                  echo "::endgroup::"
-                fi
-              done
-              exit 1
-            fi
-
-            pids=("${still_running[@]}")
-            [ ${#pids[@]} -gt 0 ] && sleep 2
-          done
-
-          echo "✓ All View Flow tests completed successfully!"
 
       # ── 7. ARTIFACTS ───────────────────────────────────────────────────────
       - name: Upload Playwright results
