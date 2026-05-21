@@ -27,10 +27,22 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=10
+          --max-connections=300
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
 
     env:
       DB_HOST: 127.0.0.1
       DB_PORT: 3306
+      REDIS_HOST: 127.0.0.1
+      REDIS_PORT: 6379
       DB_NAME: UltimateCompanyDatabase
       DB_USER: root
       DB_PASSWORD: ""
@@ -60,6 +72,28 @@ jobs:
             sleep 2
             if [ $i -eq 30 ]; then
               echo "❌ MySQL never became ready"
+              exit 1
+            fi
+          done
+
+      # ── 1b. WAIT FOR REDIS ─────────────────────────────────────────────────
+      - name: Wait for Redis to be ready
+        env:
+          REDIS_HOST: ${{ env.REDIS_HOST }}
+          REDIS_PORT: ${{ env.REDIS_PORT }}
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y redis-tools
+          echo "Waiting for Redis at ${REDIS_HOST}:${REDIS_PORT}..."
+          for i in {1..30}; do
+            if redis-cli -h "${REDIS_HOST}" -p "${REDIS_PORT}" ping 2>/dev/null | grep -q PONG; then
+              echo "Redis is up!"
+              break
+            fi
+            echo "Attempt $i/30 - Redis not ready, waiting..."
+            sleep 2
+            if [ $i -eq 30 ]; then
+              echo "❌ Redis never became ready"
               exit 1
             fi
           done
@@ -156,12 +190,18 @@ jobs:
         working-directory: Spring-Api/SpringApi
         run: |
           # 1. Build the application
-          mvn -B package -DskipTests
+          mvn -B -ntp package -DskipTests
 
           # 2. Run the API in the background using the JAR for speed
-          nohup java -jar target/*.jar --spring.profiles.active=localhost --server.port=4433 > api.log 2>&1 &
+          nohup java -jar target/*.jar \
+            --spring.profiles.active=localhost \
+            --server.port=4433 \
+            --spring.data.redis.host="${REDIS_HOST}" \
+            --spring.data.redis.port="${REDIS_PORT}" \
+            --app.grid-flow-cache.enabled=true \
+            > api.log 2>&1 &
 
-          echo "Starting API on port 4433..."
+          echo "Starting API on port 4433 (Redis ${REDIS_HOST}:${REDIS_PORT})..."
 
           # 3. Wait for the API to be ready (up to 120 seconds)
           for i in {1..60}; do
@@ -186,15 +226,25 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
 
-      - name: Install and Start Typescript Admin Dev Server
+      - name: Build and Start Typescript Admin Preview Server
         run: |
           npm ci || npm install
-          # Start dev server in the background
-          nohup npm run dev > dev.log 2>&1 &
+          npm run build
+          nohup npm run preview -- --host 127.0.0.1 --port 3000 > preview.log 2>&1 &
 
-          echo "Waiting for Typescript Admin dev server to start..."
-          sleep 5
-          cat dev.log || true
+          echo "Waiting for Typescript Admin preview server on port 3000..."
+          for i in {1..60}; do
+            if curl -sf http://127.0.0.1:3000 > /dev/null 2>&1; then
+              echo "Preview server is up!"
+              break
+            fi
+            if [ $i -eq 60 ]; then
+              echo "Preview server failed to start. Logs:"
+              cat preview.log || true
+              exit 1
+            fi
+            sleep 2
+          done
 
       # ── 6. CLONE AND RUN PLAYWRIGHT TESTS ─────────────────────────────
       - name: Checkout Playwright Automation Repo
@@ -220,31 +270,42 @@ jobs:
         run: |
           set -euo pipefail
           echo "Installing Playwright Chromium (once for all flow suites)..."
-          mvn -B exec:java \
+          mvn -B -ntp exec:java \
             -Dexec.mainClass=com.microsoft.playwright.CLI \
             -Dexec.args="install chromium"
           echo "Cleaning and compiling test sources (once for all flow suites)..."
-          mvn -B clean test-compile -Plocal -Dtest.env=local -DskipTests
+          mvn -B -ntp clean test-compile -Plocal -Dtest.env=local -DskipTests
 
-      - name: Login Flow Tests
+      # Login → Grid → View (suites sequential; tests within each suite parallel).
+      # Step markers (▶️ STEP / ✅ PASSED STEP / ⏱ TEST START) stream to the job log via tee.
+      - name: Login Flow Tests (parallel within suite)
         working-directory: Spring-PlayWright-Automation
         env:
           PROJECT_ROOT: ${{ github.workspace }}
+          FLOW_TEST_SKIP_COMPILE: "true"
+          FLOW_TEST_LOG_DIR: flow-test-logs/login
         run: |
           chmod +x "${GITHUB_WORKSPACE}/.github/scripts/run-parallel-flow-tests.sh"
           "${GITHUB_WORKSPACE}/.github/scripts/run-parallel-flow-tests.sh" \
             "Login Flow" \
             AdminToolTests.flows \
-            LoginFlowTests \
-            ClientLandingFlowTests
+            "LoginFlowTests#test01_successfulLogin" \
+            "LoginFlowTests#test02_unsuccessfulLogin_wrongPassword" \
+            "LoginFlowTests#test03_unsuccessfulLogin_emailNotConfirmed" \
+            "LoginFlowTests#test04_resetPassword_successful" \
+            "LoginFlowTests#test05_resetPassword_unsuccessful" \
+            "ClientLandingFlowTests#test01_clientLandingDisplaysAlphabeticalGridAndCounts" \
+            "ClientLandingFlowTests#test02_paginationNavigatesThroughClientList" \
+            "ClientLandingFlowTests#test03_filterClientsByName"
 
-      - name: Grid Flow Tests
+      - name: Grid Flow Tests (parallel within suite)
         working-directory: Spring-PlayWright-Automation
         env:
           PROJECT_ROOT: ${{ github.workspace }}
+          FLOW_TEST_SKIP_COMPILE: "true"
+          FLOW_TEST_LOG_DIR: flow-test-logs/grid
         run: |
           chmod +x "${GITHUB_WORKSPACE}/.github/scripts/run-parallel-flow-tests.sh"
-          # Order matches Typescript-admin DashboardSidebar.tsx
           "${GITHUB_WORKSPACE}/.github/scripts/run-parallel-flow-tests.sh" \
             "Grid Flow" \
             AdminToolTests.flows.GridFlows \
@@ -257,13 +318,14 @@ jobs:
             PickupLocationsFlowTests \
             MessagesFlowTests
 
-      - name: View Flow Tests
+      - name: View Flow Tests (parallel within suite)
         working-directory: Spring-PlayWright-Automation
         env:
           PROJECT_ROOT: ${{ github.workspace }}
+          FLOW_TEST_SKIP_COMPILE: "true"
+          FLOW_TEST_LOG_DIR: flow-test-logs/view
         run: |
           chmod +x "${GITHUB_WORKSPACE}/.github/scripts/run-parallel-flow-tests.sh"
-          # Order matches Typescript-admin DashboardSidebar.tsx (same as Grid Flow Tests)
           "${GITHUB_WORKSPACE}/.github/scripts/run-parallel-flow-tests.sh" \
             "View Flow" \
             AdminToolTests.flows.ViewFlows \
@@ -277,6 +339,14 @@ jobs:
             ViewMessageFlowTests
 
       # ── 7. ARTIFACTS ───────────────────────────────────────────────────────
+      - name: Upload flow test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flow-test-logs
+          path: Spring-PlayWright-Automation/flow-test-logs/
+          if-no-files-found: ignore
+
       - name: Upload Playwright results
         if: always()
         uses: actions/upload-artifact@v4
