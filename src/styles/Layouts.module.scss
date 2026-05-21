@@ -92,6 +92,7 @@
     min-height: 48px;
     padding-left: 20px; // Corresponds to MUI px: 2.5
     padding-right: 20px; // Corresponds to MUI px: 2.5
+    align-items: center;
 
     &--open {
       justify-content: initial;
@@ -133,6 +134,7 @@
     background-color: rgba(0, 0, 0, 0.02);
     margin-bottom: 2px;
     border-left: 3px solid transparent;
+    align-items: center;
 
     &:hover {
       background-color: rgba(0, 0, 0, 0.06);
@@ -150,6 +152,8 @@
 
   &__expand-icon {
     margin-left: auto;
+    flex-shrink: 0;
+    align-self: center;
     padding: 4px;
 
     &:hover {
@@ -157,11 +161,23 @@
     }
   }
 
+  &__sub-list {
+    margin-left: 20px;
+    padding-left: 8px;
+    border-left: 2px solid rgba(0, 0, 0, 0.08);
+  }
+
   &__sub-item {
-    padding-left: 64px; // Increased indentation for child items
-    min-height: 48px;
+    min-height: 44px;
     background-color: rgba(0, 0, 0, 0.01);
     border-left: 3px solid transparent;
+    align-items: center;
+
+    // MUI ListItemButton-gutters sets padding-left: 16px and wins without higher specificity
+    &:global(.MuiListItemButton-root) {
+      padding-left: 40px !important;
+      padding-right: 16px !important;
+    }
 
     &:hover {
       background-color: rgba(0, 0, 0, 0.05);
@@ -178,10 +194,9 @@
   }
 
   &__sub-item-icon {
-    min-width: 0;
-    margin-right: 16px; // Slightly reduced for sub-items
+    min-width: 32px !important;
+    margin-right: 12px;
     justify-content: center;
-    color: rgba(0, 0, 0, 0.6); // Slightly muted color for sub-items
   }
 }
 

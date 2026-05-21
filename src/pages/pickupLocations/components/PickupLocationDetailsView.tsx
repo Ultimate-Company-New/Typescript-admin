@@ -26,11 +26,12 @@ import {
   type FilterGroup,
   type GridDensityType
 } from '../../../components/datagrid'
-import { BodyText, Subheader } from '../../../components/fonts'
+import { BodyText, FieldLabel, Subheader } from '../../../components/fonts'
 import AddressDetailsView from '../../../components/form/AddressDetailsView'
 import { getPackageGridColumns, type PackageData } from '../../../models/grid-models/PackageGridColumns'
 import { getProductGridColumns, type ProductData } from '../../../models/grid-models/ProductGridColumns'
-import styles from '../../../styles/Users.module.scss'
+import commonStyles from '../../../styles/common.module.scss'
+import styles from '../../../styles/PickupLocations.module.scss'
 import { type PaginatedGridInterface } from '../../../types/grid.types'
 
 interface PickupLocationDetailsViewProps {
@@ -66,7 +67,6 @@ const PickupLocationDetailsView = ({
   notes,
   pickupLocationId,
 }: PickupLocationDetailsViewProps): JSX.Element => {
-  // ==================== Product Grid State ====================
   const [productRows, setProductRows] = useState<ProductData[]>([])
   const [productLoading, setProductLoading] = useState(false)
   const [productTotalCount, setProductTotalCount] = useState(0)
@@ -78,9 +78,9 @@ const PickupLocationDetailsView = ({
   const [productColumnVisibilityModel, setProductColumnVisibilityModel] = useState<GridColumnVisibilityModel>({
     isDeleted: false,
     productId: false,
-    pickupLocations: false, // Hide pickup locations column since we're already filtered
-    actions: false, // Hide actions column - not needed in this view
-    returnsAllowed: false, // Hide returns toggle - not needed in this view
+    pickupLocations: false,
+    actions: false,
+    returnsAllowed: false,
   })
   const [productPaginationModel, setProductPaginationModel] = useState<PaginatedGridInterface>({
     start: 0,
@@ -91,7 +91,6 @@ const PickupLocationDetailsView = ({
     totalPaginationBlockCount: 0,
   })
 
-  // ==================== Package Grid State ====================
   const [packageRows, setPackageRows] = useState<PackageData[]>([])
   const [packageLoading, setPackageLoading] = useState(false)
   const [packageTotalCount, setPackageTotalCount] = useState(0)
@@ -103,8 +102,8 @@ const PickupLocationDetailsView = ({
   const [packageColumnVisibilityModel, setPackageColumnVisibilityModel] = useState<GridColumnVisibilityModel>({
     isDeleted: false,
     packageId: false,
-    pickupLocationQuantities: false, // Hide locations column since we're already filtered
-    actions: false, // Hide actions column - not needed in this view
+    pickupLocationQuantities: false,
+    actions: false,
   })
   const [packagePaginationModel, setPackagePaginationModel] = useState<PaginatedGridInterface>({
     start: 0,
@@ -115,11 +114,9 @@ const PickupLocationDetailsView = ({
     totalPaginationBlockCount: 0,
   })
 
-  // ==================== Product Grid Functions ====================
   const fetchProducts = useCallback(async (): Promise<void> => {
     if (!pickupLocationId) return
 
-    // Create filter group with pickupLocationId filter
     const filterWithLocation: FilterGroup = {
       logicOperator: productActiveFilterGroup.logicOperator,
       filters: [
@@ -153,13 +150,9 @@ const PickupLocationDetailsView = ({
     )
   }, [fetchProducts])
 
-  // Note: handleToggleReturns removed - returnWindowDays is set at product creation and cannot be changed
-
-  // ==================== Package Grid Functions ====================
   const fetchPackages = useCallback(async (): Promise<void> => {
     if (!pickupLocationId) return
 
-    // Create filter group with pickupLocationId filter
     const filterWithLocation: FilterGroup = {
       logicOperator: packageActiveFilterGroup.logicOperator,
       filters: [
@@ -193,7 +186,6 @@ const PickupLocationDetailsView = ({
     )
   }, [fetchPackages])
 
-  // ==================== Grid Columns with Quantity ====================
   const productColumns = useMemo(
     () => getProductGridColumns(handleToggleProduct, {
       displayQuantity: true,
@@ -210,7 +202,6 @@ const PickupLocationDetailsView = ({
     [handleTogglePackage, pickupLocationId]
   )
 
-  // ==================== Effects ====================
   useEffect(() => {
     if (pickupLocationId) {
       void fetchProducts()
@@ -223,7 +214,6 @@ const PickupLocationDetailsView = ({
     }
   }, [pickupLocationId, packagePaginationModel, packageActiveFilterGroup, fetchPackages])
 
-  // ==================== Toolbar Props ====================
   const productToolbarProps = useMemo(
     () =>
       ({
@@ -254,32 +244,38 @@ const PickupLocationDetailsView = ({
 
   return (
     <>
-      {/* Location Information Section */}
-      <Paper className={styles['add-users-page__section']}>
-        <Subheader label="Location Information" className={styles['add-users-page__section-title']} />
-        <Divider className={styles['add-users-page__divider']} />
-        <Box className={styles['add-users-page__divider-spacer']} />
+      <Paper className={styles['add-pickup-location-page__section']}>
+        <Subheader label="Location Information" className={styles['add-pickup-location-page__section-title']} />
+        <Divider className={styles['add-pickup-location-page__divider']} />
+        <Box className={styles['add-pickup-location-page__divider-spacer']} />
 
         <Grid container spacing={3}>
           <Grid item xs={12} sm={6}>
-            <Box className={styles['user-details-view__field']}>
-              <BodyText className={styles['user-details-view__label']}>Location Name</BodyText>
-              <BodyText className={styles['user-details-view__value']}>{addressNickName || '—'}</BodyText>
+            <Box className={styles['pickup-location-details-view__field']}>
+              <FieldLabel>Location Name</FieldLabel>
+              <BodyText
+                data-test-id="pickup-location-view-location-name"
+                className={styles['pickup-location-details-view__value']}
+              >
+                {addressNickName || '—'}
+              </BodyText>
             </Box>
           </Grid>
 
           <Grid item xs={12} sm={6}>
-            <Box className={styles['user-details-view__field']}>
-              <BodyText className={styles['user-details-view__label']}>Shiprocket ID</BodyText>
-              <BodyText className={styles['user-details-view__value']}>
+            <Box className={styles['pickup-location-details-view__field']}>
+              <FieldLabel>Shiprocket ID</FieldLabel>
+              <BodyText
+                data-test-id="pickup-location-view-shiprocket-id"
+                className={styles['pickup-location-details-view__value']}
+              >
                 {shipRocketPickupLocationId ?? '—'}
-            </BodyText>
+              </BodyText>
             </Box>
           </Grid>
         </Grid>
       </Paper>
 
-      {/* Address Details Section - using shared component */}
       <AddressDetailsView
         streetAddress={address.streetAddress}
         streetAddress2={address.streetAddress2}
@@ -292,26 +288,36 @@ const PickupLocationDetailsView = ({
         nameOnAddress={address.nameOnAddress}
         emailOnAddress={address.emailOnAddress}
         phoneOnAddress={address.phoneOnAddress}
+        testIdPrefix="pickup-location-view-address"
+        sectionClassName={styles['add-pickup-location-page__section']}
+        sectionTitleClassName={styles['add-pickup-location-page__section-title']}
+        dividerClassName={styles['add-pickup-location-page__divider']}
+        dividerSpacerClassName={styles['add-pickup-location-page__divider-spacer']}
+        fieldClassName={styles['pickup-location-details-view__field']}
+        valueClassName={styles['pickup-location-details-view__value']}
       />
 
-      {/* Notes Section */}
-      {notes && (
-        <Paper className={styles['add-users-page__section']}>
-          <Subheader label="Notes" className={styles['add-users-page__section-title']} />
-          <Divider className={styles['add-users-page__divider']} />
-          <Box className={styles['add-users-page__divider-spacer']} />
-          <BodyText className={styles['user-details-view__notes']}>{notes}</BodyText>
-        </Paper>
-      )}
+      <Paper className={styles['add-pickup-location-page__section']}>
+        <Subheader label="Notes" className={styles['add-pickup-location-page__section-title']} />
+        <Divider className={styles['add-pickup-location-page__divider']} />
+        <Box className={styles['add-pickup-location-page__divider-spacer']} />
+        <FieldLabel>Additional Notes</FieldLabel>
+        <Box className={commonStyles['view-notes__container']}>
+          <BodyText data-test-id="pickup-location-view-notes" className={commonStyles['view-notes__text']}>
+            {notes || 'No notes provided'}
+          </BodyText>
+        </Box>
+      </Paper>
 
-      {/* Products at this Location */}
       {pickupLocationId && (
-        <Paper className={styles['add-users-page__section']} sx={{ overflow: 'hidden' }}>
-          <Subheader label="Products at this Location" className={styles['add-users-page__section-title']} />
-          <Divider className={styles['add-users-page__divider']} />
-          <Box className={styles['add-users-page__divider-spacer']} />
+        <Paper className={styles['add-pickup-location-page__section']} sx={{ overflow: 'hidden' }}>
+          <Subheader label="Products at this Location" className={styles['add-pickup-location-page__section-title']} />
+          <Divider className={styles['add-pickup-location-page__divider']} />
+          <Box className={styles['add-pickup-location-page__divider-spacer']} />
           <Box sx={{ height: '100%', width: '100%', overflow: 'auto' }}>
             <StyledDataGrid
+              dataTestId="pickup-location-view-products-grid"
+              paginationTestId="pickup-location-view-products-pagination"
               rows={productRows}
               columns={productColumns}
               loading={productLoading}
@@ -356,14 +362,15 @@ const PickupLocationDetailsView = ({
         </Paper>
       )}
 
-      {/* Packages at this Location */}
       {pickupLocationId && (
-        <Paper className={styles['add-users-page__section']} sx={{ overflow: 'hidden' }}>
-          <Subheader label="Packages at this Location" className={styles['add-users-page__section-title']} />
-          <Divider className={styles['add-users-page__divider']} />
-          <Box className={styles['add-users-page__divider-spacer']} />
+        <Paper className={styles['add-pickup-location-page__section']} sx={{ overflow: 'hidden' }}>
+          <Subheader label="Packages at this Location" className={styles['add-pickup-location-page__section-title']} />
+          <Divider className={styles['add-pickup-location-page__divider']} />
+          <Box className={styles['add-pickup-location-page__divider-spacer']} />
           <Box sx={{ height: '100%', width: '100%', overflow: 'auto' }}>
             <StyledDataGrid
+              dataTestId="pickup-location-view-packages-grid"
+              paginationTestId="pickup-location-view-packages-pagination"
               rows={packageRows}
               columns={packageColumns}
               loading={packageLoading}

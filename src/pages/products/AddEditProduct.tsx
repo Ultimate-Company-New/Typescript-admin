@@ -902,8 +902,9 @@ const AddEditProduct = (): React.JSX.Element => {
           }}
         >
           {isView ? (
-            // View Mode - Product Details
-            <ProductDetailsView watchedValues={watchedValues} />
+            <Box className={styles['products-page__view-container']}>
+              <ProductDetailsView watchedValues={watchedValues} />
+            </Box>
           ) : (
             <>
               {/* Edit/Add Mode - Form Sections */}

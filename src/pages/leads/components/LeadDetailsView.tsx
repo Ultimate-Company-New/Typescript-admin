@@ -1,6 +1,6 @@
 import { Box, Divider, Grid, Paper } from '@mui/material'
 
-import { BodyText, Subheader } from '../../../components/fonts'
+import { BodyText, FieldLabel, Subheader } from '../../../components/fonts'
 import styles from '../../../styles/Leads.module.scss'
 
 interface LeadDetailsViewProps {
@@ -68,85 +68,109 @@ const LeadDetailsView = ({
         <Grid container spacing={3}>
           <Grid item xs={12} sm={6}>
             <Box className={styles['lead-details-view__field']}>
-              <BodyText className={styles['lead-details-view__label']}>First Name</BodyText>
-              <BodyText className={styles['lead-details-view__value']}>{firstName || '—'}</BodyText>
+              <FieldLabel>First Name</FieldLabel>
+              <BodyText data-test-id="lead-view-first-name" className={styles['lead-details-view__value']}>
+                {firstName || '—'}
+              </BodyText>
             </Box>
           </Grid>
 
           <Grid item xs={12} sm={6}>
             <Box className={styles['lead-details-view__field']}>
-              <BodyText className={styles['lead-details-view__label']}>Last Name</BodyText>
-              <BodyText className={styles['lead-details-view__value']}>{lastName || '—'}</BodyText>
+              <FieldLabel>Last Name</FieldLabel>
+              <BodyText data-test-id="lead-view-last-name" className={styles['lead-details-view__value']}>
+                {lastName || '—'}
+              </BodyText>
             </Box>
           </Grid>
 
           <Grid item xs={12} sm={6}>
             <Box className={styles['lead-details-view__field']}>
-              <BodyText className={styles['lead-details-view__label']}>Email</BodyText>
-              <BodyText className={styles['lead-details-view__value']}>{email || '—'}</BodyText>
+              <FieldLabel>Email</FieldLabel>
+              <BodyText data-test-id="lead-view-email" className={styles['lead-details-view__value']}>
+                {email || '—'}
+              </BodyText>
             </Box>
           </Grid>
 
           <Grid item xs={12} sm={6}>
             <Box className={styles['lead-details-view__field']}>
-              <BodyText className={styles['lead-details-view__label']}>Phone</BodyText>
-              <BodyText className={styles['lead-details-view__value']}>{formatPhone(phone)}</BodyText>
+              <FieldLabel>Phone</FieldLabel>
+              <BodyText data-test-id="lead-view-phone" className={styles['lead-details-view__value']}>
+                {formatPhone(phone)}
+              </BodyText>
             </Box>
           </Grid>
 
           <Grid item xs={12} sm={6}>
             <Box className={styles['lead-details-view__field']}>
-              <BodyText className={styles['lead-details-view__label']}>Lead Status</BodyText>
-              <BodyText className={styles['lead-details-view__value']}>{leadStatus || '—'}</BodyText>
+              <FieldLabel>Lead Status</FieldLabel>
+              <BodyText data-test-id="lead-view-lead-status" className={styles['lead-details-view__value']}>
+                {leadStatus || '—'}
+              </BodyText>
             </Box>
           </Grid>
 
           <Grid item xs={12} sm={6}>
             <Box className={styles['lead-details-view__field']}>
-              <BodyText className={styles['lead-details-view__label']}>Company</BodyText>
-              <BodyText className={styles['lead-details-view__value']}>{company ?? '—'}</BodyText>
+              <FieldLabel>Company</FieldLabel>
+              <BodyText data-test-id="lead-view-company" className={styles['lead-details-view__value']}>
+                {company ?? '—'}
+              </BodyText>
             </Box>
           </Grid>
 
           <Grid item xs={12} sm={6}>
             <Box className={styles['lead-details-view__field']}>
-              <BodyText className={styles['lead-details-view__label']}>Title</BodyText>
-              <BodyText className={styles['lead-details-view__value']}>{title ?? '—'}</BodyText>
+              <FieldLabel>Title</FieldLabel>
+              <BodyText data-test-id="lead-view-title" className={styles['lead-details-view__value']}>
+                {title ?? '—'}
+              </BodyText>
             </Box>
           </Grid>
 
           <Grid item xs={12} sm={6}>
             <Box className={styles['lead-details-view__field']}>
-              <BodyText className={styles['lead-details-view__label']}>Company Size</BodyText>
-              <BodyText className={styles['lead-details-view__value']}>{companySize?.toLocaleString() ?? '—'}</BodyText>
+              <FieldLabel>Company Size</FieldLabel>
+              <BodyText data-test-id="lead-view-company-size" className={styles['lead-details-view__value']}>
+                {companySize?.toLocaleString() ?? '—'}
+              </BodyText>
             </Box>
           </Grid>
 
           <Grid item xs={12} sm={6}>
             <Box className={styles['lead-details-view__field']}>
-              <BodyText className={styles['lead-details-view__label']}>Annual Revenue</BodyText>
-              <BodyText className={styles['lead-details-view__value']}>{formatCurrency(annualRevenue)}</BodyText>
+              <FieldLabel>Annual Revenue</FieldLabel>
+              <BodyText data-test-id="lead-view-annual-revenue" className={styles['lead-details-view__value']}>
+                {formatCurrency(annualRevenue)}
+              </BodyText>
             </Box>
           </Grid>
 
           <Grid item xs={12} sm={6}>
             <Box className={styles['lead-details-view__field']}>
-              <BodyText className={styles['lead-details-view__label']}>Website</BodyText>
-              <BodyText className={styles['lead-details-view__value']}>{website ?? '—'}</BodyText>
+              <FieldLabel>Website</FieldLabel>
+              <BodyText data-test-id="lead-view-website" className={styles['lead-details-view__value']}>
+                {website ?? '—'}
+              </BodyText>
             </Box>
           </Grid>
 
           <Grid item xs={12} sm={6}>
             <Box className={styles['lead-details-view__field']}>
-              <BodyText className={styles['lead-details-view__label']}>Fax</BodyText>
-              <BodyText className={styles['lead-details-view__value']}>{fax ?? '—'}</BodyText>
+              <FieldLabel>Fax</FieldLabel>
+              <BodyText data-test-id="lead-view-fax" className={styles['lead-details-view__value']}>
+                {fax ?? '—'}
+              </BodyText>
             </Box>
           </Grid>
 
           <Grid item xs={12} sm={6}>
             <Box className={styles['lead-details-view__field']}>
-              <BodyText className={styles['lead-details-view__label']}>Assigned Agent</BodyText>
-              <BodyText className={styles['lead-details-view__value']}>{assignedAgent ?? '—'}</BodyText>
+              <FieldLabel>Assigned Agent</FieldLabel>
+              <BodyText data-test-id="lead-view-assigned-agent" className={styles['lead-details-view__value']}>
+                {assignedAgent ?? '—'}
+              </BodyText>
             </Box>
           </Grid>
         </Grid>

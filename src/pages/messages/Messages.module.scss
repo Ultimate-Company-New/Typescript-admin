@@ -1,3 +1,5 @@
+@use '../../styles/common.module.scss' as *;
+
 .messages-page {
   padding: 0;
   width: 100%;
@@ -32,6 +34,86 @@
     padding: 16px;
     border-top: 1px solid rgba(224, 224, 224, 1);
     background-color: #ffffff;
+  }
+}
+
+.add-messages-page {
+  &__container {
+    @extend .page__container--form;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  &__section {
+    padding: 24px;
+  }
+
+  &__section-title {
+    margin-bottom: 8px;
+  }
+
+  &__divider {
+    margin-bottom: 16px;
+  }
+
+  &__divider-spacer {
+    height: 16px;
+  }
+
+  &__grid-container {
+    margin-top: 8px;
+    min-height: 300px;
+  }
+}
+
+.message-details-view {
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__badge-wrapper {
+    display: inline-flex;
+    width: fit-content;
+  }
+
+  &__badge {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.25;
+    white-space: nowrap;
+
+    &--yes {
+      background-color: #e3f2fd;
+      color: #1565c0;
+    }
+
+    &--no {
+      background-color: #f5f5f5;
+      color: rgba(0, 0, 0, 0.6);
+    }
+  }
+
+  &__value {
+    word-break: break-word;
+  }
+
+  &__html-content {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: rgba(0, 0, 0, 0.87);
+
+    p {
+      margin: 0 0 8px;
+    }
   }
 }
 

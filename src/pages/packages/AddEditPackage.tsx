@@ -461,19 +461,6 @@ const AddEditPackage = (): React.JSX.Element => {
             </Paper>
           )}
 
-          {/* View mode - Back button */}
-          {isView && (
-            <Paper className={styles['add-packages-page__section']}>
-              <Box className={styles['add-packages-page__actions']}>
-                <BlueButton
-                  variant="contained"
-                  onClick={handleCancel}
-                  className={styles['add-packages-page__action-button']}
-                  label="Back to Packages"
-                />
-              </Box>
-            </Paper>
-          )}
         </Box>
       </form>
 

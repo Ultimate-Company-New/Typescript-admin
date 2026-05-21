@@ -297,6 +297,52 @@ jobs:
 
           echo "✓ All Grid Flow tests passed"
 
+      - name: View Flow Tests
+        working-directory: Spring-PlayWright-Automation
+        env:
+          PROJECT_ROOT: ${{ github.workspace }}
+        run: |
+          set -euo pipefail
+
+          echo "Installing Playwright Chromium..."
+          mvn -B exec:java \
+            -Dexec.mainClass=com.microsoft.playwright.CLI \
+            -Dexec.args="install chromium"
+
+          VIEW_FLOW_PKG="AdminToolTests.flows.ViewFlows"
+
+          # Order matches Typescript-admin DashboardSidebar.tsx (same as Grid Flow Tests)
+          VIEW_FLOW_TESTS=(
+            ViewUserFlowTests
+            ViewUserGroupFlowTests
+            ViewLeadFlowTests
+            ViewPromoFlowTests
+            ViewProductFlowTests
+            ViewPackageFlowTests
+            ViewPickupLocationFlowTests
+            ViewMessageFlowTests
+          )
+
+          mvn -B clean
+
+          for test_class in "${VIEW_FLOW_TESTS[@]}"; do
+            echo "=========================================="
+            echo "Running ${test_class}..."
+            echo "=========================================="
+            if ! mvn -B verify \
+              -Plocal \
+              -Dtest.env=local \
+              -Dplaywright.browser=chromium \
+              -Dplaywright.headless=true \
+              -Dtest="${VIEW_FLOW_PKG}.${test_class}"; then
+              echo "❌ ${test_class} failed — stopping View Flow Tests (remaining suites skipped)"
+              exit 1
+            fi
+            echo "✓ ${test_class} passed"
+          done
+
+          echo "✓ All View Flow tests passed"
+
       # ── 7. ARTIFACTS ───────────────────────────────────────────────────────
       - name: Upload Playwright results
         if: always()

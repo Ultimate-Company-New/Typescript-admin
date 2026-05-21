@@ -217,6 +217,8 @@ const AddEditUser = (): JSX.Element => {
 
   // User groups state
   const [selectedGroupIds, setSelectedGroupIds] = useState<number[]>([])
+  /** Stable assigned-group filter for view mode (not cleared by toolbar actions). */
+  const [viewAssignedGroupIds, setViewAssignedGroupIds] = useState<number[] | undefined>(undefined)
 
   // User Logs state
   const [userLogsRows, setUserLogsRows] = useState<UserLogResponseModel[]>([])
@@ -351,8 +353,14 @@ const AddEditUser = (): JSX.Element => {
             .map(group => group.groupId)
             .filter((id): id is number => typeof id === 'number')
           setSelectedGroupIds(groupIds)
+          if (isView) {
+            setViewAssignedGroupIds(groupIds)
+          }
         } else {
           setSelectedGroupIds([])
+          if (isView) {
+            setViewAssignedGroupIds([])
+          }
         }
 
         // Set permissions
@@ -848,17 +856,7 @@ const AddEditUser = (): JSX.Element => {
   )
 
   return (
-    <Container
-      maxWidth={false}
-      disableGutters
-      sx={{
-        px: {
-          xs: 2,
-          sm: 3,
-          md: 4,
-        },
-      }}
-    >
+    <Container maxWidth={false} disableGutters className={styles['users-page']}>
       {/* Fill Test Data Button - Only show in development/non-view mode */}
       {!isView && (
         <FillTestDataButton
@@ -958,7 +956,7 @@ const AddEditUser = (): JSX.Element => {
             showSelectionInfo={!isView}
             defaultPageSize={10}
             hideToolbar={false}
-            selectedGroupIdsFilter={isView ? selectedGroupIds : undefined}
+            selectedGroupIdsFilter={isView ? viewAssignedGroupIds : undefined}
           />
 
           {/* User Logs Section - Only show in edit/view mode */}

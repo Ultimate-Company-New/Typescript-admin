@@ -21,6 +21,7 @@ import { userGroupApi } from '../../api/userGroupApi'
 import styles from '../../styles/Users.module.scss'
 import { type PaginatedGridInterface } from '../../types/grid.types'
 import {
+  GridDensity,
   LogicOperator,
   getInitialDensity,
   getRowClassName,
@@ -60,6 +61,9 @@ interface UserGroupSelectionGridProps {
   defaultPageSize?: number
   hideToolbar?: boolean
   selectedGroupIdsFilter?: number[]
+  dataTestId?: string
+  gridContainerClassName?: string
+  dividerSpacerClassName?: string
 }
 
 /**
@@ -77,6 +81,9 @@ const UserGroupSelectionGrid = ({
   defaultPageSize = 10,
   hideToolbar = false,
   selectedGroupIdsFilter,
+  dataTestId = 'user-groups-selection-data-grid',
+  gridContainerClassName = styles['add-users-page__grid-container'],
+  dividerSpacerClassName = styles['add-users-page__divider-spacer'],
 }: UserGroupSelectionGridProps): JSX.Element => {
   const [rowSelectionModel, setRowSelectionModel] = useState<GridRowSelectionModel>({
     type: 'include',
@@ -84,7 +91,9 @@ const UserGroupSelectionGrid = ({
   })
   const [groupsLoading, setGroupsLoading] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
-  const [density, setDensity] = useState<GridDensityType>(getInitialDensity())
+  const [density, setDensity] = useState<GridDensityType>(
+    isView ? GridDensity.STANDARD : getInitialDensity(),
+  )
   const [activeFilterGroup, setActiveFilterGroup] = useState<FilterGroup>({
     logicOperator: LogicOperator.AND,
     filters: [],
@@ -248,8 +257,8 @@ const UserGroupSelectionGrid = ({
         onColumnVisibilityChange: setColumnVisibilityModel,
         hideIncludeDeleted: true,
         hideExport: false,
-        onClearSelection: handleClearSelection,
-        selectionCount: selectedGroupIds.length,
+        onClearSelection: isView ? undefined : handleClearSelection,
+        selectionCount: isView ? undefined : selectedGroupIds.length,
       }) as GridToolbarProps,
     [
       density,
@@ -261,6 +270,7 @@ const UserGroupSelectionGrid = ({
       handleClearSelection,
       handleIncludeDeletedChange,
       selectedGroupIds.length,
+      isView,
     ],
   )
 
@@ -336,11 +346,11 @@ const UserGroupSelectionGrid = ({
     <Paper className={styles['add-users-page__section']}>
       <Subheader label={title} className={styles['add-users-page__section-title']} />
       <Divider className={styles['add-users-page__divider']} />
-      <Box className={styles['add-users-page__divider-spacer']} />
+      <Box className={dividerSpacerClassName} />
 
-      <Box className={styles['add-users-page__grid-container']}>
+      <Box className={gridContainerClassName}>
         <StyledDataGrid
-          dataTestId="user-groups-selection-data-grid"
+          dataTestId={dataTestId}
           rows={rows}
           columns={columns}
           loading={groupsLoading}
@@ -362,13 +372,13 @@ const UserGroupSelectionGrid = ({
           rowSelectionModel={isView ? undefined : rowSelectionModel}
           onRowSelectionModelChange={handleRowSelectionChange}
           slots={{
-            toolbar: !hideToolbar && !isView ? (SimpleToolbar as GridSlotsComponent['toolbar']) : undefined,
+            toolbar: !hideToolbar ? (SimpleToolbar as GridSlotsComponent['toolbar']) : undefined,
           }}
           slotProps={{
-            toolbar: !hideToolbar && !isView ? toolbarProps : undefined,
+            toolbar: !hideToolbar ? toolbarProps : undefined,
           }}
-          showToolbar={!hideToolbar && !isView}
-          disableColumnMenu={isView}
+          showToolbar={!hideToolbar}
+          disableColumnMenu={false}
           className={styles['add-users-page__data-grid']}
         />
       </Box>

@@ -12,7 +12,7 @@ import { Box, Container, Divider, Paper } from '@mui/material'
 import { leadApi } from '../../api/leadApi'
 import { userApi } from '../../api/userApi'
 import { BlueButton, RedButton } from '../../components/buttons'
-import { BodyText, Subheader } from '../../components/fonts'
+import { BodyText, FieldLabel, Subheader } from '../../components/fonts'
 import {
   AddressDetailsView,
   FormFieldRenderer,
@@ -27,6 +27,7 @@ import { APP_ROUTES } from '../../constants/routes'
 import { usePermissions } from '../../hooks/usePermissions'
 import { type LeadDetailsResponseModel, type LeadRequestModel, type UserResponseModel } from '../../models/api-models'
 import styles from '../../styles/Leads.module.scss'
+import commonStyles from '../../styles/common.module.scss'
 import { getAllStates, getCitiesByState } from '../../utils/stateCityMapper'
 import { leadFormSchema, type LeadFormData } from '../../utils/validationSchemas'
 
@@ -599,17 +600,7 @@ const AddEditLead = (): React.JSX.Element => {
         />
       )}
 
-      <Container
-        maxWidth={false}
-        disableGutters
-        sx={{
-          px: {
-            xs: 2,
-            sm: 3,
-            md: 4,
-          },
-        }}
-      >
+      <Container maxWidth={false} disableGutters className={styles['leads-page']}>
         <form onSubmit={handleFormSubmit(onSubmit) as React.FormEventHandler<HTMLFormElement>}>
           <Box className={styles['add-leads-page__container']}>
             {/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */}
@@ -644,14 +635,17 @@ const AddEditLead = (): React.JSX.Element => {
                 />
 
                 {/* View Mode - Notes Section (after Address) */}
-                {watchedValues.notes && (
-                  <Paper className={styles['add-leads-page__section']}>
-                    <Subheader label="Notes" className={styles['add-leads-page__section-title']} />
-                    <Divider className={styles['add-leads-page__divider']} />
-                    <Box className={styles['add-leads-page__divider-spacer']} />
-                    <BodyText className={styles['lead-details-view__notes']}>{watchedValues.notes}</BodyText>
-                  </Paper>
-                )}
+                <Paper className={styles['add-leads-page__section']}>
+                  <Subheader label="Notes" className={styles['add-leads-page__section-title']} />
+                  <Divider className={styles['add-leads-page__divider']} />
+                  <Box className={styles['add-leads-page__divider-spacer']} />
+                  <FieldLabel>Additional Notes</FieldLabel>
+                  <Box className={commonStyles['view-notes__container']}>
+                    <BodyText data-test-id="lead-view-notes" className={commonStyles['view-notes__text']}>
+                      {watchedValues.notes?.trim() ? watchedValues.notes : '—'}
+                    </BodyText>
+                  </Box>
+                </Paper>
               </>
             ) : (
               /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */

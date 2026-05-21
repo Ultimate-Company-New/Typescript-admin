@@ -51,22 +51,24 @@
 
 .add-user-groups-page {
   &__container {
-    padding-top: 32px;
-    padding-bottom: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding-top: 24px;
+    padding-bottom: 24px;
   }
 
   &__section {
-    margin-top: 24px;
     padding: 24px;
   }
 
   &__section-title {
     font-weight: 600;
-    margin-bottom: 16px;
+    margin-bottom: 8px;
   }
 
   &__divider {
-    margin-bottom: 24px;
+    margin-bottom: 16px;
   }
 
   &__form {
@@ -106,7 +108,7 @@
   }
 
   &__divider-spacer {
-    margin-bottom: 24px;
+    height: 8px;
   }
 
   &__data-grid {
@@ -124,14 +126,9 @@
 
 .user-group-details-view {
   &__field {
-    margin-bottom: 24px;
-  }
-
-  &__label {
-    font-weight: 600;
-    color: rgba(0, 0, 0, 0.6);
-    margin-bottom: 8px;
-    font-size: 0.875rem;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
 
   &__value {

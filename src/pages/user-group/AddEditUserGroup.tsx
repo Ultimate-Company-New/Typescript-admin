@@ -68,6 +68,8 @@ const AddEditUserGroup = (): React.JSX.Element => {
 
   const [loading, setLoading] = useState(false)
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([])
+  /** Stable member filter for view mode (not cleared by toolbar actions). */
+  const [viewAssignedUserIds, setViewAssignedUserIds] = useState<number[] | undefined>(undefined)
   const [preloadedUsers, setPreloadedUsers] = useState<UserResponseModel[]>([])
 
   const mapUserGroupUserToUserResponse = useCallback(
@@ -120,7 +122,12 @@ const AddEditUserGroup = (): React.JSX.Element => {
         const fallbackUserIds = Array.isArray((response as { userIds?: number[] }).userIds)
           ? ((response as { userIds?: number[] }).userIds ?? [])
           : []
-        setSelectedUserIds(selectedIdsFromUsers.length > 0 ? selectedIdsFromUsers : fallbackUserIds)
+        const assignedUserIds =
+          selectedIdsFromUsers.length > 0 ? selectedIdsFromUsers : fallbackUserIds
+        setSelectedUserIds(assignedUserIds)
+        if (isView) {
+          setViewAssignedUserIds(assignedUserIds)
+        }
         setPreloadedUsers(groupUsers.map(mapUserGroupUserToUserResponse))
 
         toast.success('User group details loaded successfully')
@@ -130,7 +137,7 @@ const AddEditUserGroup = (): React.JSX.Element => {
         setLoading(false)
       }
     },
-    [mapUserGroupUserToUserResponse, reset],
+    [isView, mapUserGroupUserToUserResponse, reset],
   )
 
   /**
@@ -258,17 +265,7 @@ const AddEditUserGroup = (): React.JSX.Element => {
   }, [userGroupId, fetchUserGroupDetails])
 
   return (
-    <Container
-      maxWidth={false}
-      disableGutters
-      sx={{
-        px: {
-          xs: 2,
-          sm: 3,
-          md: 4,
-        },
-      }}
-    >
+    <Container maxWidth={false} disableGutters className={styles['user-groups-page']}>
       {/* Fill Test Data Button - Only show in development/non-view mode */}
       {!isView && (
         <FillTestDataButton
@@ -315,7 +312,7 @@ const AddEditUserGroup = (): React.JSX.Element => {
             showSelectionInfo={!isView}
             defaultPageSize={10}
             hideToolbar={false}
-            selectedUserIdsFilter={isView ? selectedUserIds : undefined}
+            selectedUserIdsFilter={isView ? viewAssignedUserIds : undefined}
             preloadedUsers={isView ? preloadedUsers : undefined}
           />
 

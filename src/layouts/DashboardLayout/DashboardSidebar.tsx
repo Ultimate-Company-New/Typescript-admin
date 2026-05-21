@@ -10,16 +10,15 @@ import {
   Description as DescriptionIcon,
   ExpandLess,
   ExpandMore,
-  GroupAdd as GroupAddIcon,
   Groups as GroupsIcon,
-  Inventory as InventoryIcon,
+  Inventory2 as Inventory2Icon,
+  Storefront as StorefrontIcon,
   Leaderboard as LeaderboardIcon,
   LocalOffer as LocalOfferIcon,
   LocalShipping as LocalShippingIcon,
   LocationOn as LocationOnIcon,
   Message as MessageIcon,
   People as PeopleIcon,
-  PersonAdd as PersonAddIcon,
   Settings as SettingsIcon,
   ShoppingCart as ShoppingCartIcon,
   Support as SupportIcon,
@@ -41,6 +40,9 @@ import { styled, useTheme } from '@mui/material/styles'
 
 import { APP_ROUTES } from '../../constants/routes'
 import styles from '../../styles/Layouts.module.scss'
+import { ColoredSidebarIcon, getSidebarIconColors } from './sidebarNavIcons'
+
+const sidebarClass = (suffix: string): string => styles[`dashboard-sidebar__${suffix}`]
 
 interface DashboardSidebarProps {
   open: boolean
@@ -112,6 +114,7 @@ const DrawerHeader = styled('div')(({ theme }) => ({
  */
 const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ open, onDrawerToggle }, ref) => {
   const theme = useTheme()
+  const iconColors = getSidebarIconColors(theme)
   const location = useLocation()
   const [usersExpanded, setUsersExpanded] = useState(true)
   const [groupsExpanded, setGroupsExpanded] = useState(false)
@@ -185,16 +188,16 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
           to={APP_ROUTES.DASHBOARD.USERS}
           selected={location.pathname === APP_ROUTES.DASHBOARD.USERS}
           data-test-id="sidebar-users-item"
-          className={`${styles['dashboard-sidebar__list-item']} ${styles['dashboard-sidebar__parent-item']} ${open ? styles['dashboard-sidebar__list-item--open'] : styles['dashboard-sidebar__list-item--closed']}`}
+          className={`${sidebarClass('list-item')} ${sidebarClass('parent-item')} ${open ? sidebarClass('list-item--open') : sidebarClass('list-item--closed')}`}
         >
           <ListItemIcon
-            className={`${styles['dashboard-sidebar__list-item-icon']} ${open ? styles['dashboard-sidebar__list-item-icon--open'] : styles['dashboard-sidebar__list-item-icon--closed']}`}
+            className={`${sidebarClass('list-item-icon')} ${open ? sidebarClass('list-item-icon--open') : sidebarClass('list-item-icon--closed')}`}
           >
-            <PeopleIcon />
+            <ColoredSidebarIcon icon={PeopleIcon} color={iconColors.users} />
           </ListItemIcon>
           <ListItemText
             primary="Users"
-            className={`${styles['dashboard-sidebar__list-item-text']} ${open ? styles['dashboard-sidebar__list-item-text--visible'] : styles['dashboard-sidebar__list-item-text--hidden']}`}
+            className={`${sidebarClass('list-item-text')} ${open ? sidebarClass('list-item-text--visible') : sidebarClass('list-item-text--hidden')}`}
           />
           {open && (
             <IconButton
@@ -204,7 +207,7 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
                 e.stopPropagation()
                 handleUsersToggle()
               }}
-              className={styles['dashboard-sidebar__expand-icon']}
+              className={sidebarClass('expand-icon')}
             >
               {usersExpanded ? <ExpandLess /> : <ExpandMore />}
             </IconButton>
@@ -213,17 +216,17 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
 
         {/* Users - Sub Items */}
         <Collapse in={usersExpanded && open} timeout="auto" unmountOnExit>
-          <List component="div" disablePadding>
+          <List component="div" disablePadding className={sidebarClass('sub-list')}>
             {/* Add Users */}
             <ListItemButton
               component={RouterLink}
               to={APP_ROUTES.DASHBOARD.ADD_USERS}
               selected={isActive(APP_ROUTES.DASHBOARD.ADD_USERS)}
               data-test-id="sidebar-add-users-item"
-              className={styles['dashboard-sidebar__sub-item']}
+              className={sidebarClass('sub-item')}
             >
-              <ListItemIcon className={styles['dashboard-sidebar__sub-item-icon']}>
-                <PersonAddIcon fontSize="small" />
+              <ListItemIcon className={sidebarClass('sub-item-icon')}>
+                <ColoredSidebarIcon icon={AddIcon} color={iconColors.add} fontSize="small" />
               </ListItemIcon>
               <ListItemText primary="Add Users" />
             </ListItemButton>
@@ -234,10 +237,10 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
               to={APP_ROUTES.DASHBOARD.IMPORT_USERS}
               selected={isActive(APP_ROUTES.DASHBOARD.IMPORT_USERS)}
               data-test-id="sidebar-import-users-item"
-              className={styles['dashboard-sidebar__sub-item']}
+              className={sidebarClass('sub-item')}
             >
-              <ListItemIcon className={styles['dashboard-sidebar__sub-item-icon']}>
-                <UploadIcon fontSize="small" />
+              <ListItemIcon className={sidebarClass('sub-item-icon')}>
+                <ColoredSidebarIcon icon={UploadIcon} color={iconColors.import} fontSize="small" />
               </ListItemIcon>
               <ListItemText primary="Import Users" />
             </ListItemButton>
@@ -250,16 +253,16 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
           to={APP_ROUTES.DASHBOARD.GROUPS}
           selected={location.pathname === APP_ROUTES.DASHBOARD.GROUPS}
           data-test-id="sidebar-groups-item"
-          className={`dashboard-sidebar__list-item dashboard-sidebar__parent-item ${open ? 'dashboard-sidebar__list-item--open' : 'dashboard-sidebar__list-item--closed'}`}
+          className={`${sidebarClass('list-item')} ${sidebarClass('parent-item')} ${open ? sidebarClass('list-item--open') : sidebarClass('list-item--closed')}`}
         >
           <ListItemIcon
-            className={`dashboard-sidebar__list-item-icon ${open ? 'dashboard-sidebar__list-item-icon--open' : 'dashboard-sidebar__list-item-icon--closed'}`}
+            className={`${sidebarClass('list-item-icon')} ${open ? sidebarClass('list-item-icon--open') : sidebarClass('list-item-icon--closed')}`}
           >
-            <GroupsIcon />
+            <ColoredSidebarIcon icon={GroupsIcon} color={iconColors.userGroups} />
           </ListItemIcon>
           <ListItemText
             primary="User Groups"
-            className={`dashboard-sidebar__list-item-text ${open ? 'dashboard-sidebar__list-item-text--visible' : 'dashboard-sidebar__list-item-text--hidden'}`}
+            className={`${sidebarClass('list-item-text')} ${open ? sidebarClass('list-item-text--visible') : sidebarClass('list-item-text--hidden')}`}
           />
           {open && (
             <IconButton
@@ -269,7 +272,7 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
                 e.stopPropagation()
                 handleGroupsToggle()
               }}
-              className={styles['dashboard-sidebar__expand-icon']}
+              className={sidebarClass('expand-icon')}
             >
               {groupsExpanded ? <ExpandLess /> : <ExpandMore />}
             </IconButton>
@@ -278,17 +281,17 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
 
         {/* User Groups - Sub Items */}
         <Collapse in={groupsExpanded && open} timeout="auto" unmountOnExit>
-          <List component="div" disablePadding>
+          <List component="div" disablePadding className={sidebarClass('sub-list')}>
             {/* Add User Group */}
             <ListItemButton
               component={RouterLink}
               to={APP_ROUTES.DASHBOARD.ADD_GROUPS}
               selected={isActive(APP_ROUTES.DASHBOARD.ADD_GROUPS)}
               data-test-id="sidebar-add-group-item"
-              className={styles['dashboard-sidebar__sub-item']}
+              className={sidebarClass('sub-item')}
             >
-              <ListItemIcon className={styles['dashboard-sidebar__sub-item-icon']}>
-                <GroupAddIcon fontSize="small" />
+              <ListItemIcon className={sidebarClass('sub-item-icon')}>
+                <ColoredSidebarIcon icon={AddIcon} color={iconColors.add} fontSize="small" />
               </ListItemIcon>
               <ListItemText primary="Add Group" />
             </ListItemButton>
@@ -299,10 +302,10 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
               to={APP_ROUTES.DASHBOARD.IMPORT_GROUPS}
               selected={isActive(APP_ROUTES.DASHBOARD.IMPORT_GROUPS)}
               data-test-id="sidebar-import-groups-item"
-              className={styles['dashboard-sidebar__sub-item']}
+              className={sidebarClass('sub-item')}
             >
-              <ListItemIcon className={styles['dashboard-sidebar__sub-item-icon']}>
-                <UploadIcon fontSize="small" />
+              <ListItemIcon className={sidebarClass('sub-item-icon')}>
+                <ColoredSidebarIcon icon={UploadIcon} color={iconColors.import} fontSize="small" />
               </ListItemIcon>
               <ListItemText primary="Import Groups" />
             </ListItemButton>
@@ -315,16 +318,16 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
           to={APP_ROUTES.DASHBOARD.LEADS}
           selected={location.pathname === APP_ROUTES.DASHBOARD.LEADS}
           data-test-id="sidebar-leads-item"
-          className={`dashboard-sidebar__list-item dashboard-sidebar__parent-item ${open ? 'dashboard-sidebar__list-item--open' : 'dashboard-sidebar__list-item--closed'}`}
+          className={`${sidebarClass('list-item')} ${sidebarClass('parent-item')} ${open ? sidebarClass('list-item--open') : sidebarClass('list-item--closed')}`}
         >
           <ListItemIcon
-            className={`dashboard-sidebar__list-item-icon ${open ? 'dashboard-sidebar__list-item-icon--open' : 'dashboard-sidebar__list-item-icon--closed'}`}
+            className={`${sidebarClass('list-item-icon')} ${open ? sidebarClass('list-item-icon--open') : sidebarClass('list-item-icon--closed')}`}
           >
-            <LeaderboardIcon />
+            <ColoredSidebarIcon icon={LeaderboardIcon} color={iconColors.leads} />
           </ListItemIcon>
           <ListItemText
             primary="Leads"
-            className={`dashboard-sidebar__list-item-text ${open ? 'dashboard-sidebar__list-item-text--visible' : 'dashboard-sidebar__list-item-text--hidden'}`}
+            className={`${sidebarClass('list-item-text')} ${open ? sidebarClass('list-item-text--visible') : sidebarClass('list-item-text--hidden')}`}
           />
           {open && (
             <IconButton
@@ -334,7 +337,7 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
                 e.stopPropagation()
                 handleLeadsToggle()
               }}
-              className={styles['dashboard-sidebar__expand-icon']}
+              className={sidebarClass('expand-icon')}
             >
               {leadsExpanded ? <ExpandLess /> : <ExpandMore />}
             </IconButton>
@@ -343,17 +346,17 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
 
         {/* Leads - Sub Items */}
         <Collapse in={leadsExpanded && open} timeout="auto" unmountOnExit>
-          <List component="div" disablePadding>
+          <List component="div" disablePadding className={sidebarClass('sub-list')}>
             {/* Add Lead */}
             <ListItemButton
               component={RouterLink}
               to={APP_ROUTES.DASHBOARD.ADD_LEAD}
               selected={isActive(APP_ROUTES.DASHBOARD.ADD_LEAD)}
               data-test-id="sidebar-add-lead-item"
-              className={styles['dashboard-sidebar__sub-item']}
+              className={sidebarClass('sub-item')}
             >
-              <ListItemIcon className={styles['dashboard-sidebar__sub-item-icon']}>
-                <AddIcon fontSize="small" />
+              <ListItemIcon className={sidebarClass('sub-item-icon')}>
+                <ColoredSidebarIcon icon={AddIcon} color={iconColors.add} fontSize="small" />
               </ListItemIcon>
               <ListItemText primary="Add Lead" />
             </ListItemButton>
@@ -364,10 +367,10 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
               to={APP_ROUTES.DASHBOARD.IMPORT_LEADS}
               selected={isActive(APP_ROUTES.DASHBOARD.IMPORT_LEADS)}
               data-test-id="sidebar-import-leads-item"
-              className={styles['dashboard-sidebar__sub-item']}
+              className={sidebarClass('sub-item')}
             >
-              <ListItemIcon className={styles['dashboard-sidebar__sub-item-icon']}>
-                <UploadIcon fontSize="small" />
+              <ListItemIcon className={sidebarClass('sub-item-icon')}>
+                <ColoredSidebarIcon icon={UploadIcon} color={iconColors.import} fontSize="small" />
               </ListItemIcon>
               <ListItemText primary="Import Leads" />
             </ListItemButton>
@@ -380,16 +383,16 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
           to={APP_ROUTES.DASHBOARD.PROMOS}
           selected={location.pathname === APP_ROUTES.DASHBOARD.PROMOS}
           data-test-id="sidebar-promos-item"
-          className={`dashboard-sidebar__list-item dashboard-sidebar__parent-item ${open ? 'dashboard-sidebar__list-item--open' : 'dashboard-sidebar__list-item--closed'}`}
+          className={`${sidebarClass('list-item')} ${sidebarClass('parent-item')} ${open ? sidebarClass('list-item--open') : sidebarClass('list-item--closed')}`}
         >
           <ListItemIcon
-            className={`dashboard-sidebar__list-item-icon ${open ? 'dashboard-sidebar__list-item-icon--open' : 'dashboard-sidebar__list-item-icon--closed'}`}
+            className={`${sidebarClass('list-item-icon')} ${open ? sidebarClass('list-item-icon--open') : sidebarClass('list-item-icon--closed')}`}
           >
-            <LocalOfferIcon />
+            <ColoredSidebarIcon icon={LocalOfferIcon} color={iconColors.promos} />
           </ListItemIcon>
           <ListItemText
             primary="Promos"
-            className={`dashboard-sidebar__list-item-text ${open ? 'dashboard-sidebar__list-item-text--visible' : 'dashboard-sidebar__list-item-text--hidden'}`}
+            className={`${sidebarClass('list-item-text')} ${open ? sidebarClass('list-item-text--visible') : sidebarClass('list-item-text--hidden')}`}
           />
           {open && (
             <IconButton
@@ -399,7 +402,7 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
                 e.stopPropagation()
                 handlePromosToggle()
               }}
-              className={styles['dashboard-sidebar__expand-icon']}
+              className={sidebarClass('expand-icon')}
             >
               {promosExpanded ? <ExpandLess /> : <ExpandMore />}
             </IconButton>
@@ -408,17 +411,17 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
 
         {/* Promos - Sub Items */}
         <Collapse in={promosExpanded && open} timeout="auto" unmountOnExit>
-          <List component="div" disablePadding>
+          <List component="div" disablePadding className={sidebarClass('sub-list')}>
             {/* Add Promo */}
             <ListItemButton
               component={RouterLink}
               to={APP_ROUTES.DASHBOARD.ADD_PROMO}
               selected={isActive(APP_ROUTES.DASHBOARD.ADD_PROMO)}
               data-test-id="sidebar-add-promo-item"
-              className={styles['dashboard-sidebar__sub-item']}
+              className={sidebarClass('sub-item')}
             >
-              <ListItemIcon className={styles['dashboard-sidebar__sub-item-icon']}>
-                <AddIcon fontSize="small" />
+              <ListItemIcon className={sidebarClass('sub-item-icon')}>
+                <ColoredSidebarIcon icon={AddIcon} color={iconColors.add} fontSize="small" />
               </ListItemIcon>
               <ListItemText primary="Add Promo" />
             </ListItemButton>
@@ -429,10 +432,10 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
               to={APP_ROUTES.DASHBOARD.IMPORT_PROMOS}
               selected={isActive(APP_ROUTES.DASHBOARD.IMPORT_PROMOS)}
               data-test-id="sidebar-import-promos-item"
-              className={styles['dashboard-sidebar__sub-item']}
+              className={sidebarClass('sub-item')}
             >
-              <ListItemIcon className={styles['dashboard-sidebar__sub-item-icon']}>
-                <UploadIcon fontSize="small" />
+              <ListItemIcon className={sidebarClass('sub-item-icon')}>
+                <ColoredSidebarIcon icon={UploadIcon} color={iconColors.import} fontSize="small" />
               </ListItemIcon>
               <ListItemText primary="Import Promos" />
             </ListItemButton>
@@ -445,16 +448,16 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
           to={APP_ROUTES.DASHBOARD.PRODUCTS}
           selected={location.pathname === APP_ROUTES.DASHBOARD.PRODUCTS}
           data-test-id="sidebar-products-item"
-          className={`dashboard-sidebar__list-item dashboard-sidebar__parent-item ${open ? 'dashboard-sidebar__list-item--open' : 'dashboard-sidebar__list-item--closed'}`}
+          className={`${sidebarClass('list-item')} ${sidebarClass('parent-item')} ${open ? sidebarClass('list-item--open') : sidebarClass('list-item--closed')}`}
         >
           <ListItemIcon
-            className={`dashboard-sidebar__list-item-icon ${open ? 'dashboard-sidebar__list-item-icon--open' : 'dashboard-sidebar__list-item-icon--closed'}`}
+            className={`${sidebarClass('list-item-icon')} ${open ? sidebarClass('list-item-icon--open') : sidebarClass('list-item-icon--closed')}`}
           >
-            <InventoryIcon />
+            <ColoredSidebarIcon icon={StorefrontIcon} color={iconColors.products} />
           </ListItemIcon>
           <ListItemText
             primary="Products"
-            className={`dashboard-sidebar__list-item-text ${open ? 'dashboard-sidebar__list-item-text--visible' : 'dashboard-sidebar__list-item-text--hidden'}`}
+            className={`${sidebarClass('list-item-text')} ${open ? sidebarClass('list-item-text--visible') : sidebarClass('list-item-text--hidden')}`}
           />
           {open && (
             <IconButton
@@ -464,7 +467,7 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
                 e.stopPropagation()
                 handleProductsToggle()
               }}
-              className={styles['dashboard-sidebar__expand-icon']}
+              className={sidebarClass('expand-icon')}
             >
               {productsExpanded ? <ExpandLess /> : <ExpandMore />}
             </IconButton>
@@ -473,17 +476,17 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
 
         {/* Products - Sub Items */}
         <Collapse in={productsExpanded && open} timeout="auto" unmountOnExit>
-          <List component="div" disablePadding>
+          <List component="div" disablePadding className={sidebarClass('sub-list')}>
             {/* Add Product */}
             <ListItemButton
               component={RouterLink}
               to={APP_ROUTES.DASHBOARD.ADD_PRODUCT}
               selected={isActive(APP_ROUTES.DASHBOARD.ADD_PRODUCT)}
               data-test-id="sidebar-add-product-item"
-              className={styles['dashboard-sidebar__sub-item']}
+              className={sidebarClass('sub-item')}
             >
-              <ListItemIcon className={styles['dashboard-sidebar__sub-item-icon']}>
-                <AddIcon fontSize="small" />
+              <ListItemIcon className={sidebarClass('sub-item-icon')}>
+                <ColoredSidebarIcon icon={AddIcon} color={iconColors.add} fontSize="small" />
               </ListItemIcon>
               <ListItemText primary="Add Product" />
             </ListItemButton>
@@ -494,10 +497,10 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
               to={APP_ROUTES.DASHBOARD.IMPORT_PRODUCTS}
               selected={isActive(APP_ROUTES.DASHBOARD.IMPORT_PRODUCTS)}
               data-test-id="sidebar-import-products-item"
-              className={styles['dashboard-sidebar__sub-item']}
+              className={sidebarClass('sub-item')}
             >
-              <ListItemIcon className={styles['dashboard-sidebar__sub-item-icon']}>
-                <UploadIcon fontSize="small" />
+              <ListItemIcon className={sidebarClass('sub-item-icon')}>
+                <ColoredSidebarIcon icon={UploadIcon} color={iconColors.import} fontSize="small" />
               </ListItemIcon>
               <ListItemText primary="Import Products" />
             </ListItemButton>
@@ -510,16 +513,16 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
           to={APP_ROUTES.DASHBOARD.PACKAGES}
           selected={location.pathname === APP_ROUTES.DASHBOARD.PACKAGES}
           data-test-id="sidebar-packages-item"
-          className={`dashboard-sidebar__list-item dashboard-sidebar__parent-item ${open ? 'dashboard-sidebar__list-item--open' : 'dashboard-sidebar__list-item--closed'}`}
+          className={`${sidebarClass('list-item')} ${sidebarClass('parent-item')} ${open ? sidebarClass('list-item--open') : sidebarClass('list-item--closed')}`}
         >
           <ListItemIcon
-            className={`dashboard-sidebar__list-item-icon ${open ? 'dashboard-sidebar__list-item-icon--open' : 'dashboard-sidebar__list-item-icon--closed'}`}
+            className={`${sidebarClass('list-item-icon')} ${open ? sidebarClass('list-item-icon--open') : sidebarClass('list-item-icon--closed')}`}
           >
-            <LocalShippingIcon />
+            <ColoredSidebarIcon icon={Inventory2Icon} color={iconColors.packages} />
           </ListItemIcon>
           <ListItemText
             primary="Packages"
-            className={`dashboard-sidebar__list-item-text ${open ? 'dashboard-sidebar__list-item-text--visible' : 'dashboard-sidebar__list-item-text--hidden'}`}
+            className={`${sidebarClass('list-item-text')} ${open ? sidebarClass('list-item-text--visible') : sidebarClass('list-item-text--hidden')}`}
           />
           {open && (
             <IconButton
@@ -529,7 +532,7 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
                 e.stopPropagation()
                 handlePackagesToggle()
               }}
-              className={styles['dashboard-sidebar__expand-icon']}
+              className={sidebarClass('expand-icon')}
             >
               {packagesExpanded ? <ExpandLess /> : <ExpandMore />}
             </IconButton>
@@ -538,17 +541,17 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
 
         {/* Packages - Sub Items */}
         <Collapse in={packagesExpanded && open} timeout="auto" unmountOnExit>
-          <List component="div" disablePadding>
+          <List component="div" disablePadding className={sidebarClass('sub-list')}>
             {/* Add Package */}
             <ListItemButton
               component={RouterLink}
               to={APP_ROUTES.DASHBOARD.ADD_PACKAGE}
               selected={isActive(APP_ROUTES.DASHBOARD.ADD_PACKAGE)}
               data-test-id="sidebar-add-package-item"
-              className={styles['dashboard-sidebar__sub-item']}
+              className={sidebarClass('sub-item')}
             >
-              <ListItemIcon className={styles['dashboard-sidebar__sub-item-icon']}>
-                <AddIcon fontSize="small" />
+              <ListItemIcon className={sidebarClass('sub-item-icon')}>
+                <ColoredSidebarIcon icon={AddIcon} color={iconColors.add} fontSize="small" />
               </ListItemIcon>
               <ListItemText primary="Add Package" />
             </ListItemButton>
@@ -559,10 +562,10 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
               to={APP_ROUTES.DASHBOARD.IMPORT_PACKAGES}
               selected={isActive(APP_ROUTES.DASHBOARD.IMPORT_PACKAGES)}
               data-test-id="sidebar-import-packages-item"
-              className={styles['dashboard-sidebar__sub-item']}
+              className={sidebarClass('sub-item')}
             >
-              <ListItemIcon className={styles['dashboard-sidebar__sub-item-icon']}>
-                <UploadIcon fontSize="small" />
+              <ListItemIcon className={sidebarClass('sub-item-icon')}>
+                <ColoredSidebarIcon icon={UploadIcon} color={iconColors.import} fontSize="small" />
               </ListItemIcon>
               <ListItemText primary="Import Packages" />
             </ListItemButton>
@@ -575,16 +578,16 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
           to={APP_ROUTES.DASHBOARD.PICKUP_LOCATIONS}
           selected={location.pathname === APP_ROUTES.DASHBOARD.PICKUP_LOCATIONS}
           data-test-id="sidebar-pickup-locations-item"
-          className={`dashboard-sidebar__list-item dashboard-sidebar__parent-item ${open ? 'dashboard-sidebar__list-item--open' : 'dashboard-sidebar__list-item--closed'}`}
+          className={`${sidebarClass('list-item')} ${sidebarClass('parent-item')} ${open ? sidebarClass('list-item--open') : sidebarClass('list-item--closed')}`}
         >
           <ListItemIcon
-            className={`dashboard-sidebar__list-item-icon ${open ? 'dashboard-sidebar__list-item-icon--open' : 'dashboard-sidebar__list-item-icon--closed'}`}
+            className={`${sidebarClass('list-item-icon')} ${open ? sidebarClass('list-item-icon--open') : sidebarClass('list-item-icon--closed')}`}
           >
-            <LocationOnIcon />
+            <ColoredSidebarIcon icon={LocationOnIcon} color={iconColors.pickupLocations} />
           </ListItemIcon>
           <ListItemText
             primary="Pickup Locations"
-            className={`dashboard-sidebar__list-item-text ${open ? 'dashboard-sidebar__list-item-text--visible' : 'dashboard-sidebar__list-item-text--hidden'}`}
+            className={`${sidebarClass('list-item-text')} ${open ? sidebarClass('list-item-text--visible') : sidebarClass('list-item-text--hidden')}`}
           />
           {open && (
             <IconButton
@@ -594,7 +597,7 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
                 e.stopPropagation()
                 handlePickupLocationsToggle()
               }}
-              className={styles['dashboard-sidebar__expand-icon']}
+              className={sidebarClass('expand-icon')}
             >
               {pickupLocationsExpanded ? <ExpandLess /> : <ExpandMore />}
             </IconButton>
@@ -603,17 +606,17 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
 
         {/* Pickup Locations - Sub Items */}
         <Collapse in={pickupLocationsExpanded && open} timeout="auto" unmountOnExit>
-          <List component="div" disablePadding>
+          <List component="div" disablePadding className={sidebarClass('sub-list')}>
             {/* Add Pickup Location */}
             <ListItemButton
               component={RouterLink}
               to={APP_ROUTES.DASHBOARD.ADD_PICKUP_LOCATION}
               selected={isActive(APP_ROUTES.DASHBOARD.ADD_PICKUP_LOCATION)}
               data-test-id="sidebar-add-pickup-location-item"
-              className={styles['dashboard-sidebar__sub-item']}
+              className={sidebarClass('sub-item')}
             >
-              <ListItemIcon className={styles['dashboard-sidebar__sub-item-icon']}>
-                <AddIcon fontSize="small" />
+              <ListItemIcon className={sidebarClass('sub-item-icon')}>
+                <ColoredSidebarIcon icon={AddIcon} color={iconColors.add} fontSize="small" />
               </ListItemIcon>
               <ListItemText primary="Add Location" />
             </ListItemButton>
@@ -624,10 +627,10 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
               to={APP_ROUTES.DASHBOARD.IMPORT_PICKUP_LOCATIONS}
               selected={isActive(APP_ROUTES.DASHBOARD.IMPORT_PICKUP_LOCATIONS)}
               data-test-id="sidebar-import-pickup-locations-item"
-              className={styles['dashboard-sidebar__sub-item']}
+              className={sidebarClass('sub-item')}
             >
-              <ListItemIcon className={styles['dashboard-sidebar__sub-item-icon']}>
-                <UploadIcon fontSize="small" />
+              <ListItemIcon className={sidebarClass('sub-item-icon')}>
+                <ColoredSidebarIcon icon={UploadIcon} color={iconColors.import} fontSize="small" />
               </ListItemIcon>
               <ListItemText primary="Import Locations" />
             </ListItemButton>
@@ -640,16 +643,16 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
           to={APP_ROUTES.DASHBOARD.PURCHASE_ORDERS}
           selected={location.pathname === APP_ROUTES.DASHBOARD.PURCHASE_ORDERS}
           data-test-id="sidebar-purchase-orders-item"
-          className={`dashboard-sidebar__list-item dashboard-sidebar__parent-item ${open ? 'dashboard-sidebar__list-item--open' : 'dashboard-sidebar__list-item--closed'}`}
+          className={`${sidebarClass('list-item')} ${sidebarClass('parent-item')} ${open ? sidebarClass('list-item--open') : sidebarClass('list-item--closed')}`}
         >
           <ListItemIcon
-            className={`dashboard-sidebar__list-item-icon ${open ? 'dashboard-sidebar__list-item-icon--open' : 'dashboard-sidebar__list-item-icon--closed'}`}
+            className={`${sidebarClass('list-item-icon')} ${open ? sidebarClass('list-item-icon--open') : sidebarClass('list-item-icon--closed')}`}
           >
-            <ShoppingCartIcon />
+            <ColoredSidebarIcon icon={ShoppingCartIcon} color={iconColors.purchaseOrders} />
           </ListItemIcon>
           <ListItemText
             primary="Purchase Orders"
-            className={`dashboard-sidebar__list-item-text ${open ? 'dashboard-sidebar__list-item-text--visible' : 'dashboard-sidebar__list-item-text--hidden'}`}
+            className={`${sidebarClass('list-item-text')} ${open ? sidebarClass('list-item-text--visible') : sidebarClass('list-item-text--hidden')}`}
           />
           {open && (
             <IconButton
@@ -659,7 +662,7 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
                 e.stopPropagation()
                 handlePurchaseOrdersToggle()
               }}
-              className={styles['dashboard-sidebar__expand-icon']}
+              className={sidebarClass('expand-icon')}
             >
               {purchaseOrdersExpanded ? <ExpandLess /> : <ExpandMore />}
             </IconButton>
@@ -668,17 +671,17 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
 
         {/* Purchase Orders - Sub Items */}
         <Collapse in={purchaseOrdersExpanded && open} timeout="auto" unmountOnExit>
-          <List component="div" disablePadding>
+          <List component="div" disablePadding className={sidebarClass('sub-list')}>
             {/* Add Purchase Order */}
             <ListItemButton
               component={RouterLink}
               to={APP_ROUTES.DASHBOARD.ADD_PURCHASE_ORDER}
               selected={isActive(APP_ROUTES.DASHBOARD.ADD_PURCHASE_ORDER)}
               data-test-id="sidebar-add-purchase-order-item"
-              className={styles['dashboard-sidebar__sub-item']}
+              className={sidebarClass('sub-item')}
             >
-              <ListItemIcon className={styles['dashboard-sidebar__sub-item-icon']}>
-                <AddIcon fontSize="small" />
+              <ListItemIcon className={sidebarClass('sub-item-icon')}>
+                <ColoredSidebarIcon icon={AddIcon} color={iconColors.add} fontSize="small" />
               </ListItemIcon>
               <ListItemText primary="Add Order" />
             </ListItemButton>
@@ -689,10 +692,10 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
               to={APP_ROUTES.DASHBOARD.IMPORT_PURCHASE_ORDERS}
               selected={isActive(APP_ROUTES.DASHBOARD.IMPORT_PURCHASE_ORDERS)}
               data-test-id="sidebar-import-purchase-orders-item"
-              className={styles['dashboard-sidebar__sub-item']}
+              className={sidebarClass('sub-item')}
             >
-              <ListItemIcon className={styles['dashboard-sidebar__sub-item-icon']}>
-                <UploadIcon fontSize="small" />
+              <ListItemIcon className={sidebarClass('sub-item-icon')}>
+                <ColoredSidebarIcon icon={UploadIcon} color={iconColors.import} fontSize="small" />
               </ListItemIcon>
               <ListItemText primary="Import Orders" />
             </ListItemButton>
@@ -705,16 +708,16 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
           to={APP_ROUTES.DASHBOARD.SHIPMENTS}
           selected={location.pathname === APP_ROUTES.DASHBOARD.SHIPMENTS}
           data-test-id="sidebar-shipments-item"
-          className={`dashboard-sidebar__list-item dashboard-sidebar__parent-item ${open ? 'dashboard-sidebar__list-item--open' : 'dashboard-sidebar__list-item--closed'}`}
+          className={`${sidebarClass('list-item')} ${sidebarClass('parent-item')} ${open ? sidebarClass('list-item--open') : sidebarClass('list-item--closed')}`}
         >
           <ListItemIcon
-            className={`dashboard-sidebar__list-item-icon ${open ? 'dashboard-sidebar__list-item-icon--open' : 'dashboard-sidebar__list-item-icon--closed'}`}
+            className={`${sidebarClass('list-item-icon')} ${open ? sidebarClass('list-item-icon--open') : sidebarClass('list-item-icon--closed')}`}
           >
-            <LocalShippingIcon />
+            <ColoredSidebarIcon icon={LocalShippingIcon} color={iconColors.shipments} />
           </ListItemIcon>
           <ListItemText
             primary="Shipments"
-            className={`dashboard-sidebar__list-item-text ${open ? 'dashboard-sidebar__list-item-text--visible' : 'dashboard-sidebar__list-item-text--hidden'}`}
+            className={`${sidebarClass('list-item-text')} ${open ? sidebarClass('list-item-text--visible') : sidebarClass('list-item-text--hidden')}`}
           />
         </ListItemButton>
 
@@ -724,16 +727,16 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
           to={APP_ROUTES.DASHBOARD.MESSAGES}
           selected={location.pathname === APP_ROUTES.DASHBOARD.MESSAGES}
           data-test-id="sidebar-messages-item"
-          className={`dashboard-sidebar__list-item dashboard-sidebar__parent-item ${open ? 'dashboard-sidebar__list-item--open' : 'dashboard-sidebar__list-item--closed'}`}
+          className={`${sidebarClass('list-item')} ${sidebarClass('parent-item')} ${open ? sidebarClass('list-item--open') : sidebarClass('list-item--closed')}`}
         >
           <ListItemIcon
-            className={`dashboard-sidebar__list-item-icon ${open ? 'dashboard-sidebar__list-item-icon--open' : 'dashboard-sidebar__list-item-icon--closed'}`}
+            className={`${sidebarClass('list-item-icon')} ${open ? sidebarClass('list-item-icon--open') : sidebarClass('list-item-icon--closed')}`}
           >
-            <MessageIcon />
+            <ColoredSidebarIcon icon={MessageIcon} color={iconColors.messages} />
           </ListItemIcon>
           <ListItemText
             primary="Messages"
-            className={`dashboard-sidebar__list-item-text ${open ? 'dashboard-sidebar__list-item-text--visible' : 'dashboard-sidebar__list-item-text--hidden'}`}
+            className={`${sidebarClass('list-item-text')} ${open ? sidebarClass('list-item-text--visible') : sidebarClass('list-item-text--hidden')}`}
           />
           {open && (
             <IconButton
@@ -743,7 +746,7 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
                 e.stopPropagation()
                 handleMessagesToggle()
               }}
-              className={styles['dashboard-sidebar__expand-icon']}
+              className={sidebarClass('expand-icon')}
             >
               {messagesExpanded ? <ExpandLess /> : <ExpandMore />}
             </IconButton>
@@ -752,17 +755,17 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
 
         {/* Messages - Sub Items */}
         <Collapse in={messagesExpanded && open} timeout="auto" unmountOnExit>
-          <List component="div" disablePadding>
+          <List component="div" disablePadding className={sidebarClass('sub-list')}>
             {/* Add Message */}
             <ListItemButton
               component={RouterLink}
               to={APP_ROUTES.DASHBOARD.ADD_MESSAGE}
               selected={isActive(APP_ROUTES.DASHBOARD.ADD_MESSAGE)}
               data-test-id="sidebar-add-message-item"
-              className={styles['dashboard-sidebar__sub-item']}
+              className={sidebarClass('sub-item')}
             >
-              <ListItemIcon className={styles['dashboard-sidebar__sub-item-icon']}>
-                <AddIcon fontSize="small" />
+              <ListItemIcon className={sidebarClass('sub-item-icon')}>
+                <ColoredSidebarIcon icon={AddIcon} color={iconColors.add} fontSize="small" />
               </ListItemIcon>
               <ListItemText primary="Add Message" />
             </ListItemButton>
@@ -773,10 +776,10 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
               to={APP_ROUTES.DASHBOARD.IMPORT_MESSAGES}
               selected={isActive(APP_ROUTES.DASHBOARD.IMPORT_MESSAGES)}
               data-test-id="sidebar-import-messages-item"
-              className={styles['dashboard-sidebar__sub-item']}
+              className={sidebarClass('sub-item')}
             >
-              <ListItemIcon className={styles['dashboard-sidebar__sub-item-icon']}>
-                <UploadIcon fontSize="small" />
+              <ListItemIcon className={sidebarClass('sub-item-icon')}>
+                <ColoredSidebarIcon icon={UploadIcon} color={iconColors.import} fontSize="small" />
               </ListItemIcon>
               <ListItemText primary="Import Messages" />
             </ListItemButton>
@@ -789,16 +792,16 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
           to={APP_ROUTES.DASHBOARD.WEB_TEMPLATES}
           selected={location.pathname === APP_ROUTES.DASHBOARD.WEB_TEMPLATES}
           data-test-id="sidebar-web-templates-item"
-          className={`dashboard-sidebar__list-item dashboard-sidebar__parent-item ${open ? 'dashboard-sidebar__list-item--open' : 'dashboard-sidebar__list-item--closed'}`}
+          className={`${sidebarClass('list-item')} ${sidebarClass('parent-item')} ${open ? sidebarClass('list-item--open') : sidebarClass('list-item--closed')}`}
         >
           <ListItemIcon
-            className={`dashboard-sidebar__list-item-icon ${open ? 'dashboard-sidebar__list-item-icon--open' : 'dashboard-sidebar__list-item-icon--closed'}`}
+            className={`${sidebarClass('list-item-icon')} ${open ? sidebarClass('list-item-icon--open') : sidebarClass('list-item-icon--closed')}`}
           >
-            <WebIcon />
+            <ColoredSidebarIcon icon={WebIcon} color={iconColors.webTemplates} />
           </ListItemIcon>
           <ListItemText
             primary="Web Templates"
-            className={`dashboard-sidebar__list-item-text ${open ? 'dashboard-sidebar__list-item-text--visible' : 'dashboard-sidebar__list-item-text--hidden'}`}
+            className={`${sidebarClass('list-item-text')} ${open ? sidebarClass('list-item-text--visible') : sidebarClass('list-item-text--hidden')}`}
           />
           {open && (
             <IconButton
@@ -808,7 +811,7 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
                 e.stopPropagation()
                 handleWebTemplatesToggle()
               }}
-              className={styles['dashboard-sidebar__expand-icon']}
+              className={sidebarClass('expand-icon')}
             >
               {webTemplatesExpanded ? <ExpandLess /> : <ExpandMore />}
             </IconButton>
@@ -817,17 +820,17 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
 
         {/* Web Templates - Sub Items */}
         <Collapse in={webTemplatesExpanded && open} timeout="auto" unmountOnExit>
-          <List component="div" disablePadding>
+          <List component="div" disablePadding className={sidebarClass('sub-list')}>
             {/* Add Web Template */}
             <ListItemButton
               component={RouterLink}
               to={APP_ROUTES.DASHBOARD.ADD_WEB_TEMPLATE}
               selected={isActive(APP_ROUTES.DASHBOARD.ADD_WEB_TEMPLATE)}
               data-test-id="sidebar-add-web-template-item"
-              className={styles['dashboard-sidebar__sub-item']}
+              className={sidebarClass('sub-item')}
             >
-              <ListItemIcon className={styles['dashboard-sidebar__sub-item-icon']}>
-                <AddIcon fontSize="small" />
+              <ListItemIcon className={sidebarClass('sub-item-icon')}>
+                <ColoredSidebarIcon icon={AddIcon} color={iconColors.add} fontSize="small" />
               </ListItemIcon>
               <ListItemText primary="Add Template" />
             </ListItemButton>
@@ -838,10 +841,10 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
               to={APP_ROUTES.DASHBOARD.IMPORT_WEB_TEMPLATES}
               selected={isActive(APP_ROUTES.DASHBOARD.IMPORT_WEB_TEMPLATES)}
               data-test-id="sidebar-import-web-templates-item"
-              className={styles['dashboard-sidebar__sub-item']}
+              className={sidebarClass('sub-item')}
             >
-              <ListItemIcon className={styles['dashboard-sidebar__sub-item-icon']}>
-                <UploadIcon fontSize="small" />
+              <ListItemIcon className={sidebarClass('sub-item-icon')}>
+                <ColoredSidebarIcon icon={UploadIcon} color={iconColors.import} fontSize="small" />
               </ListItemIcon>
               <ListItemText primary="Import Templates" />
             </ListItemButton>
@@ -863,16 +866,16 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
             to={APP_ROUTES.DASHBOARD.SETTINGS}
             selected={isActive(APP_ROUTES.DASHBOARD.SETTINGS)}
             data-test-id="sidebar-settings-item"
-            className={`dashboard-sidebar__list-item dashboard-sidebar__parent-item ${open ? 'dashboard-sidebar__list-item--open' : 'dashboard-sidebar__list-item--closed'}`}
+            className={`${sidebarClass('list-item')} ${sidebarClass('parent-item')} ${open ? sidebarClass('list-item--open') : sidebarClass('list-item--closed')}`}
           >
             <ListItemIcon
-              className={`dashboard-sidebar__list-item-icon ${open ? 'dashboard-sidebar__list-item-icon--open' : 'dashboard-sidebar__list-item-icon--closed'}`}
+              className={`${sidebarClass('list-item-icon')} ${open ? sidebarClass('list-item-icon--open') : sidebarClass('list-item-icon--closed')}`}
             >
-              <SettingsIcon />
+              <ColoredSidebarIcon icon={SettingsIcon} color={iconColors.settings} />
             </ListItemIcon>
             <ListItemText
               primary="Settings"
-              className={`dashboard-sidebar__list-item-text ${open ? 'dashboard-sidebar__list-item-text--visible' : 'dashboard-sidebar__list-item-text--hidden'}`}
+              className={`${sidebarClass('list-item-text')} ${open ? sidebarClass('list-item-text--visible') : sidebarClass('list-item-text--hidden')}`}
             />
           </ListItemButton>
 
@@ -882,16 +885,16 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
             to={APP_ROUTES.DASHBOARD.QA_DASHBOARD}
             selected={isActive(APP_ROUTES.DASHBOARD.QA_DASHBOARD)}
             data-test-id="sidebar-qa-dashboard-item"
-            className={`dashboard-sidebar__list-item dashboard-sidebar__parent-item ${open ? 'dashboard-sidebar__list-item--open' : 'dashboard-sidebar__list-item--closed'}`}
+            className={`${sidebarClass('list-item')} ${sidebarClass('parent-item')} ${open ? sidebarClass('list-item--open') : sidebarClass('list-item--closed')}`}
           >
             <ListItemIcon
-              className={`dashboard-sidebar__list-item-icon ${open ? 'dashboard-sidebar__list-item-icon--open' : 'dashboard-sidebar__list-item-icon--closed'}`}
+              className={`${sidebarClass('list-item-icon')} ${open ? sidebarClass('list-item-icon--open') : sidebarClass('list-item-icon--closed')}`}
             >
-              <BugReportIcon />
+              <ColoredSidebarIcon icon={BugReportIcon} color={iconColors.qaDashboard} />
             </ListItemIcon>
             <ListItemText
               primary="QA Dashboard"
-              className={`dashboard-sidebar__list-item-text ${open ? 'dashboard-sidebar__list-item-text--visible' : 'dashboard-sidebar__list-item-text--hidden'}`}
+              className={`${sidebarClass('list-item-text')} ${open ? sidebarClass('list-item-text--visible') : sidebarClass('list-item-text--hidden')}`}
             />
           </ListItemButton>
 
@@ -901,16 +904,16 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
             to={APP_ROUTES.DASHBOARD.SUPPORT}
             selected={isActive(APP_ROUTES.DASHBOARD.SUPPORT)}
             data-test-id="sidebar-support-item"
-            className={`dashboard-sidebar__list-item dashboard-sidebar__parent-item ${open ? 'dashboard-sidebar__list-item--open' : 'dashboard-sidebar__list-item--closed'}`}
+            className={`${sidebarClass('list-item')} ${sidebarClass('parent-item')} ${open ? sidebarClass('list-item--open') : sidebarClass('list-item--closed')}`}
           >
             <ListItemIcon
-              className={`dashboard-sidebar__list-item-icon ${open ? 'dashboard-sidebar__list-item-icon--open' : 'dashboard-sidebar__list-item-icon--closed'}`}
+              className={`${sidebarClass('list-item-icon')} ${open ? sidebarClass('list-item-icon--open') : sidebarClass('list-item-icon--closed')}`}
             >
-              <SupportIcon />
+              <ColoredSidebarIcon icon={SupportIcon} color={iconColors.support} />
             </ListItemIcon>
             <ListItemText
               primary="Support"
-              className={`dashboard-sidebar__list-item-text ${open ? 'dashboard-sidebar__list-item-text--visible' : 'dashboard-sidebar__list-item-text--hidden'}`}
+              className={`${sidebarClass('list-item-text')} ${open ? sidebarClass('list-item-text--visible') : sidebarClass('list-item-text--hidden')}`}
             />
           </ListItemButton>
 
@@ -920,16 +923,16 @@ const DashboardSidebar = forwardRef<HTMLDivElement, DashboardSidebarProps>(({ op
             to={APP_ROUTES.DASHBOARD.DEVELOPER_DOCS}
             selected={isActive(APP_ROUTES.DASHBOARD.DEVELOPER_DOCS)}
             data-test-id="sidebar-developer-docs-item"
-            className={`dashboard-sidebar__list-item dashboard-sidebar__parent-item ${open ? 'dashboard-sidebar__list-item--open' : 'dashboard-sidebar__list-item--closed'}`}
+            className={`${sidebarClass('list-item')} ${sidebarClass('parent-item')} ${open ? sidebarClass('list-item--open') : sidebarClass('list-item--closed')}`}
           >
             <ListItemIcon
-              className={`dashboard-sidebar__list-item-icon ${open ? 'dashboard-sidebar__list-item-icon--open' : 'dashboard-sidebar__list-item-icon--closed'}`}
+              className={`${sidebarClass('list-item-icon')} ${open ? sidebarClass('list-item-icon--open') : sidebarClass('list-item-icon--closed')}`}
             >
-              <DescriptionIcon />
+              <ColoredSidebarIcon icon={DescriptionIcon} color={iconColors.developerDocs} />
             </ListItemIcon>
             <ListItemText
               primary="Developer Docs"
-              className={`dashboard-sidebar__list-item-text ${open ? 'dashboard-sidebar__list-item-text--visible' : 'dashboard-sidebar__list-item-text--hidden'}`}
+              className={`${sidebarClass('list-item-text')} ${open ? sidebarClass('list-item-text--visible') : sidebarClass('list-item-text--hidden')}`}
             />
           </ListItemButton>
         </Box>
