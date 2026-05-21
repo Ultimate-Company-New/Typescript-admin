@@ -27,6 +27,25 @@ import {
   ProductDetailsView,
 } from './components'
 
+type ProductResponseWithPolicies = ProductResponseModel & {
+  returnPolicies?: Array<{ returnWindowDays?: number | null }>
+}
+
+/** Reads return window days from flat or nested return-policy API payloads. */
+const resolveReturnWindowDaysFromProductResponse = (
+  response: ProductResponseWithPolicies
+): number => {
+  if (typeof response.returnWindowDays === 'number' && !Number.isNaN(response.returnWindowDays)) {
+    return response.returnWindowDays
+  }
+  const policies = response.returnPolicies
+  if (policies?.length) {
+    const activePolicy = policies[policies.length - 1]
+    return activePolicy?.returnWindowDays ?? 0
+  }
+  return 0
+}
+
 /**
  * Add/Edit/View Product Page
  * Features:
@@ -210,7 +229,7 @@ const AddEditProduct = (): React.JSX.Element => {
           price: response.price,
           discount: response.discount,
           isDiscountPercent: response.isDiscountPercent,
-          returnWindowDays: response.returnWindowDays,
+          returnWindowDays: resolveReturnWindowDaysFromProductResponse(response),
           length: response.length,
           breadth: response.breadth,
           height: response.height,
