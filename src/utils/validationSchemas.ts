@@ -87,9 +87,9 @@ export const clientSettingsSchema = z.object({
     .string()
     .min(1, 'Website is required')
     .regex(/^https?:\/\/.*/, 'Website must start with http:// or https://'),
-  sendGridApiKey: z.string().optional(),
-  sendGridEmailAddress: z.union([emailSchema, z.literal('')]).optional(),
-  sendgridSenderName: z.string().optional(),
+  brevoApiKey: z.string().optional(),
+  brevoEmailAddress: z.union([emailSchema, z.literal('')]).optional(),
+  brevoSenderName: z.string().optional(),
   razorpayApiKey: z.string().optional(),
   razorpayApiSecret: z.string().optional(),
   imgbbApiKey: z.string().optional(),

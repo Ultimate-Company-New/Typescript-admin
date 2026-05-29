@@ -51,9 +51,9 @@ const Settings = (): JSX.Element => {
       description: '',
       supportEmail: '',
       website: '',
-      sendGridApiKey: '',
-      sendGridEmailAddress: '',
-      sendgridSenderName: '',
+      brevoApiKey: '',
+      brevoEmailAddress: '',
+      brevoSenderName: '',
       razorpayApiKey: '',
       razorpayApiSecret: '',
       imgbbApiKey: '',
@@ -112,9 +112,9 @@ const Settings = (): JSX.Element => {
           supportEmail: response.supportEmail,
           website: response.website,
           logoBase64: response.logoUrl ?? '',
-          sendGridApiKey: response.sendGridApiKey ?? '',
-          sendGridEmailAddress: response.sendGridEmailAddress ?? '',
-          sendgridSenderName: response.sendgridSenderName ?? '',
+          brevoApiKey: response.brevoApiKey ?? '',
+          brevoEmailAddress: response.brevoEmailAddress ?? '',
+          brevoSenderName: response.brevoSenderName ?? '',
           razorpayApiKey: response.razorpayApiKey ?? '',
           razorpayApiSecret: response.razorpayApiSecret ?? '',
           imgbbApiKey: response.imgbbApiKey ?? '',
@@ -193,9 +193,9 @@ const Settings = (): JSX.Element => {
           supportEmail: string
           website: string
           logoBase64?: string
-          sendGridApiKey?: string
-          sendGridEmailAddress?: string
-          sendgridSenderName?: string
+          brevoApiKey?: string
+          brevoEmailAddress?: string
+          brevoSenderName?: string
           razorpayApiKey?: string
           razorpayApiSecret?: string
           imgbbApiKey?: string
@@ -218,9 +218,9 @@ const Settings = (): JSX.Element => {
           description: typedData.description,
           supportEmail: typedData.supportEmail,
           website: typedData.website,
-          sendGridApiKey: typedData.sendGridApiKey,
-          sendGridEmailAddress: typedData.sendGridEmailAddress,
-          sendgridSenderName: typedData.sendgridSenderName,
+          brevoApiKey: typedData.brevoApiKey,
+          brevoEmailAddress: typedData.brevoEmailAddress,
+          brevoSenderName: typedData.brevoSenderName,
           razorpayApiKey: typedData.razorpayApiKey,
           razorpayApiSecret: typedData.razorpayApiSecret,
           imgbbApiKey: typedData.imgbbApiKey,
@@ -313,11 +313,11 @@ const Settings = (): JSX.Element => {
         ],
       },
       {
-        title: 'SendGrid Configuration',
+        title: 'Brevo Configuration',
         fields: [
           {
-            name: 'sendGridApiKey' as const,
-            label: 'SendGrid API Key',
+            name: 'brevoApiKey' as const,
+            label: 'Brevo API Key',
             type: FieldType.Password as FieldType,
             required: false,
             gridSize: {
@@ -326,8 +326,8 @@ const Settings = (): JSX.Element => {
             },
           },
           {
-            name: 'sendGridEmailAddress' as const,
-            label: 'SendGrid Email Address',
+            name: 'brevoEmailAddress' as const,
+            label: 'Brevo Email Address',
             type: FieldType.Email as FieldType,
             required: false,
             gridSize: {
@@ -336,8 +336,8 @@ const Settings = (): JSX.Element => {
             },
           },
           {
-            name: 'sendgridSenderName' as const,
-            label: 'SendGrid Sender Name',
+            name: 'brevoSenderName' as const,
+            label: 'Brevo Sender Name',
             type: FieldType.Text as FieldType,
             required: false,
             gridSize: {

@@ -20,7 +20,7 @@ export interface MessageResponseModel {
   sendAsEmail?: boolean
   isDeleted: boolean
   createdByUserId: number
-  sendgridEmailBatchId?: string
+  brevoEmailBatchId?: string
   createdAt: string
   updatedAt: string
   createdUser: string

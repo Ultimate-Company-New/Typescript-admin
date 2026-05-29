@@ -32,10 +32,10 @@ const FillSettingsTestDataButton = ({ setValue }: FillSettingsTestDataButtonProp
       setValue('supportEmail', 'support@ultimatecompany.com')
       setValue('website', 'https://www.ultimatecompany.com')
 
-      // SendGrid Configuration (constants provided by user)
-      setValue('sendGridApiKey', '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')
-      setValue('sendGridEmailAddress', 'nahushrai@hotmail.com')
-      setValue('sendgridSenderName', 'Ultimate Company Support')
+      // Brevo Configuration (constants provided by user)
+      setValue('brevoApiKey', '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')
+      setValue('brevoEmailAddress', 'nahushrai@hotmail.com')
+      setValue('brevoSenderName', 'Ultimate Company Support')
 
       // Razorpay Configuration
       setValue('razorpayApiKey', 'rzp_test_1234567890abcd')
