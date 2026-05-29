@@ -17,6 +17,10 @@ export interface ProductBatchItem {
   productId: number;
   title: string;
   price: number;
+  brand?: string;
+  upc?: string;
+  model?: string;
+  weightKgs?: number;
   discount?: number;
   isDiscountPercent?: boolean;
   mainImageUrl?: string;
@@ -58,6 +62,7 @@ export interface FillTestDataButtonProps {
 export interface PurchaseOrderProductItemForm {
   productId: number;
   productTitle: string;
+  title?: string;
   quantity: number;
   pricePerUnit: number;
   images?: ProductImageInfo[];

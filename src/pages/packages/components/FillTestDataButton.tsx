@@ -8,6 +8,7 @@ import { CircularProgress, Fab, Tooltip } from '@mui/material'
 
 import styles from '../../../styles/Packages.module.scss'
 import { generatePackageFormTest } from '../../../utils/generateTestData'
+import type { PackageType } from '../../../models/api-models/PackageModels'
 import type { PackageFormData } from '../../../utils/validationSchemas'
 
 interface FillTestDataButtonProps {
@@ -38,7 +39,7 @@ const FillTestDataButton = ({ reset, setValue, isEdit }: FillTestDataButtonProps
         setValue('maxWeight', testData.maxWeight, { shouldValidate: true })
         setValue('standardCapacity', testData.standardCapacity, { shouldValidate: true })
         setValue('pricePerUnit', testData.pricePerUnit, { shouldValidate: true })
-        setValue('packageType', testData.packageType, { shouldValidate: true })
+        setValue('packageType', testData.packageType as PackageType, { shouldValidate: true })
         setValue('pickupLocationQuantities', testData.pickupLocationQuantities ?? {}, { shouldValidate: true })
         setValue('notes', testData.notes ?? '', { shouldValidate: true })
       } else {
@@ -51,7 +52,7 @@ const FillTestDataButton = ({ reset, setValue, isEdit }: FillTestDataButtonProps
           maxWeight: testData.maxWeight,
           standardCapacity: testData.standardCapacity,
           pricePerUnit: testData.pricePerUnit,
-          packageType: testData.packageType,
+          packageType: testData.packageType as PackageType,
           pickupLocationQuantities: testData.pickupLocationQuantities ?? {},
           notes: testData.notes ?? '',
         })

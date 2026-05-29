@@ -101,8 +101,19 @@ const FillTestDataButton = ({
       // Fetch a random agent
       const agentData = await fetchRandomAgent()
 
+      const address = testData.address ?? {
+        streetAddress: '',
+        streetAddress2: '',
+        streetAddress3: '',
+        city: '',
+        state: '',
+        postalCode: '',
+        country: 'India',
+        addressType: 'OFFICE',
+      }
+
       // Set state first so cities dropdown populates
-      setSelectedState(testData.address.state)
+      setSelectedState(address.state ?? '')
 
       // Set initial agent option for the lazy autocomplete display
       if (agentData) {
@@ -124,21 +135,21 @@ const FillTestDataButton = ({
         fax: testData.fax,
         assignedAgentId: agentData?.userId,
         address: {
-          streetAddress: testData.address.streetAddress,
-          streetAddress2: testData.address.streetAddress2,
-          streetAddress3: testData.address.streetAddress3,
+          streetAddress: address.streetAddress,
+          streetAddress2: address.streetAddress2,
+          streetAddress3: address.streetAddress3,
           city: '', // Will be set after state change
-          state: testData.address.state,
-          postalCode: testData.address.postalCode,
-          country: testData.address.country,
-          addressType: testData.address.addressType,
+          state: address.state,
+          postalCode: address.postalCode,
+          country: address.country,
+          addressType: address.addressType,
         },
         notes: testData.notes,
       })
 
       // Set the city after a small delay to ensure the cities dropdown is populated
       setTimeout(() => {
-        setValue('address.city', testData.address.city)
+        setValue('address.city', address.city ?? '')
         setFilling(false)
         toast.success('Test data filled successfully!')
       }, 100)

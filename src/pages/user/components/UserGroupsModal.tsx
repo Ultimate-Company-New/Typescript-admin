@@ -1,11 +1,10 @@
-import { format } from 'date-fns'
-
 import { Close as CloseIcon, Group as GroupIcon } from '@mui/icons-material'
 import { Box, Chip, Dialog, DialogContent, DialogTitle, Grid, IconButton, Paper } from '@mui/material'
 
 import { BodyText, Subheader } from '../../../components/fonts'
 import { type UserGroupResponseModel } from '../../../models/api-models'
 import styles from '../../../styles/DataGrid.module.scss'
+import { formatApiDateTime } from '../../../utils/dateTimeHelper'
 
 interface UserGroupsModalProps {
   open: boolean
@@ -50,43 +49,47 @@ const UserGroupsModal = ({ open, onClose, userGroups, userName }: UserGroupsModa
         </Box>
       ) : (
         <Grid container spacing={2}>
-          {userGroups.map(group => (
-            <Grid item xs={12} sm={6} key={group.groupId}>
-              <Paper
-                elevation={2}
-                className={styles['user-groups-modal__group-card']}
-                data-test-id="user-groups-modal-card"
-                data-group-id={group.groupId}
-                data-group-name={group.groupName}
-                data-created-at={group.createdAt ?? ''}
-              >
-                <Box className={styles['user-groups-modal__group-card-header']}>
-                  <GroupIcon className={styles['user-groups-modal__group-icon']} sx={{ color: 'primary.main' }} />
-                  <Subheader label={group.groupName} className={styles['user-groups-modal__group-name']} />
-                </Box>
+          {userGroups.map(group => {
+            const createdLabel = formatApiDateTime(group.createdAt, 'MMM dd, yyyy')
 
-                {group.description && (
-                  <BodyText
-                    variant="body2"
-                    className={styles['user-groups-modal__group-description']}
-                  >
-                    {group.description}
-                  </BodyText>
-                )}
+            return (
+              <Grid item xs={12} sm={6} key={group.groupId}>
+                <Paper
+                  elevation={2}
+                  className={styles['user-groups-modal__group-card']}
+                  data-test-id="user-groups-modal-card"
+                  data-group-id={group.groupId}
+                  data-group-name={group.groupName}
+                  data-created-at={group.createdAt ?? ''}
+                >
+                  <Box className={styles['user-groups-modal__group-card-header']}>
+                    <GroupIcon className={styles['user-groups-modal__group-icon']} sx={{ color: 'primary.main' }} />
+                    <Subheader label={group.groupName} className={styles['user-groups-modal__group-name']} />
+                  </Box>
 
-                <Box className={styles['user-groups-modal__group-metadata']}>
-                  {group.createdAt && (
-                    <Chip
-                      label={`Created: ${format(new Date(group.createdAt), 'MMM dd, yyyy')}`}
-                      size="small"
-                      variant="outlined"
-                      className={styles['user-groups-modal__metadata-chip']}
-                    />
+                  {group.description && (
+                    <BodyText
+                      variant="body2"
+                      className={styles['user-groups-modal__group-description']}
+                    >
+                      {group.description}
+                    </BodyText>
                   )}
-                </Box>
-              </Paper>
-            </Grid>
-          ))}
+
+                  <Box className={styles['user-groups-modal__group-metadata']}>
+                    {createdLabel ? (
+                      <Chip
+                        label={`Created: ${createdLabel}`}
+                        size="small"
+                        variant="outlined"
+                        className={styles['user-groups-modal__metadata-chip']}
+                      />
+                    ) : null}
+                  </Box>
+                </Paper>
+              </Grid>
+            )
+          })}
         </Grid>
       )}
     </DialogContent>

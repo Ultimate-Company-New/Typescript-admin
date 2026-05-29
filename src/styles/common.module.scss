@@ -59,6 +59,22 @@
   }
 }
 
+// Shared bordered notes box used on entity view pages (Products, Packages, Promos, etc.)
+.view-notes {
+  &__container {
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 8px;
+    padding: 16px;
+    background-color: #fafafa;
+    min-height: 60px;
+  }
+
+  &__text {
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+}
+
 .section {
   margin-top: 24px;
   padding: 24px;

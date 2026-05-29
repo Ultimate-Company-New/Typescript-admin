@@ -1,0 +1,32 @@
+name: Build & Unit Test
+
+on:
+  workflow_call:
+    inputs:
+      pr_number:
+        required: true
+        type: string
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install Dependencies
+        run: npm ci || npm install
+
+      - name: Run Type Check
+        run: npm run type-check
+
+      - name: Build Application
+        run: npm run build

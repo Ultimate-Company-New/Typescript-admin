@@ -10,7 +10,6 @@
 export interface AddressRequestModel {
   addressId?: number
   userId?: number
-  clientId?: number
   streetAddress?: string
   streetAddress2?: string
   streetAddress3?: string
@@ -37,7 +36,7 @@ export interface AddressRequestModel {
 export interface AddressResponseModel {
   addressId: number
   userId?: number
-  clientId?: number
+  addressType: string
   streetAddress: string
   streetAddress2?: string
   streetAddress3?: string
@@ -46,11 +45,15 @@ export interface AddressResponseModel {
   postalCode?: string
   zipCode?: string // Keep for backward compatibility
   country: string
-  addressType: string
   nameOnAddress?: string
   emailOnAddress?: string
   phoneOnAddress?: string
   isPrimary: boolean
+  isDeleted?: boolean
   createdAt?: string
   updatedAt?: string
+  modifiedAt?: string
+  createdBy?: string
+  modifiedBy?: string
+  notes?: string
 }

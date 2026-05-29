@@ -2,13 +2,13 @@ import { Close as CloseIcon } from '@mui/icons-material'
 import { Box, Chip, Dialog, DialogContent, DialogTitle, Divider, IconButton, Paper } from '@mui/material'
 
 import { BodyText, Subheader } from '../../../components/fonts'
-import { type UserPermissionInfo } from '../../../models/api-models'
+import { type PermissionResponseModel } from '../../../models/api-models'
 import styles from '../../../styles/DataGrid.module.scss'
 
 interface PermissionsModalProps {
   open: boolean
   onClose: () => void
-  permissions: UserPermissionInfo[]
+  permissions: PermissionResponseModel[]
   userName: string
 }
 
@@ -20,7 +20,7 @@ const normalizeTestId = (value?: string): string => (value ?? 'uncategorized').t
 
 const PermissionsModal = ({ open, onClose, permissions, userName }: PermissionsModalProps): JSX.Element => {
   // Group permissions by category
-  const groupedPermissions = permissions.reduce<Record<string, UserPermissionInfo[]>>((acc, permission) => {
+  const groupedPermissions = permissions.reduce<Record<string, PermissionResponseModel[]>>((acc, permission) => {
     const category = permission.category ?? 'Uncategorized'
     if (!(category in acc)) {
       acc[category] = []

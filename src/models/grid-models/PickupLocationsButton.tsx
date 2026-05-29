@@ -35,6 +35,7 @@ const PickupLocationsButton = ({ locations, productTitle }: PickupLocationsButto
   return (
     <>
       <IconButton
+        data-test-id="product-pickup-locations-button"
         onClick={handleOpen}
         size="small"
         sx={{
@@ -44,7 +45,11 @@ const PickupLocationsButton = ({ locations, productTitle }: PickupLocationsButto
           },
         }}
       >
-        <Badge badgeContent={locations.length} color="primary">
+        <Badge
+          badgeContent={locations.length}
+          color="primary"
+          data-test-id="product-pickup-locations-badge"
+        >
           <LocationIcon />
         </Badge>
       </IconButton>

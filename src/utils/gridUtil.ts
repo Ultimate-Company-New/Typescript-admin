@@ -1,7 +1,7 @@
 import * as React from 'react'
 
-import { format } from 'date-fns'
 import { toast } from 'react-toastify'
+import { formatApiDisplayDate, formatApiUtcTimestamp } from './dateTimeHelper'
 import * as XLSX from 'xlsx'
 import type { ZodType } from 'zod'
 
@@ -434,21 +434,7 @@ export const formatPhone = (value: string | number | null | undefined, emptyText
  *   valueFormatter: (value) => formatUTCTimestamp(value),
  * }
  */
-export const formatUTCTimestamp = (
-  value: unknown,
-  formatString: string = 'MMM dd, yyyy HH:mm',
-  emptyText: string = 'Never',
-  showUTCSuffix: boolean = true,
-): string => {
-  if (!value) return emptyText
-
-  try {
-    const formattedDate = format(new Date(value as string), formatString)
-    return showUTCSuffix ? `${formattedDate} UTC` : formattedDate
-  } catch {
-    return String(value)
-  }
-}
+export const formatUTCTimestamp = formatApiUtcTimestamp
 
 /**
  * Utility function to format date as a string (for valueFormatter)
@@ -468,15 +454,7 @@ export const formatUTCTimestamp = (
  *   valueFormatter: (value) => formatDate(value, 'MM/dd/yyyy', 'N/A'),
  * }
  */
-export const formatDate = (value: unknown, formatString: string = 'do MMM yyyy', emptyText: string = '—'): string => {
-  if (!value) return emptyText
-
-  try {
-    return format(new Date(value as string), formatString)
-  } catch {
-    return String(value)
-  }
-}
+export const formatDate = formatApiDisplayDate
 
 /**
  * Utility function to get state abbreviation

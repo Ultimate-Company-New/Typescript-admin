@@ -148,12 +148,16 @@ const PickupLocationCard = ({ location: item, index = 0 }: PickupLocationCardPro
       variant="outlined"
       className={styles['pickup-location-card']}
       key={locationId ?? index}
+      data-test-id={`pickup-location-card-${locationId ?? index}`}
     >
       <CardContent>
         {/* Location Name */}
         <Box className={styles['pickup-location-card__header']}>
           <LocationOnIcon color="primary" fontSize="small" />
-          <BodyText className={styles['pickup-location-card__title']}>
+          <BodyText
+            data-test-id={`pickup-location-card-${locationId ?? index}-title`}
+            className={styles['pickup-location-card__title']}
+          >
             {locationName}
           </BodyText>
         </Box>
@@ -162,6 +166,7 @@ const PickupLocationCard = ({ location: item, index = 0 }: PickupLocationCardPro
         {availableStock != null && (
           <Box className={styles['pickup-location-card__stock']}>
             <Chip
+              data-test-id={`pickup-location-card-${locationId ?? index}-available-stock`}
               label={`Available Stock: ${availableStock}`}
               size="small"
               color={availableStock > 0 ? (isLowStock ? 'warning' : 'success') : 'error'}
@@ -195,7 +200,10 @@ const PickupLocationCard = ({ location: item, index = 0 }: PickupLocationCardPro
                     <SecondaryFont className={styles['pickup-location-card__inventory-label']}>
                       Reorder Level
                     </SecondaryFont>
-                    <BodyText className={styles['pickup-location-card__inventory-value']}>
+                    <BodyText
+                      data-test-id={`pickup-location-card-${locationId ?? index}-reorder-level-value`}
+                      className={styles['pickup-location-card__inventory-value']}
+                    >
                       {reorderLevel}
                     </BodyText>
                   </Box>
@@ -206,7 +214,10 @@ const PickupLocationCard = ({ location: item, index = 0 }: PickupLocationCardPro
                     <SecondaryFont className={styles['pickup-location-card__inventory-label']}>
                       Max Stock
                     </SecondaryFont>
-                    <BodyText className={styles['pickup-location-card__inventory-value']}>
+                    <BodyText
+                      data-test-id={`pickup-location-card-${locationId ?? index}-max-stock-value`}
+                      className={styles['pickup-location-card__inventory-value']}
+                    >
                       {maxStockLevel}
                     </BodyText>
                   </Box>
@@ -218,6 +229,7 @@ const PickupLocationCard = ({ location: item, index = 0 }: PickupLocationCardPro
                       Stock Level
                     </SecondaryFont>
                     <Chip
+                      data-test-id={`pickup-location-card-${locationId ?? index}-stock-level`}
                       label={`${stockPercentage}%`}
                       size="small"
                       color={stockPercentage > 50 ? 'success' : stockPercentage > 20 ? 'warning' : 'error'}
@@ -246,21 +258,57 @@ const PickupLocationCard = ({ location: item, index = 0 }: PickupLocationCardPro
             Address:
           </SecondaryFont>
           {hasAddress ? (
-            <Box component="div">
+            <Box component="div" data-test-id={`pickup-location-card-${locationId ?? index}-address`}>
               {nameOnAddress != null && (
-                <BodyText className={styles['pickup-location-card__name']}>{nameOnAddress}</BodyText>
+                <BodyText
+                  data-test-id={`pickup-location-card-${locationId ?? index}-address-name`}
+                  className={styles['pickup-location-card__name']}
+                >
+                  {nameOnAddress}
+                </BodyText>
               )}
-              {streetAddress != null && <BodyText variant="body2">{streetAddress}</BodyText>}
-              {streetAddress2 != null && <BodyText variant="body2">{streetAddress2}</BodyText>}
-              {streetAddress3 != null && <BodyText variant="body2">{streetAddress3}</BodyText>}
+              {streetAddress != null && (
+                <BodyText
+                  data-test-id={`pickup-location-card-${locationId ?? index}-address-street-0`}
+                  variant="body2"
+                >
+                  {streetAddress}
+                </BodyText>
+              )}
+              {streetAddress2 != null && (
+                <BodyText
+                  data-test-id={`pickup-location-card-${locationId ?? index}-address-street-1`}
+                  variant="body2"
+                >
+                  {streetAddress2}
+                </BodyText>
+              )}
+              {streetAddress3 != null && (
+                <BodyText
+                  data-test-id={`pickup-location-card-${locationId ?? index}-address-street-2`}
+                  variant="body2"
+                >
+                  {streetAddress3}
+                </BodyText>
+              )}
               {(city != null || state != null) && (
-                <BodyText variant="body2">
+                <BodyText
+                  data-test-id={`pickup-location-card-${locationId ?? index}-address-city-state-postal`}
+                  variant="body2"
+                >
                   {city}
                   {city && state && ', '}
                   {state} {postalCode ?? ''}
                 </BodyText>
               )}
-              {country != null && <BodyText variant="body2">{country}</BodyText>}
+              {country != null && (
+                <BodyText
+                  data-test-id={`pickup-location-card-${locationId ?? index}-address-country`}
+                  variant="body2"
+                >
+                  {country}
+                </BodyText>
+              )}
             </Box>
           ) : (
             <SecondaryFont className={styles['pickup-location-card__no-address']}>
@@ -276,9 +324,10 @@ const PickupLocationCard = ({ location: item, index = 0 }: PickupLocationCardPro
               <Box className={styles['pickup-location-card__contact-row']}>
                 <PhoneIcon fontSize="small" className={styles['pickup-location-card__contact-icon']} />
                 <BodyText
+                  data-test-id={`pickup-location-card-${locationId ?? index}-phone`}
                   variant="body2"
                   component="a"
-                  href={`tel:${phoneOnAddress}`}
+                  {...({ href: `tel:${phoneOnAddress}` } as React.ComponentProps<typeof BodyText>)}
                   className={styles['pickup-location-card__contact-link']}
                 >
                   {phoneOnAddress}
@@ -289,9 +338,10 @@ const PickupLocationCard = ({ location: item, index = 0 }: PickupLocationCardPro
               <Box className={styles['pickup-location-card__contact-row']}>
                 <EmailIcon fontSize="small" className={styles['pickup-location-card__contact-icon']} />
                 <BodyText
+                  data-test-id={`pickup-location-card-${locationId ?? index}-email`}
                   variant="body2"
                   component="a"
-                  href={`mailto:${emailOnAddress}`}
+                  {...({ href: `mailto:${emailOnAddress}` } as React.ComponentProps<typeof BodyText>)}
                   className={styles['pickup-location-card__contact-link']}
                 >
                   {emailOnAddress}

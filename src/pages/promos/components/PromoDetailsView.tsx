@@ -2,8 +2,9 @@ import type React from 'react'
 
 import { Box, Divider, Grid, Paper } from '@mui/material'
 
-import { BodyText, Subheader } from '../../../components/fonts'
+import { BodyText, FieldLabel, Subheader } from '../../../components/fonts'
 import styles from '../../../styles/Promos.module.scss'
+import commonStyles from '../../../styles/common.module.scss'
 import type { PromoFormData } from '../../../utils/validationSchemas'
 
 interface PromoDetailsViewProps {
@@ -75,8 +76,8 @@ const PromoDetailsView = ({ watchedValues }: PromoDetailsViewProps): React.JSX.E
           {/* Promo Code */}
           <Grid item xs={12} sm={6}>
             <Box className={styles['promo-details-view__field']}>
-              <BodyText className={styles['promo-details-view__label']}>Promo Code</BodyText>
-              <BodyText className={styles['promo-details-view__value']}>
+              <FieldLabel>Promo Code</FieldLabel>
+              <BodyText data-test-id="promo-view-promo-code" className={styles['promo-details-view__value']}>
                 {watchedValues.promoCode?.toUpperCase() ?? '—'}
               </BodyText>
             </Box>
@@ -85,17 +86,22 @@ const PromoDetailsView = ({ watchedValues }: PromoDetailsViewProps): React.JSX.E
           {/* Discount Value */}
           <Grid item xs={12} sm={6}>
             <Box className={styles['promo-details-view__field']}>
-              <BodyText className={styles['promo-details-view__label']}>Discount Value</BodyText>
-              <BodyText className={styles['promo-details-view__value']}>{formatDiscount()}</BodyText>
+              <FieldLabel>Discount Value</FieldLabel>
+              <BodyText data-test-id="promo-view-discount-value" className={styles['promo-details-view__value']}>
+                {formatDiscount()}
+              </BodyText>
             </Box>
           </Grid>
 
           {/* Discount Type */}
           <Grid item xs={12} sm={6}>
             <Box className={styles['promo-details-view__field']}>
-              <BodyText className={styles['promo-details-view__label']}>Discount Type</BodyText>
+              <FieldLabel>Discount Type</FieldLabel>
               <Box>
-                <span className={`${styles['promo-details-view__badge']} ${getPromoBadgeClass()}`}>
+                <span
+                  data-test-id="promo-view-discount-type"
+                  className={`${styles['promo-details-view__badge']} ${getPromoBadgeClass()}`}
+                >
                   {watchedValues.isPercent ? 'Percentage' : 'Fixed Amount'}
                 </span>
               </Box>
@@ -105,24 +111,28 @@ const PromoDetailsView = ({ watchedValues }: PromoDetailsViewProps): React.JSX.E
           {/* Start Date */}
           <Grid item xs={12} sm={6}>
             <Box className={styles['promo-details-view__field']}>
-              <BodyText className={styles['promo-details-view__label']}>Start Date</BodyText>
-              <BodyText className={styles['promo-details-view__value']}>{formatDate(watchedValues.startDate)}</BodyText>
+              <FieldLabel>Start Date</FieldLabel>
+              <BodyText data-test-id="promo-view-start-date" className={styles['promo-details-view__value']}>
+                {formatDate(watchedValues.startDate)}
+              </BodyText>
             </Box>
           </Grid>
 
           {/* Expiry Date */}
           <Grid item xs={12} sm={6}>
             <Box className={styles['promo-details-view__field']}>
-              <BodyText className={styles['promo-details-view__label']}>Expiry Date</BodyText>
-              <BodyText className={styles['promo-details-view__value']}>{formatDate(watchedValues.expiryDate)}</BodyText>
+              <FieldLabel>Expiry Date</FieldLabel>
+              <BodyText data-test-id="promo-view-expiry-date" className={styles['promo-details-view__value']}>
+                {formatDate(watchedValues.expiryDate)}
+              </BodyText>
             </Box>
           </Grid>
 
           {/* Description */}
           <Grid item xs={12}>
             <Box className={styles['promo-details-view__field']}>
-              <BodyText className={styles['promo-details-view__label']}>Description</BodyText>
-              <BodyText className={styles['promo-details-view__value']}>
+              <FieldLabel>Description</FieldLabel>
+              <BodyText data-test-id="promo-view-description" className={styles['promo-details-view__value']}>
                 {watchedValues.description ?? '—'}
               </BodyText>
             </Box>
@@ -131,10 +141,12 @@ const PromoDetailsView = ({ watchedValues }: PromoDetailsViewProps): React.JSX.E
           {/* Notes */}
           <Grid item xs={12}>
             <Box className={styles['promo-details-view__field']}>
-              <BodyText className={styles['promo-details-view__label']}>Notes</BodyText>
-              <BodyText className={styles['promo-details-view__value']}>
-                {watchedValues.notes || '—'}
-              </BodyText>
+              <FieldLabel>Additional Notes</FieldLabel>
+              <Box className={commonStyles['view-notes__container']}>
+                <BodyText data-test-id="promo-view-notes" className={commonStyles['view-notes__text']}>
+                  {watchedValues.notes || '—'}
+                </BodyText>
+              </Box>
             </Box>
           </Grid>
         </Grid>

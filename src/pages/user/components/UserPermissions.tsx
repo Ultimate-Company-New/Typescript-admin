@@ -204,6 +204,7 @@ const UserPermissions = ({
                     key={permission.permissionId}
                     control={
                       <Checkbox
+                        data-test-id={`user-view-permission-checkbox-${permission.permissionId}`}
                         checked={localSelectedIds.includes(permission.permissionId)}
                         onChange={e => {
                           handlePermissionChange(permission.permissionId, e.target.checked)

@@ -97,6 +97,10 @@ export interface LazyAutocompleteInputProps
    * Use this when you only have the value and need to display it
    */
   value?: string | number | null
+  /**
+   * Input placeholder
+   */
+  placeholder?: string
 }
 
 /**
@@ -127,6 +131,7 @@ const LazyAutocompleteInput = forwardRef<HTMLDivElement, LazyAutocompleteInputPr
       initialOption,
       value,
       onChange,
+      placeholder = 'Type to search...',
       ...props
     },
     ref,
@@ -272,7 +277,7 @@ const LazyAutocompleteInput = forwardRef<HTMLDivElement, LazyAutocompleteInputPr
      */
     const handleChange = useCallback(
       (
-        event: React.SyntheticEvent,
+        _event: React.SyntheticEvent,
         newValue: LazyOption | null,
         reason: 'selectOption' | 'createOption' | 'removeOption' | 'blur' | 'clear',
         details?: { option: LazyOption } | undefined,
@@ -421,7 +426,7 @@ const LazyAutocompleteInput = forwardRef<HTMLDivElement, LazyAutocompleteInputPr
             error={error}
             helperText={helperText}
             className={styles['filled-input']}
-            placeholder="Type to search..."
+            placeholder={placeholder}
             InputLabelProps={{
               shrink: true,
             }}

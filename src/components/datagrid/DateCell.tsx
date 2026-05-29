@@ -1,4 +1,4 @@
-import { formatDate } from '../../utils/gridUtil'
+import { formatApiDisplayDate } from '../../utils/dateTimeHelper'
 
 /**
  * Props for DateCell component
@@ -54,6 +54,6 @@ export interface DateCellProps {
  * }
  */
 export const DateCell = ({ value, formatString = 'do MMM yyyy', emptyText = '—' }: DateCellProps): JSX.Element => {
-  const formattedValue = formatDate(value, formatString, emptyText)
+  const formattedValue = formatApiDisplayDate(value, formatString, emptyText)
   return <span>{formattedValue}</span>
 }

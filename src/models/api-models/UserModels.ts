@@ -53,6 +53,7 @@ export interface UserResponseModel {
   loginName: string
   firstName: string
   lastName: string
+  email?: string
   phone: string
   datePasswordChanges?: string
   loginAttempts?: number
@@ -63,7 +64,6 @@ export interface UserResponseModel {
   dob: string
   isGuest?: boolean
   apiKey?: string
-  email: string
   addressId?: number
   profilePicture?: string
   lastLoginAt?: string
@@ -72,23 +72,35 @@ export interface UserResponseModel {
   createdAt?: string
   updatedAt?: string
   notes?: string
-  permissions?: UserPermissionInfo[]
+  permissions?: PermissionResponseModel[]
   addresses?: AddressResponseModel[]
   userGroups?: UserGroupResponseModel[]
 }
 
-export interface UserPermissionInfo {
+export interface PermissionResponseModel {
   permissionId: number
   permissionName: string
   permissionCode: string
   description?: string
   category?: string
+  isDeleted?: boolean
+  createdUser?: string
+  modifiedUser?: string
+  createdAt?: string
+  updatedAt?: string
+  notes?: string
 }
 
 export interface UserGroupResponseModel {
   groupId: number
   groupName: string
   description?: string
+  isDeleted?: boolean
+  createdUser?: string
+  modifiedUser?: string
+  notes?: string
+  createdAt?: string
+  updatedAt?: string
   users?: {
     userId: number
     firstName?: string
@@ -101,9 +113,6 @@ export interface UserGroupResponseModel {
     emailConfirmed?: boolean
     profilePicture?: string
   }[]
-  isDeleted?: boolean
-  createdAt?: string
-  updatedAt?: string
 }
 
 export interface PaginationBaseResponseModel<T> {

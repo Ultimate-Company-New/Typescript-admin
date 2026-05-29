@@ -13,6 +13,7 @@ import {
   getConditionLabel,
 } from "../../../constants/appConstants";
 import styles from "../../../styles/Products.module.scss";
+import commonStyles from "../../../styles/common.module.scss";
 import type { ProductFormData } from "../../../utils/validationSchemas";
 import PickupLocationCard, { type PickupLocationCardData } from "./PickupLocationCard";
 
@@ -186,6 +187,7 @@ const ProductDetailsView = ({
             <Box className={styles["product-details-view__image-container"]}>
               <FieldLabel>Main Image</FieldLabel>
               <Avatar
+                data-test-id="product-view-image-main"
                 variant="square"
                 src={watchedValues.mainImage}
                 className={styles["product-details-view__image--main"]}
@@ -210,6 +212,7 @@ const ProductDetailsView = ({
               <Box className={styles["product-details-view__image-container"]}>
                 <FieldLabel>{label}</FieldLabel>
                 <Avatar
+                  data-test-id={`product-view-image-${label.toLowerCase()}`}
                   variant="square"
                   src={image}
                   className={styles["product-details-view__image"]}
@@ -227,6 +230,7 @@ const ProductDetailsView = ({
               <Box className={styles["product-details-view__image-container"]}>
                 <FieldLabel color="error.main">Defect</FieldLabel>
                 <Avatar
+                  data-test-id="product-view-image-defect"
                   variant="square"
                   src={watchedValues.defectImage}
                   className={styles["product-details-view__image--defect"]}
@@ -242,6 +246,7 @@ const ProductDetailsView = ({
               <Box className={styles["product-details-view__image-container"]}>
                 <FieldLabel>Additional 1</FieldLabel>
                 <Avatar
+                  data-test-id="product-view-image-additional1"
                   variant="square"
                   src={watchedValues.additionalImage1}
                   className={styles["product-details-view__image"]}
@@ -257,6 +262,7 @@ const ProductDetailsView = ({
               <Box className={styles["product-details-view__image-container"]}>
                 <FieldLabel>Additional 2</FieldLabel>
                 <Avatar
+                  data-test-id="product-view-image-additional2"
                   variant="square"
                   src={watchedValues.additionalImage2}
                   className={styles["product-details-view__image"]}
@@ -272,6 +278,7 @@ const ProductDetailsView = ({
               <Box className={styles["product-details-view__image-container"]}>
                 <FieldLabel>Additional 3</FieldLabel>
                 <Avatar
+                  data-test-id="product-view-image-additional3"
                   variant="square"
                   src={watchedValues.additionalImage3}
                   className={styles["product-details-view__image"]}
@@ -298,7 +305,11 @@ const ProductDetailsView = ({
           <Grid item xs={12}>
             <Box className={styles["product-details-view__field"]}>
               <FieldLabel>Title</FieldLabel>
-              <BodyText variant="body1" className={styles["product-details-view__value--large"]}>
+              <BodyText
+                data-test-id="product-view-title"
+                variant="body1"
+                className={styles["product-details-view__value--large"]}
+              >
                 {watchedValues.title || "—"}
               </BodyText>
             </Box>
@@ -307,8 +318,9 @@ const ProductDetailsView = ({
           <Grid item xs={12}>
             <Box className={styles["product-details-view__field"]}>
               <FieldLabel>Description</FieldLabel>
-              <Box className={styles["product-details-view__html-content"]}>
+              <Box className={styles["product-details-view__html-content"]} data-test-id="product-view-description">
                 <Box
+                  data-test-id="product-view-description-html"
                   className={styles["rich-text-content"]}
                   dangerouslySetInnerHTML={{
                     __html: watchedValues.descriptionHtml || "<p>—</p>",
@@ -321,14 +333,14 @@ const ProductDetailsView = ({
           <Grid item xs={12} sm={6}>
             <Box className={styles["product-details-view__field"]}>
               <FieldLabel>Brand</FieldLabel>
-              <BodyText>{watchedValues.brand || "—"}</BodyText>
+              <BodyText data-test-id="product-view-brand">{watchedValues.brand || "—"}</BodyText>
             </Box>
           </Grid>
 
           <Grid item xs={12} sm={6}>
             <Box className={styles["product-details-view__field"]}>
               <FieldLabel>Model</FieldLabel>
-              <BodyText>{watchedValues.model || "—"}</BodyText>
+              <BodyText data-test-id="product-view-model">{watchedValues.model || "—"}</BodyText>
             </Box>
           </Grid>
 
@@ -337,6 +349,7 @@ const ProductDetailsView = ({
               <FieldLabel>Condition</FieldLabel>
               {watchedValues.condition ? (
                 <Chip
+                  data-test-id="product-view-condition"
                   label={getConditionLabel(watchedValues.condition)}
                   color={getConditionColor(watchedValues.condition)}
                   size="small"
@@ -350,7 +363,7 @@ const ProductDetailsView = ({
           <Grid item xs={12} sm={6}>
             <Box className={styles["product-details-view__field"]}>
               <FieldLabel>UPC</FieldLabel>
-              <BodyText>{watchedValues.upc || "—"}</BodyText>
+              <BodyText data-test-id="product-view-upc">{watchedValues.upc || "—"}</BodyText>
             </Box>
           </Grid>
 
@@ -361,14 +374,18 @@ const ProductDetailsView = ({
                 {watchedValues.color ? (
                   <>
                     <Box
+                      data-test-id="product-view-color-swatch"
                       className={styles["product-details-view__color-swatch"]}
                       style={{ backgroundColor: watchedValues.color }}
                     />
                     <Box>
-                      <BodyText className={styles["product-details-view__color-name"]}>
+                      <BodyText
+                        data-test-id="product-view-color-label"
+                        className={styles["product-details-view__color-name"]}
+                      >
                         {watchedValues.colorLabel || PRODUCT_COLOR_OPTIONS.find(opt => opt.hex === watchedValues.color)?.name || "Custom Color"}
                       </BodyText>
-                      <SecondaryFont variant="caption">
+                      <SecondaryFont data-test-id="product-view-color-hex" variant="caption">
                         {watchedValues.color}
                       </SecondaryFont>
                     </Box>
@@ -383,14 +400,14 @@ const ProductDetailsView = ({
           <Grid item xs={12} sm={6}>
             <Box className={styles["product-details-view__field"]}>
               <FieldLabel>Country of Manufacture</FieldLabel>
-              <BodyText>{watchedValues.countryOfManufacture || "—"}</BodyText>
+              <BodyText data-test-id="product-view-country">{watchedValues.countryOfManufacture || "—"}</BodyText>
             </Box>
           </Grid>
 
           <Grid item xs={12} sm={6}>
             <Box className={styles["product-details-view__field"]}>
               <FieldLabel>Category</FieldLabel>
-              <BodyText>{watchedValues.categoryFullPath || "—"}</BodyText>
+              <BodyText data-test-id="product-view-category">{watchedValues.categoryFullPath || "—"}</BodyText>
             </Box>
           </Grid>
 
@@ -398,6 +415,7 @@ const ProductDetailsView = ({
             <Box className={styles["product-details-view__field"]}>
               <FieldLabel>Item Modified</FieldLabel>
               <Chip
+                data-test-id="product-view-item-modified"
                 label={watchedValues.itemModified ? "Yes" : "No"}
                 color={watchedValues.itemModified ? "warning" : "default"}
                 size="small"
@@ -436,7 +454,11 @@ const ProductDetailsView = ({
           <Grid item xs={12} sm={6} md={3}>
             <Box className={styles["product-details-view__field"]}>
               <FieldLabel>Price</FieldLabel>
-              <BodyText variant="body1" className={styles["product-details-view__price"]}>
+              <BodyText
+                data-test-id="product-view-price"
+                variant="body1"
+                className={styles["product-details-view__price"]}
+              >
                 {formatCurrency(watchedValues.price)}
               </BodyText>
             </Box>
@@ -445,7 +467,11 @@ const ProductDetailsView = ({
           <Grid item xs={12} sm={6} md={3}>
             <Box className={styles["product-details-view__field"]}>
               <FieldLabel>Discount</FieldLabel>
-              <BodyText variant="body1" className={styles["product-details-view__discount"]}>
+              <BodyText
+                data-test-id="product-view-discount"
+                variant="body1"
+                className={styles["product-details-view__discount"]}
+              >
                 {formatDiscount()}
               </BodyText>
             </Box>
@@ -455,6 +481,7 @@ const ProductDetailsView = ({
             <Box className={styles["product-details-view__field"]}>
               <FieldLabel>Return Window (Days)</FieldLabel>
               <Chip
+                data-test-id="product-view-return-window"
                 label={watchedValues.returnWindowDays > 0 ? `${watchedValues.returnWindowDays} days` : "No Returns"}
                 color={watchedValues.returnWindowDays > 0 ? "success" : "default"}
                 size="small"
@@ -466,6 +493,7 @@ const ProductDetailsView = ({
             <Box className={styles["product-details-view__field"]}>
               <FieldLabel>Discount Type</FieldLabel>
               <Chip
+                data-test-id="product-view-discount-type"
                 label={watchedValues.isDiscountPercent ? "Percentage" : "Fixed Amount"}
                 color={watchedValues.isDiscountPercent ? "info" : "default"}
                 size="small"
@@ -476,11 +504,19 @@ const ProductDetailsView = ({
           <Grid item xs={12} sm={6}>
             <Box className={styles["product-details-view__field"]}>
               <FieldLabel>Available From</FieldLabel>
-              <BodyText variant="body1" className={styles["product-details-view__value--large"]}>
+              <BodyText
+                data-test-id="product-view-available-from"
+                variant="body1"
+                className={styles["product-details-view__value--large"]}
+              >
                 {formatAvailableFrom()}
               </BodyText>
               {watchedValues.itemAvailableFrom?.timezone && (
-                <SecondaryFont variant="caption" className={styles["product-details-view__timezone"]}>
+                <SecondaryFont
+                  data-test-id="product-view-available-from-timezone"
+                  variant="caption"
+                  className={styles["product-details-view__timezone"]}
+                >
                   {getFullTimezoneLabel()}
                 </SecondaryFont>
               )}
@@ -502,28 +538,28 @@ const ProductDetailsView = ({
           <Grid item xs={12} sm={6} md={3}>
             <Box className={styles["product-details-view__field"]}>
               <FieldLabel>Length (cm)</FieldLabel>
-              <BodyText>{watchedValues.length ?? "—"}</BodyText>
+              <BodyText data-test-id="product-view-length">{watchedValues.length ?? "—"}</BodyText>
             </Box>
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
             <Box className={styles["product-details-view__field"]}>
               <FieldLabel>Breadth (cm)</FieldLabel>
-              <BodyText>{watchedValues.breadth ?? "—"}</BodyText>
+              <BodyText data-test-id="product-view-breadth">{watchedValues.breadth ?? "—"}</BodyText>
             </Box>
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
             <Box className={styles["product-details-view__field"]}>
               <FieldLabel>Height (cm)</FieldLabel>
-              <BodyText>{watchedValues.height ?? "—"}</BodyText>
+              <BodyText data-test-id="product-view-height">{watchedValues.height ?? "—"}</BodyText>
             </Box>
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
             <Box className={styles["product-details-view__field"]}>
               <FieldLabel>Weight (kg)</FieldLabel>
-              <BodyText>{watchedValues.weightKgs ?? "—"}</BodyText>
+              <BodyText data-test-id="product-view-weight">{watchedValues.weightKgs ?? "—"}</BodyText>
             </Box>
           </Grid>
         </Grid>
@@ -558,8 +594,8 @@ const ProductDetailsView = ({
         <Divider className={styles["products-page__divider"]} />
         <Box className={styles["products-page__divider-spacer"]} />
         <FieldLabel>Additional Notes</FieldLabel>
-        <Box className={styles["product-details-view__notes-container"]}>
-          <BodyText className={styles["product-details-view__notes"]}>
+        <Box className={commonStyles["view-notes__container"]}>
+          <BodyText data-test-id="product-view-notes" className={commonStyles["view-notes__text"]}>
             {watchedValues.notes || "No notes provided"}
           </BodyText>
         </Box>

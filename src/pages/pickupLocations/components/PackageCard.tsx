@@ -45,6 +45,7 @@ export const PackageCard = ({ mapping }: PackageCardProps): JSX.Element => {
   return (
     <Card
       variant="outlined"
+      data-test-id={`pickup-location-package-card-${packageId}`}
       sx={{
         borderRadius: 3,
         transition: 'all 0.2s ease-in-out',

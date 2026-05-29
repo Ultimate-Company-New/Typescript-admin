@@ -230,7 +230,11 @@ const PickupLocations = (): React.JSX.Element => {
       {/* Product Modal */}
       <ProductModal
         open={productModalOpen}
-        onClose={() => setProductModalOpen(false)}
+        onClose={() => {
+          setProductModalOpen(false)
+          setSelectedPickupLocationId(undefined)
+          setSelectedLocationName('')
+        }}
         pickupLocationId={selectedPickupLocationId}
         locationName={selectedLocationName}
       />
@@ -238,7 +242,11 @@ const PickupLocations = (): React.JSX.Element => {
       {/* Package Modal */}
       <PackageModal
         open={packageModalOpen}
-        onClose={() => setPackageModalOpen(false)}
+        onClose={() => {
+          setPackageModalOpen(false)
+          setSelectedPickupLocationId(undefined)
+          setSelectedLocationName('')
+        }}
         pickupLocationId={selectedPickupLocationId}
         locationName={selectedLocationName}
       />

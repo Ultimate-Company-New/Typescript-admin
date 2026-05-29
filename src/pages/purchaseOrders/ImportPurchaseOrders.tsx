@@ -173,7 +173,13 @@ const mapToApiPayload = (
               // Store full courier option as JSON string for API (required)
               courierMetadata: JSON.stringify(selectedCourier),
             }
-          : undefined,
+          : {
+              courierCompanyId: 0,
+              courierName: 'Pending',
+              courierRate: 0,
+              courierMinWeight: 0,
+              courierMetadata: '{}',
+            },
         products:
           shipment.products?.map((p) => ({
             productId: p.product.productId,
@@ -1118,7 +1124,7 @@ const ImportPurchaseOrders = (): React.JSX.Element => {
             })),
           };
         }
-      ) ?? []) as ShipmentResponseData[];
+      ) ?? []) as unknown as ShipmentResponseData[];
 
       setSelectedShipments(convertedShipments);
       setShipmentsModalOpen(true);

@@ -79,30 +79,31 @@ const FillImportTestDataButton = (_props: FillImportTestDataButtonProps): JSX.El
         // Randomly assign an agent from available users
         const randomAgentId = allUserIds[Math.floor(Math.random() * allUserIds.length)]
 
+        const address = lead.address ?? {}
         return [
           // Lead Details
-          lead.firstName,
-          lead.lastName,
-          lead.email,
-          lead.phone,
-          lead.leadStatus,
-          lead.title,
+          lead.firstName ?? '',
+          lead.lastName ?? '',
+          lead.email ?? '',
+          lead.phone ?? '',
+          lead.leadStatus ?? '',
+          lead.title ?? '',
           randomAgentId,
           // Company Details
-          lead.company,
-          lead.companySize,
-          lead.annualRevenue,
-          lead.website,
-          lead.fax,
+          lead.company ?? '',
+          lead.companySize ?? '',
+          lead.annualRevenue ?? '',
+          lead.website ?? '',
+          lead.fax ?? '',
           // Address
-          lead.address.streetAddress,
-          lead.address.streetAddress2,
-          lead.address.streetAddress3,
-          lead.address.city,
-          lead.address.state,
-          lead.address.postalCode,
-          lead.address.country,
-          lead.address.addressType,
+          address.streetAddress ?? '',
+          address.streetAddress2 ?? '',
+          address.streetAddress3 ?? '',
+          address.city ?? '',
+          address.state ?? '',
+          address.postalCode ?? '',
+          address.country ?? '',
+          address.addressType ?? '',
           // Notes
           lead.notes || `Test lead ${index + 1} generated for import testing`,
         ]

@@ -37,6 +37,7 @@ const PromoActionsCell = ({
         {canToggle && (
           <Link
             href="#"
+            data-test-id="promo-action-activate"
             onClick={e => {
               e.preventDefault()
               onToggle(promoId)
@@ -61,13 +62,18 @@ const PromoActionsCell = ({
       }}
     >
       {canView && (
-        <Link href={`${APP_ROUTES.DASHBOARD.ADD_PROMO}?promoId=${promoId}&isView`} sx={{ cursor: 'pointer' }}>
+        <Link
+          href={`${APP_ROUTES.DASHBOARD.ADD_PROMO}?promoId=${promoId}&isView`}
+          data-test-id="promo-action-view"
+          sx={{ cursor: 'pointer' }}
+        >
           View
         </Link>
       )}
       {canToggle && (
         <Link
           href="#"
+          data-test-id="promo-action-toggle"
           onClick={e => {
             e.preventDefault()
             onToggle(promoId)

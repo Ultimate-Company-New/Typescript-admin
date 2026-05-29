@@ -162,9 +162,10 @@ const Products = (): React.JSX.Element => {
   return (
     <Box className={styles["products-page"]}>
       <Box className={styles["products-page__container"]}>
-        <Box className={styles["products-page__card"]}>
+        <Box className={styles["products-page__card"]} data-test-id="products-grid-card">
           <StyledDataGrid
             dataTestId="products-data-grid"
+            paginationTestId="products-pagination"
             rows={rows}
             columns={columns}
             loading={loading}

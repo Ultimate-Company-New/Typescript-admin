@@ -1,12 +1,4 @@
-import { formatUTCTimestamp } from '../../utils/gridUtil'
-
-// Explicitly define the function type for better type safety
-type FormatUTCTimestampFn = (
-  value: unknown,
-  formatString?: string,
-  emptyText?: string,
-  showUTCSuffix?: boolean,
-) => string
+import { formatApiUtcTimestamp } from '../../utils/dateTimeHelper'
 
 /**
  * Props for UTCTimestampCell component
@@ -56,7 +48,6 @@ export const UTCTimestampCell = ({
   emptyText = 'Never',
   showUTCSuffix = true,
 }: UTCTimestampCellProps): JSX.Element => {
-  const formatter = formatUTCTimestamp as FormatUTCTimestampFn
-  const formattedValue: string = formatter(value, formatString, emptyText, showUTCSuffix)
+  const formattedValue = formatApiUtcTimestamp(value, formatString, emptyText, showUTCSuffix)
   return <span>{formattedValue}</span>
 }

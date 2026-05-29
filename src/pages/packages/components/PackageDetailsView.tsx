@@ -8,6 +8,7 @@ import { BodyText, FieldLabel, SecondaryFont, Subheader } from '../../../compone
 import { type PackagePickupLocationMappingResponseModel } from '../../../models/api-models'
 import PickupLocationCard, { type PickupLocationCardData } from '../../products/components/PickupLocationCard'
 import styles from '../../../styles/Packages.module.scss'
+import commonStyles from '../../../styles/common.module.scss'
 
 interface PickupLocationApiData {
   pickupLocationId?: number
@@ -164,7 +165,7 @@ const PackageDetailsView = ({
           {/* Package Name */}
           <Box className={styles['package-details-view__field']}>
             <FieldLabel>Package Name</FieldLabel>
-            <BodyText>{packageName || '—'}</BodyText>
+            <BodyText data-test-id="package-view-package-name">{packageName || '—'}</BodyText>
           </Box>
 
           {/* Package Type */}
@@ -172,6 +173,7 @@ const PackageDetailsView = ({
             <FieldLabel>Package Type</FieldLabel>
             <Box>
               <Chip
+                data-test-id="package-view-package-type"
                 label={packageType || 'STANDARD'}
                 color={getPackageTypeColor(packageType)}
                 size="small"
@@ -183,7 +185,10 @@ const PackageDetailsView = ({
           <Box className={styles['package-details-view__field']}>
             <FieldLabel>Dimensions (L × W × H)</FieldLabel>
             <Box className={styles['package-details-view__dimensions']}>
-              <BodyText className={styles['package-details-view__dimensions-value']}>
+              <BodyText
+                data-test-id="package-view-dimensions"
+                className={styles['package-details-view__dimensions-value']}
+              >
                 {length} × {breadth} × {height}
               </BodyText>
               <SecondaryFont variant="caption" className={styles['package-details-view__dimensions-unit']}>
@@ -196,7 +201,10 @@ const PackageDetailsView = ({
           <Box className={styles['package-details-view__field']}>
             <FieldLabel>Max Weight</FieldLabel>
             <Box className={styles['package-details-view__dimensions']}>
-              <BodyText className={styles['package-details-view__dimensions-value']}>
+              <BodyText
+                data-test-id="package-view-max-weight"
+                className={styles['package-details-view__dimensions-value']}
+              >
                 {maxWeight}
               </BodyText>
               <SecondaryFont variant="caption" className={styles['package-details-view__dimensions-unit']}>
@@ -209,7 +217,10 @@ const PackageDetailsView = ({
           <Box className={styles['package-details-view__field']}>
             <FieldLabel>Standard Capacity</FieldLabel>
             <Box className={styles['package-details-view__dimensions']}>
-              <BodyText className={styles['package-details-view__dimensions-value']}>
+              <BodyText
+                data-test-id="package-view-standard-capacity"
+                className={styles['package-details-view__dimensions-value']}
+              >
                 {standardCapacity}
               </BodyText>
               <SecondaryFont variant="caption" className={styles['package-details-view__dimensions-unit']}>
@@ -221,7 +232,7 @@ const PackageDetailsView = ({
           {/* Price Per Unit */}
           <Box className={styles['package-details-view__field']}>
             <FieldLabel>Price Per Unit</FieldLabel>
-            <BodyText>₹{pricePerUnit.toFixed(2)}</BodyText>
+            <BodyText data-test-id="package-view-price-per-unit">₹{pricePerUnit.toFixed(2)}</BodyText>
           </Box>
         </Box>
       </Paper>
@@ -249,7 +260,12 @@ const PackageDetailsView = ({
           <Subheader label="Notes" className={styles['add-packages-page__section-title']} />
           <Divider className={styles['add-packages-page__divider']} />
           <Box className={styles['add-packages-page__divider-spacer']} />
-          <BodyText className={styles['package-details-view__notes']}>{notes}</BodyText>
+          <FieldLabel>Additional Notes</FieldLabel>
+          <Box className={commonStyles['view-notes__container']}>
+            <BodyText data-test-id="package-view-notes" className={commonStyles['view-notes__text']}>
+              {notes}
+            </BodyText>
+          </Box>
         </Paper>
       )}
     </>

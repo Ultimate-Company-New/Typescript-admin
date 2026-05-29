@@ -13,7 +13,6 @@ import type { PackageResponseModel } from "./PackageModels";
 import type { ProductResponseModel } from "./ProductModels";
 import type { PromoResponseModel } from "./PromoModels";
 import type { UserResponseModel } from "./UserModels";
-import type { PackageProductResponseData } from "./ShipmentModels";
 
 /**
  * Pickup Location Response Model
@@ -23,7 +22,6 @@ export interface PickupLocationResponseModel {
   pickupLocationId: number;
   addressNickName: string;
   isDeleted: boolean;
-  clientId: number;
   pickupLocationAddressId: number;
   shipRocketPickupLocationId?: number;
   createdAt?: string;
@@ -32,10 +30,6 @@ export interface PickupLocationResponseModel {
   modifiedBy?: string;
   notes?: string;
   address?: AddressResponseModel;
-  client?: {
-    clientId: number;
-    name: string;
-  };
   isActive?: boolean;
   productCount?: number;
   packageCount?: number;
@@ -290,7 +284,6 @@ export interface ShipmentResponseData {
   shipRocketLabelUrl?: string;
 
   // Audit Fields
-  clientId?: number;
   createdUser?: string;
   modifiedUser?: string;
   createdAt?: string;
@@ -302,7 +295,7 @@ export interface ShipmentResponseData {
   products: ProductResponseModel[];
 
   // Packages Used in Shipment
-  packages: ShipmentPackageResponseData[];
+  packages: PackageResponseModel[];
 }
 
 /**
@@ -366,7 +359,6 @@ export interface PaymentResponseModel {
   payerIpAddress?: string;
   payerUserAgent?: string;
   isTestPayment?: boolean;
-  clientId: number;
   createdUser: string;
   modifiedUser: string;
   createdAt?: string; // ISO date string

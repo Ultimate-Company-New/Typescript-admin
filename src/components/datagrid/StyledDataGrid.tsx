@@ -108,10 +108,28 @@ export const StyledDataGrid = React.forwardRef<HTMLDivElement, StyledDataGridPro
       }
     }, [paginationModelState])
 
-    const { slotProps, paginationModel, slots, ...restDataGridProps } = dataGridProps
+    const { slotProps, paginationModel, slots, paginationTestId, ...restDataGridProps } = dataGridProps
 
     // Build merged slot props with data-test-id if provided
     const mergedSlotProps = React.useMemo(() => {
+      const virtualScrollerProps =
+        dataTestId != null
+          ? {
+              virtualScroller: {
+                'data-test-id': `${dataTestId}-virtual-scroller`,
+              },
+            }
+          : {}
+
+      const paginationProps =
+        paginationTestId != null
+          ? {
+              pagination: {
+                'data-test-id': paginationTestId,
+              },
+            }
+          : {}
+
       if (dataTestId != null && slotProps !== undefined) {
         return {
           ...slotProps,
@@ -119,6 +137,8 @@ export const StyledDataGrid = React.forwardRef<HTMLDivElement, StyledDataGridPro
             ...slotProps.root,
             'data-test-id': dataTestId,
           },
+          ...virtualScrollerProps,
+          ...paginationProps,
         }
       }
       if (dataTestId != null) {
@@ -126,10 +146,21 @@ export const StyledDataGrid = React.forwardRef<HTMLDivElement, StyledDataGridPro
           root: {
             'data-test-id': dataTestId,
           },
+          ...virtualScrollerProps,
+          ...paginationProps,
         }
       }
+      if (paginationTestId != null && slotProps !== undefined) {
+        return {
+          ...slotProps,
+          ...paginationProps,
+        }
+      }
+      if (paginationTestId != null) {
+        return paginationProps
+      }
       return slotProps
-    }, [dataTestId, slotProps])
+    }, [dataTestId, paginationTestId, slotProps])
 
     // Convert column grouping model to MUI's columnGroupingModel format
     const muiColumnGroupingModel: GridColumnGroupingModel | undefined = React.useMemo(() => {

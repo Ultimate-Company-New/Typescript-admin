@@ -7,6 +7,7 @@ import { CssBaseline, ThemeProvider, createTheme } from '@mui/material'
 
 import 'react-toastify/dist/ReactToastify.css'
 import App from './App.tsx'
+import { AuthProvider } from './contexts/AuthContext'
 
 // Get theme mode from localStorage
 const themeMode = localStorage.getItem('theme')
@@ -25,7 +26,9 @@ ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <App />
+      <AuthProvider>
+        <App />
+      </AuthProvider>
       <ToastContainer
         position="top-right"
         autoClose={10000}

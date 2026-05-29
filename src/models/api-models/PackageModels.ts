@@ -93,7 +93,6 @@ export interface PackageResponseModel {
   packageType: string
   notes?: string
   isDeleted?: boolean
-  clientId?: number
   createdAt?: string
   createdUser?: string
   updatedAt?: string
@@ -107,6 +106,14 @@ export interface PackageResponseModel {
 
   // Products in this package (only populated when package is part of a shipment)
   products?: PackageProductResponseData[]
+
+  /** Nested package info when returned as part of shipment allocation */
+  packageInfo?: {
+    packageId: number
+    packageName?: string
+    packageType?: string
+    pricePerUnit?: number
+  }
 }
 
 /**

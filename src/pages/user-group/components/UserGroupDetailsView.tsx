@@ -1,7 +1,8 @@
 import { Box, Divider, Grid, Paper } from '@mui/material'
 
-import { BodyText, Subheader } from '../../../components/fonts'
+import { BodyText, FieldLabel, Subheader } from '../../../components/fonts'
 import styles from '../../../styles/UserGroups.module.scss'
+import commonStyles from '../../../styles/common.module.scss'
 
 interface UserGroupDetailsViewProps {
   name: string
@@ -25,22 +26,33 @@ const UserGroupDetailsView = ({ name, description, notes }: UserGroupDetailsView
         <Grid container spacing={3}>
           <Grid item xs={12} sm={6}>
             <Box className={styles['user-group-details-view__field']}>
-              <BodyText className={styles['user-group-details-view__label']}>Group Name</BodyText>
-              <BodyText className={styles['user-group-details-view__value']}>{name || '—'}</BodyText>
+              <FieldLabel>Group Name</FieldLabel>
+              <BodyText data-test-id="user-group-view-name" className={styles['user-group-details-view__value']}>
+                {name || '—'}
+              </BodyText>
             </Box>
           </Grid>
 
           <Grid item xs={12}>
             <Box className={styles['user-group-details-view__field']}>
-              <BodyText className={styles['user-group-details-view__label']}>Description</BodyText>
-              <BodyText className={styles['user-group-details-view__value']}>{description || '—'}</BodyText>
+              <FieldLabel>Description</FieldLabel>
+              <BodyText
+                data-test-id="user-group-view-description"
+                className={styles['user-group-details-view__value']}
+              >
+                {description || '—'}
+              </BodyText>
             </Box>
           </Grid>
 
           <Grid item xs={12}>
             <Box className={styles['user-group-details-view__field']}>
-              <BodyText className={styles['user-group-details-view__label']}>Notes</BodyText>
-              <BodyText className={styles['user-group-details-view__value']}>{notes || '—'}</BodyText>
+              <FieldLabel>Additional Notes</FieldLabel>
+              <Box className={commonStyles['view-notes__container']}>
+                <BodyText data-test-id="user-group-view-notes" className={commonStyles['view-notes__text']}>
+                  {notes || '—'}
+                </BodyText>
+              </Box>
             </Box>
           </Grid>
         </Grid>

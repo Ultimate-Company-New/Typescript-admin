@@ -395,15 +395,13 @@ const CalculateAllShippingButton = ({
   children,
 }: CalculateAllShippingButtonProps): JSX.Element => {
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showProgressDialog, setShowProgressDialog] = useState(false);
-  const [currentRowIndex, setCurrentRowIndex] = useState(0);
-  const [totalRows, setTotalRows] = useState(0);
-  const [currentRowNumber, setCurrentRowNumber] = useState<number | null>(null);
-  const [processingResults, setProcessingResults] = useState<
-    RowProcessingResult[]
-  >([]);
-  const [isComplete, setIsComplete] = useState(false);
-  const [isCancelled, setIsCancelled] = useState(false);
+  const [, setShowProgressDialog] = useState(false);
+  const [, setCurrentRowIndex] = useState(0);
+  const [, setTotalRows] = useState(0);
+  const [, setCurrentRowNumber] = useState<number | null>(null);
+  const [, setProcessingResults] = useState<RowProcessingResult[]>([]);
+  const [, setIsComplete] = useState(false);
+  const [, setIsCancelled] = useState(false);
 
   // Use ref for cancellation flag so it can be checked in real-time during the async loop
   const cancelledRef = useRef(false);
@@ -642,47 +640,10 @@ const CalculateAllShippingButton = ({
     setIsProcessing(false);
   }, [importData, buildProductDataMap, processRow]);
 
-  // Cancel processing
-  const handleCancel = useCallback(() => {
-    cancelledRef.current = true;
-    setIsCancelled(true);
-  }, []);
-
-  // Close dialog
-  const handleCloseDialog = useCallback(() => {
-    setShowProgressDialog(false);
-    setCurrentRowIndex(0);
-    setTotalRows(0);
-    setCurrentRowNumber(null);
-    setProcessingResults([]);
-    setIsComplete(false);
-    setIsCancelled(false);
-    cancelledRef.current = false;
-  }, []);
-
   // Count rows that need processing
   const rowsNeedingProcessing = importData.filter(
     (row) => !row.shippingCalculated && row.validationErrors.length === 0
   ).length;
-
-  const successCount = processingResults.filter((r) => r.success).length;
-  const errorCount = processingResults.filter((r) => !r.success).length;
-  const progress = totalRows > 0 ? (currentRowIndex / totalRows) * 100 : 0;
-
-  const contextValue: CalculateShippingContextType = {
-    showProgressDialog,
-    isComplete,
-    isCancelled,
-    currentRowIndex,
-    totalRows,
-    currentRowNumber,
-    progress,
-    successCount,
-    errorCount,
-    processingResults,
-    handleCancel,
-    handleCloseDialog,
-  };
 
   return (
     <CalculateAllShippingButtonProvider

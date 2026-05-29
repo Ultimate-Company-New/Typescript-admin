@@ -283,17 +283,7 @@ const AddEditPromo = (): React.JSX.Element => {
   )
 
   return (
-    <Container
-      maxWidth={false}
-      disableGutters
-      sx={{
-        px: {
-          xs: 2,
-          sm: 3,
-          md: 4,
-        },
-      }}
-    >
+    <Container maxWidth={false} disableGutters className={styles['promos-page']}>
       {/* Fill Test Data Button - Only show in development/non-view mode */}
       {!isView && (
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -360,19 +350,6 @@ const AddEditPromo = (): React.JSX.Element => {
             </Paper>
           )}
 
-          {/* View mode - Back button */}
-          {isView && (
-            <Paper className={styles['add-promos-page__section']}>
-              <Box className={styles['add-promos-page__actions']}>
-                <BlueButton
-                  variant="contained"
-                  onClick={handleCancel}
-                  className={styles['add-promos-page__action-button']}
-                  label="Back to Promos"
-                />
-              </Box>
-            </Paper>
-          )}
         </Box>
       </form>
     </Container>

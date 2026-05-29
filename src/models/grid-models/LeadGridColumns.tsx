@@ -1,11 +1,11 @@
-import { LocationOn as LocationIcon } from '@mui/icons-material'
-import { Box, Chip, Link, Tooltip } from '@mui/material'
+import { Box, Chip, Link } from '@mui/material'
 import { type GridColDef, type GridRenderCellParams } from '@mui/x-data-grid'
 
-import { RenderLongCellItem } from '../../components/datagrid'
+import { AddressCell, RenderLongCellItem } from '../../components/datagrid'
 import { PERMISSIONS } from '../../constants/appConstants'
 import { APP_ROUTES } from '../../constants/routes'
 import { usePermissions } from '../../hooks/usePermissions'
+import { type AddressResponseModel } from '../../models/api-models/AddressModels'
 
 /**
  * Lead Actions Component - handles permission-based action visibility
@@ -36,6 +36,7 @@ const LeadActionsCell = ({
       <div>
         <Link
           href="#"
+          data-test-id="lead-action-activate"
           onClick={e => {
             e.preventDefault()
             if (onToggleLead) {
@@ -61,6 +62,7 @@ const LeadActionsCell = ({
       <Link
         key="view"
         href={`${APP_ROUTES.DASHBOARD.ADD_LEAD}?leadId=${leadId}&isView`}
+        data-test-id="lead-action-view"
         sx={{ cursor: 'pointer' }}
       >
         View
@@ -73,6 +75,7 @@ const LeadActionsCell = ({
       <Link
         key="edit"
         href={`${APP_ROUTES.DASHBOARD.ADD_LEAD}?leadId=${leadId}`}
+        data-test-id="lead-action-edit"
         sx={{ cursor: 'pointer' }}
       >
         Edit
@@ -85,6 +88,7 @@ const LeadActionsCell = ({
       <Link
         key="deactivate"
         href="#"
+        data-test-id="lead-action-toggle"
         onClick={e => {
           e.preventDefault()
           if (onToggleLead) {
@@ -139,16 +143,7 @@ export interface LeadData {
   isDeleted: boolean
 
   // Related entities
-  address: {
-    streetAddress: string
-    streetAddress2?: string
-    streetAddress3?: string
-    city: string
-    state: string
-    postalCode: string
-    country?: string
-    addressType?: string
-  }
+  address?: AddressResponseModel | null
   assignedAgent?: {
     userId: number
     firstName: string
@@ -239,6 +234,7 @@ export const getLeadGridColumns = (onToggleLead: (leadId: number) => void): Grid
           <Chip
             label={status}
             size="small"
+            data-test-id="lead-status-label"
             sx={{
               backgroundColor: colors.bg,
               color: colors.text,
@@ -334,58 +330,17 @@ export const getLeadGridColumns = (onToggleLead: (leadId: number) => void): Grid
     valueGetter: (_value, row: LeadData) => {
       const addr = row.address
       if (!addr) return '—'
-      // Only show city and state in the grid
       const parts: string[] = []
       if (addr.city) parts.push(addr.city)
       if (addr.state) parts.push(addr.state)
-
       return parts.length > 0 ? parts.join(', ') : '—'
     },
-    renderCell: (params: GridRenderCellParams<LeadData>) => {
-      const rowData = params.row
-      const addr = rowData.address
-
-      if (!addr) {
-        return <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>—</Box>
-      }
-
-      // Build full address with all parts on separate lines
-      const addressParts: string[] = []
-      if (addr.streetAddress) addressParts.push(addr.streetAddress)
-      if (addr.streetAddress2) addressParts.push(addr.streetAddress2)
-      if (addr.streetAddress3) addressParts.push(addr.streetAddress3)
-
-      const cityStateZip: string[] = []
-      if (addr.city) cityStateZip.push(addr.city)
-      if (addr.state) cityStateZip.push(addr.state)
-      if (addr.postalCode) cityStateZip.push(addr.postalCode)
-
-      if (cityStateZip.length > 0) {
-        addressParts.push(cityStateZip.join(', '))
-      }
-
-      const fullAddress = addressParts.join('\n')
-      const shortAddress = params.value as string
-
-      return (
-        <Tooltip title={<div style={{ whiteSpace: 'pre-line' }}>{fullAddress}</div>} placement="top">
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              height: '100%',
-              gap: '8px',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            <LocationIcon sx={{ fontSize: 18, color: 'text.secondary', flexShrink: 0 }} />
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shortAddress}</span>
-          </Box>
-        </Tooltip>
-      )
-    },
+    renderCell: (params: GridRenderCellParams<LeadData>) => (
+      <AddressCell
+        addresses={params.row.address ? [params.row.address] : []}
+        testId="lead-address-cell"
+      />
+    ),
   },
   {
     field: 'companySize',

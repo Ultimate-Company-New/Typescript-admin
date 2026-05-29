@@ -17,22 +17,32 @@ interface PickupLocationsModalProps {
 
 const PickupLocationsModal = ({ open, onClose, locations, productTitle, loading = false }: PickupLocationsModalProps): JSX.Element => (
   <Modal open={open} onClose={onClose} aria-labelledby="pickup-locations-modal-title">
-    <Box className={styles['pickup-locations-modal']}>
+    <Box className={styles['pickup-locations-modal']} data-test-id="pickup-locations-modal">
       {/* Header */}
       <Box className={styles['pickup-locations-modal__header']}>
         <Box className={styles['pickup-locations-modal__header-content']}>
           <LocationOnIcon color="primary" />
           <Subheader label="Pickup Locations" variant="h6" id="pickup-locations-modal-title" />
-          {!loading && <Chip label={locations.length} size="small" color="primary" />}
+          {!loading && (
+            <Chip
+              label={locations.length}
+              size="small"
+              color="primary"
+              data-test-id="pickup-locations-modal-count"
+            />
+          )}
         </Box>
-        <IconButton onClick={onClose} size="small">
+        <IconButton onClick={onClose} size="small" data-test-id="pickup-locations-modal-close">
           <CloseIcon />
         </IconButton>
       </Box>
 
       {/* Product Title */}
       {productTitle != null && (
-        <Box className={styles['pickup-locations-modal__product-title']}>
+        <Box
+          className={styles['pickup-locations-modal__product-title']}
+          data-test-id="pickup-locations-modal-item-title"
+        >
           <SecondaryFont>
             Available locations for: <strong>{productTitle}</strong>
           </SecondaryFont>
@@ -42,7 +52,10 @@ const PickupLocationsModal = ({ open, onClose, locations, productTitle, loading 
       {/* Content */}
       <Box className={styles['pickup-locations-modal__content']}>
         {loading ? (
-          <Box className={styles['pickup-locations-modal__loading']}>
+          <Box
+            className={styles['pickup-locations-modal__loading']}
+            data-test-id="pickup-locations-modal-loading"
+          >
             <CircularProgress size={40} />
             <SecondaryFont>Loading pickup location details...</SecondaryFont>
           </Box>

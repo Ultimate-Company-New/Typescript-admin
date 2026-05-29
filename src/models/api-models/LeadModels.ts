@@ -48,7 +48,6 @@ export interface LeadRequestModel {
   notes?: string
 
   // Related entities
-  clientId?: number
   addressId?: number
   createdById?: number
   assignedAgentId?: number
@@ -104,7 +103,6 @@ export interface LeadResponseModel {
   notes?: string
 
   // Related entity IDs
-  clientId: number
   addressId: number
   createdById: number
   assignedAgentId?: number

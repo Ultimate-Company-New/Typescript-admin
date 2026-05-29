@@ -33,7 +33,7 @@ import { Subheader } from '../../../components/fonts';
 import shipmentApi, { type CreateReturnRequest, type ReturnProductItem } from '../../../api/shipmentApi';
 import type { ShipmentData } from '../../../models/api-models/ShipmentModels';
 import type { ProductResponseModel } from '../../../models/api-models';
-import { RETURN_REASON_OPTIONS } from '../../../constants/appConstants';
+import { RETURN_REASON_OPTIONS, type ReturnReason } from '../../../constants/appConstants';
 
 interface ReturnProductSelection {
   productId: number;

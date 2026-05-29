@@ -53,6 +53,19 @@
     }
   }
 
+  // Add/Edit/View Product page layout (matches packages view spacing)
+  &__view-container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding-top: 24px;
+    padding-bottom: 24px;
+
+    .products-page__section {
+      margin-bottom: 0;
+    }
+  }
+
   // Add/Edit Product Page Sections
   &__section {
     background-color: #ffffff;
@@ -66,7 +79,7 @@
     font-size: 1.25rem;
     font-weight: 600;
     color: rgba(0, 0, 0, 0.87);
-    margin-bottom: 16px;
+    margin-bottom: 8px;
   }
 
   &__divider {
@@ -74,7 +87,7 @@
   }
 
   &__divider-spacer {
-    height: 16px;
+    height: 8px;
   }
 
   &__actions {

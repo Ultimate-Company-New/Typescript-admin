@@ -72,6 +72,10 @@
     margin-bottom: 16px;
   }
 
+  &__divider-spacer {
+    height: 8px;
+  }
+
   &__actions {
     display: flex;
     justify-content: flex-end;
@@ -89,7 +93,7 @@
 
 .pickup-location-details-view {
   &__divider-spacer {
-    height: 16px;
+    height: 8px;
   }
 
   &__field {

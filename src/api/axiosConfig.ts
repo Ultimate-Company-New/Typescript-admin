@@ -4,22 +4,21 @@ import { toast } from 'react-toastify'
 import type { ApiLog } from '../components/DevLogger'
 
 /**
- * Dynamically determine API base URL based on environment
- * If running on localhost, use localhost API on port 4433
- * Otherwise use environment variable or default
+ * API base URL.
+ *
+ * Local dev/preview: same-origin `/api` (proxied to Spring on 4433 by vite.config.ts).
+ * Deployed builds: `VITE_API_BASE_URL` or direct localhost:4433 fallback.
  */
 const getBaseUrl = (): string => {
-  // Check if we're running on localhost
-  const isLocalhost =
+  const isLocalDev =
     window.location.hostname === 'localhost' ||
     window.location.hostname === '127.0.0.1' ||
     window.location.hostname === ''
 
-  if (isLocalhost) {
-    return 'http://localhost:4433/api'
+  if (isLocalDev) {
+    return '/api'
   }
 
-  // Use environment variable or default for production
   return (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:4433/api'
 }
 
@@ -156,6 +155,11 @@ axiosInstance.interceptors.response.use(
           if (!window.location.pathname.includes('/login')) {
             localStorage.removeItem('authToken')
             sessionStorage.clear()
+            window.dispatchEvent(
+              new CustomEvent('admin-auth-changed', {
+                detail: { isAuthenticated: false, token: null },
+              }),
+            )
             window.location.href = '/login'
           }
           break

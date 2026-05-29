@@ -184,6 +184,7 @@ export interface ImportProductData {
   discount: number
   isDiscountPercent: boolean
   returnsAllowed: boolean
+  returnWindowDays?: number
   length?: number
   breadth?: number
   height?: number

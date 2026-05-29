@@ -9,11 +9,11 @@ export interface ClientRequestModel {
   clientId?: number
   name: string
   description: string
-  sendGridApiKey?: string
-  sendGridEmailAddress?: string
+  brevoApiKey?: string
+  brevoEmailAddress?: string
   supportEmail: string
   website: string
-  sendgridSenderName?: string
+  brevoSenderName?: string
   razorpayApiKey?: string
   razorpayApiSecret?: string
   imgbbApiKey?: string
@@ -38,12 +38,12 @@ export interface ClientResponseModel {
   clientId: number
   name: string
   description: string
-  sendGridApiKey?: string
-  sendGridEmailAddress?: string
+  brevoApiKey?: string
+  brevoEmailAddress?: string
   isDeleted: boolean
   supportEmail: string
   website: string
-  sendgridSenderName?: string
+  brevoSenderName?: string
   razorpayApiKey?: string
   razorpayApiSecret?: string
   imgbbApiKey?: string

@@ -57,6 +57,9 @@ interface UserSelectionGridProps {
   hideToolbar?: boolean
   selectedUserIdsFilter?: number[]
   preloadedUsers?: UserResponseModel[]
+  dataTestId?: string
+  gridContainerClassName?: string
+  dividerSpacerClassName?: string
 }
 
 /**
@@ -79,6 +82,9 @@ const UserSelectionGrid = ({
   hideToolbar = false,
   selectedUserIdsFilter,
   preloadedUsers,
+  dataTestId = 'users-selection-data-grid',
+  gridContainerClassName = styles['add-users-page__grid-container'],
+  dividerSpacerClassName = styles['add-users-page__divider-spacer'],
 }: UserSelectionGridProps): JSX.Element => {
   const [rows, setRows] = useState<UserResponseModel[]>([])
   const [loading, setLoading] = useState(false)
@@ -124,7 +130,9 @@ const UserSelectionGrid = ({
 
   // Fetch users on mount and when pagination model changes
   useEffect(() => {
-    if (isView) {
+    const useViewFilter =
+      isView && Array.isArray(selectedUserIdsFilter) && selectedUserIdsFilter.length > 0
+    if (isView && !useViewFilter) {
       const viewRows = Array.isArray(preloadedUsers) ? preloadedUsers : []
       setRows(viewRows)
       setTotalCount(viewRows.length)
@@ -247,11 +255,11 @@ const UserSelectionGrid = ({
     <Paper className={styles['add-users-page__section']}>
       <Subheader label={title} className={styles['add-users-page__section-title']} />
       <Divider className={styles['add-users-page__divider']} />
-      <Box className={styles['add-users-page__divider-spacer']} />
+      <Box className={dividerSpacerClassName} />
 
-      <Box className={styles['add-users-page__grid-container']}>
+      <Box className={gridContainerClassName}>
         <StyledDataGrid
-          dataTestId="users-selection-data-grid"
+          dataTestId={dataTestId}
           rows={rows}
           columns={columns}
           loading={loading}

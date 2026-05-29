@@ -176,7 +176,15 @@ export const getMessageGridColumns = (onToggleMessage?: (messageId: number) => v
       const value = params.value ? 'Yes' : 'No'
       const color = params.value ? 'success' : 'default'
 
-      return <Chip label={value} color={color} size="small" />
+      return (
+        <Chip
+          label={value}
+          color={color}
+          size="small"
+          data-test-id="message-send-as-email-chip"
+          data-send-as-email={params.value ? 'true' : 'false'}
+        />
+      )
     },
   },
 
@@ -282,6 +290,7 @@ export const getMessageGridColumns = (onToggleMessage?: (messageId: number) => v
           arrow
         >
           <Box
+            data-test-id="message-created-by-cell"
             sx={{
               display: 'flex',
               alignItems: 'center',
@@ -314,7 +323,7 @@ marginLeft: '4px' }}>({email})</span>
   // 8. Created Date/Time
   {
     field: 'createdAt',
-    headerName: 'Created',
+    headerName: 'Created Date',
     minWidth: 200,
     flex: 1.2,
     valueFormatter: (value: unknown) => {
@@ -378,6 +387,7 @@ hour12: true })
           <div>
             <Link
               href="#"
+              data-test-id="message-action-activate"
               onClick={e => {
                 e.preventDefault()
                 if (onToggleMessage) {
@@ -398,6 +408,7 @@ color: 'success.main' }}
 gap: '12px' }}>
           <Link
             href={`${APP_ROUTES.DASHBOARD.ADD_MESSAGE}?messageId=${rowData.messageId}&isView`}
+            data-test-id="message-action-view"
             sx={{ cursor: 'pointer' }}
           >
             View
@@ -405,6 +416,7 @@ gap: '12px' }}>
           {canEdit && (
             <Link
               href={`${APP_ROUTES.DASHBOARD.ADD_MESSAGE}?messageId=${rowData.messageId}`}
+              data-test-id="message-action-edit"
               sx={{ cursor: 'pointer' }}
             >
               Edit
@@ -412,6 +424,7 @@ gap: '12px' }}>
           )}
           <Link
             href="#"
+            data-test-id="message-action-delete"
             onClick={e => {
               e.preventDefault()
               if (onToggleMessage) {
